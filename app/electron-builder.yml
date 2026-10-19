@@ -67,6 +67,8 @@ nsis:
   oneClick: true
   perMachine: false
 linux:
+  # the default comes from the package name (@hob/app), which isn't a valid file name
+  executableName: hob
   artifactName: Hob-linux-${arch}.${ext}
   target:
     - target: AppImage
