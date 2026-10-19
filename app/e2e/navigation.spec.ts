@@ -30,14 +30,15 @@ test('search chats from the top bar or ⌘K, run quick actions, go back and forw
   await expect(bar).toContainText('Recent chats')
   await expect(bar).toContainText('Quick actions')
   // finds a chat by something said in it, with the words around it
-  await page.keyboard.type('waterfall')
+  // typed into the box itself: on slow machines the keys can arrive before it has focus
+  await bar.getByRole('textbox').fill('waterfall')
   await expect(bar.getByTestId('command-item').first()).toContainText('waterfall')
   await page.keyboard.press('Escape')
   await expect(bar).toBeHidden()
 
   // the search button opens it too; Enter opens the first chat found
   await page.getByTestId('open-search').click()
-  await page.keyboard.type('wine')
+  await bar.getByRole('textbox').fill('wine')
   await expect(bar.getByTestId('command-item').first()).toContainText(/wine/i)
   await page.keyboard.press('Enter')
   await expect(bar).toBeHidden()
@@ -45,7 +46,7 @@ test('search chats from the top bar or ⌘K, run quick actions, go back and forw
 
   // quick action by keyboard
   await page.keyboard.press(`${mod}+k`)
-  await page.keyboard.type('plugins')
+  await bar.getByRole('textbox').fill('plugins')
   await page.keyboard.press('Enter')
   await expect(page.getByRole('heading', { name: 'Plugins', level: 1 })).toBeVisible()
 

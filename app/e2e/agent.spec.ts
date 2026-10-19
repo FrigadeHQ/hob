@@ -7,7 +7,7 @@ const main = join(import.meta.dirname, '../out/main/index.js')
 
 /** a pretend home folder: project folders must be inside it (temp folders count as system folders) */
 async function launch(userData = mkdtempSync(join(tmpdir(), 'hob-e2e-')), home = mkdtempSync(join(tmpdir(), 'hob-home-'))) {
-  const app = await electron.launch({ args: [main], env: { ...process.env, HOME: home, HOB_FAKE: '1', HOB_USER_DATA: userData } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOME: home, USERPROFILE: home, HOB_FAKE: '1', HOB_USER_DATA: userData } })
   const page = await app.firstWindow()
   return { app, page, userData, home }
 }

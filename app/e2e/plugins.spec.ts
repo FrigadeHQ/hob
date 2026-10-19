@@ -95,7 +95,9 @@ test('an .mcpb bundle is added with its icon and asks for the settings it needs'
     user_config: { api_key: { type: 'string', title: 'API key', sensitive: true, required: true }, folders: { type: 'directory', title: 'Folders', multiple: true, default: ['${HOME}/Desktop'] } },
   }))
   const file = join(root, 'notes.mcpb')
-  execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
+  // Windows has no zip command; its tar makes zips
+  if (process.platform === 'win32') execFileSync('tar', ['-a', '-c', '-f', file, '.'], { cwd: dir })
+  else execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
   const { app, page } = await launch()
   await page.getByTestId('open-plugins').click()
   await page.evaluate((f) => (window as unknown as { hob: { plugins: { addFile(p: string): Promise<unknown> } } }).hob.plugins.addFile(f), file)
