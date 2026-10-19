@@ -25,6 +25,12 @@
 
 <br>
 
+<p align="center">
+  <img src="docs/assets/screenshot.png" width="880" alt="Hob charting a sales spreadsheet in a project: it read the file, ran code and drew an interactive chart, then summed up what stands out">
+</p>
+
+<br>
+
 ---
 
 ## What's a hob?
