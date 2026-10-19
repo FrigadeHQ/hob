@@ -117,3 +117,14 @@ body {
 /* new text fades in instead of popping */
 @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 .fade-in { animation: fade-in 400ms ease-out both; }
+
+/* the hob on the start-up screen: floats, breathes, its tip flickers, it blinks now and then */
+.hob-alive .hob-body { animation: hob-float 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.hob-alive .hob-flame { animation: hob-flicker 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.hob-alive .hob-eyes { animation: hob-blink 4.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+.hob-alive .hob-glow { animation: hob-glow 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+@keyframes hob-float { 0%, 100% { transform: translateY(0) scale(1, 1) } 50% { transform: translateY(-14px) scale(1.02, 0.985) } }
+@keyframes hob-flicker { 0%, 100% { transform: skewX(0deg) scaleY(1) } 30% { transform: skewX(-2deg) scaleY(1.025) } 65% { transform: skewX(1.5deg) scaleY(0.99) } }
+@keyframes hob-blink { 0%, 92%, 100% { transform: scaleY(1) } 95% { transform: scaleY(0.1) } }
+@keyframes hob-glow { 0%, 100% { opacity: 0.7; transform: scale(0.96) } 50% { opacity: 1; transform: scale(1.04) } }
+@media (prefers-reduced-motion: reduce) { .hob-alive * { animation: none !important } }

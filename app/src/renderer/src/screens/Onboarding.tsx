@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ModelOption, SetupState } from '../../../shared/types'
 import { hob } from '../api'
 import { Check, ChevronDown } from 'lucide-react'
+import { Mascot } from '../components/Mascot'
 
 const eta = (s: number) => (s <= 0 ? '' : s < 90 ? 'about a minute left' : s < 5400 ? `about ${Math.round(s / 60)} minutes left` : `about ${Math.round(s / 3600)} hours left`)
 const gb = (n: number) => (n < 10 ? `${Math.ceil(n * 10) / 10} GB` : `${Math.ceil(n)} GB`)
@@ -79,7 +80,14 @@ export function Onboarding({ state }: { state: SetupState }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   if (state.phase === 'probing') {
-    return <Frame><p data-testid="setup-probing" className="text-body text-muted animate-pulse">Starting Hob…</p></Frame>
+    return (
+      <Frame>
+        <div className="flex flex-col items-center">
+          <Mascot size={112} alive />
+          <p data-testid="setup-probing" className="mt-5 text-body text-muted">Starting Hob…</p>
+        </div>
+      </Frame>
+    )
   }
 
   if (state.phase === 'error') {
