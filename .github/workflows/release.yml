@@ -1,5 +1,6 @@
 # Push a tag like v0.2.0 (matching app/package.json "version") to build Hob for Mac, Windows and Linux
 # and publish them as a GitHub release. The download links in README.md always point at the newest one.
+# Running it by hand (Actions → Release → Run workflow) only builds: the installers are attached to the run, nothing is published.
 #
 # Mac signing and notarization use these repository secrets (without them, the Mac build is unsigned):
 #   MAC_CERT_P12_BASE64, MAC_CERT_PASSWORD   Developer ID Application certificate (.p12, base64) and its password
@@ -59,4 +60,15 @@ jobs:
           if [ "${{ matrix.platform }}" = "--mac" ]; then
             if [ -n "$CSC_LINK" ]; then [ -n "$APPLE_ID" ] && extra="-c.mac.notarize=true"; else export CSC_IDENTITY_AUTO_DISCOVERY=false; unset CSC_LINK CSC_KEY_PASSWORD; extra="-c.dmg.sign=false"; fi
           fi
-          cd app && pnpm exec electron-builder ${{ matrix.platform }} --publish always $extra
+          publish=never; [ "${{ github.ref_type }}" = "tag" ] && publish=always
+          cd app && pnpm exec electron-builder ${{ matrix.platform }} --publish $publish $extra
+      - name: Keep the installer (test runs)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hob-${{ runner.os }}
+          path: |
+            app/dist/*.dmg
+            app/dist/*.exe
+            app/dist/*.AppImage
+          if-no-files-found: error
