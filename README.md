@@ -6,8 +6,9 @@
 
 <p align="center">
   <b>The full AI coworker experience. None of the cloud.</b><br>
-  It works on your files, runs code, searches the web and makes charts, all on your own computer.<br>
-  Free, open source, and nothing leaves your machine.
+  Tell Hob what you need done. It works on your files, figures out the steps,<br>
+  and hands back finished work, all on your own computer.<br>
+  Free, open source, and nothing ever leaves your machine.
 </p>
 
 <p align="center">
