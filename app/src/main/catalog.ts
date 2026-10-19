@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { validateCatalog, type Catalog } from '@hob/picker'
 
-export const CATALOG_URL = 'https://raw.githubusercontent.com/FrigadeHQ/opencowork/main/catalog/catalog.json'
+export const CATALOG_URL = 'https://raw.githubusercontent.com/FrigadeHQ/hob/main/catalog/catalog.json'
 
 export async function loadCatalog(opts: { url: string; cachePath: string; bundled: unknown; licenses: string[]; fetchFn?: typeof fetch }): Promise<Catalog> {
   const fetchFn = opts.fetchFn ?? fetch

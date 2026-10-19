@@ -7,7 +7,7 @@ copyright: Copyright © 2026 Frigade
 publish:
   provider: github
   owner: FrigadeHQ
-  repo: opencowork
+  repo: hob
   releaseType: release
 directories:
   output: dist

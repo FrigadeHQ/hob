@@ -11,7 +11,7 @@ const TRUST: Record<PluginTrust, { icon: typeof Box; text: string }> = {
   online: { icon: Globe, text: 'Connects to an online service' },
   full: { icon: TriangleAlert, text: 'Runs its own program with full access to your computer' },
 }
-const GUIDE = 'https://github.com/FrigadeHQ/opencowork/blob/main/docs/plugins/README.md'
+const GUIDE = 'https://github.com/FrigadeHQ/hob/blob/main/docs/plugins/README.md'
 
 function SkillDialog({ initial, onClose, onSaved }: { initial?: NewSkill; onClose(): void; onSaved(name: string): void }) {
   const [s, setS] = useState<NewSkill>(initial ?? { name: '', description: '', instructions: '' })

@@ -11,15 +11,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/FrigadeHQ/opencowork/releases/latest/download/Hob-mac-arm64.dmg"><b>Download for Mac</b></a> ·
-  <a href="https://github.com/FrigadeHQ/opencowork/releases/latest/download/Hob-windows-x64.exe"><b>Windows</b></a> ·
-  <a href="https://github.com/FrigadeHQ/opencowork/releases/latest/download/Hob-linux-x86_64.AppImage"><b>Linux</b></a> ·
-  <a href="https://github.com/FrigadeHQ/opencowork/releases">All releases</a>
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-mac-arm64.dmg"><b>Download for Mac</b></a> ·
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><b>Windows</b></a> ·
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-linux-x86_64.AppImage"><b>Linux</b></a> ·
+  <a href="https://github.com/FrigadeHQ/hob/releases">All releases</a>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-c2410c"></a>
-  <a href="https://github.com/FrigadeHQ/opencowork/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/FrigadeHQ/opencowork?color=c2410c"></a>
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/FrigadeHQ/hob?color=c2410c"></a>
 </p>
 
 ---

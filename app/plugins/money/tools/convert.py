@@ -9,7 +9,7 @@ amount = float(args["amount"])
 src, dst = args["from"].strip().upper(), args["to"].strip().upper()
 
 url = f"https://api.frankfurter.dev/v1/latest?base={src}&symbols={dst}"
-req = urllib.request.Request(url, headers={"User-Agent": "Hob (https://github.com/FrigadeHQ/opencowork)"})
+req = urllib.request.Request(url, headers={"User-Agent": "Hob (https://github.com/FrigadeHQ/hob)"})
 try:
     with urllib.request.urlopen(req, timeout=15) as r:
         data = json.load(r)
