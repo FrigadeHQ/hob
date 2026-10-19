@@ -11,18 +11,19 @@
   Free, open source, and nothing ever leaves your machine.
 </p>
 
+<br>
+
 <p align="center">
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-mac-arm64.dmg"><img alt="Download for Mac" src="https://img.shields.io/badge/Download_for_Mac-Apple_Silicon-c2410c?style=for-the-badge&logo=apple&logoColor=white"></a>
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download_for_Windows-x64-c2410c?style=for-the-badge&logo=windows&logoColor=white"></a>
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-linux-x86_64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download_for_Linux-AppImage-c2410c?style=for-the-badge&logo=linux&logoColor=white"></a>
-  <br>
-  <a href="https://github.com/FrigadeHQ/hob/releases">All releases</a>
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-mac-arm64.dmg"><img alt="Download for Mac" src="https://img.shields.io/badge/Download_for_Mac-1c1917?style=for-the-badge&logo=apple&logoColor=white"></a>&nbsp;&nbsp;
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download_for_Windows-1c1917?style=for-the-badge&logo=windows&logoColor=white"></a>&nbsp;&nbsp;
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-linux-x86_64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download_for_Linux-1c1917?style=for-the-badge&logo=linux&logoColor=white"></a>
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-c2410c"></a>
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/FrigadeHQ/hob?color=c2410c"></a>
+  <sub>Mac with Apple Silicon · Windows 10 and 11 · Linux x64 &nbsp;·&nbsp; <a href="https://github.com/FrigadeHQ/hob/releases">All releases</a> &nbsp;·&nbsp; <a href="LICENSE">MIT license</a></sub>
 </p>
+
+<br>
 
 ---
 
