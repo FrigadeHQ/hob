@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join, sep } from 'node:path'
+import { join, normalize, sep } from 'node:path'
 import type { Manifest, McpServerConfig, McpStdioConfig, PluginSetting, SettingKind } from './manifest'
 import { slug } from './skills'
 
@@ -89,6 +89,13 @@ export function fromMcpb(raw: Raw, dir: string, platform: string = process.platf
     },
     ...(iconFile ? { image: iconFile } : {}),
   }
+}
+
+/** a setting's default with ${HOME}… filled in; folders and files in this system's own form ("${HOME}/Desktop" → C:\Users\me\Desktop) */
+export function settingDefault(s: { kind?: string; default?: string }, dir: string): string | undefined {
+  if (s.default === undefined) return undefined
+  const v = expandConfig({ command: s.default }, standardVars(dir)).command
+  return s.kind === 'directory' || s.kind === 'file' ? v.split('\n').map((p) => (p ? normalize(p) : p)).join('\n') : v
 }
 
 /** the folders ${HOME}, ${DESKTOP}… stand for */

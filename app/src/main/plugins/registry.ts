@@ -8,7 +8,7 @@ import type { NewSkill, PluginInfo, PluginResult, PluginSource, PluginTrust, Ski
 import type { Store } from '../store'
 import { isUrlConfig, parseManifest, PLUGIN_ID, type Manifest, type McpServerConfig, type McpUrlConfig } from './manifest'
 import { McpAuthError, McpClient, type McpServerSpec, type McpTool } from './mcp'
-import { expandConfig, fromMcpb, readMcpb, standardVars } from './mcpb'
+import { expandConfig, fromMcpb, readMcpb, settingDefault, standardVars } from './mcpb'
 import { refreshTokens, signIn as oauthSignIn, tokenFresh, type OAuthState } from './oauth'
 import { parseSkill, skillFile, skillNameOk, slug, type Skill } from './skills'
 import { mcpTool, pythonTool, safeToolName, type PluginRef } from './tools'
@@ -214,7 +214,7 @@ export class PluginRegistry {
           key: s.key, label: s.label, secret: !!s.secret, ...(s.help ? { help: s.help } : {}), set: stored[s.key] !== undefined,
           ...(!s.secret && stored[s.key] !== undefined ? { value: stored[s.key] } : {}),
           kind: s.kind ?? 'text', required: !!s.required, multiple: !!s.multiple,
-          ...(s.default !== undefined ? { default: expandConfig({ command: s.default }, standardVars(p.dir)).command } : {}),
+          ...(s.default !== undefined ? { default: settingDefault(s, p.dir) } : {}),
         })),
       }
     })
@@ -255,7 +255,7 @@ export class PluginRegistry {
     const env: Record<string, string> = {}
     for (const s of p.manifest.settings) {
       const v = stored[s.key]
-      if (v === undefined) { if (s.default !== undefined) env[s.key] = expandConfig({ command: s.default }, standardVars(p.dir)).command; continue }
+      if (v === undefined) { if (s.default !== undefined) env[s.key] = settingDefault(s, p.dir)!; continue }
       try { env[s.key] = s.secret ? this.d.crypt.decrypt(v) : v } catch { /* can't decrypt on this computer: treat as unset */ }
     }
     return env
