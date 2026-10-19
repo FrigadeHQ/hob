@@ -132,7 +132,7 @@ pnpm -C app dist            # build an installer for this computer
 ---
 
 <p align="center">
-  <b>Hob is made by <a href="https://frigade.com">Frigade</a>.</b><br>
+  <b>Hob is made by <a href="https://frigade.com?utm_source=github&utm_medium=readme&utm_campaign=hob">Frigade</a>.</b><br>
   We build an in-product AI assistant that learns your software by using it, then answers your users' questions, walks them through it and gets things done for them.<br>
-  If you make software people sometimes get stuck in, <a href="https://frigade.com">take a look</a>.
+  If you make software people sometimes get stuck in, <a href="https://frigade.com?utm_source=github&utm_medium=readme&utm_campaign=hob">take a look</a>.
 </p>
