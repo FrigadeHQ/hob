@@ -1,0 +1,11 @@
+{
+  "id": "web",
+  "name": "Web search",
+  "version": "1.0.0",
+  "description": "Searches the web and reads pages when it helps. Searches run through a search engine on your computer.",
+  "author": "Hob",
+  "icon": "globe",
+  "permissions": { "network": true },
+  "tools": [{ "native": "web_search" }, { "native": "fetch_url" }],
+  "prompt": "For anything current or that you are unsure about (news, prices, facts), search the web with web_search and read pages with fetch_url."
+}

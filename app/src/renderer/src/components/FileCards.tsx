@@ -1,0 +1,36 @@
+import { FileText, FolderOpen, Image as ImageIcon, SquareArrowOutUpRight } from 'lucide-react'
+import type { Step } from '../../../shared/agent'
+import { hob } from '../api'
+import { ChartCard } from './ChartCard'
+
+const IMAGE = /\.(png|jpe?g|gif|webp|svg)$/i
+const CHART = /\.chart\.json$/i
+const name = (p: string) => p.split(/[\\/]/).pop() ?? p
+
+/** Files the agent created or changed, with charts shown inline. */
+export function FileCards({ steps }: { steps: Step[] }) {
+  const files = [...new Set(steps.filter((s) => s.status === 'done').flatMap((s) => s.files ?? []))]
+  if (!files.length) return null
+  const reveal = hob.platform === 'darwin' ? 'Show in Finder' : 'Show in folder'
+  return (
+    <div className="mt-3 space-y-2">
+      {files.map((f) => {
+        // Hob's own charts: drawn live, not a file to open
+        if (CHART.test(f)) return <div key={f} className="overflow-hidden rounded-card border border-line bg-surface"><ChartCard path={f} /></div>
+        const image = IMAGE.test(f)
+        const Icon = image ? ImageIcon : FileText
+        return (
+          <div key={f} data-testid="file-card" className="overflow-hidden rounded-card border border-line bg-surface">
+            {image && <img data-testid="file-image" src={hob.fileUrl(f)} alt={name(f)} className="block max-h-96 w-full bg-white object-contain" />}
+            <div className="flex items-center gap-2 px-3 py-2 text-ui">
+              <Icon size={16} strokeWidth={1.75} className="shrink-0 text-ink-soft" />
+              <span className="min-w-0 flex-1 truncate">{name(f)}</span>
+              <button onClick={() => void hob.files.open(f)} className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-ink-soft hover:bg-line/70 hover:text-ink"><SquareArrowOutUpRight size={14} />Open</button>
+              <button onClick={() => void hob.files.show(f)} className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-ink-soft hover:bg-line/70 hover:text-ink"><FolderOpen size={14} />{reveal}</button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}

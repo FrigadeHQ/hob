@@ -1,0 +1,23 @@
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+
+/** pendingModelId: a model download that was still in progress when Hob last ran */
+export type Settings = { activeModelId?: string; pendingModelId?: string; webAccess?: boolean; filesDir?: string }
+
+export function loadSettings(path: string): Settings {
+  try { return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {} } catch { return {} }
+}
+export function saveSettings(path: string, s: Settings) {
+  // write-then-rename so a crash mid-save never leaves a half-written file
+  writeFileSync(path + '.tmp', JSON.stringify(s, null, 2))
+  renameSync(path + '.tmp', path)
+}
+
+/** Merge a patch into the saved settings; undefined values remove a key. */
+export function updateSettings(path: string, patch: Partial<Settings>): Settings {
+  const next = { ...loadSettings(path), ...patch }
+  saveSettings(path, next)
+  return next
+}
+
+/** Web search is on unless the user switched it off. */
+export const webAccessOn = (s: Settings) => s.webAccess !== false

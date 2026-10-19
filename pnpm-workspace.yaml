@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+  - app
+onlyBuiltDependencies:
+  - electron
+  - esbuild
+  - node-llama-cpp

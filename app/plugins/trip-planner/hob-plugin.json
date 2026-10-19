@@ -1,0 +1,9 @@
+{
+  "id": "trip-planner",
+  "name": "Trip Planner",
+  "version": "1.0.0",
+  "description": "Day-by-day trip plans with the weather, getting around and a rough budget.",
+  "author": "Hob",
+  "icon": "map",
+  "starters": [{ "title": "Plan a 3-day trip to Lisbon", "prompt": "/plan-trip 3 days in Lisbon" }]
+}

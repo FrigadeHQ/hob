@@ -1,0 +1,75 @@
+appId: com.frigade.hob
+productName: Hob
+electronVersion: 44.7.2
+copyright: Copyright © 2026 Frigade
+# GitHub Releases: every v* tag builds Mac, Windows and Linux (.github/workflows/release.yml).
+# Fixed file names, so releases/latest/download/<name> always points at the newest one.
+publish:
+  provider: github
+  owner: FrigadeHQ
+  repo: opencowork
+  releaseType: release
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**
+  - package.json
+  # pulled in by transformers.js but never used (speech runs in the window, images aren't processed)
+  - "!**/node_modules/onnxruntime-node/**"
+  - "!**/node_modules/sharp/**"
+  - "!**/node_modules/@img/**"
+# built-in plugins ship as plain folders, read like any other plugin
+extraResources:
+  - from: plugins
+    to: plugins
+  # native helpers (scripts/build-native.mjs): hob-pdf reads and fills PDFs with Apple's PDFKit and Vision
+  - from: resources/bin
+    to: bin
+# double-clicking an MCP bundle offers Hob (Claude Desktop stays the default if it's installed)
+fileAssociations:
+  - ext: [mcpb, dxt]
+    name: MCP Bundle
+    role: Viewer
+    rank: Alternate
+asarUnpack:
+  # the local AI engine loads native binaries; they can't run from inside the asar archive
+  - "**/node_modules/node-llama-cpp/**"
+  - "**/node_modules/@node-llama-cpp/**"
+mac:
+  files:
+    # this Mac build only needs the Apple Silicon engine binaries
+    - "!**/node_modules/@node-llama-cpp/{linux,win,mac-x64}*/**"
+    - "!**/node_modules/node-llama-cpp/bins/{linux,win,mac-x64}*/**"
+  artifactName: Hob-mac-${arch}.${ext}
+  target:
+    - target: dmg
+      arch: [arm64]
+  icon: build/icon.icns
+  category: public.app-category.productivity
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: Hob uses the microphone for dictation. Speech is turned into text on this computer.
+  # signs with the Developer ID certificate in the keychain (or CSC_LINK on CI); notarized by scripts/release-mac.sh or CI
+dmg:
+  title: Hob
+  # the disk image is checked when downloaded, not just the app inside
+  sign: true
+win:
+  artifactName: Hob-windows-${arch}.${ext}
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+nsis:
+  oneClick: true
+  perMachine: false
+linux:
+  artifactName: Hob-linux-${arch}.${ext}
+  target:
+    - target: AppImage
+      arch: [x64]
+  icon: build/icon.png
+  category: Utility

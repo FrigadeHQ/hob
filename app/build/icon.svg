@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- warm hearth gradient -->
+    <linearGradient id="bg" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FF9445"/>
+      <stop offset="0.5" stop-color="#EE5A1E"/>
+      <stop offset="1" stop-color="#B9370A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.56" r="0.34">
+      <stop offset="0" stop-color="#FFD9A8" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#FFE3C2" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="spirit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFF1E4"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#7A2306" flood-opacity="0.22"/>
+    </filter>
+    <filter id="iconShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.22"/>
+    </filter>
+    <!-- macOS squircle, 824 x 824 centered -->
+    <clipPath id="squircle"><path id="sq" d="M 285 100 L 739 100 C 849 100 924 175 924 285 L 924 739 C 924 849 849 924 739 924 L 285 924 C 175 924 100 849 100 739 L 100 285 C 100 175 175 100 285 100 Z"/></clipPath>
+  </defs>
+  <g filter="url(#iconShadow)">
+    <path d="M 285 100 L 739 100 C 849 100 924 175 924 285 L 924 739 C 924 849 849 924 739 924 L 285 924 C 175 924 100 849 100 739 L 100 285 C 100 175 175 100 285 100 Z" fill="url(#bg)"/>
+  </g>
+  <g clip-path="url(#squircle)">
+    <rect width="1024" height="1024" fill="url(#glow)"/>
+    <rect width="1024" height="1024" fill="url(#sheen)"/>
+  </g>
+  <!-- the hob: a soft flame-spirit -->
+  <g filter="url(#shadow)">
+    <path d="M512 232
+             C 554 312 654 356 694 458
+             C 736 566 670 736 512 740
+             C 354 736 288 566 330 458
+             C 358 386 422 356 458 310
+             C 466 350 484 372 506 380
+             C 496 328 490 280 512 232 Z" fill="url(#spirit)"/>
+  </g>
+  <!-- eyes -->
+  <ellipse cx="458" cy="574" rx="24" ry="32" fill="#2B1608"/>
+  <ellipse cx="566" cy="574" rx="24" ry="32" fill="#2B1608"/>
+  <circle cx="465" cy="563" r="8" fill="#FFFFFF"/>
+  <circle cx="573" cy="563" r="8" fill="#FFFFFF"/>
+  <!-- cheeks -->
+  <ellipse cx="424" cy="628" rx="20" ry="11" fill="#FF9A6A" opacity="0.55"/>
+  <ellipse cx="600" cy="628" rx="20" ry="11" fill="#FF9A6A" opacity="0.55"/>
+</svg>

@@ -1,0 +1,11 @@
+{
+  "id": "pdf",
+  "name": "PDF",
+  "version": "1.0.0",
+  "description": "Reads any PDF, even scanned ones, and fills in forms for you. Text is recognized on this computer.",
+  "author": "Hob",
+  "icon": "file-text",
+  "tools": [{ "native": "read_pdf" }, { "native": "fill_pdf" }],
+  "starters": [{ "title": "Fill in a PDF form", "prompt": "/fill-pdf Fill in this form for me.", "file": true }],
+  "prompt": "For PDFs, use read_pdf (it reads scanned pages too) and fill_pdf to fill in forms. Don't use run_python for PDFs and don't turn pages into images. To fill a form: read it once, ask only for answers to its listed blanks that you don't have, never sign for the user, then call fill_pdf right away."
+}

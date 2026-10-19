@@ -1,0 +1,119 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/*
+ * Hob design system
+ * Type: four sizes only. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
+ * Color: paper (app) · sidebar · surface (composer, cards) · ink · ink-soft (secondary text) · muted (hints, placeholders) · line · line-strong · accent
+ * Radius: 8 controls · 12 cards · 18 composer. Icons: lucide, 16px in UI, 14px in steps.
+ */
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-meta: 12px;
+  --text-meta--line-height: 16px;
+  --text-ui: 13px;
+  --text-ui--line-height: 20px;
+  --text-body: 15px;
+  --text-body--line-height: 24px;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+
+  --color-paper: #fbfaf9;
+  --color-sidebar: #f4f3f1;
+  --color-surface: #ffffff;
+  --color-ink: #1c1917;
+  --color-ink-soft: #57534e;
+  --color-muted: #a29d98;
+  --color-line: #e9e6e3;
+  --color-line-strong: #d6d2cd;
+  --color-accent: #c2410c;
+  /* the mic while it's recording */
+  --color-rec: #dbe7fb;
+  --color-rec-ink: #2f5bb7;
+  /* actions that can't be taken back */
+  --color-danger: #b42318;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-composer: 18px;
+}
+
+/* charts: calm, tell-apart colours, accent first. Outside @theme: only JavaScript reads them, and Tailwind drops theme colours no class uses */
+:root {
+  --color-chart-1: #c2410c;
+  --color-chart-2: #2563eb;
+  --color-chart-3: #0d9488;
+  --color-chart-4: #ca8a04;
+  --color-chart-5: #7c3aed;
+  --color-chart-6: #db2777;
+  --color-chart-7: #65a30d;
+  --color-chart-8: #57534e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #191817;
+    --color-sidebar: #141312;
+    --color-surface: #22201e;
+    --color-ink: #f2f1ef;
+    --color-ink-soft: #c4beb8;
+    --color-muted: #8a847e;
+    --color-line: #2f2c29;
+    --color-line-strong: #423e3a;
+    --color-rec: #24344f;
+    --color-rec-ink: #9cc0ff;
+    --color-danger: #f97066;
+    --color-chart-1: #fb923c;
+    --color-chart-2: #60a5fa;
+    --color-chart-3: #2dd4bf;
+    --color-chart-4: #facc15;
+    --color-chart-5: #a78bfa;
+    --color-chart-6: #f472b6;
+    --color-chart-7: #a3e635;
+    --color-chart-8: #a8a29e;
+  }
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-ui);
+  -webkit-font-smoothing: antialiased;
+}
+/* thin, quiet scrollbars that don't take room from the content */
+* { scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+.drag { -webkit-app-region: drag; }
+.no-drag { -webkit-app-region: no-drag; }
+
+/* Assistant replies: body size, calm rhythm, consistent with the rest of the UI */
+.reply.prose {
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  color: var(--color-ink);
+  --tw-prose-body: var(--color-ink);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-links: var(--color-ink);
+  --tw-prose-bullets: var(--color-muted);
+  --tw-prose-counters: var(--color-muted);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-th-borders: var(--color-line-strong);
+  --tw-prose-td-borders: var(--color-line);
+}
+.reply.prose :where(p, ul, ol, table, pre) { margin-top: 0.6em; margin-bottom: 0.6em; }
+.reply.prose :where(h1, h2, h3) { font-size: var(--text-body); line-height: var(--text-body--line-height); font-weight: 600; margin: 1em 0 0.4em; }
+.reply.prose :where(li) { margin: 0.2em 0; }
+.reply.prose :where(code):not(pre code) { font-size: 0.87em; background: var(--color-line); border-radius: 5px; padding: 0.1em 0.35em; font-weight: 400; }
+.reply.prose :where(code):not(pre code)::before, .reply.prose :where(code):not(pre code)::after { content: none; }
+.reply.prose :where(pre) { background: var(--color-sidebar); color: var(--color-ink); border: 1px solid var(--color-line); border-radius: var(--radius-card); font-size: var(--text-ui); }
+.reply.prose :where(table) { font-size: var(--text-ui); }
+.reply.prose :where(a) { text-decoration-color: var(--color-line-strong); text-underline-offset: 3px; }
+.reply.prose > :first-child { margin-top: 0; }
+
+/* new text fades in instead of popping */
+@keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+.fade-in { animation: fade-in 400ms ease-out both; }

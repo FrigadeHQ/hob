@@ -1,0 +1,132 @@
+import { useEffect, useRef, useState } from 'react'
+import type { ModelOption, SetupState } from '../../../shared/types'
+import { hob } from '../api'
+import { Check, ChevronDown } from 'lucide-react'
+
+const eta = (s: number) => (s <= 0 ? '' : s < 90 ? 'about a minute left' : s < 5400 ? `about ${Math.round(s / 60)} minutes left` : `about ${Math.round(s / 3600)} hours left`)
+const gb = (n: number) => (n < 10 ? `${Math.ceil(n * 10) / 10} GB` : `${Math.ceil(n)} GB`)
+
+function Frame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="h-full flex flex-col">
+      <div className="drag h-10 shrink-0" />
+      <div className="flex-1 flex items-center justify-center px-6">
+        <div className="w-full max-w-md text-center">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+const why = { memory: 'Needs more memory', slow: 'Too slow on this computer' }
+
+function ModelRow({ m, selected, onPick }: { m: ModelOption; selected: boolean; onPick: () => void }) {
+  return (
+    <button
+      data-testid="model-option"
+      role="option"
+      aria-selected={selected}
+      disabled={!m.available}
+      onClick={onPick}
+      className={`w-full flex gap-3 items-start px-3 py-2.5 rounded-control text-left ${m.available ? 'hover:bg-line/60' : 'opacity-40 cursor-not-allowed'} ${selected ? 'bg-line/60' : ''}`}
+    >
+      <span className="flex w-4 shrink-0 justify-center pt-0.5">{selected && <Check size={14} strokeWidth={2} />}</span>
+      <span className="flex-1 min-w-0">
+        <span className="flex items-center gap-2">
+          <span className="font-medium">{m.name}</span>
+          {m.recommended && <span className="text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded bg-ink text-paper">Recommended</span>}
+        </span>
+        <span className="block text-ui text-muted">{m.description}</span>
+      </span>
+      <span className="shrink-0 text-meta text-muted pt-1 text-right">{m.available ? `${m.blurb} · ${gb(m.sizeGB)}` : why[m.reason ?? 'memory']}</span>
+    </button>
+  )
+}
+
+function ModelPicker({ models, selected, onSelect }: { models: ModelOption[]; selected: ModelOption; onSelect: (id: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', close); document.addEventListener('keydown', close)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', close) }
+  }, [open])
+  return (
+    <div ref={ref} className="mt-4">
+      <button data-testid="setup-other-options" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="text-ui text-muted hover:text-ink">
+        {selected.recommended ? 'Choose a different model' : <>Using <span className="text-ink font-medium">{selected.name}</span> · change</>} <ChevronDown size={14} className="inline-block align-[-2px]" />
+      </button>
+      {open && (
+        <div role="listbox" className="mt-3 p-1.5 max-h-[45vh] overflow-y-auto rounded-card border border-line bg-paper shadow-lg text-left">
+          {models.filter((m) => m.available).map((m) => (
+            <ModelRow key={m.id} m={m} selected={m.id === selected.id} onPick={() => { onSelect(m.id); setOpen(false) }} />
+          ))}
+          {models.some((m) => !m.available) && (
+            <p className="px-3 pt-3 pb-1 text-[11px] uppercase tracking-wide text-muted border-t border-line mt-1.5">Needs a more powerful computer</p>
+          )}
+          {models.filter((m) => !m.available).map((m) => (
+            <ModelRow key={m.id} m={m} selected={false} onPick={() => {}} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function Onboarding({ state }: { state: SetupState }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  if (state.phase === 'probing') {
+    return <Frame><p data-testid="setup-probing" className="text-body text-muted animate-pulse">Starting Hob…</p></Frame>
+  }
+
+  if (state.phase === 'error') {
+    return (
+      <Frame>
+        <h1 className="text-title font-semibold mb-2">Something went wrong</h1>
+        <p data-testid="setup-error" className="text-body text-ink-soft mb-6">{state.message}</p>
+        <button onClick={() => hob.setup.retry()} className="px-5 py-2.5 rounded-card bg-ink text-paper font-medium">Try again</button>
+      </Frame>
+    )
+  }
+
+  if (state.phase === 'choose') {
+    const selected = state.models.find((m) => m.id === selectedId && m.available) ?? state.models.find((m) => m.recommended)!
+    return (
+      <Frame>
+        <h1 className="text-title font-semibold tracking-tight mb-3">Welcome to Hob</h1>
+        <p data-testid="setup-recommended" className="text-body text-ink-soft mb-8">
+          A private AI that runs entirely on your computer.
+          <br />
+          One-time {gb(selected.sizeGB)} download, then it works offline.
+        </p>
+        {selected.needsDiskGB > 0 && <p className="text-accent mb-4">Not enough disk space. Free up {Math.ceil(selected.needsDiskGB)} GB to continue.</p>}
+        <button data-testid="setup-download" onClick={() => hob.setup.confirm(selected.id)} disabled={selected.needsDiskGB > 0} className="w-full py-3 rounded-card bg-ink text-paper font-medium text-body disabled:opacity-30">
+          Download and start
+        </button>
+        {selected.needsDiskGB > 0 && <button onClick={() => hob.setup.retry()} className="mt-3 w-full py-2.5 rounded-card border border-line font-medium">Check again</button>}
+        <ModelPicker models={state.models} selected={selected} onSelect={setSelectedId} />
+        {state.liteMode && <p className="mt-6 text-meta text-muted">Hob will use a smaller model on this computer, so answers may be simpler.</p>}
+      </Frame>
+    )
+  }
+
+  if (state.phase === 'downloading') {
+    const pct = Math.min(99, Math.floor(state.progress * 100))
+    const finishing = state.progress >= 1
+    return (
+      <Frame>
+        <h1 className="text-title font-semibold mb-2">Setting up Hob</h1>
+        <p className="text-body text-ink-soft mb-6">One-time download. You can start chatting in a few minutes.</p>
+        <div className="h-2 rounded-full bg-line overflow-hidden">
+          <div data-testid="setup-progress" className={`h-full bg-ink transition-all ${finishing ? 'animate-pulse' : ''}`} style={{ width: `${finishing ? 100 : pct}%` }} />
+        </div>
+        <p className="mt-3 text-ui text-muted">{finishing ? 'Almost ready…' : `${pct}%${eta(state.etaSec) ? ` · ${eta(state.etaSec)}` : ''}`}</p>
+      </Frame>
+    )
+  }
+
+  return null
+}

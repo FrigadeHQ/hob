@@ -1,0 +1,51 @@
+{
+  "name": "@hob/app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "node scripts/build-native.mjs && electron-vite build",
+    "test": "vitest run",
+    "e2e": "node scripts/build-native.mjs && electron-vite build && playwright test",
+    "typecheck": "tsc -p .",
+    "dist": "node scripts/build-native.mjs && electron-vite build && electron-builder --mac",
+    "native": "node scripts/build-native.mjs"
+  },
+  "dependencies": {
+    "@hob/picker": "workspace:^",
+    "@mozilla/readability": "0.6.0",
+    "linkedom": "0.18.13",
+    "node-llama-cpp": "3.22.1",
+    "recharts": "3.10.1"
+  },
+  "devDependencies": {
+    "@huggingface/transformers": "4.3.0",
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "24",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "44",
+    "electron-builder": "26.17.0",
+    "electron-vite": "6",
+    "lucide-react": "1.49.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "4.0.1",
+    "tailwindcss": "^4.3.3",
+    "tslib": "2.8.1",
+    "typescript": "5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  },
+  "productName": "Hob",
+  "description": "A private AI that runs on your computer.",
+  "author": "Frigade",
+  "license": "MIT",
+  "repository": "github:FrigadeHQ/opencowork"
+}

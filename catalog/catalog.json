@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "id": "qwen3-1.7b",
+      "name": "Qwen3 1.7B",
+      "family": "qwen3",
+      "license": "Apache-2.0",
+      "agentScore": 2,
+      "chatScore": 3,
+      "contextMax": 32768,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": true,
+      "description": "Instant and tiny. Fine for quick questions, weak on harder tasks.",
+      "builds": [
+        {
+          "quant": "Q8_0",
+          "url": "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q8_0.gguf",
+          "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+          "sizeGB": 1.83,
+          "paramsB": 1.7,
+          "activeParamsB": 1.7
+        }
+      ]
+    },
+    {
+      "id": "qwen3-4b",
+      "name": "Qwen3 4B",
+      "family": "qwen3",
+      "license": "Apache-2.0",
+      "agentScore": 4,
+      "chatScore": 5,
+      "contextMax": 32768,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": false,
+      "description": "Very fast and light. Good for everyday chat.",
+      "builds": [
+        {
+          "quant": "Q4_K_M",
+          "url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf",
+          "sha256": "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5",
+          "sizeGB": 2.5,
+          "paramsB": 4.0,
+          "activeParamsB": 4.0
+        }
+      ]
+    },
+    {
+      "id": "qwen3-8b",
+      "name": "Qwen3 8B",
+      "family": "qwen3",
+      "license": "Apache-2.0",
+      "agentScore": 5,
+      "chatScore": 6,
+      "contextMax": 32768,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": false,
+      "description": "Fast, with solid everyday smarts.",
+      "builds": [
+        {
+          "quant": "Q4_K_M",
+          "url": "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf",
+          "sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+          "sizeGB": 5.03,
+          "paramsB": 8.2,
+          "activeParamsB": 8.2
+        }
+      ]
+    },
+    {
+      "id": "qwen3-14b",
+      "name": "Qwen3 14B",
+      "family": "qwen3",
+      "license": "Apache-2.0",
+      "agentScore": 6,
+      "chatScore": 7,
+      "contextMax": 32768,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": false,
+      "description": "Balanced. Noticeably smarter, still quick.",
+      "builds": [
+        {
+          "quant": "Q4_K_M",
+          "url": "https://huggingface.co/Qwen/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf",
+          "sha256": "500a8806e85ee9c83f3ae08420295592451379b4f8cf2d0f41c15dffeb6b81f0",
+          "sizeGB": 9.0,
+          "paramsB": 14.8,
+          "activeParamsB": 14.8
+        }
+      ]
+    },
+    {
+      "id": "gpt-oss-20b",
+      "name": "gpt-oss 20B",
+      "family": "gpt-oss",
+      "license": "Apache-2.0",
+      "agentScore": 7,
+      "chatScore": 7,
+      "contextMax": 131072,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": false,
+      "description": "OpenAI's open model. Fast, strong at reasoning.",
+      "builds": [
+        {
+          "quant": "MXFP4",
+          "url": "https://huggingface.co/ggml-org/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b-MXFP4.gguf",
+          "sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+          "sizeGB": 12.11,
+          "paramsB": 21,
+          "activeParamsB": 3.6
+        }
+      ]
+    },
+    {
+      "id": "qwen3-30b-a3b",
+      "name": "Qwen3 30B",
+      "family": "qwen3",
+      "license": "Apache-2.0",
+      "agentScore": 7,
+      "chatScore": 7,
+      "contextMax": 32768,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": false,
+      "description": "Smart and very fast. Great all-rounder.",
+      "builds": [
+        {
+          "quant": "Q4_K_M",
+          "url": "https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF/resolve/main/Qwen3-30B-A3B-Q4_K_M.gguf",
+          "sha256": "0d003f6662faee786ed5da3e31b29c978de5ae5d275c8794c606a7f3c01aa8f5",
+          "sizeGB": 18.56,
+          "paramsB": 30.5,
+          "activeParamsB": 3.3
+        }
+      ]
+    },
+    {
+      "id": "qwen3-32b",
+      "name": "Qwen3 32B",
+      "family": "qwen3",
+      "license": "Apache-2.0",
+      "agentScore": 7,
+      "chatScore": 8,
+      "contextMax": 32768,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": false,
+      "description": "Very smart, but slower.",
+      "builds": [
+        {
+          "quant": "Q4_K_M",
+          "url": "https://huggingface.co/Qwen/Qwen3-32B-GGUF/resolve/main/Qwen3-32B-Q4_K_M.gguf",
+          "sha256": "efd971561896866f0e910cce52761ca77b1b138090c7f15fe284676d57d1f689",
+          "sizeGB": 19.76,
+          "paramsB": 32.8,
+          "activeParamsB": 32.8
+        }
+      ]
+    },
+    {
+      "id": "qwen3.6-35b-a3b",
+      "name": "Qwen3.6 35B",
+      "family": "qwen3.6",
+      "license": "Apache-2.0",
+      "agentScore": 8,
+      "chatScore": 8,
+      "contextMax": 65536,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": false,
+      "description": "Smartest model that stays fast. Best for real tasks.",
+      "builds": [
+        {
+          "quant": "MXFP4_MOE",
+          "url": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-MXFP4_MOE.gguf",
+          "sha256": "2fdd20997c4d88ee25f70f500c61f8b999378d92ab055f9d450fc70d617158d3",
+          "sizeGB": 21.71,
+          "paramsB": 35,
+          "activeParamsB": 3
+        }
+      ]
+    },
+    {
+      "id": "gpt-oss-120b",
+      "name": "gpt-oss 120B",
+      "family": "gpt-oss",
+      "license": "Apache-2.0",
+      "agentScore": 9,
+      "chatScore": 9,
+      "contextMax": 131072,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-14",
+      "starter": false,
+      "description": "Top-tier smarts. Needs a high-end machine (64 GB+).",
+      "builds": [
+        {
+          "quant": "MXFP4",
+          "url": "https://huggingface.co/ggml-org/gpt-oss-120b-GGUF/resolve/main/gpt-oss-120b-MXFP4.gguf",
+          "sha256": "582bd40f6886200101f4c4ed9f25f3fe80cc14c86e9e2b37746cd8904a0c622d",
+          "sizeGB": 63.39,
+          "paramsB": 117,
+          "activeParamsB": 5.1
+        }
+      ]
+    }
+  ]
+}

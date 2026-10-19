@@ -1,0 +1,9 @@
+{
+  "id": "study-buddy",
+  "name": "Study Buddy",
+  "version": "1.0.0",
+  "description": "Quizzes you on any topic or file, and turns notes into flashcards you can import into Anki.",
+  "author": "Hob",
+  "icon": "graduation-cap",
+  "starters": [{ "title": "Quiz me on the solar system", "prompt": "/quiz-me The solar system" }]
+}

@@ -1,0 +1,13 @@
+node_modules
+out
+dist
+.vite
+test-results
+playwright-report
+*.log
+.DS_Store
+
+# local QA scripts
+app/e2e/zz-*.spec.ts
+app/dist/
+app/resources/bin/
