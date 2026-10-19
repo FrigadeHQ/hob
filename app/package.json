@@ -44,7 +44,7 @@
     "vitest": "^5.0.4"
   },
   "productName": "Hob",
-  "description": "A private AI that runs on your computer.",
+  "description": "The full AI coworker experience. None of the cloud.",
   "author": "Frigade",
   "license": "MIT",
   "repository": "github:FrigadeHQ/hob"

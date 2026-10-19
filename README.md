@@ -5,9 +5,9 @@
 <h1 align="center">Hob</h1>
 
 <p align="center">
-  <b>A private AI helper that lives on your computer.</b><br>
-  It works on your files, runs code, searches the web and makes charts, like the Claude and ChatGPT desktop apps do.<br>
-  Nothing you say or share leaves your machine.
+  <b>The full AI coworker experience. None of the cloud.</b><br>
+  It works on your files, runs code, searches the web and makes charts, all on your own computer.<br>
+  Free, open source, and nothing leaves your machine.
 </p>
 
 <p align="center">
