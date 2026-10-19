@@ -13,8 +13,8 @@
 
 <p align="center">
   <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-mac-arm64.dmg"><img alt="Download for Mac" src="https://img.shields.io/badge/Download_for_Mac-Apple_Silicon-c2410c?style=for-the-badge&logo=apple&logoColor=white"></a>
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download_for_Windows-preview-c2410c?style=for-the-badge&logo=windows&logoColor=white"></a>
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-linux-x86_64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download_for_Linux-preview-c2410c?style=for-the-badge&logo=linux&logoColor=white"></a>
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download_for_Windows-x64-c2410c?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-linux-x86_64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download_for_Linux-AppImage-c2410c?style=for-the-badge&logo=linux&logoColor=white"></a>
   <br>
   <a href="https://github.com/FrigadeHQ/hob/releases">All releases</a>
 </p>
@@ -97,8 +97,8 @@ Start with the **[plugin guide](docs/plugins/README.md)**: your first skill take
 | | |
 |---|---|
 | **Mac** | Apple Silicon (M1 or newer). Open the `.dmg` and drag Hob to Applications. Signed and notarized by Apple. |
-| **Windows** | Windows 10 or 11, 64-bit. Run the installer. *Preview: the agent's code sandbox is Mac-only for now.* |
-| **Linux** | x64 AppImage. Make it executable (`chmod +x`) and run it. *Preview, same note as Windows.* |
+| **Windows** | Windows 10 or 11, 64-bit. Run the installer. |
+| **Linux** | x64 AppImage. Make it executable (`chmod +x`) and run it. |
 
 More memory means bigger, smarter models. 16 GB or more is a good start, and Hob still works on 8 GB with a smaller model.
 

@@ -36,7 +36,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # the unit tests cover Mac-only parts too (sandbox, PDFKit); Windows and Linux builds are previews for now
+      # the unit tests include Mac-only parts (sandbox, PDFKit), so they run on the Mac build
       - name: Test
         if: runner.os == 'macOS'
         run: pnpm -C app test
