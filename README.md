@@ -42,6 +42,7 @@ Hob gives you the polished, agentic experience of the cloud apps with everything
 - **No setup decisions.** Hob checks your computer and picks the best model it can run well. It's one download and one click, with no model hub and no settings.
 - **A real toolkit out of the box.** Files, folders, code, charts, PDFs, web search, weather, dictation, skills and app connections are all built in and working on day one.
 - **Made for everyone.** Plain-English approval cards before anything changes, Undo for everything Hob does, and deleted files go to the Trash.
+- **Free and open source, for good.** Hob is [MIT licensed](LICENSE): use it at home or at work, read every line, change it, ship it in your own product. No subscription, no account, no usage limits.
 
 ## Private by design
 
