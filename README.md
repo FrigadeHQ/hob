@@ -7,7 +7,7 @@
 <p align="center">
   <b>The full AI coworker experience. None of the cloud.</b><br>
   Tell Hob what you need done. It works on your files, figures out the steps,<br>
-  and hands back finished work, all on your own computer.<br>
+  and hands back finished work, all on your own computer using the most capable open-weight models.<br><br>
   Free, open source, and nothing ever leaves your machine.
 </p>
 
