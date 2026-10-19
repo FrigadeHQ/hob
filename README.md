@@ -11,9 +11,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-mac-arm64.dmg"><b>Download for Mac</b></a> ·
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><b>Windows</b></a> ·
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-linux-x86_64.AppImage"><b>Linux</b></a> ·
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-mac-arm64.dmg"><img alt="Download for Mac" src="https://img.shields.io/badge/Download_for_Mac-Apple_Silicon-c2410c?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download_for_Windows-preview-c2410c?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-linux-x86_64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download_for_Linux-preview-c2410c?style=for-the-badge&logo=linux&logoColor=white"></a>
+  <br>
   <a href="https://github.com/FrigadeHQ/hob/releases">All releases</a>
 </p>
 
