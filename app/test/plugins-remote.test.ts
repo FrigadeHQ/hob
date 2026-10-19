@@ -56,7 +56,9 @@ function bundle(root: string, manifest: Record<string, unknown> = BUNDLE) {
   copyFileSync(fixture, join(dir, 'server/index.mjs'))
   writeFileSync(join(dir, 'icon.png'), Buffer.from('89504e470d0a1a0a', 'hex'))
   const file = join(root, 'notes.mcpb')
-  execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
+  // Windows has no zip command; its tar makes zips
+  if (process.platform === 'win32') execFileSync('tar', ['-a', '-c', '-f', file, '.'], { cwd: dir })
+  else execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
   return file
 }
 

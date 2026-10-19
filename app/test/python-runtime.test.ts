@@ -9,7 +9,7 @@ function fakeDeps(root: string, fail = false) {
   const deps: RuntimeDeps = {
     async fetchFile(url, _sha, _gb, dir, onProgress, name = 'py.tgz') { calls.push(`fetch ${url.split('/').pop()}`); onProgress(1); const p = join(dir, name); writeFileSync(p, 'x'); return p },
     async exec(cmd, args) {
-      calls.push(`${cmd.split('/').pop()} ${args.slice(0, 3).join(' ')}`)
+      calls.push(`${cmd.split(/[\\/]/).pop()} ${args.slice(0, 3).join(' ')}`)
       if (cmd === 'tar') { const bin = pythonBin(root, 'darwin'); mkdirSync(dirname(bin), { recursive: true }); writeFileSync(bin, '') }
       if (fail && args.includes('pip')) throw new Error('pip failed')
     },

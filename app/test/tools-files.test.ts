@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { expect, it } from 'vitest'
 import { Journal, type UndoOp } from '../src/main/agent/journal'
 import type { TurnCtx } from '../src/main/agent/tool'
@@ -104,16 +104,16 @@ it("won't delete the chat folder or a granted folder itself", async () => {
 
 it('approval text names the real folder', () => {
   const c = ctx(); const g = c.grants[0]
-  expect(writeFile.ask!({ path: join(g, 'x.txt'), content: '' })).toBe(`Save x.txt in ${g.split('/').pop()}?`)
+  expect(writeFile.ask!({ path: join(g, 'x.txt'), content: '' })).toBe(`Save x.txt in ${basename(g)}?`)
 })
 
 it('paths starting with ~ or $HOME mean the home folder, not a folder called "~" in the chat', () => {
   const c = { chatDir: '/chat' }
-  expect(resolvePath(c, '~/Desktop/hob-test', '/Users/eric')).toBe('/Users/eric/Desktop/hob-test')
-  expect(resolvePath(c, '~', '/Users/eric')).toBe('/Users/eric')
-  expect(resolvePath(c, '$HOME/Desktop', '/Users/eric')).toBe('/Users/eric/Desktop')
-  expect(resolvePath(c, '~notes.txt', '/Users/eric')).toBe('/chat/~notes.txt')
-  expect(resolvePath(c, 'a.txt', '/Users/eric')).toBe('/chat/a.txt')
+  expect(resolvePath(c, '~/Desktop/hob-test', '/Users/eric')).toBe(join('/Users/eric', 'Desktop', 'hob-test'))
+  expect(resolvePath(c, '~', '/Users/eric')).toBe(join('/Users/eric'))
+  expect(resolvePath(c, '$HOME/Desktop', '/Users/eric')).toBe(join('/Users/eric', 'Desktop'))
+  expect(resolvePath(c, '~notes.txt', '/Users/eric')).toBe(join('/chat', '~notes.txt'))
+  expect(resolvePath(c, 'a.txt', '/Users/eric')).toBe(join('/chat', 'a.txt'))
 })
 
 it('move_files renames many files in one go, each undoable', async () => {

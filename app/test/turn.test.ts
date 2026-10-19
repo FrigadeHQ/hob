@@ -232,7 +232,7 @@ function withHome(answer: ApprovalAnswer = 'allow') {
 it("a folder Hob can't use yet: asks for access right in the chat, then carries on", async () => {
   const w = withHome('allow')
   const reply = await w.turn(`__tools__ [["list_files",{"path":${JSON.stringify(w.photos)}}]]`)
-  expect(w.asked[0]).toMatchObject({ text: 'Let Hob use your “hob-test” folder?', access: true, detail: '~/Desktop/hob-test' })
+  expect(w.asked[0]).toMatchObject({ text: 'Let Hob use your “hob-test” folder?', access: true, detail: join('~', 'Desktop', 'hob-test') })
   expect(reply.steps[0].status).toBe('done')
   expect(reply.content).toContain('IMG_1.jpg')
   expect(reply.content).toContain('The user just gave Hob access')
