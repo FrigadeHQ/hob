@@ -1,13 +1,15 @@
-import { spawn } from 'node:child_process'
-import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { execFileSync, spawn } from 'node:child_process'
+import { copyFileSync, existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { LANDLOCK_PY } from './landlock'
 
 export const RUN_TIMEOUT_MS = 120_000
 export const OUTPUT_CAP = 8000
 
 /**
- * macOS sandbox for model-written code:
+ * Model-written code is sandboxed on every system: macOS sandbox-exec (below), Linux Landlock (./landlock.ts),
+ * Windows low integrity (lowIntegrity). macOS sandbox:
  * - writes only in the chat folder + private temp; no network
  * - can't start other programs or talk to LaunchServices/AppleEvents (`open x.command`, `osascript`)
  * - reads of user and shared locations limited to the chat folder, temp, runtime and granted folders
@@ -24,6 +26,27 @@ ${network ? '' : '(deny network*)\n'}(deny appleevent-send)
 (allow file-write* (subpath (param "WS")) (subpath (param "TMP")) (literal "/dev/null"))
 (deny file-read* (subpath (param "HOME")) (subpath "/Users") (subpath "/Volumes") (subpath "/private/tmp") (subpath "/private/var/folders"))
 (allow file-read* (subpath (param "WS")) (subpath (param "TMP")) (subpath (param "RUNTIME")) ${reads})`
+}
+
+/**
+ * Windows: Python runs at low integrity, the level browsers use for their sandboxes. It can only write where the
+ * label is low: the chat folder and temp, labelled here. Reads and network stay open (Windows has no simple way to limit them).
+ * The low-integrity copy of python.exe sits next to the real one, so pip and setup still use the normal one.
+ */
+const labelled = new Set<string>()
+function lowIntegrity(python: string, writable: string[]): string {
+  const low = join(dirname(python), 'hob-python-low.exe')
+  if (!existsSync(low)) {
+    copyFileSync(python, low)
+    execFileSync('icacls', [low, '/setintegritylevel', 'low'], { stdio: 'ignore' })
+  }
+  for (const dir of writable) {
+    if (labelled.has(dir)) continue
+    // (OI)(CI): files and folders made inside get the label too; /T: and the ones already there
+    execFileSync('icacls', [dir, '/setintegritylevel', '(OI)(CI)low', '/T', '/C', '/Q'], { stdio: 'ignore' })
+    labelled.add(dir)
+  }
+  return low
 }
 
 export function capOutput(s: string, cap = OUTPUT_CAP): string {
@@ -68,17 +91,28 @@ export function runPython(o: RunOpts): Promise<RunResult> {
   }
   // a granted folder may be gone (deleted, drive unplugged); skip it rather than fail every run
   const reads = (o.readPaths ?? []).filter((p) => existsSync(p)).map((p) => realpathSync(p))
-  const sandboxed = o.sandbox ?? process.platform === 'darwin'
-  const [cmd, args]: [string, string[]] = sandboxed
-    ? ['/usr/bin/sandbox-exec', [
-        '-p', sandboxProfile(reads.length, o.network),
-        '-D', `WS=${realpathSync(o.cwd)}`, '-D', `TMP=${realpathSync(o.tmpDir)}`,
-        '-D', `RUNTIME=${realpathSync(o.runtimeRoot)}`, '-D', `HOME=${realpathSync(homedir())}`,
-        ...reads.flatMap((p, i) => ['-D', `R${i}=${p}`]),
-        // the sandbox allows running programs by their real path only (the app's folder may be reached through a link)
-        realpathSync(o.python), script,
-      ]]
-    : [o.python, [script]]
+  const sandboxed = o.sandbox ?? true
+  let cmd = o.python
+  let args = [script]
+  if (sandboxed && process.platform === 'darwin') {
+    cmd = '/usr/bin/sandbox-exec'
+    args = [
+      '-p', sandboxProfile(reads.length, o.network),
+      '-D', `WS=${realpathSync(o.cwd)}`, '-D', `TMP=${realpathSync(o.tmpDir)}`,
+      '-D', `RUNTIME=${realpathSync(o.runtimeRoot)}`, '-D', `HOME=${realpathSync(homedir())}`,
+      ...reads.flatMap((p, i) => ['-D', `R${i}=${p}`]),
+      // the sandbox allows running programs by their real path only (the app's folder may be reached through a link)
+      realpathSync(o.python), script,
+    ]
+  } else if (sandboxed && process.platform === 'linux') {
+    const boot = join(o.tmpDir, 'hob-sandbox.py')
+    writeFileSync(boot, LANDLOCK_PY)
+    args = [boot, script]
+    env.HOB_SB = JSON.stringify({ write: [realpathSync(o.cwd), realpathSync(o.tmpDir)], exec: [realpathSync(o.runtimeRoot)], read: reads })
+    if (o.network) env.HOB_SB_NET = '1'
+  } else if (sandboxed && win) {
+    cmd = lowIntegrity(o.python, [o.cwd, o.tmpDir])
+  }
 
   return new Promise((resolve) => {
     let out = ''

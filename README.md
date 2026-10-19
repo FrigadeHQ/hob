@@ -75,7 +75,7 @@ When you first open Hob, it checks your memory, your graphics card (or Apple chi
 |---|---|
 | **Work on your files** | Drop in documents, spreadsheets, PDFs and photos. Hob reads them, summarizes, finds typos, renames, sorts and converts. |
 | **Projects** | Group chats around your folders and give each project its own instructions. Hob can read the folders and saves new files in the first one. |
-| **Run code** | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow. On Mac it runs in a sandbox that can only write to the chat's own folder. |
+| **Run code** | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow, in a sandbox that can only change files in the chat's own folder. |
 | **Charts** | Clean, interactive charts drawn right in the chat, in light and dark mode. Download any chart as a PNG. |
 | **PDFs** | Reads PDFs, including scanned pages, and fills in PDF forms (Mac). |
 | **Web** | Searches the web and reads pages, on by default and easy to switch off. |

@@ -5,7 +5,17 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { capOutput, runPython } from '../src/main/python/run'
 
-const [python, prefix] = (() => { try { return execFileSync('python3', ['-c', 'import sys, os; print(os.path.realpath(sys.executable)); print(os.path.realpath(sys.base_prefix))']).toString().trim().split('\n') } catch { return ['', ''] } })()
+const [python, prefix] = (() => {
+  for (const cmd of ['python3', 'python']) {
+    try { return execFileSync(cmd, ['-c', 'import sys, os; print(os.path.realpath(sys.executable)); print(os.path.realpath(sys.base_prefix))']).toString().trim().split(/\r?\n/) } catch { /* try the next name */ }
+  }
+  return ['', '']
+})()
+/** Linux: the kernel's Landlock sandbox (5.13+); network limits need 6.7+ */
+const landlock = (() => {
+  if (process.platform !== 'linux' || !python) return 0
+  try { return Number(execFileSync(python, ['-c', 'import ctypes; print(ctypes.CDLL(None, use_errno=True).syscall(444, None, 0, 1))']).toString().trim()) } catch { return 0 }
+})()
 const dirs = () => ({ cwd: mkdtempSync(join(tmpdir(), 'hob-run-')), tmpDir: mkdtempSync(join(tmpdir(), 'hob-tmp-')) })
 
 describe.skipIf(!python)('runPython', () => {
@@ -31,7 +41,8 @@ describe.skipIf(!python)('runPython', () => {
     const r = await runPython({ ...base(), code: 'import time\ntime.sleep(30)', signal: ac.signal })
     expect(r.stopped).toBe(true)
   })
-  it.runIf(process.platform === 'darwin')('sandbox: writes only in the chat folder, no network', async () => {
+  // Mac: sandbox-exec. Linux: Landlock. Windows: low integrity (writes only; reads and network stay open)
+  it.runIf(process.platform === 'darwin' || landlock > 0 || process.platform === 'win32')('sandbox: writes only in the chat folder, no network', async () => {
     const b = base()
     const outside = join(tmpdir(), `hob-escape-${Date.now()}.txt`)
     const code = [
@@ -42,7 +53,7 @@ describe.skipIf(!python)('runPython', () => {
     const r = await runPython({ ...b, code })
     expect(readFileSync(join(b.cwd, 'inside.txt'), 'utf8')).toBe('ok')
     expect(r.output).toContain('blocked-write')
-    expect(r.output).toContain('blocked-net')
+    if (process.platform === 'darwin' || landlock >= 4) expect(r.output).toContain('blocked-net')
     expect(existsSync(outside)).toBe(false)
   })
   it.runIf(process.platform === 'darwin')('sandbox: cannot launch apps or scripts outside it (open, osascript)', async () => {
@@ -63,7 +74,19 @@ describe.skipIf(!python)('runPython', () => {
     expect(r.output).toMatch(/\/usr\/bin\/open blocked|\/usr\/bin\/open rc [^0]/)
     expect(r.output).toMatch(/osascript blocked|osascript rc [^0]/)
   })
-  it.runIf(process.platform === 'darwin')('sandbox: cannot read other temp folders or shared user folders', async () => {
+  it.runIf(process.platform === 'linux' && landlock > 0)('sandbox: cannot start other programs (Linux)', async () => {
+    const marker = join(tmpdir(), `hob-launched-${Date.now()}`)
+    const code = `import subprocess\ntry:\n  subprocess.run(['/bin/sh', '-c', 'touch ${marker}'], timeout=10); print('ran')\nexcept Exception as e: print('blocked', type(e).__name__)`
+    const r = await runPython({ ...base(), code })
+    expect(r.output).toContain('blocked')
+    expect(existsSync(marker)).toBe(false)
+  })
+  it('a plugin may use the internet when allowed', async () => {
+    const r = await runPython({ ...base(), code: 'import socket\ns = socket.socket()\ns.settimeout(5)\ntry:\n  s.connect(("example.com", 80)); print("connected")\nexcept Exception as e: print("failed", e)', network: true })
+    // a network hiccup on the test machine shouldn't fail this; being blocked by the sandbox would
+    expect(r.output).not.toMatch(/Permission denied|PermissionError|Operation not permitted/)
+  })
+  it.runIf(process.platform === 'darwin' || landlock > 0)('sandbox: cannot read other temp folders or shared user folders', async () => {
     const b = base()
     const other = mkdtempSync(join(tmpdir(), 'hob-other-'))
     writeFileSync(join(other, 'secret.txt'), 'secret')

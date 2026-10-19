@@ -22,6 +22,10 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      # the sandbox tests run real Python (its own install, apart from the system's, like Hob's runtime)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: pnpm install --frozen-lockfile
       - name: Typecheck
         run: pnpm -C app exec tsc -p . --noEmit
