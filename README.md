@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-mac-arm64.dmg"><img alt="Download for Mac" src="https://img.shields.io/badge/Download_for_Mac-1c1917?style=for-the-badge&logo=apple&logoColor=white"></a>&nbsp;&nbsp;
-  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download_for_Windows-1c1917?style=for-the-badge&logo=windows&logoColor=white"></a>&nbsp;&nbsp;
+  <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-windows-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download_for_Windows-1c1917?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0zIDUuMSAxMC40IDR2Ny4xSDNWNS4xWm0wIDEzLjggNy40IDEuMXYtN0gzdjUuOVpNMTEuMyAzLjkgMjEgMi41djguNmgtOS43VjMuOVptMCAxNi4yIDkuNyAxLjR2LTguNWgtOS43djcuMVoiLz48L3N2Zz4="></a>&nbsp;&nbsp;
   <a href="https://github.com/FrigadeHQ/hob/releases/latest/download/Hob-linux-x86_64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download_for_Linux-1c1917?style=for-the-badge&logo=linux&logoColor=white"></a>
 </p>
 
