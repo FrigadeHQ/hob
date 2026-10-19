@@ -37,7 +37,9 @@ export type TurnCtx = {
  * failed: the tool ran but its work didn't succeed (e.g. code exited with an error)
  * title: replaces the step title when what happened differs from what was asked
  */
-export type ToolOutput = { text: string; detail?: string; files?: string[]; failed?: boolean; title?: string }
+export type ToolOutput = { text: string; detail?: string; files?: string[]; failed?: boolean; title?: string
+  /** files only read to make the result (a chart's data, a list of moves): not shown as cards */
+  uses?: string[] }
 
 /** Every agent tool implements this; plugins will too. */
 export interface Tool<A = Record<string, unknown>> {

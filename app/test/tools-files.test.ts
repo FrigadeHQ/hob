@@ -227,7 +227,8 @@ it('move_files can read the list from a file code wrote, so the model never rety
   const args = moveFiles.prepare!({ file: 'moves.json' } as never, c)
   expect(moveFiles.ask!(args)).toBe('Rename 2 files in Downloads?')
   expect(moveFiles.askDetail!(args)).toBe('IMG_1.jpg → a.jpg\nIMG_2.jpg → b.jpg')
-  await moveFiles.run(args, c)
+  // the list is only a means: no file card for it
+  expect((await moveFiles.run(args, c)).uses).toEqual([join(c.chatDir, 'moves.json')])
   expect(existsSync(join(g, 'b.jpg'))).toBe(true)
   // {folder, moves} works too; a bad file says what's wrong
   writeFileSync(join(c.chatDir, 'm2.json'), JSON.stringify({ folder: g, moves: [{ from: 'a.jpg', to: 'c.jpg' }] }))

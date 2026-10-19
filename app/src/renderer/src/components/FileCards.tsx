@@ -9,7 +9,9 @@ const name = (p: string) => p.split(/[\\/]/).pop() ?? p
 
 /** Files the agent created or changed, with charts shown inline. */
 export function FileCards({ steps }: { steps: Step[] }) {
-  const files = [...new Set(steps.filter((s) => s.status === 'done').flatMap((s) => s.files ?? []))]
+  // a chart's data or a list of moves is a means, not a result: no card for it
+  const used = new Set(steps.flatMap((s) => s.uses ?? []))
+  const files = [...new Set(steps.filter((s) => s.status === 'done').flatMap((s) => s.files ?? []))].filter((f) => !used.has(f))
   if (!files.length) return null
   const reveal = hob.platform === 'darwin' ? 'Show in Finder' : 'Show in folder'
   return (

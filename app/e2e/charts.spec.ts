@@ -36,5 +36,12 @@ test('charts: Hob draws them in the chat, and they download as PNG', async () =>
   await page.getByTestId('new-chat').click()
   await page.getByTestId('chat-item').first().click()
   await expect(page.getByTestId('chart-card')).toHaveCount(3)
+
+  // a chart drawn from a data file the code saved: just the chart, no card for the data file
+  await page.getByTestId('new-chat').click()
+  await page.getByTestId('composer-input').fill('__tools__ [["write_file",{"path":"totals.csv","content":"region,total\\nNorth,10\\nSouth,30\\n"}],["make_chart",{"type":"bar","title":"Totals","x":"region","series":["total"],"file":"totals.csv"}]]')
+  await page.getByTestId('composer-send').click()
+  await expect(page.getByTestId('chart-card')).toHaveCount(1)
+  await expect(page.getByTestId('file-card')).toHaveCount(0)
   await app.close()
 })

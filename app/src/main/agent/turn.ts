@@ -169,7 +169,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
       const out = await tool.run(input, ctx)
       if (!out.failed && CHANGES.has(name)) changesDone.add(key)
       if (!out.failed && MOVES.has(name)) moved = true
-      show({ ...step, ...(out.title ? { title: out.title } : {}), status: out.failed ? 'error' : 'done', ...(out.detail ? { detail: out.detail } : {}), ...(out.files?.length ? { files: out.files } : {}) })
+      show({ ...step, ...(out.title ? { title: out.title } : {}), status: out.failed ? 'error' : 'done', ...(out.detail ? { detail: out.detail } : {}), ...(out.files?.length ? { files: out.files } : {}), ...(out.uses?.length ? { uses: out.uses } : {}) })
       const text = budget.take(capOutput(out.text))
       results.set(key, text)
       // the system prompt was written before this folder was allowed

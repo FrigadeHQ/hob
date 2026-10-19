@@ -50,6 +50,6 @@ export const makeChart: Tool<ChartArgs> = {
     if ('error' in r) return { text: r.error, failed: true, title: "Couldn't make the chart" }
     const p = join(ctx.chatDir, uniqueName(ctx.chatDir, `${fileTitle(r.spec.title)}.chart.json`))
     writeFileSync(p, JSON.stringify(r.spec))
-    return { text: `Made the chart "${r.spec.title}". It shows in the chat; don't describe it again, just give the main takeaway.`, files: [p] }
+    return { text: `Made the chart "${r.spec.title}". It shows in the chat; don't describe it again, just give the main takeaway.`, files: [p], ...(a.file ? { uses: [resolvePath(ctx, a.file)] } : {}) }
   },
 }

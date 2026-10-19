@@ -8,7 +8,8 @@ export type Attachment = { name: string; path: string; sizeBytes: number }
 
 export type StepStatus = 'running' | 'waiting' | 'done' | 'error' | 'denied'
 /** One agent action shown in the thread, e.g. "Read sales.csv". */
-export type Step = { id: string; title: string; status: StepStatus; detail?: string; files?: string[] }
+/** files: what the step made or changed (shown as cards). uses: files it only read to make them, e.g. a chart's data (no card) */
+export type Step = { id: string; title: string; status: StepStatus; detail?: string; files?: string[]; uses?: string[] }
 
 /** access: Hob asks to use a folder it can't see yet (allow adds it to the folders it can use) */
 export type ApprovalRequest = { id: string; requestId: string; text: string; folder?: string; detail?: string; access?: boolean }

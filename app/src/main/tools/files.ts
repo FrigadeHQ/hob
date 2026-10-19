@@ -145,7 +145,7 @@ function movesFromFile(file: string, ctx: TurnCtx): MoveArgs {
   try { data = JSON.parse(readFileSync(p, 'utf8')) } catch (err) { return fail(lexists(p) ? 'it isn\'t valid JSON' : "it doesn't exist") }
   const o = Array.isArray(data) ? { moves: data } : (data ?? {}) as Record<string, unknown>
   const moves = movesOf(o)
-  return moves.length ? { moves } : fail('it has no {"from", "to"} pairs')
+  return moves.length ? { moves, listFile: p } : fail('it has no {"from", "to"} pairs')
 }
 /** "Rename 20 files in hob-test" or "Move 3 files" */
 function describeMoves(moves: Move[]): { verb: 'Rename' | 'Move'; where: string } {
@@ -154,7 +154,7 @@ function describeMoves(moves: Move[]): { verb: 'Rename' | 'Move'; where: string 
 }
 const files = (n: number) => `${n} ${n === 1 ? 'file' : 'files'}`
 
-type MoveArgs = { moves: Move[]; folder?: string; file?: string; fileError?: string }
+type MoveArgs = { moves: Move[]; folder?: string; file?: string; fileError?: string; listFile?: string }
 
 export const moveFiles: Tool<MoveArgs> = {
   spec: {
@@ -211,6 +211,7 @@ export const moveFiles: Tool<MoveArgs> = {
     const extra = done.length ? ` (${files(done.length)} already done earlier)` : ''
     return {
       text: left ? `Stopped by the user after ${moved.length} of ${todo.length}.` : `Moved ${files(moved.length)}${extra}.`,
+      ...(a.listFile ? { uses: [a.listFile] } : {}),
       detail: moved.map((m) => `${basename(m.from)} → ${basename(m.to)}`).join('\n'),
     }
   },
