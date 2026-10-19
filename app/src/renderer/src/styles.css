@@ -127,4 +127,7 @@ body {
 @keyframes hob-flicker { 0%, 100% { transform: skewX(0deg) scaleY(1) } 30% { transform: skewX(-2deg) scaleY(1.025) } 65% { transform: skewX(1.5deg) scaleY(0.99) } }
 @keyframes hob-blink { 0%, 92%, 100% { transform: scaleY(1) } 95% { transform: scaleY(0.1) } }
 @keyframes hob-glow { 0%, 100% { opacity: 0.7; transform: scale(0.96) } 50% { opacity: 1; transform: scale(1.04) } }
+/* watching the cursor: eyes and a small lean, smoothed */
+.hob-alive .hob-look { transition: transform 160ms ease-out; }
+.hob-alive .hob-lean { transition: transform 400ms ease-out; transform-box: fill-box; transform-origin: 50% 100%; }
 @media (prefers-reduced-motion: reduce) { .hob-alive * { animation: none !important } }

@@ -53,3 +53,17 @@ it('make_chart saves the chart in the chat folder; data can come from a CSV code
   const outside = makeChart.prepare!({ type: 'bar', title: 'x', x: 'a', series: ['b'], file: join(c.chatDir, '..', 'elsewhere', 'x.csv') } as never, c)
   expect((await makeChart.run(outside, c)).text).toContain("isn't in this chat's folder")
 })
+
+it('rows with dates along the bottom are put in date order; other rows keep their order', () => {
+  const sorted = (data: Record<string, unknown>[], type = 'line') => {
+    const r = validateChart({ type, x: 'd', series: ['v'], data })
+    return 'spec' in r ? r.spec.data.map((row) => row.d) : r.error
+  }
+  expect(sorted([{ d: '5/18/2026', v: 1 }, { d: '5/6/2026', v: 2 }, { d: '4/29/2026', v: 3 }])).toEqual(['4/29/2026', '5/6/2026', '5/18/2026'])
+  expect(sorted([{ d: '2026-03-02', v: 1 }, { d: '2026-02-27', v: 2 }], 'bar')).toEqual(['2026-02-27', '2026-03-02'])
+  // names, months and a mix stay as the model gave them
+  expect(sorted([{ d: 'Mar', v: 1 }, { d: 'Jan', v: 2 }])).toEqual(['Mar', 'Jan'])
+  expect(sorted([{ d: 'North', v: 1 }, { d: '2026-01-01', v: 2 }])).toEqual(['North', '2026-01-01'])
+  // a pie's slices aren't a timeline
+  expect(sorted([{ d: '2026-03-02', v: 1 }, { d: '2026-02-27', v: 2 }], 'pie')).toEqual(['2026-03-02', '2026-02-27'])
+})

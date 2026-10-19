@@ -28,6 +28,13 @@ function toNumber(v: unknown): number | null | undefined {
   return Number.isFinite(n) ? n : undefined
 }
 
+/** "2026-03-05", "3/5/2026", "Mar 5, 2026" → a time; bare names ("Mar", "North") → undefined */
+function dateOf(v: unknown): number | undefined {
+  if (typeof v !== 'string' || !/\d/.test(v) || !/[-/.\s]/.test(v.trim())) return undefined
+  const t = Date.parse(v)
+  return Number.isNaN(t) ? undefined : t
+}
+
 /** Check a chart the model asked for; the error says plainly what to fix. */
 export function validateChart(input: unknown): { spec: ChartSpec } | { error: string } {
   const o = (input ?? {}) as Record<string, unknown>
@@ -60,6 +67,14 @@ export function validateChart(input: unknown): { spec: ChartSpec } | { error: st
       row[s.key] = n
     }
     out.push(row)
+  }
+  // a timeline in the wrong order draws a zig-zag; put dates in order (pie slices aren't a timeline)
+  if (type !== 'pie' && type !== 'scatter') {
+    const times = out.map((r) => dateOf(r[x]))
+    if (times.every((t) => t !== undefined)) {
+      const order = out.map((r, i) => ({ r, t: times[i]! })).sort((a, b) => a.t - b.t)
+      out.splice(0, out.length, ...order.map((e) => e.r))
+    }
   }
   const title = String(o.title ?? '').trim().slice(0, 120) || series.map((s) => s.label).join(' and ')
   const unit = typeof o.unit === 'string' && o.unit.trim() ? o.unit.trim().slice(0, 12) : undefined

@@ -1,0 +1,54 @@
+# Every push and pull request: unit tests, then the end-to-end tests on real Mac, Windows and Linux machines.
+# The e2e tests drive the app with a stand-in model (HOB_FAKE), hidden, so they're quick.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm -C app exec tsc -p . --noEmit
+      - name: Unit tests
+        run: pnpm -C app test
+      - name: Build
+        shell: bash
+        run: |
+          mkdir -p app/resources/bin
+          pnpm -C app run native
+          pnpm -C app exec electron-vite build
+      - name: Install Playwright
+        run: pnpm -C app exec playwright install-deps
+        if: runner.os == 'Linux'
+      # Ubuntu 24.04 blocks the user namespaces Electron's sandbox needs
+      - name: Let Electron start (Linux)
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: End-to-end tests
+        shell: bash
+        run: |
+          cd app
+          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a pnpm exec playwright test --grep-invert zz; else pnpm exec playwright test --grep-invert zz; fi
+      - name: Keep the test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report-${{ runner.os }}
+          path: app/test-results
+          if-no-files-found: ignore
