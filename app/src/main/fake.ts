@@ -37,9 +37,11 @@ export class FakeEngine implements Engine {
     if (req.messages[0]?.content.startsWith(TITLE_PROMPT)) return `Title for: ${said.replace(/^User: /, '').split('\n\nAssistant:')[0].split(/\s+/).slice(0, 4).join(' ')}`
     if (said === '__empty__') return ''
     if (said === '__error__') throw new Error('boom')
-    if (said === '__slow__') {
+    if (said === '__slow__' || said === '__slower__') {
       let out = ''
-      for (const w of ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']) {
+      const words = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']
+      // __slower__: ~10s, for tests that leave the chat and come back while it's still going
+      for (const w of said === '__slower__' ? [...words.slice(0, -1), ...Array(25).fill('more'), 'eight'] : words) {
         if (signal?.aborted) return out
         onToken(w + ' '); out += w + ' '
         await new Promise((r) => setTimeout(r, 300))

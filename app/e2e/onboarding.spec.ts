@@ -43,7 +43,7 @@ test('first run: recommend → download → chat', async () => {
   await expect(page.getByTestId('message-assistant').last()).not.toContainText("couldn't")
 
   // New chat while a reply is running: the screen clears, the reply keeps going, and its chat picks it up again
-  await page.getByTestId('composer-input').fill('__slow__')
+  await page.getByTestId('composer-input').fill('__slower__')
   await page.getByTestId('composer-send').click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('one')
   await page.getByTestId('new-chat').click()
@@ -53,7 +53,7 @@ test('first run: recommend → download → chat', async () => {
   await page.getByTestId('chat-working').locator('..').getByTestId('chat-item').click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('two')
   await expect(page.getByTestId('composer-stop')).toBeVisible()
-  await expect(page.getByTestId('message-assistant').last()).toContainText('eight', { timeout: 10_000 })
+  await expect(page.getByTestId('message-assistant').last()).toContainText('eight', { timeout: 20_000 })
   await expect(page.getByTestId('composer-send')).toBeVisible()
   await expect(page.getByTestId('chat-working')).toHaveCount(0)
   await page.getByTestId('new-chat').click()
