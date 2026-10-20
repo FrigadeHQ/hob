@@ -34,6 +34,16 @@ test('first run: recommend → download → chat', async () => {
   await page.getByTestId('copy-reply').last().click()
   expect(await app.evaluate(({ clipboard }) => clipboard.readText())).toContain('You said: hello there')
 
+  // typing while Hob works queues the message; it sends when the reply is done
+  await page.getByTestId('composer-input').fill('__slow__')
+  await page.getByTestId('composer-send').click()
+  await expect(page.getByTestId('message-assistant').last()).toContainText('one')
+  await page.getByTestId('composer-input').fill('and then?')
+  await page.keyboard.press('Enter')
+  await expect(page.getByTestId('queued')).toContainText('and then?')
+  await expect(page.getByTestId('message-assistant').last()).toContainText('You said: and then?', { timeout: 15_000 })
+  await expect(page.getByTestId('queued')).toHaveCount(0)
+
   // Stop keeps what was written and says it stopped, not "couldn't come up with an answer"
   await page.getByTestId('composer-input').fill('__slow__')
   await page.getByTestId('composer-send').click()

@@ -429,3 +429,12 @@ it('folder paths in the prompt are quoted, so names with spaces stay whole; the 
   expect(p).not.toMatch(/untitled folder[^”]/)
   expect(p).toMatch(/never search the web/i)
 })
+
+it('a failed or refused step keeps a short reason the user can read', async () => {
+  const w = world()
+  const reply = await w.turn(`__tools__ [["read_file",{"path":"/etc/hosts"}],["read_file",{"path":"nope.txt"}]]`)
+  expect(reply.steps[0]).toMatchObject({ status: 'denied', reason: expect.stringContaining("Hob can't use") })
+  expect(reply.steps[1].status).toBe('error')
+  expect(reply.steps[1].reason).toBeTruthy()
+  expect(reply.steps[1].reason!.length).toBeLessThanOrEqual(160)
+})

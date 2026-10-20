@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ArrowDown, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
+import { ArrowDown, Clock, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
 import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../../shared/agent'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
@@ -225,8 +225,18 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
   }
 
+  // typed while Hob was still working: sent as soon as the reply is done
+  const [queued, setQueued] = useState<string | null>(null)
+  useEffect(() => {
+    if (requestId || !queued) return
+    const next = queued
+    setQueued(null)
+    void send(next)
+  }, [requestId, queued])
+
   async function send(prompt?: string, attached?: Attachment[]) {
     const text = (prompt ?? input).trim()
+    if (text && requestId && prompt === undefined) { setQueued(text); setInput(''); return }
     if (!text || requestId) return
     const rid = crypto.randomUUID()
     const files = attached ?? pending
@@ -345,6 +355,13 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
           <p data-testid="notice" className="mb-2 text-ui text-ink-soft">
             {notice.text} {notice.folders && <button onClick={() => { onNewProject(notice.folders); setNotice(null) }} className="underline underline-offset-2 hover:text-ink">Make a project</button>}
           </p>
+        )}
+        {queued && (
+          <div data-testid="queued" className="fade-in mb-1.5 flex items-center gap-2 rounded-control bg-line/50 px-3 py-1.5 text-ui text-ink-soft">
+            <Clock size={14} className="shrink-0 text-muted" />
+            <span className="min-w-0 flex-1 truncate">Sends when Hob is done: {queued}</span>
+            <button aria-label="Don't send" title="Don't send" onClick={() => { setInput(queued); setQueued(null) }} className="text-muted hover:text-ink"><X size={14} /></button>
+          </div>
         )}
         <div className="mb-1.5 flex min-h-7 items-center">
           <ProjectChip projects={projects} value={projectId} locked={created} onChange={pickProject} onNew={() => onNewProject()} />

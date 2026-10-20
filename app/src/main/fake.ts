@@ -49,7 +49,7 @@ export class FakeEngine implements Engine {
       return out
     }
     if (said === '__think__') {
-      for (const w of ['Hmm,', 'weighing', 'the', 'options', 'here…']) { onToken(w + ' ', true); await new Promise((r) => setTimeout(r, 400)) }
+      for (const w of ['Hmm,', 'weighing', 'the', 'options', 'here', 'and', 'checking', 'again…']) { onToken(w + ' ', true); await new Promise((r) => setTimeout(r, 600)) }
       onToken('Here is my answer.')
       return 'Here is my answer.'
     }

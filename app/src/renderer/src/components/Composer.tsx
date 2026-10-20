@@ -111,7 +111,8 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, running, p
       if ((e.key === 'Enter' || e.key === 'Tab') && items[active] && !e.shiftKey) { e.preventDefault(); pick(items[active]); return }
       if (e.key === 'Escape') { e.preventDefault(); setDismissed(value); return }
     }
-    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (canSend) onSend() }
+    // while Hob works, Enter queues the message (the chat sends it when the reply is done)
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (value.trim()) onSend() }
   }
   return (
     <div className="relative">
@@ -127,7 +128,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, running, p
           value={value}
           onChange={(e) => { onChange(e.target.value); setActive(0) }}
           onKeyDown={onKeyDown}
-          placeholder={dictation?.hint ?? (skills.length ? 'Ask Hob anything, type / for skills' : 'Ask Hob anything, or drop files here')}
+          placeholder={dictation?.hint ?? (running ? 'Hob is working. Type your next message, it sends when Hob is done' : skills.length ? 'Ask Hob anything, type / for skills' : 'Ask Hob anything, or drop files here')}
           rows={1}
           className={`block max-h-60 min-h-[48px] w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-body outline-none placeholder:text-muted [field-sizing:content] ${dictation?.hint ? 'placeholder:italic' : ''}`}
         />

@@ -133,7 +133,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     if (earlier !== undefined) return `You already did exactly this earlier in this task. The result was:\n${earlier.slice(0, 2000)}\nDon't repeat it; continue with something else.`
     const step: Step = { id: randomUUID(), title: tool.title(input), status: 'running', tool: name }
     const refused = tool.refuse?.(input, ctx)
-    if (refused) { show({ ...step, status: 'denied' }); return refused }
+    if (refused) { show({ ...step, status: 'denied', reason: short(refused) }); return refused }
     show(step)
     try {
       const action = tool.action(input, ctx)
@@ -149,7 +149,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
         show({ ...step, status: 'waiting' })
         const answer = await d.approve({ id: step.id, requestId: a.requestId, text: `Let Hob use your “${basename(folder)}” folder?`, detail: shown, access: true }, a.signal)
         if (answer === 'deny') {
-          show({ ...step, status: 'denied' })
+          show({ ...step, status: 'denied', reason: 'You said not now.' })
           return `The user didn't give Hob access to ${folder}. Don't try again. Tell them it isn't done, and that they can add the folder to a project (the + next to Projects in the sidebar).`
         }
         // for this chat only; folders Hob uses again and again belong in a project
@@ -160,12 +160,12 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
         show({ ...step, status: 'running' })
         decision = gate()
       }
-      if (decision.verdict === 'deny') { show({ ...step, status: 'denied' }); return decision.reason }
-      if (decision.verdict === 'grant') { show({ ...step, status: 'denied' }); return 'Hob still has no access to that folder.' }
+      if (decision.verdict === 'deny') { show({ ...step, status: 'denied', reason: short(decision.reason) }); return decision.reason }
+      if (decision.verdict === 'grant') { show({ ...step, status: 'denied', reason: 'Hob has no access to that folder.' }); return 'Hob still has no access to that folder.' }
       if (decision.verdict === 'ask') {
         show({ ...step, status: 'waiting' })
         const answer = await d.approve({ id: step.id, requestId: a.requestId, text: tool.ask?.(input) ?? `${step.title}?`, folder: decision.folder, ...(tool.askDetail ? { detail: tool.askDetail(input) } : {}) }, a.signal)
-        if (answer === 'deny') { show({ ...step, status: 'denied' }); return "The user said no. Don't retry; tell them what you would have done." }
+        if (answer === 'deny') { show({ ...step, status: 'denied', reason: 'You said no.' }); return "The user said no. Don't retry; tell them what you would have done." }
         if (answer === 'always' && decision.folder) { d.store.addAlways(a.chatId, decision.folder); always.push(decision.folder) }
         show({ ...step, status: 'running' })
       }
@@ -173,13 +173,13 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
       const out = await tool.run(input, ctx)
       if (!out.failed && CHANGES.has(name)) changesDone.add(key)
       if (!out.failed && MOVES.has(name)) moved = true
-      show({ ...step, ...(out.title ? { title: out.title } : {}), status: out.failed ? 'error' : 'done', ...(out.detail ? { detail: out.detail } : {}), ...(out.files?.length ? { files: out.files } : {}), ...(out.uses?.length ? { uses: out.uses } : {}) })
+      show({ ...step, ...(out.title ? { title: out.title } : {}), status: out.failed ? 'error' : 'done', ...(out.failed ? { reason: short(out.text) } : {}), ...(out.detail ? { detail: out.detail } : {}), ...(out.files?.length ? { files: out.files } : {}), ...(out.uses?.length ? { uses: out.uses } : {}) })
       const text = budget.take(capOutput(out.text))
       results.set(key, text)
       // the system prompt was written before this folder was allowed
       return granted ? `${grantedNote(granted)}\n\n${text}` : text
     } catch (err) {
-      show({ ...step, status: 'error' })
+      show({ ...step, status: 'error', reason: short(err instanceof Error ? err.message : String(err)) })
       return `Error: ${err instanceof Error ? err.message : String(err)}`
     } finally {
       ctx.progress = undefined
@@ -286,4 +286,12 @@ function codeThatWorked(steps: Step[]): string {
   const code = steps.filter((s) => s.tool === 'run_python' && s.status === 'done' && s.detail).map((s) => s.detail!.split('\n\n--- output ---')[0].trim())
   if (!code.length) return ''
   return `\n\n[Code you ran for this, which worked:\n${code.map((c) => `\`\`\`python\n${c}\n\`\`\``).join('\n')}]`.slice(0, CODE_CHARS)
+}
+
+/** the first readable line of an error, for the work log: no tracebacks, no hints meant for the model */
+export function short(text: string): string {
+  const lines = text.split('\n').map((l) => l.trim()).filter((l) => l && !/^(Traceback|File "|Exit code|\^+$|Hob: )/.test(l))
+  const line = (lines.find((l) => /Error|error:|can't|couldn't|not found|No such|denied|failed/i.test(l)) ?? lines[0] ?? '').replace(/^Error:\s*/, '')
+  const first = line.split(/(?<=[.!?])\s/)[0]
+  return first.length > 160 ? `${first.slice(0, 159)}…` : first
 }
