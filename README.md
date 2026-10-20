@@ -52,7 +52,6 @@ Hob picks from a curated list of open models, from Qwen3 for 8 GB laptops up to 
 
 ### What it can do
 
-| | |
 |---|---|
 | Files and projects | Work on attached files, or on folders grouped into projects with their own instructions |
 | Code | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow, sandboxed to the chat's folder |
