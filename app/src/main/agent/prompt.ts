@@ -7,23 +7,27 @@ export const MAX_INSTRUCTIONS = 4000
 /** folders[0] is the main folder. missing: folders that can't be found right now. files: what's in the main folder */
 type PromptProject = { name: string; instructions: string; folders: string[]; missing?: string[]; files?: string[] }
 /** the project this chat is in: its folders (the first is where new files go) and the user's instructions for it */
+/** paths in “quotes”: names with spaces (“untitled folder”) stay whole for the model */
+const q = (p: string) => `“${p}”`
+const qs = (ps: string[]) => ps.map(q).join(', ')
+
 function projectLines(p: PromptProject): string {
   const lines = [`This chat is in the user's project “${p.name}”.`]
   const missing = p.missing ?? []
   const found = p.folders.filter((f) => !missing.includes(f))
   const main = p.folders[0]
   if (main && missing.includes(main)) {
-    lines.push(`The main folder ${main} can't be found right now (moved, renamed, or on a drive that isn't plugged in). Don't save anything there; save in this chat's folder and tell the user.`)
+    lines.push(`The main folder ${q(main)} can't be found right now (moved, renamed, or on a drive that isn't plugged in). Don't save anything there; save in this chat's folder and tell the user.`)
   } else if (main) {
-    lines.push(`The main folder is ${main}: save new files there, with full paths (that needs no approval). Changing or deleting files that are already there asks the user first. run_python can read the project folders but saves only in this chat's folder: save results there, then move them into ${main} with move_files.`)
+    lines.push(`The main folder is ${q(main)}: save new files there, with full paths (that needs no approval). Changing or deleting files that are already there asks the user first. run_python can read the project folders but saves only in this chat's folder: save results there, then move them into ${q(main)} with move_files.`)
     const files = p.files ?? []
-    lines.push(files.length ? `${main} contains: ${files.slice(0, 50).join(', ')}${files.length > 50 ? `, … (${files.length} in all)` : ''}.` : `${main} is empty.`)
+    lines.push(files.length ? `${q(main)} contains: ${files.slice(0, 50).join(', ')}${files.length > 50 ? `, … (${files.length} in all)` : ''}.` : `${q(main)} is empty.`)
   }
   if (found.length) {
-    lines.push(`Project folders: ${found.join(', ')}.`)
-    lines.push("When the user talks about files, photos or documents without saying where, they mean the project folders: look there first (list_files) and get on with it. Don't ask where the files are.")
+    lines.push(`Project folders: ${qs(found)}.`)
+    lines.push("When the user talks about files, photos or documents without saying where, they mean the project folders: look there first (list_files) and get on with it. Don't ask where the files are, and never search the web for them.")
   }
-  if (missing.length && !(missing.length === 1 && missing[0] === main)) lines.push(`Can't be found right now: ${missing.filter((m) => m !== main).join(', ')}.`)
+  if (missing.length && !(missing.length === 1 && missing[0] === main)) lines.push(`Can't be found right now: ${qs(missing.filter((m) => m !== main))}.`)
   const text = p.instructions.trim()
   if (text) lines.push(`Project instructions from the user:\n${text.length > MAX_INSTRUCTIONS ? `${text.slice(0, MAX_INSTRUCTIONS)}\n(The rest was cut: too long.)` : text}`)
   return lines.join('\n')
@@ -49,15 +53,15 @@ export function systemPrompt(o: {
     "You are Hob, a helpful assistant running privately on the user's computer. Be concise and friendly. Avoid jargon. Don't use emojis.",
     `Today is ${today}.`,
     '',
-    `You can work with files using tools. This chat's folder is ${o.chatDir} (the current directory for code).`,
+    `You can work with files using tools. This chat's folder is ${q(o.chatDir)} (the current directory for code). Paths are in “quotes”; use them exactly, spaces included.`,
     o.files.length ? `It contains: ${o.files.slice(0, 50).join(', ')}${o.files.length > 50 ? ', …' : ''}.` : 'It is empty.',
     o.grants.length
-      ? `In this chat the user also gave you access to: ${o.grants.join(', ')}. To change files there, use move_files (many renames or moves in one go), move_file, write_file and delete_file. Hob shows the user an approval card for the change, so don't ask for permission in the chat; just call the tools. run_python can read those folders but can only save in this chat's folder, so it can't rename or move files there.`
+      ? `In this chat the user also gave you access to: ${qs(o.grants)}. To change files there, use move_files (many renames or moves in one go), move_file, write_file and delete_file. Hob shows the user an approval card for the change, so don't ask for permission in the chat; just call the tools. run_python can read those folders but can only save in this chat's folder, so it can't rename or move files there.`
       : '',
     o.project ? projectLines(o.project) : '',
     o.home ? `The user's home folder is ${o.home} (their Desktop is ${o.home}/Desktop). Always use full paths for their files, in tools and in code.` : '',
     has('open_folder') ? `When the user asks to open or show a folder or file, call open_folder: it opens it in ${fileManager(o.platform ?? process.platform)}. Don't just list the files.` : '',
-    "If the user mentions a folder you can't use yet, call list_files with its full path: Hob asks the user to allow it. Never say a folder doesn't exist unless list_files said so.",
+    "If the user mentions a folder you can't use yet, call list_files with its full path: Hob asks the user to allow it. Never say a folder doesn't exist unless list_files said so. The user's files are on this computer: never search the web for them.",
     has('run_python')
       ? [
           'To analyze or convert data, write Python and run it with run_python. Save results as files in the current folder.',

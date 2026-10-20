@@ -52,12 +52,20 @@ export function folderProblem(p: string, home = homedir(), own: string[] = []): 
   return undefined
 }
 
-/** a mistyped path whose folder name matches one Hob can use: the path it probably meant */
+/**
+ * A mistyped path near a folder Hob can use: the path it probably meant. Either the folder's name shows up
+ * further down the path, or the name was cut off at a space ("untitled" for "untitled folder").
+ */
 function nearMiss(p: string, grants: string[]): string | undefined {
   const parts = resolve(p).split(sep)
   for (const g of grants) {
     const i = parts.lastIndexOf(basename(g))
     if (i > 0) return join(g, ...parts.slice(i + 1))
+  }
+  for (let i = parts.length; i > 1; i--) {
+    const cut = parts.slice(0, i).join(sep)
+    const g = grants.find((x) => dirname(x) === dirname(cut) && basename(x).startsWith(`${basename(cut)} `))
+    if (g) return join(g, ...parts.slice(i))
   }
   return undefined
 }
@@ -77,10 +85,12 @@ export function decide(a: Action, c: GateCtx): Decision {
     if (!root || partsBelow(root, p).some((part) => part.startsWith('.'))) inProject = false
     const g = c.grants.find((root) => isInside(root, p))
     if (!g) {
+      // a path that doesn't exist but is one letter or a cut-off name away from a folder Hob can use:
+      // correct it instead of asking for the whole folder around it
+      const near = existsSync(p) ? undefined : nearMiss(p, c.grants)
+      if (near) return { verdict: 'deny', reason: `Hob can't use “${p}”: there's a typo in the path. Did you mean “${near}”? Copy paths exactly, including spaces, or save the list from code.` }
       const ask = accessFolder(p, c.home, c.appData)
       if (ask) return { verdict: 'grant', folder: ask }
-      const near = nearMiss(p, c.grants)
-      if (near) return { verdict: 'deny', reason: `Hob can't use ${p}: there's a typo in the path. Did you mean ${near}? Copy paths exactly, or save the list from code.` }
       return { verdict: 'deny', reason: `Hob can't use ${p}. Tell the user they can add the folder to a project (the + next to Projects in the sidebar), then ask again.` }
     }
     folder = g

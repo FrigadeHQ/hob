@@ -111,5 +111,25 @@ it('a mistyped path next to a folder Hob can use: the refusal suggests the right
   const typo = join(root, 'Downlaods-x', '..', 'typo', 'Downloads', 'IMG_1.jpg').replace('typo', 'tpyo')
   const d = decide({ kind: 'change', paths: [typo] }, ctx())
   expect(d.verdict).toBe('deny')
-  expect((d as { reason: string }).reason).toContain(`Did you mean ${join(dl, 'IMG_1.jpg')}?`)
+  expect((d as { reason: string }).reason).toContain(`Did you mean “${join(dl, 'IMG_1.jpg')}”?`)
+})
+
+it('a folder name cut off at a space ("untitled" for "untitled folder") points to the real folder', () => {
+  const real = join(root, 'untitled folder')
+  mkdirSync(real, { recursive: true })
+  const d = decide({ kind: 'read', paths: [join(root, 'untitled')] }, { ...ctx(), grants: [real], project: [real] })
+  expect(d.verdict).toBe('deny')
+  expect((d as { reason: string }).reason).toContain(`Did you mean “${real}”?`)
+})
+
+it("a cut-off project folder name is corrected, not turned into a request for its whole parent folder", () => {
+  const parent = join(root, 'Downloads-cut')
+  const real = join(parent, 'untitled folder')
+  mkdirSync(real, { recursive: true })
+  // the parent exists and could be offered; the near miss wins because the path itself doesn't exist
+  const d = decide({ kind: 'read', paths: [join(parent, 'untitled')] }, { ...ctx(), grants: [real], project: [real], home: root })
+  expect(d.verdict).toBe('deny')
+  expect((d as { reason: string }).reason).toContain(`Did you mean “${real}”?`)
+  // a real new folder there still gets offered
+  expect(decide({ kind: 'read', paths: [join(parent, 'other')] }, { ...ctx(), grants: [real], home: root })).toEqual({ verdict: 'grant', folder: parent })
 })

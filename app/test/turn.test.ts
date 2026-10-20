@@ -328,10 +328,10 @@ it('in a project: new files go in without asking, changes still ask, and the pro
   expect(reply.undoable).toBe(true)
   const sys = w.engine.lastRequest!.messages[0].content
   expect(sys).toContain('project “Japan trip”')
-  expect(sys).toContain(`The main folder is ${w.grant}`)
+  expect(sys).toContain(`The main folder is “${w.grant}”`)
   expect(sys).toContain('Project instructions from the user:\nName photos by date')
   // "rename the photos" with no folder named means the project's files: don't ask where they are
-  expect(sys).toContain(`${w.grant} contains: a.txt`)
+  expect(sys).toContain(`“${w.grant}” contains: a.txt`)
   expect(sys).toMatch(/without saying where, they mean the project folders/)
 })
 
@@ -339,7 +339,7 @@ it('a project folder that is gone: the prompt says so, and nothing is made there
   const w = world('allow', { project: true })
   rmSync(w.grant, { recursive: true })
   const reply = await w.turn(`__tools__ [["write_file",{"path":${JSON.stringify(join(w.grant, 'notes.txt'))},"content":"hi"}]]`)
-  expect(w.engine.lastRequest!.messages[0].content).toContain(`The main folder ${w.grant} can't be found right now`)
+  expect(w.engine.lastRequest!.messages[0].content).toContain(`The main folder “${w.grant}” can't be found right now`)
   expect(reply.steps[0].status).not.toBe('done')
   expect(existsSync(w.grant)).toBe(false)
 })
@@ -419,4 +419,13 @@ it("skill scripts are found by skill-name/file.py or by full path, only for skil
   await w.turn('__tools__ [["probe",{}]]')
   const hit = { path: join(dir, 'make.py'), dir, network: true }
   expect(seen).toEqual([hit, hit, undefined])
+})
+
+it('folder paths in the prompt are quoted, so names with spaces stay whole; the web is never searched for their files', () => {
+  const p = systemPrompt({ chatDir: '/c', files: [], grants: ['/Users/eric/My Photos'], home: '/Users/eric',
+    project: { name: 'Test', instructions: '', folders: ['/Users/eric/Desktop/untitled folder'], files: ['a.txt'] } })
+  expect(p).toContain('“/Users/eric/Desktop/untitled folder”')
+  expect(p).toContain('“/Users/eric/My Photos”')
+  expect(p).not.toMatch(/untitled folder[^”]/)
+  expect(p).toMatch(/never search the web/i)
 })
