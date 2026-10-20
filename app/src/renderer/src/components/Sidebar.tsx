@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { ExternalLink, Folder, FolderOpen, FolderPlus, Pencil, Plus, Puzzle, Settings, SquarePen, X } from 'lucide-react'
-import type { ChatSummary, Project } from '../../../shared/agent'
+import { ExternalLink, Folder, FolderOpen, FolderPlus, Hand, LoaderCircle, Pencil, Plus, Puzzle, Settings, SquarePen, X } from 'lucide-react'
+import type { ChatSummary, LiveSummary, Project } from '../../../shared/agent'
 import { fileManager } from '../../../shared/platform'
 import type { SetupState } from '../../../shared/types'
 import type { Screen } from '../App'
@@ -67,6 +67,9 @@ const headAction = 'mt-3 rounded-control p-1 text-muted opacity-0 transition-opa
 export function Sidebar({ state, selected, refreshKey, screen, draftProject, onSelect, onNew, onNewInProject, onEditProject, onSettings, onPlugins }: Props) {
   const [chats, setChats] = useState<ChatSummary[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  // chats whose reply is still being written, maybe while another chat is open
+  const [live, setLive] = useState<LiveSummary[]>([])
+  useEffect(() => { void hob.chat.live().then(setLive); return hob.chat.onLive(setLive) }, [])
   const [collapsed, toggle] = useCollapsed()
   const [width, setWidth] = useWidth()
   const [resizing, setResizing] = useState(false)
@@ -86,6 +89,13 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
   const chatRow = (c: ChatSummary, inProject: boolean) => (
     <div key={c.id} className={`${row} ${inProject ? 'pl-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-line text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
       <button data-testid="chat-item" onClick={() => onSelect(c.id)} className="min-w-0 flex-1 truncate text-left">{c.title}</button>
+      {(() => {
+        const l = live.find((x) => x.chatId === c.id)
+        if (!l) return null
+        return l.waiting
+          ? <span data-testid="chat-waiting" title="Waiting for your OK" className="text-accent"><Hand size={14} /></span>
+          : <span data-testid="chat-working" title="Working" className="text-muted"><LoaderCircle size={14} className="animate-spin" /></span>
+      })()}
       <button aria-label="Delete chat" title="Delete chat" onClick={() => void remove(c)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><X size={14} /></button>
     </div>
   )

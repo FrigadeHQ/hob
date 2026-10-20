@@ -96,9 +96,29 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const clearThinking = () => { thoughtBuf.current = '' }
 
   // the view is keyed per chat, so history loads once; later chatId changes are this view creating its chat
-  useEffect(() => { if (initialId) void hob.chats.get(initialId).then((r) => { if (r && alive.current) { setMessages(r.messages); setProjectId(r.chat.projectId) } }) }, [])
-  // leaving this chat (New chat, another chat) stops its reply
-  useEffect(() => () => { alive.current = false; if (currentId.current) void hob.chat.stop(currentId.current) }, [])
+  useEffect(() => {
+    if (!initialId) return
+    void hob.chats.get(initialId).then((r) => {
+      if (!r || !alive.current) return
+      setProjectId(r.chat.projectId)
+      // a reply that kept going while another chat was open: show it so far and follow it again
+      if (r.live) {
+        const rid = r.live.requestId
+        currentId.current = rid
+        setRequestId(rid)
+        setApproval(r.live.approval ?? null)
+        setMessages([...r.messages, { ...placeholder(rid), content: r.live.content, steps: r.live.steps }])
+      } else setMessages(r.messages)
+    })
+  }, [])
+  // leaving this chat (New chat, another chat) doesn't stop its reply: it keeps going and is saved
+  useEffect(() => () => { alive.current = false }, [])
+  useEffect(() => hob.chat.onDone((rid, reply) => {
+    if (rid !== currentId.current) return
+    currentId.current = null
+    setMessages((ms) => [...ms.slice(0, -1), reply ?? { ...placeholder(rid), content: 'Something went wrong. Try again.' }])
+    setRequestId(null); setApproval(null); clearThinking(); inputRef.current?.focus()
+  }), [])
 
   useEffect(() => hob.chat.onToken((id, text, thought) => {
     if (id !== currentId.current) return

@@ -38,3 +38,8 @@ export type StoredMessage = {
 
 export type UserSettings = { webAccess: boolean; filesDir: string }
 export type ModelRow = ModelOption & { downloaded: boolean; active: boolean }
+
+/** a reply still being written: its chat may be closed and opened again meanwhile */
+export type LiveTurn = { requestId: string; content: string; steps: Step[]; approval?: ApprovalRequest }
+/** waiting: it needs the user's OK */
+export type LiveSummary = { chatId: string; waiting: boolean }

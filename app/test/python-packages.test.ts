@@ -60,11 +60,11 @@ describe('install_packages tool', () => {
     const python = { isReady: () => true, ensure: async () => '/py', installPackages: async (s: string[]) => { installed.push(s); return { ok: true as const, versions: { yfinance: '0.2.54' } } } }
     return { c: { untrusted: false, webAccess: true, python, ...o } as unknown as TurnCtx, installed }
   }
-  it('installs without asking, like any code step; asks after web content; needs Web access', async () => {
+  it('installs without asking, like any code step; needs Web access', async () => {
     const { c, installed } = ctx()
     expect(installPackagesTool.refuse!({ packages: ['yfinance'] }, c)).toBeUndefined()
     expect(installPackagesTool.action({ packages: ['yfinance'] }, c)).toEqual({ kind: 'run' })
-    expect(installPackagesTool.action({ packages: ['yfinance'] }, { ...c, untrusted: true })).toEqual({ kind: 'app', ask: true })
+    expect(installPackagesTool.action({ packages: ['yfinance'] }, { ...c, untrusted: true })).toEqual({ kind: 'run' })
     expect(installPackagesTool.refuse!({ packages: ['yfinance'] }, { ...c, webAccess: false })).toMatch(/Web access/)
     const out = await installPackagesTool.run({ packages: ['yfinance'] }, c)
     expect(out.failed).toBeFalsy()
@@ -95,11 +95,11 @@ describe.skipIf(!python || !!process.env.HOB_OFFLINE)('installing from PyPI', ()
 
 describe('run_python with internet', () => {
   const c = (o: Partial<TurnCtx> = {}) => ({ untrusted: false, webAccess: true, ...o } as unknown as TurnCtx)
-  it('is web work: needs Web access, asks after web content, and marks the turn untrusted', () => {
+  it('needs Web access but no OK, even after web content', () => {
     expect(runPythonTool.refuse!({ code: 'x', internet: true }, c({ webAccess: false }))).toMatch(/Web access/)
     expect(runPythonTool.refuse!({ code: 'x' }, c({ webAccess: false }))).toBeUndefined()
     expect(runPythonTool.action({ code: 'x', internet: true }, c())).toEqual({ kind: 'run' })
-    expect(runPythonTool.action({ code: 'x', internet: true }, c({ untrusted: true }))).toEqual({ kind: 'app', ask: true })
+    expect(runPythonTool.action({ code: 'x', internet: true }, c({ untrusted: true }))).toEqual({ kind: 'run' })
     expect(runPythonTool.action({ code: 'x' }, c({ untrusted: true }))).toEqual({ kind: 'run' })
   })
   it('a network error tells the model to pass internet: true', () => {

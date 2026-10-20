@@ -12,6 +12,7 @@ import { micAccess, type SpeechModel } from './speech'
 import { renderPage } from './render'
 import { runTurn } from './agent/turn'
 import { Approvals } from './agent/approvals'
+import { LiveTurns } from './agent/live'
 import { RunningTurns } from './agent/running'
 import { pruneUndo, undo, type UndoOp } from './agent/journal'
 import { coreTools } from './tools'
@@ -42,7 +43,9 @@ export type IpcDeps = {
 export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise<void> } {
   const running = new RunningTurns()
   const send = (channel: string, ...args: unknown[]) => d.win()?.webContents.send(channel, ...args)
-  const approvals = new Approvals((req) => send('chat:approval', req))
+  // replies keep going when the user opens another chat; this holds their progress meanwhile
+  const live = new LiveTurns((list) => send('chat:live', list))
+  const approvals = new Approvals((req) => { live.approval(req); send('chat:approval', req) })
   const trash = (p: string) => shell.trashItem(p)
   const userSettings = (): UserSettings => ({ webAccess: webAccessOn(loadSettings(d.paths.settings)), filesDir: d.filesDir() })
   d.setup.onState((s) => send('setup:state', s))
@@ -56,7 +59,8 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   ipcMain.handle('chats:search', (_e, q: string) => d.store.searchChats(String(q)))
   ipcMain.handle('chats:get', (_e, id: string) => {
     const chat = d.store.getChat(id)
-    return chat ? { chat, messages: d.store.messages(id) } : null
+    const turn = live.get(id)
+    return chat ? { chat, messages: d.store.messages(id), ...(turn ? { live: turn } : {}) } : null
   })
   ipcMain.handle('chats:create', (_e, projectId?: string | null) => {
     const project = projectId ? d.store.getProject(String(projectId)) : undefined
@@ -155,11 +159,12 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   ipcMain.handle('chat:send', async (_e, chatId: string, requestId: string, text: string, attachments: Attachment[]) => {
     const chat = d.store.getChat(chatId)
     const ac = running.start(requestId)
+    live.start(chatId, requestId)
     try {
       const skills = d.plugins.skills()
       // app connections still starting get a few seconds; they're ready for the next message
       const tools = [...coreTools(), ...(await d.plugins.tools({ waitMs: 8000, signal: ac.signal })), ...(skills.length ? [useSkillTool(skillSource)] : []), saveSkillTool(skillSource)]
-      return await runTurn({
+      const reply = await runTurn({
         engine: d.setup.engine, store: d.store, tools, python: d.python,
         skills: { list: () => d.plugins.skills(), find: (n) => d.plugins.findSkill(n) },
         prompts: (offered) => d.plugins.prompts(offered),
@@ -171,18 +176,30 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
         trash, undoDir: d.paths.undo, runTmp: d.paths.runTmp, appData: d.paths.root,
         approve: (req, signal) => approvals.wait(req, signal), reveal,
         onChatsChanged: () => send('chats:changed'),
-        emit: { token: (r, t, thought) => send('chat:token', r, t, thought), step: (r, s) => send('chat:step', r, s), reset: (r) => send('chat:reset', r) },
+        emit: {
+          token: (r, t, thought) => { live.token(r, t, thought); send('chat:token', r, t, thought) },
+          step: (r, s) => { live.step(r, s); send('chat:step', r, s) },
+          reset: (r) => { live.reset(r); send('chat:reset', r) },
+        },
       }, {
         chatId, requestId, text, signal: ac.signal,
         // only files that really are in this chat's folder
         attachments: (attachments ?? []).filter((a) => chat && isInside(chat.dir, a.path)),
       })
+      send('chat:done', requestId, reply)
+      send('chats:changed')
+      return reply
+    } catch (err) {
+      send('chat:done', requestId, null)
+      throw err
     } finally {
       running.finish(requestId)
+      live.finish(requestId)
     }
   })
+  ipcMain.handle('chat:live', () => live.list())
   ipcMain.handle('chat:stop', (_e, requestId: string) => running.stop(requestId))
-  ipcMain.handle('approval:answer', (_e, id: string, answer: ApprovalAnswer) => approvals.answer(String(id), answer))
+  ipcMain.handle('approval:answer', (_e, id: string, answer: ApprovalAnswer) => { live.answered(String(id)); approvals.answer(String(id), answer) })
 
   ipcMain.handle('task:undo', async (_e, messageId: number) => {
     const m = d.store.getMessage(messageId)

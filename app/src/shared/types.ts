@@ -1,5 +1,5 @@
 import type { NewSkill, PluginInfo, PluginResult, SkillRef, StarterRef } from './plugins'
-import type { ApprovalAnswer, ApprovalRequest, Attachment, ChatSummary, FolderCheck, ModelRow, Project, ProjectInput, Step, StoredMessage, UserSettings } from './agent'
+import type { ApprovalAnswer, ApprovalRequest, Attachment, ChatSummary, FolderCheck, LiveSummary, LiveTurn, ModelRow, Project, ProjectInput, Step, StoredMessage, UserSettings } from './agent'
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string }
 
@@ -41,7 +41,8 @@ export interface HobApi {
     list(): Promise<ChatSummary[]>
     /** title matches first, then chats that mention it (with a snippet) */
     search(query: string): Promise<(ChatSummary & { snippet?: string })[]>
-    get(id: string): Promise<{ chat: ChatSummary; messages: StoredMessage[] } | null>
+    /** live: its reply still being written, if any */
+    get(id: string): Promise<{ chat: ChatSummary; messages: StoredMessage[]; live?: LiveTurn } | null>
     /** projectId: start it in that project */
     create(projectId?: string | null): Promise<ChatSummary>
     remove(id: string): Promise<void>
@@ -79,6 +80,11 @@ export interface HobApi {
     /** the reply streamed so far is being rewritten */
     onReset(cb: (requestId: string) => void): () => void
     onApproval(cb: (req: ApprovalRequest) => void): () => void
+    /** a reply finished, also when its chat isn't open */
+    onDone(cb: (requestId: string, reply: StoredMessage | null) => void): () => void
+    /** chats with a reply being written */
+    live(): Promise<LiveSummary[]>
+    onLive(cb: (list: LiveSummary[]) => void): () => void
   }
   approval: { answer(id: string, answer: ApprovalAnswer): Promise<void> }
   /** failed: changes that couldn't be reversed (changed since, or too big to back up) */

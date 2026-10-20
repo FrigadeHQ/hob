@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
-import type { ApprovalRequest, Step } from '../shared/agent'
+import type { ApprovalRequest, LiveSummary, Step, StoredMessage } from '../shared/agent'
 import type { SetupState, HobApi } from '../shared/types'
 import type { PluginResult } from '../shared/plugins'
 
@@ -32,6 +32,9 @@ const api: HobApi = {
     onStep: (cb) => listen<[string, Step]>('chat:step', cb),
     onReset: (cb) => listen<[string]>('chat:reset', cb),
     onApproval: (cb) => listen<[ApprovalRequest]>('chat:approval', cb),
+    onDone: (cb) => listen<[string, StoredMessage | null]>('chat:done', cb),
+    live: invoke('chat:live'),
+    onLive: (cb) => listen<[LiveSummary[]]>('chat:live', cb),
   },
   approval: { answer: invoke('approval:answer') },
   task: { undo: invoke('task:undo') },

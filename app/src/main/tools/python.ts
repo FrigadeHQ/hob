@@ -108,11 +108,9 @@ export const runPythonTool: Tool<PyArgs> = {
     } },
   },
   title: (a) => (typeof a.script === 'string' && a.script.trim() ? `Ran ${basename(a.script.trim())}` : 'Ran code'),
-  // code online is web work: only with Web access on, and what it brings back is untrusted. A skill's own scripts
-  // got the user's OK when it was saved; code the model asks to put online after reading web pages asks first
+  // code online is web work: only while Web access is on, no extra OK (like any web step); what it brings back is untrusted
   refuse: (a, ctx) => (a.internet === true && !ctx.webAccess ? 'Code can only use the internet while Web access is on. Tell the user they can turn it on in Settings, or do it without the internet.' : undefined),
-  action: (a, ctx) => (scriptOf(a, ctx)?.network ? { kind: 'web' } : a.internet === true && ctx.untrusted ? { kind: 'app', ask: true } : { kind: 'run' }),
-  ask: () => 'Let Hob\'s code use the internet? It read web pages earlier in this task, so check this is what you asked for.',
+  action: (a, ctx) => (scriptOf(a, ctx)?.network ? { kind: 'web' } : { kind: 'run' }),
   async run(a, ctx) {
     const wantsScript = typeof a.script === 'string' && a.script.trim() !== ''
     const skill = scriptOf(a, ctx)
@@ -160,9 +158,7 @@ export const installPackagesTool: Tool<{ packages: string[] }> = {
   },
   title: (a) => `Installed ${andList((Array.isArray(a.packages) ? a.packages : []).map(String))}`,
   refuse: (_a, ctx) => (ctx.webAccess ? undefined : 'Installing packages needs the internet, and Web access is off. Tell the user they can turn it on in Settings, or do it with the packages already installed.'),
-  // after web content this turn, a page could be picking the packages: ask
-  action: (_a, ctx) => (ctx.untrusted ? { kind: 'app', ask: true } : { kind: 'run' }),
-  ask: (a) => `Install ${andList((a.packages ?? []).map(String))} from PyPI for Hob's code?`,
+  action: () => ({ kind: 'run' }),
   async run(a, ctx) {
     if (!ctx.python) throw new Error('Code tools are not available.')
     const specs = (Array.isArray(a.packages) ? a.packages : []).map((p) => String(p).trim()).filter(Boolean)
