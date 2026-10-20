@@ -33,7 +33,7 @@ export type Manifest = {
   tools: ManifestTool[]
   mcpServers: Record<string, McpServerConfig>
   settings: PluginSetting[]
-  /** a line added to Hob's instructions while the plugin is on, e.g. "For weather, use get_weather." */
+  /** a line added to Hob's instructions while the plugin is on, e.g. "For PDFs, use read_pdf." */
   prompt?: string
 }
 

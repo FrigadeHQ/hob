@@ -65,6 +65,12 @@ test('projects: make one with a folder, chat in it, open its folder, edit it, re
   await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hello')
   await expect(page.getByTestId('project-item').getByTestId('chat-item')).toHaveCount(1)
 
+  // the + next to Today starts a new chat
+  await page.getByTestId('chat-item').first().click()
+  await page.getByTestId('new-chat-inline').click()
+  await expect(page.getByTestId('message-assistant')).toHaveCount(0)
+  await expect(page.getByTestId('project-chip')).toContainText('No project')
+
   // the chip picks a project for a new chat
   await page.getByTestId('new-chat').click()
   await page.getByTestId('project-chip').click()

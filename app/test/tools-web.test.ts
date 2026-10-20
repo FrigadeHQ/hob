@@ -77,31 +77,6 @@ it('pages that only fill in with JavaScript are read through a hidden browser', 
   expect(out.text).toContain('high of 24 degrees')
 })
 
-it('get_weather looks up the place and returns a readable daily forecast (Open-Meteo)', async () => {
-  const { getWeather } = await import('../src/main/tools/weather')
-  const urls: string[] = []
-  const c = ctx({ fetch: async (u: string) => {
-    urls.push(u)
-    if (u.includes('geocoding-api.open-meteo.com')) return new Response(JSON.stringify({ results: [{ name: 'Lisbon', country: 'Portugal', latitude: 38.72, longitude: -9.14 }] }))
-    return new Response(JSON.stringify({ daily: { time: ['2026-10-16', '2026-10-17'], weather_code: [0, 61], temperature_2m_max: [24.1, 21.4], temperature_2m_min: [16.2, 15.0], precipitation_probability_max: [0, 70], wind_speed_10m_max: [12.3, 25.0] }, daily_units: { wind_speed_10m_max: 'km/h' } }))
-  } })
-  const out = await getWeather.run({ location: 'Lisbon' }, c)
-  expect(urls[0]).toContain('name=Lisbon')
-  expect(urls[1]).toContain('latitude=38.72')
-  expect(out.text).toContain('Lisbon, Portugal')
-  expect(out.text).toContain('2026-10-16: Clear sky, 16–24°C, 0% chance of rain, wind up to 12 km/h')
-  expect(out.text).toContain('2026-10-17: Rain, 15–21°C, 70% chance of rain')
-  expect(getWeather.title({ location: 'Lisbon' })).toBe('Checked the weather in Lisbon')
-})
-
-it('get_weather says plainly when the place is unknown', async () => {
-  const { getWeather } = await import('../src/main/tools/weather')
-  const c = ctx({ fetch: async () => new Response(JSON.stringify({})) })
-  const out = await getWeather.run({ location: 'Nowhereville' }, c)
-  expect(out.failed).toBe(true)
-  expect(out.text).toMatch(/couldn't find/i)
-})
-
 it('drops results that share no word with the question (a search engine sending decoys), keeps the real ones', async () => {
   const c = ctx({
     search: async () => [

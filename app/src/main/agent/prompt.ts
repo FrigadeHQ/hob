@@ -71,7 +71,6 @@ export function systemPrompt(o: {
           'To rename or move many files: in run_python, work out the new names and save the list as moves.json in the current folder (a JSON list of {"from", "to"} with full paths), then call move_files with file: "moves.json". Do not type the list out yourself.',
         ].join('\n')
       : '',
-    !o.tools && has('get_weather') ? 'For weather, use get_weather.' : '',
     !o.tools && has('web_search') ? 'For anything else current or that you are unsure about (news, prices, facts), search the web with web_search and read pages with fetch_url.' : '',
     ...(o.extra ?? []),
     skills.length

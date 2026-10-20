@@ -16,7 +16,9 @@ async function launch() {
 test('built-in plugins are listed and can be turned off; Web search is the Web access switch', async () => {
   const { app, page } = await launch()
   await page.getByTestId('open-plugins').click()
-  for (const id of ['web', 'weather', 'code', 'trip-planner', 'study-buddy', 'money']) await expect(page.locator(`[data-testid=plugin][data-id=${id}]`)).toBeVisible()
+  for (const id of ['web', 'code', 'pdf']) await expect(page.locator(`[data-testid=plugin][data-id=${id}]`)).toBeVisible()
+  // the old examples are gone
+  for (const id of ['weather', 'trip-planner', 'study-buddy', 'money']) await expect(page.locator(`[data-testid=plugin][data-id=${id}]`)).toHaveCount(0)
   const web = page.locator('[data-testid=plugin][data-id=web]')
   await web.getByTestId('plugin-toggle').click()
   await expect(web.getByTestId('plugin-toggle')).toHaveAttribute('aria-checked', 'false')
@@ -50,14 +52,13 @@ test('a new skill shows in the / menu and its instructions reach the model', asy
 test('turning a plugin off hides its skills from the / menu', async () => {
   const { app, page } = await launch()
   await page.getByTestId('composer-input').fill('/')
-  await expect(page.getByTestId('skill-option').filter({ hasText: '/plan-trip' })).toBeVisible()
+  await expect(page.getByTestId('skill-option').filter({ hasText: '/fill-pdf' })).toBeVisible()
   await page.getByTestId('composer-input').fill('')
   await page.getByTestId('open-plugins').click()
-  await page.locator('[data-testid=plugin][data-id=trip-planner]').getByTestId('plugin-toggle').click()
+  await page.locator('[data-testid=plugin][data-id=pdf]').getByTestId('plugin-toggle').click()
   await page.getByTestId('new-chat').click()
-  await page.getByTestId('composer-input').fill('/')
-  await expect(page.getByTestId('skill-option').filter({ hasText: '/quiz-me' })).toBeVisible()
-  await expect(page.getByTestId('skill-option').filter({ hasText: '/plan-trip' })).toHaveCount(0)
+  await page.getByTestId('composer-input').fill('/fill')
+  await expect(page.getByTestId('skill-option').filter({ hasText: '/fill-pdf' })).toHaveCount(0)
   await app.close()
 })
 

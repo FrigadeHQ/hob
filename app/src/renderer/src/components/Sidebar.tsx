@@ -129,14 +129,21 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
             </div>
           )
         })}
-        {group(chats.filter((c) => !c.projectId)).map(([name, list]) => (
+        {group(chats.filter((c) => !c.projectId)).map(([name, list], i) => (
           <div key={name}>
-            <p className={label}>{name}</p>
+            {i === 0
+              ? (
+                <div className="flex items-center justify-between">
+                  <p className={label}>{name}</p>
+                  <button data-testid="new-chat-inline" aria-label="New chat" title="New chat" onClick={onNew} className="mt-3 rounded-control p-1 text-muted hover:bg-line/70 hover:text-ink"><Plus size={14} /></button>
+                </div>
+              )
+              : <p className={label}>{name}</p>}
             {list.map((c) => chatRow(c, false))}
           </div>
         ))}
       </nav>
-      <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2 border-t border-line py-2.5 pl-4 pr-3">
         <Status state={state} />
         <IconButton icon={Settings} label="Settings" testId="open-settings" active={screen === 'settings'} onClick={onSettings} />
       </div>

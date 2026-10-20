@@ -8,7 +8,7 @@ A plugin is a folder with a `hob-plugin.json`. It can add any mix of:
 
 Hob also installs **MCP bundles** (`.mcpb`, the format Claude Desktop uses) as they are.
 
-Hob's own Web search, Weather, Code & charts and PDF features are built-in plugins in this same format. See [`app/plugins/`](../../app/plugins).
+Hob's own Web search, Code & charts and PDF features are built-in plugins in this same format. See [`app/plugins/`](../../app/plugins).
 
 ## Pages
 
@@ -24,10 +24,8 @@ Hob's own Web search, Weather, Code & charts and PDF features are built-in plugi
 | Plugin | What it adds |
 |---|---|
 | Web search | Searches the web and reads pages, through a private metasearch that runs on your computer |
-| Weather | Current weather and forecasts |
 | Code & charts | Python with pandas, Pillow, openpyxl and more, in a sandbox; reads photo dates |
 | PDF | Reads PDFs (scanned ones too) and fills in PDF forms (Mac) |
-| Study buddy, Trip planner, Money | Example plugins made of skills and a Python tool |
 
 ## Share it
 
