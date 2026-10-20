@@ -10,3 +10,9 @@ it('the chart idea is always on the home screen; the rest rotate', () => {
   }
   expect(new Set(Array.from({ length: 12 }, (_, s) => pickStarters([], s)[1].title)).size).toBeGreaterThan(1)
 })
+
+it('every idea fits on one line of its card', async () => {
+  const { allStarterTitles } = await import('../src/renderer/src/starters')
+  const long = allStarterTitles().filter((t) => t.length > 32)
+  expect(long).toEqual([])
+})
