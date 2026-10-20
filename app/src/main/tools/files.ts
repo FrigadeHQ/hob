@@ -36,7 +36,9 @@ const moveKind = (ctx: TurnCtx, moves: Move[]): 'create' | 'change' =>
   moves.length > 0 && moves.every((m) => isInside(ctx.chatDir, m.from) && !isInside(m.from, ctx.chatDir) && plainFile(m.from) && !lexists(m.to)) ? 'create' : 'change'
 
 export const listFiles: Tool<{ path?: string }> = {
-  spec: { name: 'list_files', description: 'List files in a folder. Defaults to the chat folder.', params: { type: 'object', properties: { path: { type: 'string', description: 'Folder path; omit for the chat folder' } } } },
+  spec: { name: 'list_files', description: "List files in a folder. Defaults to the project's main folder in a project, otherwise the chat folder.", params: { type: 'object', properties: { path: { type: 'string', description: 'Folder path; omit for the project folder (or the chat folder outside projects)' } } } },
+  // "what's in here?" in a project means the project's folder, not the (empty) chat folder
+  prepare: (a, ctx) => (!a.path?.trim() && ctx.mainFolder && existsSync(ctx.mainFolder) ? { ...a, path: ctx.mainFolder } : a),
   title: (a) => (a.path ? `Looked in ${basename(a.path)}` : 'Looked at your files'),
   action: (a, ctx) => ({ kind: 'read', paths: [resolvePath(ctx, a.path ?? '.')] }),
   async run(a, ctx) {

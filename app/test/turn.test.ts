@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { expect, it } from 'vitest'
 import { FakeEngine } from '../src/main/fake'
 import { Store } from '../src/main/store'
@@ -437,4 +437,12 @@ it('a failed or refused step keeps a short reason the user can read', async () =
   expect(reply.steps[1].status).toBe('error')
   expect(reply.steps[1].reason).toBeTruthy()
   expect(reply.steps[1].reason!.length).toBeLessThanOrEqual(160)
+})
+
+it('in a project, listing files with no folder named lists the project folder, not the empty chat folder', async () => {
+  const w = world('allow', { project: true })
+  writeFileSync(join(w.grant, 'budget.xlsx'), 'x')
+  const reply = await w.turn('__tools__ [["list_files",{}]]')
+  expect(reply.steps[0].title).toBe(`Looked in ${basename(w.grant)}`)
+  expect(reply.content).toContain('budget.xlsx')
 })
