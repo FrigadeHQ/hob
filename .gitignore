@@ -11,3 +11,4 @@ playwright-report
 app/e2e/zz-*.spec.ts
 app/dist/
 app/resources/bin/
+app/release/

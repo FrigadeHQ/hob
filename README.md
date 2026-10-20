@@ -23,119 +23,66 @@
   <sub>Mac with Apple Silicon · Windows 10 and 11 · Linux x64 &nbsp;·&nbsp; <a href="https://github.com/FrigadeHQ/hob/releases">All releases</a> &nbsp;·&nbsp; <a href="LICENSE">MIT license</a></sub>
 </p>
 
-<br>
-
-<p align="center">
-  <img src="docs/assets/screenshot.png" width="880" alt="Hob charting a sales spreadsheet in a project: it read the file, ran code and drew an interactive chart, then summed up what stands out">
-</p>
-
-<br>
-
 ---
 
-## What's a hob?
+<p align="center">
+  <img src="docs/assets/screenshot.png" width="900" alt="Hob reading a sales spreadsheet in a project, charting revenue by region and summing up what stands out">
+</p>
 
-In English folklore, a **hob** is a small household spirit. It lives by the hearth and quietly helps with the chores, and it asks for nothing in return. In British kitchens, the hob is also the stove top: the warm middle of the home.
+### Why Hob
 
-That's the idea. Hob is a helper that lives in your house, not in someone else's data center. The little flame in the logo is the hob.
+Desktop AI apps like Claude and ChatGPT work on your files, run code, search the web and ask before changing anything. The apps that run AI locally mostly give you a chat box and a model picker. Hob is the first kind, running entirely on your computer.
 
-## Why Hob exists
+- **No setup.** Hob checks your hardware and downloads the best model it can run well. No model hub, no settings.
+- **Works on your files.** Projects, folders, spreadsheets, PDFs, photos. It reads, writes, renames and charts.
+- **Safe by default.** Approval confirmations before anything in your folders changes, Undo for every task, and code runs in a sandbox.
+- **Free and open source.** [MIT licensed](LICENSE). No account, no subscription, no limits.
 
-The best AI apps today are cloud apps. Claude and ChatGPT on the desktop don't just chat. They read and change your files, run code, search the web, draw charts, fill in forms and connect to your other apps. They ask before doing anything risky, and you never have to think about which model is running.
+*A hob is a household spirit from English folklore that quietly helps with the chores.*
 
-The apps that run AI on your own computer were mostly built for tinkerers. You browse model hubs, compare file formats and settings, and you get a chat box. Working on your files, running code, plugins, approvals and undo are left for you to assemble.
+### Private
 
-Hob gives you the polished, agentic experience of the cloud apps with everything running locally:
+The model runs on your computer with [llama.cpp](https://github.com/ggml-org/llama.cpp) (Metal on Mac, CUDA or Vulkan elsewhere). Chats and files stay on your machine, and there is no telemetry. Hob only goes online to download models and check for new ones, to search the web for you (Web access can be turned off in Settings), and for app connections you add.
 
-- **No setup decisions.** Hob checks your computer and picks the best model it can run well. It's one download and one click, with no model hub and no settings.
-- **A real toolkit out of the box.** Files, folders, code, charts, PDFs, web search, weather, dictation, skills and app connections are all built in and working on day one.
-- **Made for everyone.** Approval confirmations before anything changes, Undo for everything Hob does, and deleted files go to the Trash.
-- **Free and open source, for good.** Hob is [MIT licensed](LICENSE): use it at home or at work, read every line, change it, ship it in your own product. No subscription, no account, no usage limits.
+### Models
 
-## Private by design
+Hob picks from a curated list of open models, from Qwen3 for 8 GB laptops up to gpt-oss 120B for workstations. Models are ranked on agent work (multi-step tasks and tool use), and split between graphics and system memory when that's faster. You can switch models any time.
 
-- **The AI runs on your computer.** Hob uses [llama.cpp](https://github.com/ggml-org/llama.cpp) with your graphics chip (Metal on Mac, CUDA or Vulkan elsewhere). There's no account and no API key, and no AI cloud is involved.
-- **Your chats and files stay on your computer.** Chats are stored in a local database, and Hob's own files are in a normal folder you can open.
-- **No telemetry.** Hob doesn't track you or phone home.
-- **Hob only goes online when you'd expect it to:**
-  - downloading a model, and the dictation model;
-  - checking for an updated list of models;
-  - searching the web and reading pages for you (switch **Web access** off in Settings to stop this);
-  - using an app connection you added.
-
-  Web searches go through a metasearch engine that runs on your computer, so no single search company sees all of your questions.
-
-## Picks the best model for your computer
-
-When you first open Hob, it checks your memory, your graphics card (or Apple chip) and your free disk space. Then it recommends the strongest modern open model that will run there at a comfortable reading speed.
-
-- A curated list of open models, from small ones for 8 GB laptops up to big ones for workstations. They include Qwen3, gpt-oss 20B and gpt-oss 120B.
-- Models are ranked by how well they handle agent work: following multi-step tasks and using tools, not just chatting.
-- Models are split between graphics memory and system memory when that's faster.
-- The model downloads in the background. You can start chatting before it's finished.
-- You can always choose a different model from the list. The list explains each choice in plain words.
-
-## What Hob can do
+### What it can do
 
 | | |
 |---|---|
-| **Work on your files** | Drop in documents, spreadsheets, PDFs and photos. Hob reads them, summarizes, finds typos, renames, sorts and converts. |
-| **Projects** | Group chats around your folders and give each project its own instructions. Hob can read the folders and saves new files in the first one. |
-| **Run code** | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow, in a sandbox that can only change files in the chat's own folder. |
-| **Charts** | Clean, interactive charts drawn right in the chat, in light and dark mode. Download any chart as a PNG. |
-| **PDFs** | Reads PDFs, including scanned pages, and fills in PDF forms (Mac). |
-| **Web** | Searches the web and reads pages, on by default and easy to switch off. |
-| **Dictation** | Talk instead of typing. Speech is turned into text on your computer. |
-| **Skills and app connections** | Add skills, Python tools and any MCP server. See [Plugins](#plugins). |
-| **Safety net** | Plain-English approval cards before Hob changes your files, Undo for every task, and nothing is ever deleted for good. |
+| Files and projects | Work on attached files, or on folders grouped into projects with their own instructions |
+| Code | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow, sandboxed to the chat's folder |
+| Charts | Interactive charts in the chat, downloadable as PNG |
+| PDFs | Read PDFs, including scans, and fill in forms (Mac) |
+| Web | Search and read pages through a metasearch engine that runs on your computer |
+| Dictation | Speech to text, on your computer |
+| Plugins | Skills, Python tools and MCP app connections |
 
-## Plugins
+### Plugins
 
-Everything beyond chat is a plugin, including Hob's own web search, weather, code, charts and PDF features. A plugin is a folder with a `hob-plugin.json` that can add:
+A plugin is a folder with a `hob-plugin.json`. It can add [skills](docs/plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](docs/plugins/python-tools.md), and [app connections](docs/plugins/app-connections.md) to any MCP server, including `.mcpb` bundles. Hob's own web search, weather, code and PDF features are plugins too, in [`app/plugins/`](app/plugins).
 
-- **[Skills](docs/plugins/skills.md):** plain-English instructions for a kind of task, in the open [Agent Skills](https://agentskills.io) format. Skills written for other agents work too. Type `/name` to use one.
-- **[Python tools](docs/plugins/python-tools.md):** small scripts Hob can call, run in Hob's sandbox.
-- **[App connections](docs/plugins/app-connections.md):** any [MCP](https://modelcontextprotocol.io) server, on your computer or online. Sign-in is supported, and `.mcpb` bundles install with a double-click.
+See the [plugin guide](docs/plugins/README.md) and the [reference](docs/plugins/reference.md).
 
-Start with the **[plugin guide](docs/plugins/README.md)**: your first skill takes about five minutes. Every field is listed in the **[reference](docs/plugins/reference.md)**. The built-in plugins in [`app/plugins/`](app/plugins) are good examples.
-
-## Install
-
-| | |
-|---|---|
-| **Mac** | Apple Silicon (M1 or newer). Open the `.dmg` and drag Hob to Applications. Signed and notarized by Apple. |
-| **Windows** | Windows 10 or 11, 64-bit. Run the installer. |
-| **Linux** | x64 AppImage. Make it executable (`chmod +x`) and run it. |
-
-More memory means bigger, smarter models. 16 GB or more is a good start, and Hob still works on 8 GB with a smaller model.
-
-## Build from source
+### Building
 
 Requires Node.js 24 and pnpm 10.
 
 ```sh
 pnpm install
-pnpm dev                    # run Hob in development
-pnpm -C app test            # unit tests
-pnpm -C app e2e             # end-to-end tests (Hob runs hidden, with a stand-in model)
-pnpm -C app dist            # build an installer for this computer
+pnpm dev              # run Hob
+pnpm -C app test      # unit tests
+pnpm -C app e2e       # end-to-end tests (hidden window, stand-in model)
+pnpm -C app dist      # installer for this computer
 ```
 
-**Releases:** bump `version` in `app/package.json`, then push a matching tag (`git tag v0.2.0 && git push --tags`). GitHub Actions builds Mac, Windows and Linux and publishes the release, and the download links above update by themselves. See [`.github/workflows/release.yml`](.github/workflows/release.yml) for the signing secrets.
+To release, bump `version` in `app/package.json` and push a matching tag (`v0.2.0`). [GitHub Actions](.github/workflows/release.yml) builds and publishes Mac, Windows and Linux.
 
-### Repository layout
+### License
 
-| | |
-|---|---|
-| `app/` | The desktop app (Electron, React, TypeScript) |
-| `app/plugins/` | Built-in plugins |
-| `packages/picker/` | Hardware detection and model picking |
-| `catalog/` | The curated model list |
-| `docs/plugins/` | Plugin guide |
-
-## License
-
-[MIT](LICENSE) © 2026 Frigade
+[MIT](LICENSE)
 
 ---
 
