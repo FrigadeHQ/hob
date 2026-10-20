@@ -71,7 +71,8 @@ export interface HobApi {
     pickFolders(): Promise<FolderCheck[]>
     checkFolders(paths: string[]): Promise<FolderCheck[]>
     /** the main folder, in the file manager */
-    open(id: string): Promise<void>
+    /** folder: one of its folders; its main one when left out */
+    open(id: string, folder?: string): Promise<void>
   }
   chat: {
     send(chatId: string, requestId: string, text: string, attachments: Attachment[]): Promise<StoredMessage>

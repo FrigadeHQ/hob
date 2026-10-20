@@ -6,6 +6,7 @@ import type { SetupState } from '../../../shared/types'
 import type { Screen } from '../App'
 import { hob } from '../api'
 import { Status } from './Status'
+import { confirmAction } from './Confirm'
 import { IconButton } from './ui'
 
 const DAY = 86_400_000
@@ -79,7 +80,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
   useEffect(() => hob.chats.onChanged(reload), [])
 
   async function remove(c: ChatSummary) {
-    if (!confirm(`Delete “${c.title}”? Its files go to the Trash.`)) return
+    if (!await confirmAction({ title: `Delete “${c.title}”?`, body: 'The chat is removed from Hob. Files you added to it, or that Hob made in it, move to the Trash.', ok: 'Delete chat', danger: true })) return
     await hob.chats.remove(c.id)
     if (c.id === selected) onNew()
     reload()

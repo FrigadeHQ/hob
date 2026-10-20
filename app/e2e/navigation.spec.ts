@@ -94,7 +94,7 @@ test('Settings → Danger zone deletes every chat', async () => {
   expect(readdirSync(filesDir).length).toBe(before)
   // nothing left to go back to; a new chat is ready
   await expect(page.getByTestId('go-back')).toBeDisabled()
-  await page.getByTestId('settings').getByRole('button', { name: 'Done' }).click()
+  await page.getByTestId('new-chat').click()
   await expect(page.getByTestId('message-assistant')).toHaveCount(0)
   await expect(page.getByTestId('composer-input')).toBeVisible()
   await app.close()

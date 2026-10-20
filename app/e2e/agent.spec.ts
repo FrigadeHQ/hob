@@ -122,7 +122,7 @@ test('opening Settings mid-task does not stop it', async () => {
   await expect(page.getByTestId('message-assistant').last()).toContainText('one')
   await page.getByTestId('open-settings').click()
   await expect(page.getByTestId('settings')).toBeVisible()
-  await page.getByRole('button', { name: 'Done' }).click()
+  await page.getByTestId('go-back').click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('eight', { timeout: 10_000 })
   await expect(page.getByTestId('message-assistant').last()).not.toContainText('Stopped')
   await app.close()

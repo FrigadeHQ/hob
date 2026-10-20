@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ArrowDown, Clock, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
+import { ArrowDown, Clock, FolderOpen, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
 import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../../shared/agent'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
@@ -279,11 +279,25 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
               {project
                 ? <>
                     <h1 className="text-title font-semibold tracking-tight">What should we do in {project.name}?</h1>
-                    <p className="mt-2 text-body text-ink-soft">{project.folders.length ? `Hob can use the files in ${project.folders.map(folderName).join(', ')}. New files go in ${folderName(project.folders[0])}.` : 'Chats here follow this project\'s instructions.'}</p>
+                    {project.folders.length
+                      ? (
+                        <p data-testid="project-folders-line" className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-body text-ink-soft">
+                          Working in
+                          {project.folders.map((f) => (
+                            <button key={f} title={`Open ${f}`} onClick={() => void hob.projects.open(project.id, f)} className="inline-flex items-center gap-1 rounded-control bg-line/60 px-2 py-0.5 text-ui text-ink hover:bg-line">
+                              <FolderOpen size={14} strokeWidth={1.75} className="text-ink-soft" />{folderName(f)}
+                            </button>
+                          ))}
+                        </p>
+                      )
+                      : <p className="mt-2 text-body text-ink-soft">Chats here follow this project's instructions.</p>}
                   </>
                 : <>
                     <h1 className="text-title font-semibold tracking-tight">What can Hob do for you?</h1>
-                    <p className="mt-2 text-body text-ink-soft">Private, on your computer. Drop in files to work with them.</p>
+                    <p className="mt-2 text-body text-ink-soft">
+                      Private, on your computer. Drop in files, or{' '}
+                      <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Hob a folder to work in</button>.
+                    </p>
                   </>}
               <div className="mt-8 grid gap-2 text-left sm:grid-cols-2">
                 {pickStarters(starters, seed).map((s) => (

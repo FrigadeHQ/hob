@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Box, ChevronRight, FolderOpen, Globe, Link, LogIn, LogOut, Pencil, Plug, Plus, ShieldCheck, Sparkles, Trash2, TriangleAlert, X } from 'lucide-react'
 import type { NewSkill, PluginInfo, PluginResult, PluginTrust } from '../../../shared/plugins'
 import { hob } from '../api'
+import { confirmAction } from '../components/Confirm'
 import { Dialog, Field, PluginIcon, Switch, button, field } from '../components/ui'
 import { fileManager } from '../../../shared/platform'
 
@@ -233,7 +234,7 @@ function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; on
             <button className={button.quiet} onClick={() => void hob.plugins.show(p.id)}><FolderOpen size={14} />Show in {fileManager(hob.platform)}</button>
             {p.signedIn && !p.signIn && <button className={button.quiet} onClick={() => void hob.plugins.signOut(p.id)}><LogOut size={14} />Sign out</button>}
             {p.source !== 'builtin' && (
-              <button data-testid="plugin-remove" className={button.quiet} onClick={() => { if (confirm(`Remove “${p.name}”?`)) void hob.plugins.remove(p.id) }}>
+              <button data-testid="plugin-remove" className={button.quiet} onClick={() => void confirmAction({ title: `Remove “${p.name}”?`, body: p.source === 'linked' ? 'Hob stops using it. The folder stays where it is.' : 'Hob stops using it and deletes its copy.', ok: p.source === 'linked' ? 'Unlink' : 'Remove', danger: true }).then((yes) => { if (yes) void hob.plugins.remove(p.id) })}>
                 <Trash2 size={14} />{p.source === 'linked' ? 'Unlink' : 'Remove'}
               </button>
             )}
@@ -268,7 +269,7 @@ function SkillCard({ s, from, onEdit }: { s: { name: string; description: string
       {!from && (
         <span className="flex items-center gap-1">
           <IconAction label={`Edit ${s.name}`} onClick={onEdit}><Pencil size={14} /></IconAction>
-          <IconAction label={`Delete ${s.name}`} onClick={() => { if (confirm(`Delete the “${s.name}” skill?`)) void hob.plugins.removeSkill(s.name) }}><Trash2 size={14} /></IconAction>
+          <IconAction label={`Delete ${s.name}`} onClick={() => void confirmAction({ title: `Delete the /${s.name} skill?`, ok: 'Delete skill', danger: true }).then((yes) => { if (yes) void hob.plugins.removeSkill(s.name) })}><Trash2 size={14} /></IconAction>
         </span>
       )}
     </li>
@@ -287,7 +288,7 @@ function Empty({ icon: Icon, title, text, onClick, testId }: { icon: typeof Box;
   )
 }
 
-export function Plugins({ onClose, opened }: { onClose(): void; opened?: PluginResult | null }) {
+export function Plugins({ opened }: { opened?: PluginResult | null }) {
   const [plugins, setPlugins] = useState<PluginInfo[]>([])
   const [tab, setTab] = useState<Tab>('skills')
   const [open, setOpen] = useState<string | null>(null)
@@ -352,7 +353,6 @@ export function Plugins({ onClose, opened }: { onClose(): void; opened?: PluginR
             <h1 className="text-title font-semibold tracking-tight">Plugins</h1>
             <p className="mt-1 text-body text-ink-soft">Skills teach Hob how you like things done. Connectors link it to your apps. Plugins bundle them.</p>
           </div>
-          <button onClick={onClose} className={`${button.quiet} shrink-0`}>Done</button>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">

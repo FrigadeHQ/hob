@@ -4,6 +4,7 @@ import type { SetupState } from '../../shared/types'
 import { hob } from './api'
 import { Onboarding } from './screens/Onboarding'
 import { ChatView } from './screens/Chat'
+import { ConfirmHost } from './components/Confirm'
 import { Settings } from './screens/Settings'
 import { Plugins } from './screens/Plugins'
 import type { PluginResult } from '../../shared/plugins'
@@ -52,6 +53,8 @@ export function App() {
   // a .mcpb or plugin zip opened from Finder: show it on the Plugins screen
   const [opened, setOpened] = useState<PluginResult | null>(null)
   useEffect(() => hob.plugins.onOpened((r) => { setOpened(r); setScreen('plugins') }), [])
+  // a plugin opened from Finder is announced once; leaving the page forgets it
+  useEffect(() => { if (screen !== 'plugins') setOpened(null) }, [screen])
   // a file dropped anywhere outside the chat must never navigate the window
   useEffect(() => {
     const stop = (e: DragEvent) => e.preventDefault()
@@ -115,6 +118,7 @@ export function App() {
   const mac = hob.platform === 'darwin'
   return (
     <div className="relative h-full flex">
+      <ConfirmHost />
       {sidebar && narrow && <div className="fade-in absolute inset-0 z-20 bg-black/20" onClick={() => setSidebar(false)} />}
       {sidebar && (
         <div className={narrow ? 'absolute inset-y-0 left-0 z-30 flex shadow-xl' : 'flex'}>
@@ -124,12 +128,12 @@ export function App() {
             onSettings={() => go('settings')} onPlugins={() => go('plugins')} />
         </div>
       )}
-      {screen === 'settings' && <Settings onClose={() => go('chat')} onAllChatsDeleted={() => {
+      {screen === 'settings' && <Settings onAllChatsDeleted={() => {
         // nothing to go back to
         history.current = { list: [{ screen: 'settings', chat: null }], i: 0 }
         setSelected(null); setViewKey((k) => k + 1); setRefreshKey((k) => k + 1)
       }} />}
-      {screen === 'plugins' && <Plugins opened={opened} onClose={() => { setOpened(null); go('chat') }} />}
+      {screen === 'plugins' && <Plugins opened={opened} />}
       {/* stays mounted under other screens: unmounting a chat stops its reply */}
       <div className={screen === 'chat' ? 'contents' : 'hidden'}>
         <ChatView key={viewKey} chatId={selected} projectId={draftProject} onProjectChange={(id) => { setDraftProject(id); const h = history.current; h.list[h.i] = { ...h.list[h.i], project: id } }}

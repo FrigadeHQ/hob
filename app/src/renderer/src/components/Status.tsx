@@ -1,18 +1,26 @@
+import { useRef, useState } from 'react'
 import type { SetupState } from '../../../shared/types'
 import { hob } from '../api'
 
 const gbOf = (n: number) => (n < 10 ? n.toFixed(1) : Math.round(n).toString())
 const timeLeft = (s: number) => (s <= 0 ? '' : s < 90 ? 'about a minute left' : s < 5400 ? `about ${Math.round(s / 60)} min left` : `about ${Math.round(s / 3600)} h left`)
 
-/** shadcn-style hover tooltip, opening upward */
+/**
+ * Hover tooltip opening upward. Fixed to the window, so the narrow sidebar can't cut it off;
+ * theme colors, so it stays dark in dark mode.
+ */
 function Tooltip({ content, children }: { content: React.ReactNode; children: React.ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [at, setAt] = useState<{ left: number; bottom: number } | null>(null)
+  const show = () => { const r = ref.current?.getBoundingClientRect(); if (r) setAt({ left: Math.max(8, r.left), bottom: window.innerHeight - r.top + 8 }) }
   return (
-    <span className="group relative inline-flex">
+    <span ref={ref} className="relative inline-flex" onMouseEnter={show} onMouseLeave={() => setAt(null)} onFocus={show} onBlur={() => setAt(null)}>
       {children}
       <span
         role="tooltip"
         data-testid="status-tooltip"
-        className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 rounded-control bg-ink px-3 py-2 text-meta text-paper shadow-md opacity-0 translate-y-1 transition duration-150 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100"
+        style={at ? { left: at.left, bottom: at.bottom } : undefined}
+        className={`pointer-events-none fixed z-50 w-64 max-w-[calc(100vw-16px)] rounded-card border border-line bg-surface px-3 py-2 text-meta text-ink shadow-lg transition duration-150 ${at ? 'opacity-100 translate-y-0' : 'invisible opacity-0 translate-y-1'}`}
       >
         {content}
       </span>
@@ -26,16 +34,16 @@ export function Status({ state }: { state: SetupState }) {
   const label = state.phase === 'downloading' ? (state.note ?? `Getting smarter… ${pct}%`) : (state.note ?? 'Ready')
   const tip = state.phase === 'downloading' ? (
     <>
-      <span className="block font-medium">Downloading {state.target.name}</span>
-      <span className="block opacity-70">
-        {gbOf(state.target.sizeGB * Math.min(1, state.progress))} of {gbOf(state.target.sizeGB)} GB{timeLeft(state.etaSec) && ` · ${timeLeft(state.etaSec)}`}
+      <span className="block font-medium">{state.chatReady ? 'Hob is ready to use' : 'Setting up Hob'}</span>
+      <span className="block text-ink-soft">
+        {state.chatReady ? 'A smarter model is downloading' : `Downloading ${state.target.name}`}: {gbOf(state.target.sizeGB * Math.min(1, state.progress))} of {gbOf(state.target.sizeGB)} GB{timeLeft(state.etaSec) && `, ${timeLeft(state.etaSec)}`}.
       </span>
-      <span className="block mt-1 opacity-70">Hob switches to it automatically when it's done. Keep chatting in the meantime.</span>
+      {state.chatReady && <span className="mt-1 block text-ink-soft">Hob switches to it by itself when it's done.</span>}
     </>
   ) : (
     <>
       <span className="block font-medium">{state.model.name}</span>
-      <span className="block opacity-70">Running locally. Nothing leaves this computer.</span>
+      <span className="block text-ink-soft">Runs on this computer. Your chats never leave it.</span>
     </>
   )
   return (

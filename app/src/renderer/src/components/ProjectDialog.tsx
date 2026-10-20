@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Folder, FolderPlus, X } from 'lucide-react'
 import type { FolderCheck, Project } from '../../../shared/agent'
 import { hob } from '../api'
+import { confirmAction } from './Confirm'
 import { button, Dialog, Field, field } from './ui'
 
 /** the last part of a path, on any OS */
@@ -51,7 +52,7 @@ export function ProjectDialog({ project, folders: start, onClose, onDone }: Prop
     }
   }
   async function remove() {
-    if (!project || !confirm(`Remove “${project.name}”? Its chats move to your chat list. Your files aren't touched.`)) return
+    if (!project || !await confirmAction({ title: `Remove “${project.name}”?`, body: 'Its chats move to your chat list. Your folders and files stay as they are.', ok: 'Remove project', danger: true })) return
     await hob.projects.remove(project.id)
     onDone(null)
   }
@@ -72,7 +73,7 @@ export function ProjectDialog({ project, folders: start, onClose, onDone }: Prop
                 <span className="min-w-0 flex-1 truncate">{folderName(f)}</span>
                 {missing.has(f)
                   ? <span className="shrink-0 text-meta text-muted">Can't find this folder</span>
-                  : i === 0 && <span className="shrink-0 text-meta text-muted">New files go here</span>}
+                  : i === 0 && folders.length > 1 && <span className="shrink-0 text-meta text-muted">New files go here</span>}
                 <button aria-label={`Remove ${folderName(f)}`} title="Remove" onClick={() => setFolders((cur) => cur.filter((x) => x !== f))} className="text-muted hover:text-ink"><X size={14} /></button>
               </div>
             ))}
@@ -83,7 +84,7 @@ export function ProjectDialog({ project, folders: start, onClose, onDone }: Prop
           </div>
           {problem
             ? <p data-testid="project-folder-problem" className="mt-1.5 text-ui text-ink-soft">{problem}</p>
-            : !folders.length && <p className="mt-1.5 text-meta text-muted">Optional. Hob can read the folders you add and saves new files in the first one.</p>}
+            : !folders.length && <p className="mt-1.5 text-meta text-muted">Optional. Add folders Hob should work with, like a work folder or your photos. It can see the files in them and asks before changing any.</p>}
         </div>
         <Field label="Instructions (optional)">
           <textarea data-testid="project-instructions" rows={3} className={`${field} resize-none`} value={instructions}

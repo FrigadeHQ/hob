@@ -7,7 +7,7 @@ import { Dialog, Switch, button } from '../components/ui'
 const gb = (n: number) => (n < 10 ? `${n.toFixed(1)} GB` : `${Math.round(n)} GB`)
 const left = (s: number) => (s <= 0 ? '' : s < 90 ? ' · about a minute left' : s < 5400 ? ` · about ${Math.round(s / 60)} minutes left` : ` · about ${Math.round(s / 3600)} hours left`)
 
-export function Settings({ onClose, onAllChatsDeleted }: { onClose(): void; onAllChatsDeleted(): void }) {
+export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
   const [models, setModels] = useState<ModelRow[]>([])
   const [s, setS] = useState<UserSettings | null>(null)
   const [storage, setStorage] = useState<{ modelsGB: number; filesGB: number; codeToolsGB: number } | null>(null)
@@ -35,10 +35,7 @@ export function Settings({ onClose, onAllChatsDeleted }: { onClose(): void; onAl
     <main data-testid="settings" className="flex-1 overflow-y-auto">
       <div className="drag h-12" />
       <div className="max-w-2xl mx-auto px-6 pb-12 space-y-10">
-        <div className="flex items-center justify-between">
-          <h1 className="text-title font-semibold tracking-tight">Settings</h1>
-          <button onClick={onClose} className={button.quiet}>Done</button>
-        </div>
+        <h1 className="text-title font-semibold tracking-tight">Settings</h1>
 
         <section>
           <h2 className="text-body font-medium mb-3">Model</h2>

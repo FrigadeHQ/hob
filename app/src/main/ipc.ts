@@ -142,9 +142,11 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   })
   ipcMain.handle('projects:checkFolders', (_e, paths: string[]) => check((paths ?? []).map(String)))
   /** the main folder, in the file manager */
-  ipcMain.handle('projects:open', async (_e, id: string) => {
-    const main = d.store.getProject(String(id))?.folders[0]
-    if (main && existsSync(main)) await shell.openPath(main)
+  /** one of the project's folders (its main one by default) in the file manager */
+  ipcMain.handle('projects:open', async (_e, id: string, folder?: string) => {
+    const folders = d.store.getProject(String(id))?.folders ?? []
+    const f = folder && folders.includes(String(folder)) ? String(folder) : folders[0]
+    if (f && existsSync(f)) await shell.openPath(f)
   })
   /** for open_folder: a folder opens; a file is only shown, so nothing runs */
   const reveal = async (p: string, folder: boolean) => {
