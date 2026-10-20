@@ -30,7 +30,7 @@ Hob picks from a curated list of open models, from Qwen3 for 8 GB laptops up to 
 | Feature | What Hob does |
 |---|---|
 | Files and projects | Work on attached files, or on folders grouped into projects with their own instructions |
-| Code | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow, sandboxed to the chat's folder |
+| Code | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow, plus any package from PyPI it needs; sandboxed to the chat's folder |
 | Charts | Interactive charts in the chat, downloadable as PNG |
 | PDFs | Read PDFs, including scans, and fill in forms (Mac) |
 | Web | Search and read pages through a metasearch engine that runs on your computer |

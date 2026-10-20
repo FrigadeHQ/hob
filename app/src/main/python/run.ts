@@ -73,6 +73,8 @@ export type RunOpts = {
   env?: Record<string, string>
   /** plugin tools that declare it may use the internet */
   network?: boolean
+  /** site-packages of the packages the user's code installed: importable, read-only */
+  packages?: string
 }
 /** output: stdout + stderr, as the model sees it. stdout: stdout alone (plugin tools return results there) */
 export type RunResult = { exitCode: number | null; output: string; stdout: string; timedOut: boolean; stopped: boolean }
@@ -89,8 +91,9 @@ export function runPython(o: RunOpts): Promise<RunResult> {
     ...(win ? { SYSTEMROOT: process.env.SYSTEMROOT ?? 'C:\\Windows' } : {}),
     ...o.env,
   }
+  if (o.packages && existsSync(o.packages)) env.PYTHONPATH = o.packages
   // a granted folder may be gone (deleted, drive unplugged); skip it rather than fail every run
-  const reads = (o.readPaths ?? []).filter((p) => existsSync(p)).map((p) => realpathSync(p))
+  const reads = [...(o.readPaths ?? []), ...(o.packages ? [o.packages] : [])].filter((p) => existsSync(p)).map((p) => realpathSync(p))
   const sandboxed = o.sandbox ?? true
   let cmd = o.python
   let args = [script]

@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process'
 import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ChecksumError, realDeps } from '../downloader'
+import { installedVersions, installPackages, nameOf, sitePackagesOf } from './packages'
 import { SEARXNG_SHA256, SEARXNG_URL } from '../search/searxng'
 
 // Pinned and checksummed: python-build-standalone release ≥2 weeks old at pin time.
@@ -72,6 +73,24 @@ export class PythonRuntime {
 
   get python() { return pythonBin(this.root, this.key.split('-')[0]) }
   get dir() { return this.root }
+
+  /** packages the user's code installed (a venv on top of this Python) */
+  get packagesDir() { return join(this.root, 'packages') }
+  sitePackages() { return sitePackagesOf(this.packagesDir, this.key.split('-')[0]) }
+  private baseSitePackages() { return this.key.startsWith('win32') ? join(this.root, 'python', 'Lib', 'site-packages') : sitePackagesOf(join(this.root, 'python'), this.key.split('-')[0]) }
+
+  /** installed version of each package (by its PyPI name), from the user's packages or Hob's own */
+  versions(names: string[]): Record<string, string | undefined> {
+    const all = installedVersions([this.sitePackages(), this.baseSitePackages()])
+    return Object.fromEntries(names.map((n) => [n, all.get(nameOf(n))]))
+  }
+
+  /** from PyPI, prebuilt only; resolves to the versions now installed */
+  async installPackages(specs: string[]): Promise<{ ok: true; versions: Record<string, string | undefined> } | { ok: false; error: string }> {
+    const python = await this.ensure()
+    const r = await installPackages(python, this.packagesDir, PY_VERSION, specs, this.deps.exec)
+    return r.ok ? { ok: true, versions: this.versions(specs) } : r
+  }
 
   isReady(): boolean {
     try {

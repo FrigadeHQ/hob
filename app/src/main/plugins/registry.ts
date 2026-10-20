@@ -11,6 +11,7 @@ import { McpAuthError, McpClient, type McpServerSpec, type McpTool } from './mcp
 import { expandConfig, fromMcpb, readMcpb, settingDefault, standardVars } from './mcpb'
 import { refreshTokens, signIn as oauthSignIn, tokenFresh, type OAuthState } from './oauth'
 import { parseSkill, skillFile, skillFilesProblem, skillNameOk, slug, type Skill } from './skills'
+import { packageSpecProblem } from '../python/packages'
 import { mcpTool, pythonTool, safeToolName, type PluginRef } from './tools'
 
 export const MANIFEST = 'hob-plugin.json'
@@ -598,7 +599,7 @@ export class PluginRegistry {
     if (!s.description.trim()) return { ok: false, error: 'Say when Hob should use this skill.' }
     if (!s.instructions.trim()) return { ok: false, error: 'Write the instructions for this skill.' }
     const files = s.files ?? {}
-    const problem = skillFilesProblem(files)
+    const problem = skillFilesProblem(files) ?? (s.packages ?? []).map(packageSpecProblem).find(Boolean)
     if (problem) return { ok: false, error: problem }
     const dir = join(this.d.installDir, MY_SKILLS)
     if (!existsSync(join(dir, MANIFEST))) {
@@ -608,10 +609,12 @@ export class PluginRegistry {
     const own = join(dir, 'skills', name)
     // an edit that leaves out internet use (the Plugins form) keeps what the skill had
     const prev = existsSync(join(own, 'SKILL.md')) ? parseSkill(readFileSync(join(own, 'SKILL.md'), 'utf8'), own) : undefined
-    const network = s.network ?? (!!prev && 'network' in prev && !!prev.network)
+    const kept = prev && 'dir' in prev ? prev : undefined
+    const network = s.network ?? !!kept?.network
+    const packages = s.packages ?? kept?.packages
     mkdirSync(own, { recursive: true })
     for (const [f, text] of Object.entries(files)) writeFileSync(join(own, f), String(text))
-    writeFileSync(join(own, 'SKILL.md'), skillFile({ name, description: s.description, instructions: s.instructions, network }))
+    writeFileSync(join(own, 'SKILL.md'), skillFile({ name, description: s.description, instructions: s.instructions, network, packages }))
     this.reload()
     return { ok: true, id: MY_SKILLS, name }
   }

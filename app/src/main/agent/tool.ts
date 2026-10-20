@@ -31,7 +31,7 @@ export type TurnCtx = {
   /** show a folder in the file manager (folder: true) or a file inside its folder; never opens the file itself */
   reveal?(path: string, folder: boolean): Promise<void>
   /** a script of an enabled skill, by full path or "skill-name/file.py"; undefined if it isn't one */
-  skillScript?(ref: string): { path: string; dir: string; network: boolean } | undefined
+  skillScript?(ref: string): { path: string; dir: string; network: boolean; packages?: string[] } | undefined
   /** progress for slow setup steps, e.g. installing code tools */
   progress?(title: string): void
 }

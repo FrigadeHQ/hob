@@ -45,7 +45,7 @@ export type TurnDeps = {
   /** show a folder (folder: true) or a file in its folder, in the file manager */
   reveal?(path: string, folder: boolean): Promise<void>
   /** skills from plugins that are on: listed in the prompt, and run directly with /name */
-  skills?: { list(): (PromptSkill & { dir?: string; network?: boolean })[]; find(name: string): { name: string; body: string; dir: string; network?: boolean } | undefined }
+  skills?: { list(): (PromptSkill & { dir?: string; network?: boolean; packages?: string[] })[]; find(name: string): { name: string; body: string; dir: string; network?: boolean; packages?: string[] } | undefined }
   /** instructions from plugins that are on, given the tools offered this turn */
   prompts?(offered: string[]): string[]
   /** the chat list changed (e.g. the chat got its title) */
@@ -269,15 +269,15 @@ async function nameChat(d: TurnDeps, chatId: string, placeholder: string, user: 
 }
 
 /** a skill's script by "skill-name/file.py" or full path; only skills that are on */
-export function skillScript(ref: string, skills: TurnDeps['skills']): { path: string; dir: string; network: boolean } | undefined {
+export function skillScript(ref: string, skills: TurnDeps['skills']): { path: string; dir: string; network: boolean; packages?: string[] } | undefined {
   const m = /^([a-z0-9][a-z0-9-]*)[\\/]([^\\/]+)$/.exec(ref)
   if (m) {
     const s = skills?.find(m[1])
-    return s ? { path: join(s.dir, m[2]), dir: s.dir, network: !!s.network } : undefined
+    return s ? { path: join(s.dir, m[2]), dir: s.dir, network: !!s.network, ...(s.packages ? { packages: s.packages } : {}) } : undefined
   }
   if (!isAbsolute(ref)) return undefined
   const s = skills?.list().find((x) => x.dir && isInside(x.dir, ref))
-  return s?.dir ? { path: ref, dir: s.dir, network: !!s.network } : undefined
+  return s?.dir ? { path: ref, dir: s.dir, network: !!s.network, ...(s.packages ? { packages: s.packages } : {}) } : undefined
 }
 
 const CODE_CHARS = 8000

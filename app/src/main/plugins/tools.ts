@@ -46,7 +46,7 @@ export function pythonTool(p: PluginRef, t: ManifestTool, name = t.name): Tool<R
       const before = files(ctx.chatDir)
       const r = await runPython({
         python, runtimeRoot: ctx.python.dir, cwd: ctx.chatDir, tmpDir: ctx.runTmp, signal: ctx.signal, timeoutMs: 60_000,
-        readPaths: [p.dir, ...ctx.grants], network: p.network, stdin: JSON.stringify(a ?? {}),
+        readPaths: [p.dir, ...ctx.grants], network: p.network, packages: ctx.python.sitePackages?.(), stdin: JSON.stringify(a ?? {}),
         env: { ...p.env, HOB_CHAT_DIR: ctx.chatDir, HOB_PLUGIN_DIR: p.dir },
         code: LAUNCH(join(p.dir, t.run!)),
       })

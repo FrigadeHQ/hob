@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -10,6 +9,7 @@ import { runPythonTool } from '../src/main/tools/python'
 import { Store } from '../src/main/store'
 import { skillOffer } from '../src/shared/skillOffer'
 import type { Step } from '../src/shared/agent'
+import { prefix, python } from './python'
 
 let reg: PluginRegistry | undefined
 afterEach(() => reg?.close())
@@ -107,7 +107,6 @@ describe('save_skill tool', () => {
   })
 })
 
-const [python, prefix] = (() => { try { return execFileSync('python3', ['-c', 'import sys, os; print(os.path.realpath(sys.executable)); print(os.path.realpath(sys.base_prefix))']).toString().trim().split('\n') } catch { return ['', ''] } })()
 
 describe.skipIf(!python)('run_python with a skill script', () => {
   function setup(network = false, webAccess = true) {
@@ -179,5 +178,40 @@ describe('offering to save a skill', () => {
     expect(skillOffer([user('/spending march.csv'), bot(work)], ['spending'])).toBe(-1)
     expect(skillOffer([user('a'), bot([...work, done('save_skill')])], [])).toBe(-1)
     expect(skillOffer([user('a'), bot([done('read_file'), done('make_chart'), { ...done('run_python'), status: 'error' }])], [])).toBe(-1)
+  })
+})
+
+describe('skills that need packages', () => {
+  it('saving pins each package to the installed version and lists them on the card', async () => {
+    const w = world(); const r = w.make()
+    const t = saveSkillTool(source(r))
+    const a = { name: 'stocks', description: 'd', instructions: 'Run fetch.py.', packages: ['yfinance', 'ta==0.11.0'] }
+    expect(t.askDetail!(a)).toContain('Packages: yfinance, ta==0.11.0')
+    const python = { versions: (ns: string[]) => Object.fromEntries(ns.map((n) => [n, n.startsWith('yfinance') ? '0.2.54' : undefined])) }
+    await t.run(a, { python } as never)
+    expect(r.findSkill('stocks')!.packages).toEqual(['yfinance==0.2.54', 'ta==0.11.0'])
+  })
+
+  it('bad package names are refused', () => {
+    const w = world(); const r = w.make()
+    expect(r.saveSkill({ name: 'x', description: 'd', instructions: 'i', packages: ['--index-url=http://evil'] })).toMatchObject({ ok: false })
+  })
+
+  it("running a skill's script installs its missing packages first; with Web access off it says so", async () => {
+    const root = mkdtempSync(join(tmpdir(), 'hob-skillpk-'))
+    const dir = join(root, 'stocks'); mkdirSync(dir); writeFileSync(join(dir, 'fetch.py'), "print('hi')\n")
+    const installs: string[][] = []
+    const python = { isReady: () => true, ensure: async () => 'python3', dir: root, sitePackages: () => join(root, 'none'),
+      versions: (ns: string[]) => Object.fromEntries(ns.map((n) => [n, undefined])),
+      installPackages: async (s: string[]) => { installs.push(s); return { ok: false as const, error: 'stop here' } } }
+    const ctx = { chatDir: root, grants: [], webAccess: false, untrusted: false, runTmp: join(root, 'tmp'), python,
+      skillScript: () => ({ path: join(dir, 'fetch.py'), dir, network: false, packages: ['yfinance==0.2.54'] }) } as unknown as TurnCtx
+    const off = await runPythonTool.run({ script: 'stocks/fetch.py' }, ctx)
+    expect(off.failed).toBe(true)
+    expect(off.text).toMatch(/Web access/)
+    expect(installs).toHaveLength(0)
+    const on = await runPythonTool.run({ script: 'stocks/fetch.py' }, { ...ctx, webAccess: true } as TurnCtx)
+    expect(installs).toEqual([['yfinance==0.2.54']])
+    expect(on.text).toContain('stop here')
   })
 })

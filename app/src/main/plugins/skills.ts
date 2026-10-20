@@ -2,7 +2,8 @@ import { basename } from 'node:path'
 
 /** Instructions for one kind of task, in the Agent Skills format (SKILL.md: frontmatter + Markdown). */
 /** network: its scripts may use the internet (frontmatter `network: true`; plugins must also ask for it in their manifest) */
-export type Skill = { name: string; description: string; body: string; dir: string; network?: boolean }
+/** packages: PyPI packages its scripts need (frontmatter `packages: yfinance==0.2.54, ta==0.11.0`), installed on first run */
+export type Skill = { name: string; description: string; body: string; dir: string; network?: boolean; packages?: string[] }
 
 const NAME = /^[a-z0-9][a-z0-9-]{0,63}$/
 export const skillNameOk = (n: string) => NAME.test(n)
@@ -36,11 +37,12 @@ export function parseSkill(text: string, dir: string): Skill | { error: string }
   const name = meta.name || basename(dir)
   if (!skillNameOk(name)) return { error: `${basename(dir)}/SKILL.md: name must be lowercase words with dashes, like "plan-trip"` }
   if (!meta.description) return { error: `${basename(dir)}/SKILL.md: add a description in the frontmatter so Hob knows when to use it` }
-  return { name, description: meta.description, body: body.trim(), dir, ...(meta.network === 'true' ? { network: true } : {}) }
+  const packages = (meta.packages ?? '').split(/[,\s]+/).filter(Boolean)
+  return { name, description: meta.description, body: body.trim(), dir, ...(meta.network === 'true' ? { network: true } : {}), ...(packages.length ? { packages } : {}) }
 }
 
-export const skillFile = (s: { name: string; description: string; instructions: string; network?: boolean }) =>
-  `---\nname: ${s.name}\ndescription: ${JSON.stringify(s.description.replace(/\s+/g, ' ').trim())}\n${s.network ? 'network: true\n' : ''}---\n${s.instructions.trim()}\n`
+export const skillFile = (s: { name: string; description: string; instructions: string; network?: boolean; packages?: string[] }) =>
+  `---\nname: ${s.name}\ndescription: ${JSON.stringify(s.description.replace(/\s+/g, ' ').trim())}\n${s.network ? 'network: true\n' : ''}${s.packages?.length ? `packages: ${s.packages.join(', ')}\n` : ''}---\n${s.instructions.trim()}\n`
 
 const FILE = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}\.(py|md|txt|json|csv)$/
 export const MAX_SKILL_FILES = 10

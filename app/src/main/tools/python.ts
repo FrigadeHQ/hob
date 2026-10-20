@@ -55,7 +55,7 @@ export async function pythonPreview(path: string, ctx: TurnCtx): Promise<string>
   const grant = ctx.grants.find((g) => isInside(g, path))
   const r = await runPython({
     python, runtimeRoot: ctx.python!.dir, cwd: ctx.chatDir, tmpDir: ctx.runTmp, signal: ctx.signal, timeoutMs: 60_000,
-    readPaths: grant ? [grant] : [], code: `PATH = ${JSON.stringify(path)}\n${PREVIEW_PY}`,
+    readPaths: grant ? [grant] : [], packages: ctx.python!.sitePackages?.(), code: `PATH = ${JSON.stringify(path)}\n${PREVIEW_PY}`,
   })
   return r.exitCode === 0 ? r.output : `Couldn't preview this file:\n${r.output}`
 }
@@ -71,6 +71,8 @@ export function pythonHint(output: string, code = ''): string {
     hints.push("Hob blocked this: code can only read the chat folder and folders the user gave access to, and can only save in the chat folder. To rename, move or delete the user's files, use move_files, move_file or delete_file. If it's a folder Hob can't see yet, call list_files with its full path and Hob will ask the user.")
   }
   if (/(FileNotFoundError|No such file or directory)[^\n]*['"]~/.test(output)) hints.push("Python doesn't understand ~ in paths. Use the full path instead.")
+  const missing = /ModuleNotFoundError: No module named '([\w.]+)'/.exec(output)
+  if (missing) hints.push(`To use ${missing[1].split('.')[0]}, install it first with install_packages (its name on PyPI, which can differ from the import name, e.g. beautifulsoup4 for bs4), then run the code again.`)
   return hints.length ? `\n\nHob: ${hints.join(' ')}` : ''
 }
 
@@ -93,7 +95,7 @@ const scriptOf = (a: PyArgs, ctx: TurnCtx) => {
 export const runPythonTool: Tool<PyArgs> = {
   spec: {
     name: 'run_python',
-    description: 'Run Python 3.12 in the chat folder (the current directory). Installed: pandas, numpy, matplotlib, openpyxl, python-docx, pypdf and Pillow (images and photo EXIF data, such as the date taken). No internet. Use full paths for the user\'s files (Python doesn\'t understand ~). Code can read granted folders but can only save in the chat folder: to rename, move or delete the user\'s files, use move_files, move_file or delete_file. Save outputs into the current folder. For charts use make_chart; matplotlib only for chart types it can\'t draw. Print what you need to see. To run a skill\'s script instead of code, pass script (e.g. "weekly-report/make_report.py") and its inputs as args.',
+    description: 'Run Python 3.12 in the chat folder (the current directory). Installed: pandas, numpy, matplotlib, openpyxl, python-docx, pypdf and Pillow (images and photo EXIF data, such as the date taken); for other packages call install_packages first. No internet. Use full paths for the user\'s files (Python doesn\'t understand ~). Code can read granted folders but can only save in the chat folder: to rename, move or delete the user\'s files, use move_files, move_file or delete_file. Save outputs into the current folder. For charts use make_chart; matplotlib only for chart types it can\'t draw. Print what you need to see. To run a skill\'s script instead of code, pass script (e.g. "weekly-report/make_report.py") and its inputs as args.',
     params: { type: 'object', properties: {
       code: { type: 'string' },
       script: { type: 'string', description: "a skill's script: skill-name/file.py, or its full path" },
@@ -109,13 +111,24 @@ export const runPythonTool: Tool<PyArgs> = {
     if (wantsScript && !skill) return { text: `“${a.script}” isn't a script in one of your skills. Use the skill-name/file.py form shown in the skill's instructions.`, failed: true }
     if (!skill && typeof a.code !== 'string') return { text: 'Pass code to run, or a skill script.', failed: true }
     const python = await ensurePython(ctx)
+    const need = skill?.packages ?? []
+    if (need.length) {
+      const have = ctx.python!.versions?.(need) ?? {}
+      const missing = need.filter((p) => !have[p] || (p.includes('==') && p.split('==')[1] !== have[p]))
+      if (missing.length && !ctx.webAccess) return { text: `This skill needs ${andList(missing)} installed once, which needs the internet, and Web access is off. Tell the user they can turn it on in Settings.`, failed: true }
+      if (missing.length) {
+        ctx.progress?.(`Installing ${andList(missing)}…`)
+        const r = await ctx.python!.installPackages(missing)
+        if (!r.ok) return { text: `Couldn't install what this skill needs: ${r.error}`, failed: true }
+      }
+    }
     ctx.progress?.(skill ? `Running ${basename(skill.path)}…` : 'Running code…')
     const before = snapshot(ctx.chatDir)
     const args = (Array.isArray(a.args) ? a.args : []).map(String)
     const code = skill ? LAUNCH(skill.path, args) : a.code!
     const r = await runPython({
       python, runtimeRoot: ctx.python!.dir, cwd: ctx.chatDir, tmpDir: ctx.runTmp, code, signal: ctx.signal,
-      readPaths: skill ? [skill.dir, ...ctx.grants] : ctx.grants,
+      readPaths: skill ? [skill.dir, ...ctx.grants] : ctx.grants, packages: ctx.python!.sitePackages?.(),
       ...(skill?.network ? { network: true } : {}),
       ...(skill ? { env: { HOB_CHAT_DIR: ctx.chatDir, HOB_SKILL_DIR: skill.dir } } : {}),
     })
@@ -125,5 +138,32 @@ export const runPythonTool: Tool<PyArgs> = {
     const changed = files.length ? `\nFiles created or changed: ${files.map((f) => f.slice(ctx.chatDir.length + 1)).join(', ')}` : ''
     const shown = skill ? `${skill.path} ${args.join(' ')}`.trim() : a.code!
     return { text: `${status}\n${r.output}${changed}${pythonHint(r.output, skill ? '' : a.code)}`, detail: `${shown}\n\n--- output ---\n${r.output || '(no output)'}`, files, failed: r.exitCode !== 0 }
+  },
+}
+
+const andList = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`)
+
+/** Packages from PyPI for run_python, like a coworker installing a library. Prebuilt only; the code using them stays sandboxed. */
+export const installPackagesTool: Tool<{ packages: string[] }> = {
+  spec: {
+    name: 'install_packages',
+    description: 'Install Python packages from PyPI for run_python, e.g. ["yfinance"] or ["yfinance==0.2.54"]. Only when the code needs a package that isn\'t installed yet.',
+    params: { type: 'object', properties: { packages: { type: 'array', items: { type: 'string' }, description: 'PyPI names, optionally with ==version' } }, required: ['packages'] },
+  },
+  title: (a) => `Installed ${andList((Array.isArray(a.packages) ? a.packages : []).map(String))}`,
+  refuse: (_a, ctx) => (ctx.webAccess ? undefined : 'Installing packages needs the internet, and Web access is off. Tell the user they can turn it on in Settings, or do it with the packages already installed.'),
+  // after web content this turn, a page could be picking the packages: ask
+  action: (_a, ctx) => (ctx.untrusted ? { kind: 'app', ask: true } : { kind: 'run' }),
+  ask: (a) => `Install ${andList((a.packages ?? []).map(String))} from PyPI for Hob's code?`,
+  async run(a, ctx) {
+    if (!ctx.python) throw new Error('Code tools are not available.')
+    const specs = (Array.isArray(a.packages) ? a.packages : []).map((p) => String(p).trim()).filter(Boolean)
+    if (!specs.length) return { text: 'Say which packages to install.', failed: true }
+    if (!ctx.python.isReady()) ctx.progress?.('Setting up code tools…')
+    ctx.progress?.(`Installing ${andList(specs)}…`)
+    const r = await ctx.python.installPackages(specs)
+    if (!r.ok) return { text: r.error, failed: true }
+    const got = Object.entries(r.versions).map(([n, v]) => (v ? `${n.split(/[[=]/)[0]} ${v}` : n)).join(', ')
+    return { text: `Installed ${got}. Use it in run_python now.` }
   },
 }

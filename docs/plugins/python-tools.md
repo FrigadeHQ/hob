@@ -38,7 +38,7 @@ A tool that needs the internet adds `"permissions": { "network": true }`.
 - Plain text, or a JSON object like `{"text": "…", "files": ["chart.png"]}`.
 - Files saved in the current folder (the chat folder) show up as file cards.
 
-**Packages:** Python 3.12 with pandas, numpy, matplotlib, openpyxl, python-docx, pypdf and Pillow.
+**Packages:** Python 3.12 with pandas, numpy, matplotlib, openpyxl, python-docx, pypdf and Pillow, plus any package Hob installed from PyPI with `install_packages`.
 
 **Sandbox:**
 - Writes only to the chat folder.

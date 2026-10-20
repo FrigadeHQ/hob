@@ -77,7 +77,7 @@ export function systemPrompt(o: {
       ? `Skills (step-by-step know-how for certain tasks). When a request matches one, call use_skill with its name first and follow it:\n${skills.map((s) => `- ${s.name}: ${s.description.replace(/\s+/g, ' ').slice(0, 160)}`).join('\n')}`
       : '',
     o.tools?.includes('save_skill')
-      ? 'If the user asks you to save or remember how to do something for next time, call save_skill: clear, reusable steps, plus the code that worked as script files that take their inputs from sys.argv (e.g. the file to read) and save results in the current folder. The steps say to run them with run_python, script "skill-name/file.py" and args. Set network only if a script needs the internet.'
+      ? 'If the user asks you to save or remember how to do something for next time, call save_skill: clear, reusable steps, plus the code that worked as script files that take their inputs from sys.argv (e.g. the file to read) and save results in the current folder. The steps say to run them with run_python, script "skill-name/file.py" and args. List packages you installed with install_packages that the scripts use. Set network only if a script needs the internet.'
       : '',
     'Never ask the user to run code or install anything. If code fails, read the error, fix it and try again.',
     "Do the whole task yourself, start to finish. Don't stop to ask whether to go ahead or to show a plan first: Hob shows the user an approval card before anything in their folders changes.",

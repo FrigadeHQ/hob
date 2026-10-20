@@ -28,7 +28,7 @@ Linked folders reload as you edit, so you see changes on your next message.
 
 Once Hob has done something you'll want again, say "save this as a skill". After a longer task that used code, Hob also offers a **Save as a skill** button under its reply.
 
-- Hob writes the steps, and keeps the code that worked as script files next to `SKILL.md`.
+- Hob writes the steps, keeps the code that worked as script files next to `SKILL.md`, and pins the packages it used.
 - You see everything first: the steps and each file's code, with Allow or Deny.
 - Saved skills go to **Plugins → My skills**, where you can edit or delete them.
 - Hob won't save a skill in a message where it read web pages: ask again in a new message.
@@ -48,6 +48,7 @@ description: Monthly spending chart from a bank CSV.
 
 - The script gets its inputs as `sys.argv[1:]` and runs in the chat folder, so files it saves show up in the chat.
 - It can read files next to it (templates, lookup tables) and folders the user gave Hob.
+- It can use packages from PyPI: list them in the frontmatter, pinned, e.g. `packages: yfinance==0.2.54`. Hob installs missing ones the first time the skill runs (Web access must be on).
 - It runs in the same sandbox as Hob's own code. No internet, unless the skill's frontmatter says `network: true` and Web access is on. For a plugin's skills, the plugin must also ask for `"permissions": { "network": true }`.
 
 How Hob uses skills:

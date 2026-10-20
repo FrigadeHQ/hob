@@ -31,7 +31,9 @@ export const useSkillTool = (src: SkillSource): Tool<{ name: string }> => ({
   },
 })
 
-type SaveArgs = { name: string; description: string; instructions: string; files?: Record<string, string>; network?: boolean; replace?: boolean }
+type SaveArgs = { name: string; description: string; instructions: string; files?: Record<string, string>; network?: boolean; packages?: string[]; replace?: boolean }
+
+const packagesOf = (a: SaveArgs) => (Array.isArray(a.packages) ? a.packages.map((p) => String(p).trim()).filter(Boolean) : [])
 
 const filesOf = (a: SaveArgs): Record<string, string> =>
   a.files && typeof a.files === 'object' && !Array.isArray(a.files) ? Object.fromEntries(Object.entries(a.files).map(([k, v]) => [k, String(v ?? '')])) : {}
@@ -55,6 +57,7 @@ export const saveSkillTool = (src: SkillSource): Tool<SaveArgs> => ({
         description: { type: 'string', description: 'One sentence: when to use this skill' },
         instructions: { type: 'string', description: 'Clear step-by-step instructions in Markdown. Say which script to run and what to pass it.' },
         files: { type: 'object', description: 'Scripts and data to keep with the skill: file name → contents, e.g. {"make_report.py": "..."}. Use code that already worked in this chat. Scripts get their inputs from sys.argv and save results in the current folder.', additionalProperties: { type: 'string' } },
+        packages: { type: 'array', items: { type: 'string' }, description: 'PyPI packages the scripts need that you installed with install_packages' },
         network: { type: 'boolean', description: 'true only if the scripts need the internet' },
         replace: { type: 'boolean', description: 'true to update an existing skill with this name' },
       },
@@ -72,13 +75,18 @@ export const saveSkillTool = (src: SkillSource): Tool<SaveArgs> => ({
   },
   askDetail: (a) => {
     const files = filesOf(a)
-    return [`${String(a.description ?? '').trim()}`, '', String(a.instructions ?? '').trim(),
+    const pk = packagesOf(a)
+    return [`${String(a.description ?? '').trim()}`, '', String(a.instructions ?? '').trim(), ...(pk.length ? ['', `Packages: ${pk.join(', ')}`] : []),
       ...Object.entries(files).map(([f, text]) => `\n--- ${f} ---\n${text.trim()}`)].join('\n')
   },
-  async run(a) {
+  async run(a, ctx) {
     const name = nameOf(a.name)
     const files = filesOf(a)
-    const r = src.saveSkill({ name, description: String(a.description ?? ''), instructions: withRunLine(name, String(a.instructions ?? ''), files), files, network: a.network === true }, { replace: a.replace === true })
+    // pinned to what worked here, so the skill keeps working when a package changes later
+    const asked = packagesOf(a)
+    const have = asked.length ? ctx?.python?.versions?.(asked) ?? {} : {}
+    const packages = asked.map((p) => (p.includes('==') || !have[p] ? p : `${p}==${have[p]}`))
+    const r = src.saveSkill({ name, description: String(a.description ?? ''), instructions: withRunLine(name, String(a.instructions ?? ''), files), files, network: a.network === true, ...(packages.length ? { packages } : {}) }, { replace: a.replace === true })
     if (!r.ok) return { text: r.error, failed: true }
     src.onSaved?.()
     return { text: `Saved. The user can run it with /${r.name}, and you'll see it in your skills list.`, title: `Saved the “${r.name}” skill` }
