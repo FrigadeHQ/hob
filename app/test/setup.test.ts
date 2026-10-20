@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { Catalog } from '@hob/picker'
 import bundled from '../../catalog/catalog.json'
-import { SetupController, type SetupDeps } from '../src/main/setup'
+import { computerName, SetupController, type SetupDeps } from '../src/main/setup'
 import { FakeEngine, fakeDownloadDeps } from '../src/main/fake'
 import { fileNameFor } from '../src/main/downloader'
 import { saveSettings } from '../src/main/settings'
@@ -67,6 +67,20 @@ describe('SetupController', () => {
     const { c } = setup()
     await c.start()
     expect(c.state).toMatchObject({ phase: 'choose', recommended: { id: 'gpt-oss-20b' }, liteMode: false, needsDiskGB: 0 })
+  })
+  it('choose says what computer it picked for and that a small model comes first', async () => {
+    const { c } = setup()
+    await c.start()
+    expect(c.state).toMatchObject({ phase: 'choose', computer: 'Apple M1 Max with 32 GB of memory', starter: { id: 'qwen3-1.7b' } })
+    expect(computerName({ ...m1max, os: 'win32', cpuModel: 'Intel i7', totalRamGB: 31.9, gpu: { kind: 'discrete', name: 'NVIDIA GeForce RTX 4070', vramGB: 12 } })).toBe('NVIDIA GeForce RTX 4070 (12 GB) and 32 GB of memory')
+    expect(computerName({ ...m1max, cpuModel: 'Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz', gpu: { kind: 'none', name: '', vramGB: 0 }, totalRamGB: 16 })).toBe('Intel Core i5-8250U with 16 GB of memory')
+  })
+  it('the first download says it is the small starter model', async () => {
+    const { c, states } = setup()
+    await c.start(); await c.confirm()
+    const first = states.find((s) => s.phase === 'downloading') as Extract<SetupState, { phase: 'downloading' }>
+    expect(first.starter).toMatchObject({ id: 'qwen3-1.7b' })
+    expect(states.some((s) => s.phase === 'downloading' && s.chatReady && !s.starter)).toBe(true)
   })
   it('choose lists every catalog model: runnable ones selectable, others greyed with a reason', async () => {
     const { c } = setup()

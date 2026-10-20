@@ -17,8 +17,10 @@ export type ModelOption = ModelSummary & {
 
 export type SetupState =
   | { phase: 'probing' }
-  | { phase: 'choose'; recommended: ModelSummary; models: ModelOption[]; liteMode: boolean; needsDiskGB: number }
-  | { phase: 'downloading'; target: ModelSummary; progress: number; etaSec: number; chatReady: boolean; note?: string }
+  /** computer: what the pick is based on, e.g. "Apple M3 Pro with 36 GB of memory". starter: a small model fetched first so chat opens in minutes */
+  | { phase: 'choose'; recommended: ModelSummary; models: ModelOption[]; liteMode: boolean; needsDiskGB: number; computer: string; starter?: ModelSummary }
+  /** starter: set while that small model downloads, before the full one */
+  | { phase: 'downloading'; target: ModelSummary; progress: number; etaSec: number; chatReady: boolean; note?: string; starter?: ModelSummary }
   | { phase: 'ready'; model: ModelSummary; liteMode: boolean; note?: string; canRetry?: boolean }
   | { phase: 'error'; message: string }
 

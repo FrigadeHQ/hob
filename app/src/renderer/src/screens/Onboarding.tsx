@@ -18,6 +18,8 @@ function Frame({ children }: { children: React.ReactNode }) {
   )
 }
 
+const Step = ({ n }: { n: number }) => <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-line text-meta font-medium text-ink-soft">{n}</span>
+
 const why = { memory: 'Needs more memory', slow: 'Too slow on this computer' }
 
 function ModelRow({ m, selected, onPick }: { m: ModelOption; selected: boolean; onPick: () => void }) {
@@ -76,6 +78,17 @@ function ModelPicker({ models, selected, onSelect }: { models: ModelOption[]; se
   )
 }
 
+/** what Hob is doing while it looks at the computer; each line shows long enough to read */
+const PROBING = ['Starting Hob…', 'Checking your computer…', 'Finding the best AI model for it…']
+function ProbingLine() {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setI((n) => Math.min(n + 1, PROBING.length - 1)), 1200)
+    return () => clearInterval(t)
+  }, [])
+  return <p key={i} data-testid="setup-probing" className="fade-in mt-5 text-body text-muted">{PROBING[i]}</p>
+}
+
 export function Onboarding({ state }: { state: SetupState }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -84,7 +97,7 @@ export function Onboarding({ state }: { state: SetupState }) {
       <Frame>
         <div className="flex flex-col items-center">
           <Mascot size={112} alive />
-          <p data-testid="setup-probing" className="mt-5 text-body text-muted">Starting Hob…</p>
+          <ProbingLine />
         </div>
       </Frame>
     )
@@ -102,14 +115,24 @@ export function Onboarding({ state }: { state: SetupState }) {
 
   if (state.phase === 'choose') {
     const selected = state.models.find((m) => m.id === selectedId && m.available) ?? state.models.find((m) => m.recommended)!
+    // a small model first gets chat going in minutes; not when the pick is that small model itself
+    const starter = state.starter && state.starter.id !== selected.id ? state.starter : undefined
     return (
       <Frame>
-        <h1 className="text-title font-semibold tracking-tight mb-3">Welcome to Hob</h1>
-        <p data-testid="setup-recommended" className="text-body text-ink-soft mb-8">
-          A private AI that runs entirely on your computer.
-          <br />
-          One-time {gb(selected.sizeGB)} download, then it works offline.
-        </p>
+        <h1 className="text-title font-semibold tracking-tight mb-2">Welcome to Hob</h1>
+        <p className="text-body text-ink-soft mb-6">A private AI that runs entirely on your computer.</p>
+        <div data-testid="setup-recommended" className="rounded-card border border-line bg-surface p-4 text-left mb-6">
+          <p className="text-body font-medium">{selected.recommended ? 'We found the best AI model for your computer' : 'Your pick'}</p>
+          <p className="text-ui text-ink-soft">{selected.recommended ? `Picked for your ${state.computer}.` : selected.name}</p>
+          <ol className="mt-3 space-y-2 border-t border-line pt-3 text-ui text-ink-soft">
+            {starter
+              ? <>
+                  <li className="flex gap-2.5"><Step n={1} /><span>A small model downloads first ({gb(starter.sizeGB)}), so you can start chatting in a few minutes.</span></li>
+                  <li className="flex gap-2.5"><Step n={2} /><span>The full model ({gb(selected.sizeGB)}) keeps downloading in the background. Hob switches to it by itself when it's done, and gets a lot smarter.</span></li>
+                </>
+              : <li className="flex gap-2.5"><Step n={1} /><span>One-time {gb(selected.sizeGB)} download, then it works offline.</span></li>}
+          </ol>
+        </div>
         {selected.needsDiskGB > 0 && <p className="text-accent mb-4">Not enough disk space. Free up {Math.ceil(selected.needsDiskGB)} GB to continue.</p>}
         <button data-testid="setup-download" onClick={() => hob.setup.confirm(selected.id)} disabled={selected.needsDiskGB > 0} className="w-full py-3 rounded-card bg-ink text-paper font-medium text-body disabled:opacity-30">
           Download and start
@@ -126,8 +149,12 @@ export function Onboarding({ state }: { state: SetupState }) {
     const finishing = state.progress >= 1
     return (
       <Frame>
-        <h1 className="text-title font-semibold mb-2">Setting up Hob</h1>
-        <p className="text-body text-ink-soft mb-6">One-time download. You can start chatting in a few minutes.</p>
+        <h1 className="text-title font-semibold mb-2">{state.starter ? 'Getting you started' : 'Setting up Hob'}</h1>
+        <p data-testid="setup-downloading" className="text-body text-ink-soft mb-6">
+          {state.starter
+            ? `Downloading a small model (${gb(state.starter.sizeGB)}) so you can chat in a few minutes. The full model (${gb(state.target.sizeGB)}) downloads after that, in the background.`
+            : `One-time ${gb(state.target.sizeGB)} download, then it works offline.`}
+        </p>
         <div className="h-2 rounded-full bg-line overflow-hidden">
           <div data-testid="setup-progress" className={`h-full bg-ink transition-all ${finishing ? 'animate-pulse' : ''}`} style={{ width: `${finishing ? 100 : pct}%` }} />
         </div>

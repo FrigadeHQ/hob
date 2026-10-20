@@ -28,6 +28,15 @@ export const summarize = (c: Choice): ModelSummary => ({
   id: c.model.id, name: c.model.name, sizeGB: c.build.sizeGB, estTokPerSec: c.estTokPerSec, blurb: blurb(c.estTokPerSec),
 })
 
+/** "Apple M3 Pro with 36 GB of memory", "NVIDIA GeForce RTX 4070 (12 GB) and 32 GB of memory" */
+export function computerName(hw: Hardware): string {
+  const ram = `${Math.round(hw.totalRamGB)} GB of memory`
+  if (hw.gpu.kind === 'discrete' && hw.gpu.name) return `${hw.gpu.name}${hw.gpu.vramGB ? ` (${Math.round(hw.gpu.vramGB)} GB)` : ''} and ${ram}`
+  const chip = (hw.gpu.kind === 'unified' && hw.gpu.name ? hw.gpu.name : hw.cpuModel)
+    .replace(/\((R|TM)\)/g, '').replace(/\s+CPU\b.*$/, '').replace(/\s+@.*$/, '').replace(/\s+/g, ' ').trim()
+  return chip && chip !== 'unknown' ? `${chip} with ${ram}` : `${ram}`
+}
+
 /** Plain-English message for anything that can go wrong during setup. */
 export function friendly(err: unknown): string {
   if (err instanceof DiskSpaceError) return err.message
@@ -85,7 +94,10 @@ export class SetupController {
         const savedChoice = this.choices().find((c) => c.model.id === settings.activeModelId)
         if (savedChoice && this.verified(savedChoice)) return await this.loadWithFallback(savedChoice)
 
-        this.set({ phase: 'choose', recommended: summarize(r.recommended), models: this.modelOptions(), liteMode: r.liteMode, needsDiskGB: r.recommended.needsDiskGB })
+        this.set({
+          phase: 'choose', recommended: summarize(r.recommended), models: this.modelOptions(), liteMode: r.liteMode, needsDiskGB: r.recommended.needsDiskGB,
+          computer: computerName(hw), ...(r.starter && r.starter.model.id !== r.recommended.model.id ? { starter: summarize(r.starter) } : {}),
+        })
       } catch (err) {
         this.set({ phase: 'error', message: friendly(err) })
       }
@@ -173,7 +185,7 @@ export class SetupController {
       if (useStarter) {
         // First-run screen shows the starter's progress; chat opens as soon as it loads.
         const starterProgress = ({ fraction, etaSec }: Progress) =>
-          this.set({ phase: 'downloading', target: summary, progress: fraction, etaSec, chatReady: false })
+          this.set({ phase: 'downloading', target: summary, progress: fraction, etaSec, chatReady: false, starter: summarize(starter!) })
         starterProgress({ fraction: 0, etaSec: 0 })
         const p = await this.fetch(starter!, starterProgress)
         try {
