@@ -8,6 +8,9 @@ const main = join(import.meta.dirname, '../out/main/index.js')
 test('charts: Hob draws them in the chat, and they download as PNG', async () => {
   const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
   const page = await app.firstWindow()
+  const errors: string[] = []
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
+  page.on('pageerror', (e) => errors.push(e.message))
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
 
@@ -35,7 +38,14 @@ test('charts: Hob draws them in the chat, and they download as PNG', async () =>
   await expect(page.getByTestId('chart-card').nth(1).locator('.recharts-pie-sector').first()).toBeVisible()
   await page.getByTestId('new-chat').click()
   await page.getByTestId('chat-item').first().click()
-  await expect(page.getByTestId('chart-card')).toHaveCount(3)
+  try {
+    await expect(page.getByTestId('chart-card')).toHaveCount(3)
+  } catch (err) {
+    // what the screen showed, for the CI report
+    await page.screenshot({ path: test.info().outputPath('reopened.png') })
+    console.log('ERRORS', JSON.stringify(errors))
+    throw err
+  }
 
   // a chart drawn from a data file the code saved: just the chart, no card for the data file
   await page.getByTestId('new-chat').click()

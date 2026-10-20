@@ -83,7 +83,7 @@ test('connecting an online app by link signs in through the browser and shows on
 
 test('an .mcpb bundle is added with its icon and asks for the settings it needs', async () => {
   const { execFileSync } = await import('node:child_process')
-  const { copyFileSync, mkdirSync, writeFileSync } = await import('node:fs')
+  const { copyFileSync, mkdirSync, renameSync, writeFileSync } = await import('node:fs')
   const root = mkdtempSync(join(tmpdir(), 'hob-mcpb-'))
   const dir = join(root, 'b')
   mkdirSync(join(dir, 'server'), { recursive: true })
@@ -95,8 +95,8 @@ test('an .mcpb bundle is added with its icon and asks for the settings it needs'
     user_config: { api_key: { type: 'string', title: 'API key', sensitive: true, required: true }, folders: { type: 'directory', title: 'Folders', multiple: true, default: ['${HOME}/Desktop'] } },
   }))
   const file = join(root, 'notes.mcpb')
-  // Windows has no zip command; its tar makes zips
-  if (process.platform === 'win32') execFileSync('tar', ['-a', '-c', '-f', file, '.'], { cwd: dir })
+  // Windows has no zip command; its tar makes zips, choosing the format from a .zip name
+  if (process.platform === 'win32') { execFileSync('tar', ['-a', '-c', '-f', `${file}.zip`, '.'], { cwd: dir }); renameSync(`${file}.zip`, file) }
   else execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
   const { app, page } = await launch()
   await page.getByTestId('open-plugins').click()

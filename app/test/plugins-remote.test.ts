@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -56,8 +56,8 @@ function bundle(root: string, manifest: Record<string, unknown> = BUNDLE) {
   copyFileSync(fixture, join(dir, 'server/index.mjs'))
   writeFileSync(join(dir, 'icon.png'), Buffer.from('89504e470d0a1a0a', 'hex'))
   const file = join(root, 'notes.mcpb')
-  // Windows has no zip command; its tar makes zips
-  if (process.platform === 'win32') execFileSync('tar', ['-a', '-c', '-f', file, '.'], { cwd: dir })
+  // Windows has no zip command; its tar makes zips, choosing the format from a .zip name
+  if (process.platform === 'win32') { execFileSync('tar', ['-a', '-c', '-f', `${file}.zip`, '.'], { cwd: dir }); renameSync(`${file}.zip`, file) }
   else execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
   return file
 }
