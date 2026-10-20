@@ -507,7 +507,8 @@ export class PluginRegistry {
       if (isPluginFile(path)) {
         tmp = mkdtempSync(join(tmpdir(), 'hob-plugin-'))
         if (process.platform === 'darwin') execFileSync('/usr/bin/ditto', ['-x', '-k', path, tmp])
-        else if (process.platform === 'win32') execFileSync('tar', ['-xf', path, '-C', tmp])
+        // Windows' own tar reads zips; another tar earlier on the PATH (Git's) may not
+        else if (process.platform === 'win32') execFileSync(join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe'), ['-xf', path, '-C', tmp])
         else execFileSync('unzip', ['-q', path, '-d', tmp])
         // zips usually hold one folder
         src = hasPlugin(tmp) ? tmp : subdirs(tmp).find(hasPlugin) ?? tmp

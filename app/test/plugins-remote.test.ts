@@ -57,7 +57,7 @@ function bundle(root: string, manifest: Record<string, unknown> = BUNDLE) {
   writeFileSync(join(dir, 'icon.png'), Buffer.from('89504e470d0a1a0a', 'hex'))
   const file = join(root, 'notes.mcpb')
   // Windows has no zip command; its tar makes zips, choosing the format from a .zip name
-  if (process.platform === 'win32') { execFileSync('tar', ['-a', '-c', '-f', `${file}.zip`, '.'], { cwd: dir }); renameSync(`${file}.zip`, file) }
+  if (process.platform === 'win32') { execFileSync(join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe'), ['-a', '-c', '-f', `${file}.zip`, '.'], { cwd: dir }); renameSync(`${file}.zip`, file) }
   else execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
   return file
 }

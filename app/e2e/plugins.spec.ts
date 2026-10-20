@@ -96,7 +96,7 @@ test('an .mcpb bundle is added with its icon and asks for the settings it needs'
   }))
   const file = join(root, 'notes.mcpb')
   // Windows has no zip command; its tar makes zips, choosing the format from a .zip name
-  if (process.platform === 'win32') { execFileSync('tar', ['-a', '-c', '-f', `${file}.zip`, '.'], { cwd: dir }); renameSync(`${file}.zip`, file) }
+  if (process.platform === 'win32') { execFileSync(join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe'), ['-a', '-c', '-f', `${file}.zip`, '.'], { cwd: dir }); renameSync(`${file}.zip`, file) }
   else execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
   const { app, page } = await launch()
   await page.getByTestId('open-plugins').click()
