@@ -96,15 +96,18 @@ function Tips() {
   return <p key={i} data-testid="setup-tip" className="fade-in mt-10 text-ui text-muted"><span className="font-medium text-ink-soft">Tip:</span> {TIPS[i]}</p>
 }
 
-/** what Hob is doing while it looks at the computer; each line shows long enough to read */
-const PROBING = ['Starting Hob…', 'Checking your computer…', 'Finding the best AI model for your computer…']
-function ProbingLine() {
-  const [i, setI] = useState(0)
+/** first launch: what Hob is doing while it looks at the computer. Loops; each line shows long enough to read */
+const FIRST_RUN = ['Checking your computer…', 'Looking at its memory and graphics…', 'Finding the best AI model for your computer…', 'Getting everything ready…']
+/** every other start: a bit of warmth while the model loads */
+const EVERYDAY_START = ['Stoking the fire…', 'Waking up the model…', 'Warming up…', 'Putting the kettle on…', 'Gathering your chats…', 'Fluffing the cushions…', 'Almost there…']
+function ProbingLine({ firstRun }: { firstRun: boolean }) {
+  const lines = firstRun ? FIRST_RUN : EVERYDAY_START
+  const [i, setI] = useState(() => (firstRun ? 0 : Math.floor(Math.random() * lines.length)))
   useEffect(() => {
-    const t = setInterval(() => setI((n) => Math.min(n + 1, PROBING.length - 1)), 1200)
+    const t = setInterval(() => setI((n) => (n + 1) % lines.length), 1600)
     return () => clearInterval(t)
-  }, [])
-  return <p key={i} data-testid="setup-probing" className="fade-in mt-5 text-body text-muted">{PROBING[i]}</p>
+  }, [lines])
+  return <p key={i} data-testid="setup-probing" className="fade-in mt-5 text-body text-muted">{lines[i % lines.length]}</p>
 }
 
 export function Onboarding({ state }: { state: SetupState }) {
@@ -115,7 +118,8 @@ export function Onboarding({ state }: { state: SetupState }) {
       <Frame>
         <div className="flex flex-col items-center">
           <Mascot size={112} alive />
-          <ProbingLine />
+          {/* nothing until it's known whether this is the first launch, so the words don't switch */}
+          {state.firstRun === undefined ? <p className="mt-5 text-body">&nbsp;</p> : <ProbingLine firstRun={state.firstRun} />}
         </div>
       </Frame>
     )

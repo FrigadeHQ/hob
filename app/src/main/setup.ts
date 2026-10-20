@@ -49,7 +49,7 @@ export function friendly(err: unknown): string {
 }
 
 export class SetupController {
-  private _state: SetupState = { phase: 'probing' }
+  private _state: SetupState
   private listeners = new Set<(s: SetupState) => void>()
   private result: PickResult | undefined
   /** true while start/install/recover runs; guards double-clicks and overlapping flows */
@@ -60,8 +60,12 @@ export class SetupController {
   private pendingTarget: Choice | undefined
 
   constructor(private deps: SetupDeps) {
+    this._state = { phase: 'probing', firstRun: this.firstRun() }
     deps.engine.onExit(() => void this.recover())
   }
+
+  /** no model chosen yet: the start-up screen is onboarding */
+  private firstRun() { const s = loadSettings(this.deps.settingsPath); return !s.activeModelId && !s.pendingModelId }
 
   get state() { return this._state }
   get engine() { return this.deps.engine }
@@ -81,7 +85,7 @@ export class SetupController {
 
   start() {
     return this.exclusive(async () => {
-      this.set({ phase: 'probing' })
+      this.set({ phase: 'probing', firstRun: this.firstRun() })
       try {
         const [hw, catalog] = await Promise.all([this.deps.getHardware(), this.deps.getCatalog()])
         this.result = pick(hw, catalog.models)

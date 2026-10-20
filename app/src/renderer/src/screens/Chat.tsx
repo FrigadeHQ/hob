@@ -45,15 +45,16 @@ function useSteadyText(target: string, live: boolean): string {
   useEffect(() => {
     if (!live) { at.current = target.length; setShown(target); return }
     if (target.length < at.current) at.current = 0
-    let raf = 0
+    // a timer, not animation frames: those stop in hidden or minimized windows, and the text would freeze
+    let t: ReturnType<typeof setTimeout> | undefined
     const tick = () => {
       if (at.current >= target.length) return
       at.current = Math.min(target.length, at.current + Math.max(2, Math.ceil((target.length - at.current) / 6)))
       setShown(target.slice(0, at.current))
-      raf = requestAnimationFrame(tick)
+      t = setTimeout(tick, 16)
     }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
+    t = setTimeout(tick, 0)
+    return () => clearTimeout(t)
   }, [target, live])
   return live ? shown : target
 }

@@ -63,6 +63,13 @@ describe('SetupController', () => {
     expect(saved).toMatchObject({ webAccess: true, filesDir: '/somewhere', activeModelId: expect.any(String) })
     expect(saved.pendingModelId).toBeUndefined()
   })
+  it('start-up knows whether this is the first launch (no model set up yet)', async () => {
+    const { c, deps } = setup()
+    expect(c.state).toEqual({ phase: 'probing', firstRun: true })
+    await c.start(); await c.confirm()
+    const again = new SetupController(deps)
+    expect(again.state).toEqual({ phase: 'probing', firstRun: false })
+  })
   it('start → choose with recommendation', async () => {
     const { c } = setup()
     await c.start()
