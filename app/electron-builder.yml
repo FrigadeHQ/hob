@@ -37,7 +37,13 @@ asarUnpack:
   - "**/node_modules/node-llama-cpp/**"
   - "**/node_modules/@node-llama-cpp/**"
 mac:
+  # a platform's files list replaces the one above, so it repeats it
   files:
+    - out/**
+    - package.json
+    - "!**/node_modules/onnxruntime-node/**"
+    - "!**/node_modules/sharp/**"
+    - "!**/node_modules/@img/**"
     # this Mac build only needs the Apple Silicon engine binaries
     - "!**/node_modules/@node-llama-cpp/{linux,win,mac-x64}*/**"
     - "!**/node_modules/node-llama-cpp/bins/{linux,win,mac-x64}*/**"
