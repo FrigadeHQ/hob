@@ -31,10 +31,12 @@
 
 ### Why Hob
 
-Desktop AI apps like Claude and ChatGPT work on your files, run code, search the web and ask before changing anything. The apps that run AI locally mostly give you a chat box and a model picker. Hob is the first kind, running entirely on your computer.
+Desktop AI apps like Claude and ChatGPT work on your files, run code, search the web and ask before changing anything. Existing solutions that run AI locally mostly give you a raw chat sandbox along with requiring users to deeply understand which model fits their system best.
 
-- **No setup.** Hob checks your hardware and downloads the best model it can run well. No model hub, no settings.
-- **Works on your files.** Projects, folders, spreadsheets, PDFs, photos. It reads, writes, renames and charts.
+Hob strives to work with the same quality and functionality as Claude and ChatGPT, except running its models entirely on your own computer.
+
+- **No setup.** Hob checks your hardware and downloads the best model it can run well. No account or model understanding required.
+- **Works on your files.** Projects, folders, spreadsheets, PDFs, photos, and much more.
 - **Safe by default.** Approval confirmations before anything in your folders changes, Undo for every task, and code runs in a sandbox.
 - **Free and open source.** [MIT licensed](LICENSE). No account, no subscription, no limits.
 
@@ -62,7 +64,7 @@ Hob picks from a curated list of open models, from Qwen3 for 8 GB laptops up to 
 
 ### Plugins
 
-A plugin is a folder with a `hob-plugin.json`. It can add [skills](docs/plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](docs/plugins/python-tools.md), and [app connections](docs/plugins/app-connections.md) to any MCP server, including `.mcpb` bundles. Hob's own web search, weather, code and PDF features are plugins too, in [`app/plugins/`](app/plugins).
+A plugin is a folder with a `hob-plugin.json`. It can add [skills](docs/plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](docs/plugins/python-tools.md), and [app connections](docs/plugins/app-connections.md) to any MCP server, including `.mcpb` bundles. Hob's own web search, code and PDF features are plugins too, in [`app/plugins/`](app/plugins).
 
 See the [plugin guide](docs/plugins/README.md) and the [reference](docs/plugins/reference.md).
 
