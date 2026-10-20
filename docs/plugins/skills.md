@@ -19,7 +19,7 @@ A skill is a `SKILL.md` file: a name, a one-line description, and the steps in p
    2. Suggest 3 recipes under 30 minutes, the one needing fewest extra items first.
    3. For each: time, the missing ingredients, then short numbered steps.
    ```
-4. In Hob, open **Plugins → Add → Link a folder** and pick the folder.
+4. In Hob, open **Plugins → Plugins → Add plugin → Link a folder** and pick the folder.
 5. Type `/fridge eggs, spinach, feta` in a chat.
 
 Linked folders reload as you edit, so you see changes on your next message.
@@ -30,7 +30,7 @@ Once Hob has done something you'll want again, say "save this as a skill". After
 
 - Hob writes the steps, keeps the code that worked as script files next to `SKILL.md`, and pins the packages it used.
 - You see everything first: the steps and each file's code, with Allow or Deny.
-- Saved skills go to **Plugins → My skills**, where you can edit or delete them.
+- Saved skills show under **Plugins → Skills**, each on its own card, where you can edit or delete them.
 - Hob won't save a skill in a message where it read web pages: ask again in a new message.
 
 ## Skills with scripts
@@ -57,4 +57,4 @@ How Hob uses skills:
 - Typing `/name` attaches the skill to that message directly.
 - Files next to `SKILL.md` (templates, examples, scripts) are readable by the skill's scripts.
 
-[Plugins overview](README.md) · [Skills](skills.md) · [Python tools](python-tools.md) · [App connections (MCP)](app-connections.md) · [Reference](reference.md)
+[Plugins overview](README.md) · [Skills](skills.md) · [Python tools](python-tools.md) · [Connectors (MCP)](connectors.md) · [Reference](reference.md)

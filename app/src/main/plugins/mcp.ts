@@ -27,7 +27,7 @@ export type McpServerSpec = StdioSpec | HttpSpec
 
 /** the server wants the user to sign in (or the sign-in expired) */
 export class McpAuthError extends Error {
-  constructor(public wwwAuthenticate: string) { super('Sign in to use this app connection.') }
+  constructor(public wwwAuthenticate: string) { super('Sign in to use this connector.') }
 }
 /** the server forgot our session: start a new one */
 export class McpSessionExpired extends Error {}
@@ -57,7 +57,7 @@ class StdioTransport implements Transport {
       try { onMessage(JSON.parse(line)) } catch { /* servers sometimes log to stdout */ }
     })
     child.on('error', (e) => onGone(`Couldn't start ${this.spec.command}: ${e.message}`))
-    child.on('exit', (code) => onGone(`The app connection stopped (exit code ${code}).${this.stderr ? `\n${this.stderr.trim().slice(-500)}` : ''}`))
+    child.on('exit', (code) => onGone(`The connector stopped (exit code ${code}).${this.stderr ? `\n${this.stderr.trim().slice(-500)}` : ''}`))
   }
   async send(m: object) { this.child?.stdin!.write(JSON.stringify(m) + '\n') }
   close() { this.child?.stdin!.end(); this.child?.kill() }
@@ -122,7 +122,7 @@ export class McpClient {
     if (!p) return
     this.pending.delete(m.id as number)
     clearTimeout(p.timer)
-    if (m.error) p.reject(new Error(m.error.message ?? 'The app connection returned an error'))
+    if (m.error) p.reject(new Error(m.error.message ?? 'The connector returned an error'))
     else p.resolve(m.result)
   }
 
@@ -132,7 +132,7 @@ export class McpClient {
     const id = this.nextId++
     const t = this.t
     return new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error('The app connection took too long to answer.')) }, timeoutMs)
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error('The connector took too long to answer.')) }, timeoutMs)
       this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timer })
       signal?.addEventListener('abort', () => {
         if (!this.pending.delete(id)) return
@@ -140,7 +140,7 @@ export class McpClient {
         this.notify('notifications/cancelled', { requestId: id, reason: 'Stopped by the user' })
         reject(new Error('Stopped by the user.'))
       }, { once: true })
-      if (!t) { this.pending.delete(id); clearTimeout(timer); reject(new Error('The app connection is not running.')); return }
+      if (!t) { this.pending.delete(id); clearTimeout(timer); reject(new Error('The connector is not running.')); return }
       t.send({ jsonrpc: '2.0', id, method, params }).catch((e: Error) => {
         // an expired session means a new one on the next use; calls still waiting on it start again too
         if (e instanceof McpSessionExpired) {
@@ -205,7 +205,7 @@ export class McpClient {
     const t = this.t
     this.t = undefined
     this.ready = undefined
-    this.failAll(new Error('The app connection was turned off.'))
+    this.failAll(new Error('The connector was turned off.'))
     t?.close()
   }
 }

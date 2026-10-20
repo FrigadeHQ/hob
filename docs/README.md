@@ -19,7 +19,7 @@ Hob strives to work with the same quality and functionality as Claude and ChatGP
 
 ## Private
 
-The model runs on your computer with [llama.cpp](https://github.com/ggml-org/llama.cpp) (Metal on Mac, CUDA or Vulkan elsewhere). Chats and files stay on your machine, and there is no telemetry. Hob only goes online to download models and check for new ones, to search the web for you (Web access can be turned off in Settings), and for app connections you add.
+The model runs on your computer with [llama.cpp](https://github.com/ggml-org/llama.cpp) (Metal on Mac, CUDA or Vulkan elsewhere). Chats and files stay on your machine, and there is no telemetry. Hob only goes online to download models and check for new ones, and, while Web access is on, to search the web, let its code fetch data (like stock prices) and install Python packages from PyPI. Turn Web access off in Settings to keep everything offline. Connectors you add also go online.
 
 ## Models
 
@@ -35,11 +35,11 @@ Hob picks from a curated list of open models, from Qwen3 for 8 GB laptops up to 
 | PDFs | Read PDFs, including scans, and fill in forms (Mac) |
 | Web | Search and read pages through a metasearch engine that runs on your computer |
 | Dictation | Speech to text, on your computer |
-| Plugins | Skills, Python tools and MCP app connections |
+| Plugins | Skills, Python tools and MCP connectors |
 
 ## Plugins
 
-A plugin is a folder with a `hob-plugin.json`. It can add [skills](plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](plugins/python-tools.md), and [app connections](plugins/app-connections.md) to any MCP server, including `.mcpb` bundles. Hob's own web search, code and PDF features are plugins too, in [`app/plugins/`](../app/plugins).
+A plugin is a folder with a `hob-plugin.json`. It can add [skills](plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](plugins/python-tools.md), and [connectors](plugins/connectors.md) to any MCP server, including `.mcpb` bundles. Hob's own web search, code and PDF features are plugins too, in [`app/plugins/`](../app/plugins).
 
 You don't have to write skills by hand: after Hob does something you'll want again, say "save this as a skill". It keeps the steps and the code that worked, and shows you both before saving.
 

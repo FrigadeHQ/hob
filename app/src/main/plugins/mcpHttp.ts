@@ -135,7 +135,7 @@ export class HttpTransport implements Transport {
       if (res.status === 404 && this.session) {
         this.session = undefined
         await res.body?.cancel().catch(() => {})
-        throw new McpSessionExpired('The app connection session ended.')
+        throw new McpSessionExpired('The connector session ended.')
       }
       if (!res.ok) {
         const text = (await res.text().catch(() => '')).slice(0, 300)
@@ -156,7 +156,7 @@ export class HttpTransport implements Transport {
           // the answer is in: stop reading, even if the server keeps the stream open
           if (answered && m.id !== undefined) break
         }
-        if (!answered && !this.closed) throw new Error('The app connection closed before answering.')
+        if (!answered && !this.closed) throw new Error('The connector closed before answering.')
         return
       }
       const text = await res.text()
@@ -178,7 +178,7 @@ export class HttpTransport implements Transport {
     const events = parseSse(res.body)
     for (;;) {
       const r = await events.next()
-      if (r.done) { done(); throw new Error('The app connection closed before it was ready.') }
+      if (r.done) { done(); throw new Error('The connector closed before it was ready.') }
       if (r.value.event === 'endpoint') {
         const endpoint = new URL(r.value.data.trim(), this.spec.url)
         // requests carry the user's key or token: they only go to the server the user connected
@@ -194,8 +194,8 @@ export class HttpTransport implements Transport {
         try { this.deliver(JSON.parse(e.data)) } catch { /* not JSON */ }
       }
     })().then(
-      () => { if (!this.closed) this.onGone('The app connection closed.') },
-      (e) => { if (!this.closed) this.onGone(`The app connection stopped: ${errText(e)}`) },
+      () => { if (!this.closed) this.onGone('The connector closed.') },
+      (e) => { if (!this.closed) this.onGone(`The connector stopped: ${errText(e)}`) },
     ).finally(done)
   }
 

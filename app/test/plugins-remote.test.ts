@@ -117,7 +117,7 @@ describe('MCP bundles (.mcpb)', () => {
   })
 })
 
-describe('online app connections', () => {
+describe('online connectors', () => {
   it('names a connection from its link', () => {
     expect(nameFromUrl('https://mcp.linear.app/mcp')).toBe('Linear')
     expect(nameFromUrl('https://api.githubcopilot.com/mcp/')).toBe('Githubcopilot')
@@ -184,7 +184,7 @@ describe('online app connections', () => {
   })
 })
 
-it('changing a setting while the app connection is starting connects with the new setting', async () => {
+it('changing a setting while the connector is starting connects with the new setting', async () => {
   const w = world()
   w.r.install(bundle(w.root))
   w.r.setSetting('notes-bundle', 'api_key', 'old')

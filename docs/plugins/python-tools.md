@@ -48,4 +48,4 @@ A tool that needs the internet adds `"permissions": { "network": true }`.
 
 `title` is the step title shown in the chat. `{arg}` placeholders are filled from the arguments.
 
-[Plugins overview](README.md) · [Skills](skills.md) · [Python tools](python-tools.md) · [App connections (MCP)](app-connections.md) · [Reference](reference.md)
+[Plugins overview](README.md) · [Skills](skills.md) · [Python tools](python-tools.md) · [Connectors (MCP)](connectors.md) · [Reference](reference.md)

@@ -33,4 +33,4 @@ Everything a `hob-plugin.json` can hold.
 "starters": [{ "title": "Plan a 3-day trip to Lisbon", "prompt": "/plan-trip 3 days in Lisbon" }]
 ```
 
-[Plugins overview](README.md) · [Skills](skills.md) · [Python tools](python-tools.md) · [App connections (MCP)](app-connections.md) · [Reference](reference.md)
+[Plugins overview](README.md) · [Skills](skills.md) · [Python tools](python-tools.md) · [Connectors (MCP)](connectors.md) · [Reference](reference.md)

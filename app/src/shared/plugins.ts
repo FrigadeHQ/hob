@@ -18,20 +18,22 @@ export type PluginInfo = {
   /** the plugin's own picture (an .mcpb bundle's icon), as a data: URL */
   image?: string
   source: PluginSource
+  /** connector: only links Hob to an outside service (MCP). skills: the user's own skills. plugin: a bundle of skills and tools */
+  kind: 'plugin' | 'connector' | 'skills'
   enabled: boolean
-  /** the plugin couldn't load (bad hob-plugin.json, missing files) or its app connection failed */
+  /** the plugin couldn't load (bad hob-plugin.json, missing files) or its connector failed */
   error?: string
   dir: string
   trust: PluginTrust
   skills: { name: string; description: string }[]
   tools: string[]
-  /** MCP servers (app connections) */
+  /** MCP servers (connectors) */
   apps: string[]
   starters: { title: string; prompt: string }[]
   settings: PluginSettingInfo[]
-  /** an online app connection needs the user to sign in (again) */
+  /** an online connector needs the user to sign in (again) */
   signIn?: boolean
-  /** signed in to an online app connection (can sign out) */
+  /** signed in to an online connector (can sign out) */
   signedIn?: boolean
 }
 

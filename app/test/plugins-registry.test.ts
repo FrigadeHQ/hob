@@ -246,3 +246,14 @@ describe('review fixes', () => {
     expect(reg!.prompts(['get_weather'])).toEqual(['Be kind.', 'Use get_weather.'])
   })
 })
+
+it('sorts what was added into plugins and connectors; your skills are their own kind', () => {
+  const w = world()
+  plugin(w.installDir, 'notes-server', { mcpServers: { notes: { command: 'node', args: ['x.js'] } } })
+  plugin(w.installDir, 'pdf-kit', { mcpServers: { pdf: { command: 'node', args: ['x.js'] } } }, { 'fill-it': '---\nname: fill-it\ndescription: d\n---\nGo.' })
+  plugin(w.installDir, 'trip', {}, { 'plan-trip': '---\nname: plan-trip\ndescription: d\n---\nGo.' })
+  const r = w.make()
+  r.saveSkill({ name: 'mine', description: 'd', instructions: 'i' })
+  const kinds = Object.fromEntries(r.list().map((p) => [p.id, p.kind]))
+  expect(kinds).toEqual({ 'my-skills': 'skills', 'notes-server': 'connector', 'pdf-kit': 'plugin', trip: 'plugin' })
+})

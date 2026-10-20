@@ -42,9 +42,9 @@ export type RegistryDeps = {
   bound?: Record<string, { get(): boolean; set(on: boolean): void }>
   /** secret settings at rest (Electron safeStorage in the app) */
   crypt: { encrypt(s: string): string; decrypt(s: string): string }
-  /** PATH for app connections (the user's login shell PATH) */
+  /** PATH for connectors (the user's login shell PATH) */
   path(): Promise<string>
-  /** opens the browser for signing in to online app connections */
+  /** opens the browser for signing in to online connectors */
   openExternal?(url: string): unknown
   /** Hob's own Node (Electron as Node), so bundles made for Node run without installing it */
   node?: { command: string; env: Record<string, string> }
@@ -135,9 +135,9 @@ export class PluginRegistry {
   private clients = new Map<string, Promise<McpClient>>()
   private mcpTools = new Map<string, McpTool[]>()
   private runtimeErrors = new Map<string, string>()
-  /** when an app connection last failed: don't make every message wait for it again */
+  /** when a connector last failed: don't make every message wait for it again */
   private failedAt = new Map<string, number>()
-  /** online app connections that need the user to sign in: key → the server's WWW-Authenticate */
+  /** online connectors that need the user to sign in: key → the server's WWW-Authenticate */
   private authNeeded = new Map<string, string>()
   private watchers: FSWatcher[] = []
   private reloadTimer: NodeJS.Timeout | undefined
@@ -160,7 +160,7 @@ export class PluginRegistry {
     for (const dir of this.d.store.pluginLinks()) add(load(dir, 'linked') ?? broken(dir, 'linked', `${MANIFEST} not found in ${dir}`))
     const order = { builtin: 1, installed: 2, linked: 3 }
     next.sort((a, b) => (a.manifest.id === MY_SKILLS ? -1 : b.manifest.id === MY_SKILLS ? 1 : order[a.source] - order[b.source] || a.manifest.name.localeCompare(b.manifest.name)))
-    // app connections of plugins that changed or went away restart with the new config
+    // connectors of plugins that changed or went away restart with the new config
     for (const [key, c] of this.clients) {
       const [id] = key.split('/')
       const was = this.plugins.find((p) => p.manifest.id === id)
@@ -207,6 +207,7 @@ export class PluginRegistry {
         id: m.id, name: m.name, description: m.description, version: m.version, ...(m.author ? { author: m.author } : {}), icon: m.icon,
         ...(p.image ? this.image(p) : {}),
         source: p.source, enabled: this.isOn(p), ...(error ? { error } : {}), dir: p.dir, trust,
+        kind: m.id === MY_SKILLS ? 'skills' : apps.length && !m.tools.length && !p.skills.length && !m.starters.length ? 'connector' : 'plugin',
         ...(apps.some((a) => this.authNeeded.has(`${m.id}/${a}`)) ? { signIn: true } : {}),
         ...(apps.some((a) => this.d.store.pluginSettings(m.id)[OAUTH(a)]) ? { signedIn: true } : {}),
         skills: p.skills.map((s) => ({ name: s.name, description: s.description })),
@@ -264,7 +265,7 @@ export class PluginRegistry {
     return env
   }
 
-  /** the settings a plugin needs before its app connection can start */
+  /** the settings a plugin needs before its connector can start */
   private missing(p: Loaded): string[] {
     const env = this.envFor(p.manifest.id)
     return p.manifest.settings.filter((s) => s.required && !env[s.key]?.trim()).map((s) => s.label)
@@ -331,7 +332,7 @@ export class PluginRegistry {
 
   /**
    * The tools of every plugin that's on, with clashing names made unique.
-   * waitMs: how long a message waits for app connections that are still starting (they keep starting in the background).
+   * waitMs: how long a message waits for connectors that are still starting (they keep starting in the background).
    */
   async tools(o: { waitMs?: number; signal?: AbortSignal } = {}): Promise<Tool<any>[]> {
     const taken = new Set(this.d.reserved)
@@ -405,7 +406,7 @@ export class PluginRegistry {
   }
 
   /**
-   * Connect a plugin's app connections now, signing in where a server asks for it (opens the browser).
+   * Connect a plugin's connectors now, signing in where a server asks for it (opens the browser).
    * Used right after the user adds a connection, and by the Sign in button.
    */
   async connect(id: string, signal?: AbortSignal): Promise<PluginResult> {
@@ -457,7 +458,7 @@ export class PluginRegistry {
     this.dropClient(key)
   }
 
-  /** forget the sign-in of a plugin's online app connections */
+  /** forget the sign-in of a plugin's online connectors */
   signOut(id: string) {
     const p = this.get(id)
     if (!p) return
@@ -480,7 +481,7 @@ export class PluginRegistry {
     }
     return l
   }
-  /** start app connections in the background so the first message doesn't wait */
+  /** start connectors in the background so the first message doesn't wait */
   warmUp() { void this.tools().then(() => this.d.onChange?.()).catch(() => {}) }
 
   setEnabled(id: string, on: boolean) {
@@ -493,7 +494,7 @@ export class PluginRegistry {
     const s = this.get(id)?.manifest.settings.find((x) => x.key === key)
     if (!s) return
     this.d.store.setPluginSetting(id, key, value === '' ? null : s.secret ? this.d.crypt.encrypt(value) : value)
-    // app connections get settings when they start
+    // connectors get settings when they start
     this.stopClients(id)
   }
   private stopClients(id: string) {
@@ -659,7 +660,7 @@ export class PluginRegistry {
       name ||= Object.keys(servers)[0]
     } else {
       const [command, ...args] = parseCommandLine(text)
-      if (!command) return { ok: false, error: 'Enter the command that starts the app connection.' }
+      if (!command) return { ok: false, error: 'Enter the command that starts the connector.' }
       secrets = Object.fromEntries(lines.filter((l) => l.indexOf('=') > 0).map((l) => [l.slice(0, l.indexOf('=')).trim(), l.slice(l.indexOf('=') + 1).trim()]))
       name ||= basename(args.at(-1) ?? command)
       servers = { [slug(name) || 'app']: { command, args } }
@@ -670,7 +671,7 @@ export class PluginRegistry {
     // keys typed in the form are stored like any secret setting, never in plain text in the plugin folder
     const keys = Object.entries(secrets)
     const online = Object.values(servers).every((c) => c && typeof c === 'object' && ('url' in c || (c as { type?: string }).type === 'http'))
-    const description = online ? `Online app connection: ${Object.values(servers).map((c) => { try { return new URL((c as McpUrlConfig).url).host } catch { return '' } }).filter(Boolean).join(', ')}` : 'App connection (MCP).'
+    const description = online ? `Online connector: ${Object.values(servers).map((c) => { try { return new URL((c as McpUrlConfig).url).host } catch { return '' } }).filter(Boolean).join(', ')}` : 'Connector (MCP).'
     const manifest = { id, name, version: '1.0.0', description, icon: online ? 'globe' : 'plug', mcpServers: servers, ...(keys.length ? { settings: keys.map(([key]) => ({ key, label: labels[key] ?? key, secret: true })) } : {}) }
     const r = parseManifest(manifest)
     if ('error' in r) return { ok: false, error: r.error }

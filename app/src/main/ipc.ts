@@ -162,7 +162,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     live.start(chatId, requestId)
     try {
       const skills = d.plugins.skills()
-      // app connections still starting get a few seconds; they're ready for the next message
+      // connectors still starting get a few seconds; they're ready for the next message
       const tools = [...coreTools(), ...(await d.plugins.tools({ waitMs: 8000, signal: ac.signal })), ...(skills.length ? [useSkillTool(skillSource)] : []), saveSkillTool(skillSource)]
       const reply = await runTurn({
         engine: d.setup.engine, store: d.store, tools, python: d.python,
@@ -259,7 +259,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     }
     const res = d.plugins.install(path)
     pluginsChanged()
-    // start its app connection now so problems (or settings it needs) show on its card
+    // start its connector now so problems (or settings it needs) show on its card
     if (res.ok) d.plugins.warmUp()
     return res
   }

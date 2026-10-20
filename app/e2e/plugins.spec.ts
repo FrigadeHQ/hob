@@ -16,6 +16,7 @@ async function launch() {
 test('built-in plugins are listed and can be turned off; Web search is the Web access switch', async () => {
   const { app, page } = await launch()
   await page.getByTestId('open-plugins').click()
+  await page.getByTestId('tab-plugins').click()
   for (const id of ['web', 'code', 'pdf']) await expect(page.locator(`[data-testid=plugin][data-id=${id}]`)).toBeVisible()
   // the old examples are gone
   for (const id of ['weather', 'trip-planner', 'study-buddy', 'money']) await expect(page.locator(`[data-testid=plugin][data-id=${id}]`)).toHaveCount(0)
@@ -36,6 +37,8 @@ test('a new skill shows in the / menu and its instructions reach the model', asy
   await page.getByTestId('skill-instructions').fill('Three wins, then blockers.')
   await page.getByTestId('skill-save').click()
   await expect(page.getByTestId('plugins-notice')).toContainText('/weekly-report')
+  await expect(page.locator('[data-testid=skill-card][data-name=weekly-report]')).toContainText('Yours')
+  await expect(page.locator('[data-testid=plugin][data-id=my-skills]')).toHaveCount(0)
   await page.getByTestId('new-chat').click()
   await page.getByTestId('composer-input').fill('/week')
   await expect(page.getByTestId('skill-option')).toHaveCount(1)
@@ -55,6 +58,9 @@ test('turning a plugin off hides its skills from the / menu', async () => {
   await expect(page.getByTestId('skill-option').filter({ hasText: '/fill-pdf' })).toBeVisible()
   await page.getByTestId('composer-input').fill('')
   await page.getByTestId('open-plugins').click()
+  // a plugin's skills show as their own cards, marked with where they come from
+  await expect(page.locator('[data-testid=skill-card][data-name=fill-pdf]')).toContainText('From PDF')
+  await page.getByTestId('tab-plugins').click()
   await page.locator('[data-testid=plugin][data-id=pdf]').getByTestId('plugin-toggle').click()
   await page.getByTestId('new-chat').click()
   await page.getByTestId('composer-input').fill('/fill')
@@ -67,7 +73,7 @@ test('connecting an online app by link signs in through the browser and shows on
   const fx = await startHttpFixture({ auth: true })
   const { app, page } = await launch()
   await page.getByTestId('open-plugins').click()
-  await page.getByTestId('plugins-add').click()
+  await page.getByTestId('tab-connectors').click()
   await page.getByTestId('connect-app').click()
   await page.getByTestId('connect-command').fill(fx.url)
   await expect(page.getByTestId('connect-dialog')).toContainText('Headers (optional)')
@@ -101,6 +107,7 @@ test('an .mcpb bundle is added with its icon and asks for the settings it needs'
   else execFileSync('zip', ['-qr', file, '.'], { cwd: dir })
   const { app, page } = await launch()
   await page.getByTestId('open-plugins').click()
+  await page.getByTestId('tab-connectors').click()
   await page.evaluate((f) => (window as unknown as { hob: { plugins: { addFile(p: string): Promise<unknown> } } }).hob.plugins.addFile(f), file)
   const card = page.locator('[data-testid=plugin][data-id=bundle-notes]')
   await expect(card).toContainText('Bundle Notes')

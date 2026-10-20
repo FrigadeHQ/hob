@@ -7,7 +7,7 @@ export type Action =
   | { kind: 'read' | 'create' | 'change'; paths: string[] }
   | { kind: 'run' }
   | { kind: 'web' }
-  /** a plugin's app connection; ask = the tool says it deletes or changes things */
+  /** a plugin's connector; ask = the tool says it deletes or changes things */
   | { kind: 'app'; ask?: boolean }
 /** grants: every folder this chat may use (project folders + ones allowed in the chat). project: the project's folders, where new files need no approval */
 export type GateCtx = { chatDir: string; grants: string[]; project?: string[]; always: string[]; untrusted: boolean; webAccess: boolean; home?: string; appData?: string }

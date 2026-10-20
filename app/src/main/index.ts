@@ -150,7 +150,7 @@ app.whenReady().then(() => {
       decrypt: (v) => (v.startsWith('enc:') ? safeStorage.decryptString(Buffer.from(v.slice(4), 'base64')) : v.replace(/^plain:/, '')),
     },
     path: loginPath,
-    // sign-in pages for online app connections open in the user's browser
+    // sign-in pages for online connectors open in the user's browser
     // (fake mode, for tests: follow the sign-in page's redirect straight back, like a browser that's already signed in)
     openExternal: FAKE
       ? async (url) => { const r = await fetch(url, { redirect: 'manual' }); const back = r.headers.get('location'); if (back) await fetch(back) }
