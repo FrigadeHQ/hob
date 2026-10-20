@@ -72,3 +72,27 @@ describe('fileNameFor safety (I7)', () => {
     expect(() => fileNameFor('https://huggingface.co/x/y/notes.txt')).toThrow()
   })
 })
+
+describe('stalled downloads', () => {
+  it('a download that stops receiving data is restarted (it resumes), then finishes', async () => {
+    const { retryStalled } = await import('../src/main/downloader')
+    let calls = 0
+    const run = (signal: AbortSignal, progressed: () => void) => new Promise<void>((resolve, reject) => {
+      calls++
+      if (calls === 1) { progressed(); signal.addEventListener('abort', () => reject(new Error('aborted'))); return } // hangs
+      progressed(); resolve()
+    })
+    await retryStalled(run, { stallMs: 50, tries: 3 })
+    expect(calls).toBe(2)
+  })
+  it('gives up after a few stalls with a plain error, and Stop still stops at once', async () => {
+    const { retryStalled } = await import('../src/main/downloader')
+    const hang = (signal: AbortSignal) => new Promise<void>((_r, reject) => signal.addEventListener('abort', () => reject(new Error('aborted'))))
+    await expect(retryStalled(hang, { stallMs: 20, tries: 2 })).rejects.toThrow(/stopped receiving data/)
+    const ac = new AbortController()
+    setTimeout(() => ac.abort(), 10)
+    let calls = 0
+    await expect(retryStalled((s) => { calls++; return hang(s) }, { stallMs: 1000, tries: 3, signal: ac.signal })).rejects.toThrow()
+    expect(calls).toBe(1)
+  })
+})

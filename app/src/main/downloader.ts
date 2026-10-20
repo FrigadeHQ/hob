@@ -36,15 +36,54 @@ export function partialDownloadGB(dir: string, url: string): number {
 
 export const isVerified = (dir: string, url: string) => existsSync(join(dir, fileNameFor(url))) && existsSync(marker(dir, url))
 
+export const STALL_MS = 45_000
+export const STALL_TRIES = 5
+
+/**
+ * Runs a download, restarting it when no data arrives for stallMs: connections can hang without failing,
+ * which would otherwise wait forever. Each restart resumes from the partial file.
+ */
+export async function retryStalled(
+  run: (signal: AbortSignal, progressed: () => void) => Promise<void>,
+  o: { stallMs?: number; tries?: number; signal?: AbortSignal } = {},
+): Promise<void> {
+  const stallMs = o.stallMs ?? STALL_MS
+  const tries = o.tries ?? STALL_TRIES
+  for (let attempt = 1; ; attempt++) {
+    const ac = new AbortController()
+    let stalled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const progressed = () => { clearTimeout(timer); timer = setTimeout(() => { stalled = true; ac.abort() }, stallMs) }
+    const stop = () => ac.abort()
+    o.signal?.addEventListener('abort', stop, { once: true })
+    progressed()
+    try {
+      await run(ac.signal, progressed)
+      return
+    } catch (err) {
+      if (o.signal?.aborted || !stalled) throw err
+      if (attempt >= tries) throw new Error('The download stopped receiving data. Check your internet connection and try again.')
+    } finally {
+      clearTimeout(timer)
+      o.signal?.removeEventListener('abort', stop)
+    }
+  }
+}
+
 export const realDeps: DownloadDeps = {
   async download(url, dir, fileName, onProgress, signal) {
     const { createModelDownloader } = await import('node-llama-cpp')
-    const dl = await createModelDownloader({
-      modelUri: url, dirPath: dir, fileName, skipExisting: true,
-      onProgress: ({ totalSize, downloadedSize, estimatedTimeLeft }) =>
-        onProgress({ fraction: totalSize ? downloadedSize / totalSize : 0, etaSec: Math.round(estimatedTimeLeft / 1000) }),
-    })
-    await dl.download({ signal })
+    let last = -1
+    await retryStalled(async (attemptSignal, progressed) => {
+      const dl = await createModelDownloader({
+        modelUri: url, dirPath: dir, fileName, skipExisting: true,
+        onProgress: ({ totalSize, downloadedSize, estimatedTimeLeft }) => {
+          if (downloadedSize > last) { last = downloadedSize; progressed() }
+          onProgress({ fraction: totalSize ? downloadedSize / totalSize : 0, etaSec: Math.round(estimatedTimeLeft / 1000) })
+        },
+      })
+      await dl.download({ signal: attemptSignal })
+    }, { signal })
   },
   hashFile: (path) => new Promise((resolve, reject) => {
     const h = createHash('sha256')

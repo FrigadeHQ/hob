@@ -61,6 +61,8 @@ function useCollapsed() {
 
 const row = 'group flex h-8 items-center gap-2 rounded-control px-2 text-ui'
 const label = 'px-2 pb-1 pt-4 text-meta text-muted'
+/** the + next to a heading: shows when the heading is hovered (or focused from the keyboard) */
+const headAction = 'mt-3 rounded-control p-1 text-muted opacity-0 transition-opacity hover:bg-line/70 hover:text-ink focus-visible:opacity-100 group-hover/head:opacity-100'
 
 export function Sidebar({ state, selected, refreshKey, screen, draftProject, onSelect, onNew, onNewInProject, onEditProject, onSettings, onPlugins }: Props) {
   const [chats, setChats] = useState<ChatSummary[]>([])
@@ -100,9 +102,9 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
         </button>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 pb-2">
-        <div className="flex items-center justify-between">
+        <div className="group/head flex items-center justify-between">
           <p className={label}>Projects</p>
-          <button data-testid="new-project" aria-label="New project" title="New project" onClick={() => onEditProject(null)} className="mt-3 rounded-control p-1 text-muted hover:bg-line/70 hover:text-ink"><Plus size={14} /></button>
+          <button data-testid="new-project" aria-label="New project" title="New project" onClick={() => onEditProject(null)} className={headAction}><Plus size={14} /></button>
         </div>
         {projects.length === 0 && (
           <button onClick={() => onEditProject(null)} className={`w-full ${row} text-muted hover:bg-line/60 hover:text-ink`}>
@@ -133,9 +135,9 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
           <div key={name}>
             {i === 0
               ? (
-                <div className="flex items-center justify-between">
+                <div className="group/head flex items-center justify-between">
                   <p className={label}>{name}</p>
-                  <button data-testid="new-chat-inline" aria-label="New chat" title="New chat" onClick={onNew} className="mt-3 rounded-control p-1 text-muted hover:bg-line/70 hover:text-ink"><Plus size={14} /></button>
+                  <button data-testid="new-chat-inline" aria-label="New chat" title="New chat" onClick={onNew} className={headAction}><Plus size={14} /></button>
                 </div>
               )
               : <p className={label}>{name}</p>}

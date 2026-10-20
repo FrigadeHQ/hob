@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { ModelRow, UserSettings } from '../../../shared/agent'
+import type { SetupState } from '../../../shared/types'
 import { hob } from '../api'
 import { Dialog, Switch, button } from '../components/ui'
 
 const gb = (n: number) => (n < 10 ? `${n.toFixed(1)} GB` : `${Math.round(n)} GB`)
+const left = (s: number) => (s <= 0 ? '' : s < 90 ? ' · about a minute left' : s < 5400 ? ` · about ${Math.round(s / 60)} minutes left` : ` · about ${Math.round(s / 3600)} hours left`)
 
 export function Settings({ onClose, onAllChatsDeleted }: { onClose(): void; onAllChatsDeleted(): void }) {
   const [models, setModels] = useState<ModelRow[]>([])
@@ -11,12 +13,23 @@ export function Settings({ onClose, onAllChatsDeleted }: { onClose(): void; onAl
   const [storage, setStorage] = useState<{ modelsGB: number; filesGB: number; codeToolsGB: number } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [chatCount, setChatCount] = useState(0)
+  /** the download in progress (or about to start, the moment Download is clicked) */
+  const [setup, setSetup] = useState<SetupState | null>(null)
+  const [starting, setStarting] = useState<string | null>(null)
   const reload = () => { void hob.models.list().then(setModels); void hob.storage.get().then(setStorage) }
   useEffect(() => {
     reload()
     void hob.settings.get().then(setS)
-    return hob.setup.onState(reload)
+    void hob.setup.getState().then(setSetup)
+    return hob.setup.onState((st) => { setSetup(st); if (st.phase !== 'downloading') setStarting(null); reload() })
   }, [])
+  const downloading = setup?.phase === 'downloading' ? setup : null
+  const busyId = downloading?.target.id ?? starting
+  function use(id: string) {
+    if (busyId) return
+    setStarting(id)
+    void hob.models.use(id).then(reload).finally(() => setStarting((cur) => (cur === id ? null : cur)))
+  }
 
   return (
     <main data-testid="settings" className="flex-1 overflow-y-auto">
@@ -40,12 +53,23 @@ export function Settings({ onClose, onAllChatsDeleted }: { onClose(): void; onAl
                   <p className="text-ui text-muted">{m.description}</p>
                   <p className="text-meta text-muted mt-0.5">{m.blurb} · {gb(m.sizeGB)}{m.downloaded ? ' · downloaded' : ''}</p>
                 </div>
-                {!m.active && (
-                  <button data-testid="model-use" onClick={() => void hob.models.use(m.id).then(reload)} className={button.secondary}>
+                {busyId === m.id && !m.active ? (
+                  <div data-testid="model-progress" className="w-44 shrink-0 pt-1">
+                    <p className="text-meta text-ink-soft">
+                      {downloading && downloading.target.id === m.id
+                        ? `Downloading… ${Math.min(99, Math.floor(downloading.progress * 100))}%${left(downloading.etaSec)}`
+                        : m.downloaded ? 'Switching…' : 'Starting…'}
+                    </p>
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
+                      <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${downloading && downloading.target.id === m.id ? Math.max(3, downloading.progress * 100) : 3}%` }} />
+                    </div>
+                  </div>
+                ) : !m.active && (
+                  <button data-testid="model-use" disabled={!!busyId} title={busyId ? 'Wait for the current download to finish' : undefined} onClick={() => use(m.id)} className={button.secondary}>
                     {m.downloaded ? 'Use' : 'Download'}
                   </button>
                 )}
-                {m.downloaded && !m.active && (
+                {m.downloaded && !m.active && busyId !== m.id && (
                   <button data-testid="model-delete" onClick={() => void hob.models.remove(m.id).then(reload)} className="text-ui text-muted hover:text-ink py-1.5">Delete</button>
                 )}
               </div>
