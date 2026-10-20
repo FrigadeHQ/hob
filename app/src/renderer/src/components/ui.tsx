@@ -60,7 +60,7 @@ export function Dialog({ title, onClose, children, testId }: { title: string; on
   }, [onClose])
   return (
     <div className="fade-in fixed inset-0 z-40 flex items-center justify-center bg-black/25 p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div data-testid={testId} role="dialog" aria-label={title} className="w-full max-w-lg rounded-[16px] border border-line bg-surface p-5 shadow-xl">
+      <div data-testid={testId} role="dialog" aria-label={title} className="pop w-full max-w-lg rounded-[16px] border border-line bg-surface p-5 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-body font-semibold">{title}</h2>
           <IconButton icon={X} label="Close" onClick={onClose} />

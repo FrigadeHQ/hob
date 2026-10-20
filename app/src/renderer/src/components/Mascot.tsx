@@ -36,7 +36,7 @@ function useGaze(on: boolean) {
 export function Mascot({ size = 96, alive = false }: { size?: number; alive?: boolean }) {
   const [ref, gaze] = useGaze(alive)
   return (
-    <svg ref={ref} data-testid="mascot" width={size} height={size * 1.2} viewBox="290 200 444 560" role="img" aria-label="Hob" className={alive ? 'hob-alive' : undefined}>
+    <svg ref={ref} data-testid="mascot" width={size} height={size * 1.2} viewBox="290 200 444 560" overflow="visible" role="img" aria-label="Hob" className={`overflow-visible ${alive ? 'hob-alive' : ''}`}>
       <defs>
         <linearGradient id="hob-flame" x1="0.2" y1="0" x2="0.8" y2="1">
           <stop offset="0" stopColor="#FF9445" />

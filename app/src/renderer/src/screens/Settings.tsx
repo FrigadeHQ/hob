@@ -32,7 +32,7 @@ export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
   }
 
   return (
-    <main data-testid="settings" className="flex-1 overflow-y-auto">
+    <main data-testid="settings" className="fade-in flex-1 overflow-y-auto">
       <div className="drag h-12" />
       <div className="max-w-2xl mx-auto px-6 pb-12 space-y-10">
         <h1 className="text-title font-semibold tracking-tight">Settings</h1>

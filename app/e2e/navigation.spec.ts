@@ -109,7 +109,8 @@ test('the sidebar can be dragged wider or narrower, is remembered, and double-cl
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
   const sidebar = page.getByTestId('sidebar')
   const width = async () => Math.round((await sidebar.boundingBox())!.width)
-  expect(await width()).toBe(256)
+  // the app fades in after setup; measure once it has settled
+  await expect.poll(width).toBe(256)
 
   const handle = (await page.getByTestId('sidebar-resize').boundingBox())!
   const y = handle.y + 300
@@ -126,9 +127,10 @@ test('the sidebar can be dragged wider or narrower, is remembered, and double-cl
   app = await launch()
   page = await app.firstWindow()
   await expect(page.getByTestId('sidebar')).toBeVisible({ timeout: 20_000 })
-  expect(Math.round((await page.getByTestId('sidebar').boundingBox())!.width)).toBe(420)
+  const after = async () => Math.round((await page.getByTestId('sidebar').boundingBox())!.width)
+  await expect.poll(after).toBe(420)
   await page.getByTestId('sidebar-resize').dblclick()
-  expect(Math.round((await page.getByTestId('sidebar').boundingBox())!.width)).toBe(256)
+  await expect.poll(after).toBe(256)
   await app.close()
 })
 

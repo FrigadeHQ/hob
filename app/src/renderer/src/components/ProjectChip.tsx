@@ -24,7 +24,12 @@ export function ProjectChip({ projects, value, locked, onChange, onNew }: Props)
     return () => window.removeEventListener('mousedown', close)
   }, [open])
   const current = projects.find((p) => p.id === value)
-  if (locked) return current ? <span data-testid="project-chip" className={chip}><Folder size={14} strokeWidth={1.75} />{current.name}</span> : null
+  // a chat that started can't move; it still shows where it is, so the row doesn't flash between chats
+  if (locked) {
+    return <span data-testid="project-chip" title={current ? undefined : 'This chat isn\'t in a project'} className={`${chip} cursor-default`}>
+      {current ? <Folder size={14} strokeWidth={1.75} /> : <MessageSquare size={14} strokeWidth={1.75} />}{current ? current.name : 'No project'}
+    </span>
+  }
   const Icon = current ? Folder : MessageSquare
   const choose = (id: string | null) => { onChange(id); setOpen(false) }
   return (

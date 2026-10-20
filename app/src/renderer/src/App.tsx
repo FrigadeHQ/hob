@@ -117,7 +117,7 @@ export function App() {
   if (!chatReady) return <Onboarding state={state} />
   const mac = hob.platform === 'darwin'
   return (
-    <div className="relative h-full flex">
+    <div className="reveal relative h-full flex">
       <ConfirmHost />
       {sidebar && narrow && <div className="fade-in absolute inset-0 z-20 bg-black/20" onClick={() => setSidebar(false)} />}
       {sidebar && (

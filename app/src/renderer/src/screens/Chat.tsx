@@ -7,7 +7,7 @@ import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
 import { hob } from '../api'
 import { CopyButton } from '../components/CopyButton'
-import { WorkLog } from '../components/WorkLog'
+import { ThinkingIndicator, WorkLog } from '../components/WorkLog'
 import { FileCards } from '../components/FileCards'
 import { ApprovalCard } from '../components/ApprovalCard'
 import { AttachmentChip, Composer } from '../components/Composer'
@@ -32,7 +32,36 @@ const MARKDOWN_COMPONENTS = {
     typeof src === 'string' && src.startsWith('hob-file:') ? <img src={src} alt={alt ?? ''} /> : <span>{alt}</span>,
 }
 
-type UiMessage = Omit<StoredMessage, 'id'> & { id: number | string }
+/** uiKey: a finished reply keeps the key it had while live, so its work log folds shut instead of remounting */
+type UiMessage = Omit<StoredMessage, 'id'> & { id: number | string; uiKey?: string }
+
+/**
+ * Text streams in bursts; show it at a steady pace instead. Catches up within a few frames, so it never
+ * lags far behind, and a finished reply shows in full at once.
+ */
+function useSteadyText(target: string, live: boolean): string {
+  const [shown, setShown] = useState(target)
+  const at = useRef(target.length)
+  useEffect(() => {
+    if (!live) { at.current = target.length; setShown(target); return }
+    if (target.length < at.current) at.current = 0
+    let raf = 0
+    const tick = () => {
+      if (at.current >= target.length) return
+      at.current = Math.min(target.length, at.current + Math.max(2, Math.ceil((target.length - at.current) / 6)))
+      setShown(target.slice(0, at.current))
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, live])
+  return live ? shown : target
+}
+
+function ReplyText({ content, live }: { content: string; live: boolean }) {
+  const text = useSteadyText(content, live)
+  return text ? <Markdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>{tidyMarkdown(text)}</Markdown> : null
+}
 const userMsg = (rid: string, content: string, attachments: Attachment[]): UiMessage => ({ id: `u-${rid}`, role: 'user', content, attachments, steps: [], undoable: false, undone: false })
 const placeholder = (rid: string): UiMessage => ({ id: `a-${rid}`, role: 'assistant', content: '', attachments: [], steps: [], undoable: false, undone: false })
 
@@ -116,7 +145,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   useEffect(() => hob.chat.onDone((rid, reply) => {
     if (rid !== currentId.current) return
     currentId.current = null
-    setMessages((ms) => [...ms.slice(0, -1), reply ?? { ...placeholder(rid), content: 'Something went wrong. Try again.' }])
+    setMessages((ms) => [...ms.slice(0, -1), reply ? { ...reply, uiKey: `a-${rid}` } : { ...placeholder(rid), content: 'Something went wrong. Try again.' }])
     setRequestId(null); setApproval(null); clearThinking(); inputRef.current?.focus()
   }), [])
 
@@ -248,7 +277,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     try {
       id = await ensureChat()
       const reply = await hob.chat.send(id, rid, text, files)
-      if (currentId.current === rid) setMessages((ms) => [...ms.slice(0, -1), reply])
+      if (currentId.current === rid) setMessages((ms) => [...ms.slice(0, -1), { ...reply, uiKey: `a-${rid}` }])
     } catch (err) {
       console.error(err)
       if (currentId.current === rid) setMessages((ms) => [...ms.slice(0, -1), { ...placeholder(rid), content: 'Something went wrong. Try again.' }])
@@ -321,13 +350,14 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
               )
             }
             return (
-              <div key={m.id}>
+              <div key={m.uiKey ?? m.id}>
                 <WorkLog steps={m.steps} running={live} writing={!!m.content} thinking={live ? thoughtBuf : undefined} workedMs={m.workedMs} />
                 {approval && i === messages.length - 1 && (
                   <ApprovalCard req={approval} onAnswer={(a) => { void hob.approval.answer(approval.id, a); setApproval(null) }} />
                 )}
                 <div data-testid="message-assistant" className="reply prose max-w-none [overflow-wrap:anywhere]">
-                  {m.content && <Markdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>{tidyMarkdown(m.content)}</Markdown>}
+                  {live && !m.content && !m.steps.length && <ThinkingIndicator thinking={thoughtBuf} />}
+                  <ReplyText content={m.content} live={live} />
                 </div>
                 <FileCards steps={m.steps} />
                 {!live && (

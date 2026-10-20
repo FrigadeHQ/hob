@@ -342,7 +342,7 @@ export function Plugins({ opened }: { opened?: PluginResult | null }) {
   ]
 
   return (
-    <main data-testid="plugins" className={`flex-1 overflow-y-auto transition-colors ${dragging ? 'bg-line/40' : ''}`}
+    <main data-testid="plugins" className={`fade-in flex-1 overflow-y-auto transition-colors ${dragging ? 'bg-line/40' : ''}`}
       onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragging(true) } }}
       onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false) }}
       onDrop={(e) => void drop(e)}>

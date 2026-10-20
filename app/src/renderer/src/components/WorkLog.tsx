@@ -59,9 +59,31 @@ function ThinkingLine({ source }: { source: React.MutableRefObject<string> }) {
   return <p key={line} data-testid="thinking-preview" className="fade-in mt-1 ml-6 truncate text-ui text-muted">{line}</p>
 }
 
+/** a plain reply that hasn't started yet: shown where its text will appear, so nothing jumps when it does */
+export function ThinkingIndicator({ thinking }: { thinking?: React.MutableRefObject<string> }) {
+  return (
+    <div data-testid="thinking">
+      <div className="flex items-center gap-2 text-ui text-ink-soft">
+        <span className="flex w-4 justify-center text-muted"><LoaderCircle size={14} className="animate-spin" /></span>
+        <span className="animate-pulse">Thinking</span>
+      </div>
+      {thinking && <ThinkingLine source={thinking} />}
+    </div>
+  )
+}
+
+/** folds open and shut smoothly instead of snapping */
+function Fold({ open, children }: { open: boolean; children: React.ReactNode }) {
+  return (
+    <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+      <div className="min-h-0 overflow-hidden">{children}</div>
+    </div>
+  )
+}
+
 /**
  * The agent's work for one reply. While running: what it's doing now, plus the steps so far.
- * When done: a single "Worked for 12s" line that expands to the steps.
+ * When done: the steps fold away under a single "Worked for 12s" line that opens them again.
  */
 export function WorkLog({ steps, running, writing, thinking, workedMs }: {
   steps: Step[]
@@ -72,11 +94,21 @@ export function WorkLog({ steps, running, writing, thinking, workedMs }: {
   thinking?: React.MutableRefObject<string>
   workedMs?: number
 }) {
-  const [open, setOpen] = useState(false)
+  // a reply that just finished starts open and folds shut, so the text below slides up instead of jumping
+  const [open, setOpen] = useState(running)
+  const wasRunning = useRef(running)
+  useEffect(() => {
+    if (wasRunning.current && !running) {
+      setOpen(true)
+      const t = setTimeout(() => setOpen(false), 600)
+      wasRunning.current = false
+      return () => clearTimeout(t)
+    }
+    wasRunning.current = running
+  }, [running])
   const startedAt = useRef(Date.now())
-  if (!running && !steps.length) return null
-  // plain replies without tools: no log once text is flowing
-  if (running && writing && !steps.length) return null
+  // plain replies without tools: the Thinking indicator sits in the reply itself
+  if (!steps.length) return null
 
   if (running) {
     const current = [...steps].reverse().find((s) => s.status === 'running' || s.status === 'waiting')
@@ -101,7 +133,7 @@ export function WorkLog({ steps, running, writing, thinking, workedMs }: {
       <button data-testid="worklog-toggle" onClick={() => setOpen((o) => !o)} className="flex items-center gap-1 text-ui text-muted hover:text-ink-soft">
         {label}<ChevronRight size={14} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
       </button>
-      {open && <ul className="mt-2 space-y-1 border-l border-line pl-3 ml-2">{stepRows(steps, false).map((s) => <StepRow key={s.id} s={s} />)}</ul>}
+      <Fold open={open}><ul className="mt-2 space-y-1 border-l border-line pl-3 ml-2">{stepRows(steps, false).map((s) => <StepRow key={s.id} s={s} />)}</ul></Fold>
     </div>
   )
 }

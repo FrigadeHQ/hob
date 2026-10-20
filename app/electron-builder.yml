@@ -61,6 +61,13 @@ mac:
   # signs with the Developer ID certificate in the keychain (or CSC_LINK on CI); notarized by scripts/release-mac.sh or CI
 dmg:
   title: Hob
+  # build/background.png (+ @2x), made from build/dmg-background.svg by build/render-dmg.cjs
+  background: build/background.png
+  iconSize: 96
+  window: { width: 660, height: 400 }
+  contents:
+    - { x: 180, y: 205 }
+    - { x: 480, y: 205, type: link, path: /Applications }
   # the disk image is checked when downloaded, not just the app inside
   sign: true
 win:

@@ -117,6 +117,12 @@ body {
 /* new text fades in instead of popping */
 @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 .fade-in { animation: fade-in 400ms ease-out both; }
+/* the app appearing after setup, and dialogs opening */
+@keyframes reveal { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: none; } }
+.reveal { animation: reveal 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes pop { from { opacity: 0; transform: translateY(4px) scale(0.98); } to { opacity: 1; transform: none; } }
+.pop { animation: pop 180ms ease-out both; }
+@media (prefers-reduced-motion: reduce) { .reveal, .pop, .fade-in { animation: none; } }
 
 /* the hob on the start-up screen: floats, breathes, its tip flickers, it blinks now and then */
 .hob-alive .hob-body { animation: hob-float 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }

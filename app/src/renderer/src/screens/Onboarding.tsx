@@ -63,6 +63,7 @@ function ModelPicker({ models, selected, onSelect }: { models: ModelOption[]; se
       </button>
       {open && (
         <div role="listbox" className="mt-3 p-1.5 max-h-[45vh] overflow-y-auto rounded-card border border-line bg-paper shadow-lg text-left">
+          <p className="px-3 pt-1.5 pb-1 text-left text-meta text-muted">Smartest first. Smarter models are bigger and need more memory.</p>
           {models.filter((m) => m.available).map((m) => (
             <ModelRow key={m.id} m={m} selected={m.id === selected.id} onPick={() => { onSelect(m.id); setOpen(false) }} />
           ))}
@@ -76,6 +77,23 @@ function ModelPicker({ models, selected, onSelect }: { models: ModelOption[]; se
       )}
     </div>
   )
+}
+
+/** while the first download runs: things to try once it's ready, like a game's loading screen */
+const TIPS = [
+  'Drop a spreadsheet into a chat and ask for a chart.',
+  'Make a project to let Hob work with a folder on your computer.',
+  'Type / in a chat to use a skill, like /fill-pdf.',
+  'After Hob does something you’ll want again, say “save this as a skill”.',
+  'Everything stays on your computer. Turn Web access off in Settings to stay fully offline.',
+  'Hob can rename, sort and tidy files for you, and Undo puts them back.',
+  `Press ${navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl+'}K to search your chats.`,
+  'You can keep chatting while a reply runs; switch chats and it keeps going.',
+]
+function Tips() {
+  const [i, setI] = useState(() => Math.floor(Math.random() * TIPS.length))
+  useEffect(() => { const t = setInterval(() => setI((n) => (n + 1) % TIPS.length), 6000); return () => clearInterval(t) }, [])
+  return <p key={i} data-testid="setup-tip" className="fade-in mt-10 text-ui text-muted"><span className="font-medium text-ink-soft">Tip:</span> {TIPS[i]}</p>
 }
 
 /** what Hob is doing while it looks at the computer; each line shows long enough to read */
@@ -159,6 +177,7 @@ export function Onboarding({ state }: { state: SetupState }) {
           <div data-testid="setup-progress" className={`h-full bg-ink transition-all ${finishing ? 'animate-pulse' : ''}`} style={{ width: `${finishing ? 100 : pct}%` }} />
         </div>
         <p className="mt-3 text-ui text-muted">{finishing ? 'Almost ready…' : `${pct}%${eta(state.etaSec) ? ` · ${eta(state.etaSec)}` : ''}`}</p>
+        <Tips />
       </Frame>
     )
   }
