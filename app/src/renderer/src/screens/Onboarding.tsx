@@ -97,7 +97,7 @@ function Tips() {
 }
 
 /** first launch: what Hob is doing while it looks at the computer. Loops; each line shows long enough to read */
-const FIRST_RUN = ['Checking your computer…', 'Looking at its memory and graphics…', 'Finding the best AI model for your computer…', 'Getting everything ready…']
+const FIRST_RUN = ['Checking your computer…', 'Finding the most optimal model for your computer\'s memory and graphics…', 'Finding the best AI model for your computer…', 'Getting everything ready…']
 /** every other start: a bit of warmth while the model loads */
 const EVERYDAY_START = ['Stoking the fire…', 'Waking up the model…', 'Warming up…', 'Putting the kettle on…', 'Gathering your chats…', 'Fluffing the cushions…', 'Almost there…']
 function ProbingLine({ firstRun }: { firstRun: boolean }) {
