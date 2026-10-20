@@ -3,6 +3,7 @@ import { Box, ChevronRight, FolderOpen, Globe, Link, LogIn, LogOut, Pencil, Plug
 import type { NewSkill, PluginInfo, PluginResult, PluginTrust } from '../../../shared/plugins'
 import { hob } from '../api'
 import { Dialog, Field, PluginIcon, Switch, button, field } from '../components/ui'
+import { fileManager } from '../../../shared/platform'
 
 const TRUST: Record<PluginTrust, { icon: typeof Box; text: string }> = {
   instructions: { icon: ShieldCheck, text: "Adds know-how. Doesn't run anything." },
@@ -232,7 +233,7 @@ function PluginRow({ p, open, onToggleOpen, onEditSkill }: { p: PluginInfo; open
           {p.settings.length > 0 && <div className="max-w-sm space-y-3">{p.settings.map((s) => <SettingInput key={s.key} p={p} s={s} />)}</div>}
           <div className="flex flex-wrap items-center gap-1 -ml-2 text-meta text-muted">
             {(p.version !== '0.0.0' || p.author) && <span className="px-2">{[p.author, p.version !== '0.0.0' && `v${p.version}`].filter(Boolean).join(' · ')}</span>}
-            <button className={button.quiet} onClick={() => void hob.plugins.show(p.id)}><FolderOpen size={14} />Show in Finder</button>
+            <button className={button.quiet} onClick={() => void hob.plugins.show(p.id)}><FolderOpen size={14} />Show in {fileManager(hob.platform)}</button>
             {p.signedIn && !p.signIn && <button className={button.quiet} onClick={() => void hob.plugins.signOut(p.id)}><LogOut size={14} />Sign out</button>}
             {p.source !== 'builtin' && !mine && (
               <button data-testid="plugin-remove" className={button.quiet} onClick={() => { if (confirm(`Remove “${p.name}”?`)) void hob.plugins.remove(p.id) }}>

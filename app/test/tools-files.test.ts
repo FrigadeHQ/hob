@@ -167,7 +167,7 @@ it('open_folder opens a folder, shows a file in its folder, and defaults to the 
   const g = c.grants[0]
   writeFileSync(join(g, 'a.txt'), 'x')
   expect(openFolder.action({ path: g }, c)).toEqual({ kind: 'read', paths: [g] })
-  expect((await openFolder.run({ path: g }, c)).text).toMatch(/^Opened .* in (Finder|File Explorer|your file manager)\.$/)
+  expect((await openFolder.run({ path: g }, c)).text).toMatch(/^Opened .* in (Finder|File Explorer|Files)\.$/)
   await openFolder.run({ path: join(g, 'a.txt') }, c)
   // nothing is launched: a file is only shown
   expect(shown).toEqual([[g, true], [join(g, 'a.txt'), false]])

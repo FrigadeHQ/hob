@@ -107,7 +107,7 @@ test('an .mcpb bundle is added with its icon and asks for the settings it needs'
   await expect(card.getByTestId('plugin-error')).toHaveText('Fill in “API key” to use it.')
   await card.getByRole('button', { name: /Bundle Notes/ }).click()
   await expect(card).toContainText('API key (needed)')
-  await expect(card).toContainText('/Desktop')
+  await expect(card).toContainText(/[\\/]Desktop/)
   await card.locator('input[type=password]').fill('k-1')
   await card.locator('input[type=password]').blur()
   await expect(card.getByTestId('plugin-error')).toHaveCount(0)

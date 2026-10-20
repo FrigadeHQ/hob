@@ -1,6 +1,7 @@
 import { FileText, FolderOpen, Image as ImageIcon, SquareArrowOutUpRight } from 'lucide-react'
 import type { Step } from '../../../shared/agent'
 import { hob } from '../api'
+import { fileManager } from '../../../shared/platform'
 import { ChartCard } from './ChartCard'
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg)$/i
@@ -13,7 +14,7 @@ export function FileCards({ steps }: { steps: Step[] }) {
   const used = new Set(steps.flatMap((s) => s.uses ?? []))
   const files = [...new Set(steps.filter((s) => s.status === 'done').flatMap((s) => s.files ?? []))].filter((f) => !used.has(f))
   if (!files.length) return null
-  const reveal = hob.platform === 'darwin' ? 'Show in Finder' : 'Show in folder'
+  const reveal = `Show in ${fileManager(hob.platform)}`
   return (
     <div className="mt-3 space-y-2">
       {files.map((f) => {
