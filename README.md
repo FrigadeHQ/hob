@@ -31,7 +31,7 @@
 
 ### Why Hob
 
-Desktop AI apps like Claude and ChatGPT work on your files, run code, search the web and ask before changing anything. Existing solutions that run AI locally mostly give you a raw chat sandbox along with requiring users to deeply understand which model fits their system best.
+Desktop AI apps like Claude and ChatGPT work on your files, run code, search the web and ask before changing anything. Existing solutions that run AI locally mostly give you a raw chat sandbox with no tools and requires you to understand which models are most compatible with your system.
 
 Hob strives to work with the same quality and functionality as Claude and ChatGPT, except running its models entirely on your own computer.
 
