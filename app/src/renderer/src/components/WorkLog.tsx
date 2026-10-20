@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertCircle, Ban, Check, ChevronRight, Hand, LoaderCircle } from 'lucide-react'
+import { AlertCircle, Ban, Check, ChevronRight, Hand, LoaderCircle, RefreshCw } from 'lucide-react'
 import type { Step } from '../../../shared/agent'
 import { thinkingPreview } from '../../../shared/thinking'
+import { stepRows, type StepRow as Row } from '../../../shared/steps'
 
-const STATUS_ICON: Record<Step['status'], React.ReactNode> = {
+const STATUS_ICON: Record<Row['status'], React.ReactNode> = {
   running: <LoaderCircle size={14} className="animate-spin" />,
   waiting: <Hand size={14} />,
   done: <Check size={14} />,
   error: <AlertCircle size={14} className="text-accent" />,
   denied: <Ban size={14} />,
+  // an attempt that didn't work while Hob is still on it: normal, not an error
+  retrying: <RefreshCw size={13} />,
 }
 
 /** How often the live thinking line may change: slow enough to read. */
@@ -19,13 +22,14 @@ const duration = (ms: number) => {
   return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`
 }
 
-function StepRow({ s }: { s: Step }) {
+function StepRow({ s }: { s: Row }) {
   const [open, setOpen] = useState(false)
   return (
     <li data-testid="step" data-status={s.status}>
       <button disabled={!s.detail} onClick={() => setOpen((o) => !o)} className="group flex items-center gap-2 text-left text-ui text-ink-soft enabled:hover:text-ink">
         <span className="flex w-4 shrink-0 justify-center text-muted">{STATUS_ICON[s.status]}</span>
         <span>{s.title}</span>
+        {s.tries > 1 && <span data-testid="step-tries" className="text-meta text-muted">{s.tries} tries</span>}
         {s.detail && <ChevronRight size={14} className={`text-muted transition-transform ${open ? 'rotate-90' : ''}`} />}
       </button>
       {open && s.detail && (
@@ -78,7 +82,7 @@ export function WorkLog({ steps, running, writing, thinking, workedMs }: {
         </div>
         {!current && !writing && thinking && <ThinkingLine source={thinking} />}
         {/* the step waiting for an answer is the approval card below; the running one is the line above */}
-        {shown.length > 0 && <ul className="mt-2 space-y-1 border-l border-line pl-3 ml-2">{shown.map((s) => <StepRow key={s.id} s={s} />)}</ul>}
+        {shown.length > 0 && <ul className="mt-2 space-y-1 border-l border-line pl-3 ml-2">{stepRows(shown, true).map((s) => <StepRow key={s.id} s={s} />)}</ul>}
       </div>
     )
   }
@@ -89,7 +93,7 @@ export function WorkLog({ steps, running, writing, thinking, workedMs }: {
       <button data-testid="worklog-toggle" onClick={() => setOpen((o) => !o)} className="flex items-center gap-1 text-ui text-muted hover:text-ink-soft">
         {label}<ChevronRight size={14} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
       </button>
-      {open && <ul className="mt-2 space-y-1 border-l border-line pl-3 ml-2">{steps.map((s) => <StepRow key={s.id} s={s} />)}</ul>}
+      {open && <ul className="mt-2 space-y-1 border-l border-line pl-3 ml-2">{stepRows(steps, false).map((s) => <StepRow key={s.id} s={s} />)}</ul>}
     </div>
   )
 }

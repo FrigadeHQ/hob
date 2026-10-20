@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import type { TurnCtx } from '../src/main/agent/tool'
 import { installedVersions, installPackages, nameOf, packageSpecProblem, sitePackagesOf } from '../src/main/python/packages'
 import { runPython } from '../src/main/python/run'
-import { installPackagesTool, pythonHint } from '../src/main/tools/python'
+import { installPackagesTool, pythonHint, runPythonTool } from '../src/main/tools/python'
 import { prefix, python } from './python'
 
 it('package names: plain PyPI names and pins only', () => {
@@ -91,4 +91,20 @@ describe.skipIf(!python || !!process.env.HOB_OFFLINE)('installing from PyPI', ()
     expect(r.output).toContain('ok')
     expect(readFileSync(join(chat, 't.txt'), 'utf8')).toContain('1')
   }, 180_000)
+})
+
+describe('run_python with internet', () => {
+  const c = (o: Partial<TurnCtx> = {}) => ({ untrusted: false, webAccess: true, ...o } as unknown as TurnCtx)
+  it('is web work: needs Web access, asks after web content, and marks the turn untrusted', () => {
+    expect(runPythonTool.refuse!({ code: 'x', internet: true }, c({ webAccess: false }))).toMatch(/Web access/)
+    expect(runPythonTool.refuse!({ code: 'x' }, c({ webAccess: false }))).toBeUndefined()
+    expect(runPythonTool.action({ code: 'x', internet: true }, c())).toEqual({ kind: 'run' })
+    expect(runPythonTool.action({ code: 'x', internet: true }, c({ untrusted: true }))).toEqual({ kind: 'app', ask: true })
+    expect(runPythonTool.action({ code: 'x' }, c({ untrusted: true }))).toEqual({ kind: 'run' })
+  })
+  it('a network error tells the model to pass internet: true', () => {
+    expect(pythonHint('urllib.error.URLError: <urlopen error [Errno 8] nodename nor servname provided, or not known>')).toContain('internet: true')
+    expect(pythonHint("curl: (6) Could not resolve host: query2.finance.yahoo.com")).toContain('internet: true')
+    expect(pythonHint('PermissionError: [Errno 1] Operation not permitted', "import socket")).not.toContain('only save in the chat folder')
+  })
 })

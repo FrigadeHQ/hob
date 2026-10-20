@@ -67,7 +67,11 @@ export function pythonHint(output: string, code = ''): string {
   if (/getexif\(\)/.test(code) && /36867|DateTimeOriginal/.test(code) && !/get_ifd|_getexif/.test(code)) {
     hints.push('Note: DateTimeOriginal (36867) is in the Exif IFD, not in getexif() itself: use img.getexif().get_ifd(0x8769).get(36867). Or call photo_info, which reads it for you.')
   }
-  if (/PermissionError|Operation not permitted/.test(output)) {
+  const netError = /URLError|NewConnectionError|ConnectionError|Max retries|Could not resolve|nodename nor servname|Name or service not known|Temporary failure in name resolution|Network is unreachable|getaddrinfo/.test(output)
+    || (/PermissionError|Operation not permitted/.test(output) && /\b(socket|requests|urllib|http|yfinance|curl)/.test(code))
+  if (netError) {
+    hints.push('Code has no internet unless you run it with internet: true (Web access must be on). Run it again with internet: true.')
+  } else if (/PermissionError|Operation not permitted/.test(output)) {
     hints.push("Hob blocked this: code can only read the chat folder and folders the user gave access to, and can only save in the chat folder. To rename, move or delete the user's files, use move_files, move_file or delete_file. If it's a folder Hob can't see yet, call list_files with its full path and Hob will ask the user.")
   }
   if (/(FileNotFoundError|No such file or directory)[^\n]*['"]~/.test(output)) hints.push("Python doesn't understand ~ in paths. Use the full path instead.")
@@ -84,7 +88,7 @@ sys.path.insert(0, os.path.dirname(SCRIPT))
 runpy.run_path(SCRIPT, run_name='__main__')
 `
 
-type PyArgs = { code?: string; script?: string; args?: unknown[] }
+type PyArgs = { code?: string; script?: string; args?: unknown[]; internet?: boolean }
 const scriptOf = (a: PyArgs, ctx: TurnCtx) => {
   const ref = typeof a.script === 'string' ? a.script.trim() : ''
   if (!ref) return undefined
@@ -95,16 +99,20 @@ const scriptOf = (a: PyArgs, ctx: TurnCtx) => {
 export const runPythonTool: Tool<PyArgs> = {
   spec: {
     name: 'run_python',
-    description: 'Run Python 3.12 in the chat folder (the current directory). Installed: pandas, numpy, matplotlib, openpyxl, python-docx, pypdf and Pillow (images and photo EXIF data, such as the date taken); for other packages call install_packages first. No internet. Use full paths for the user\'s files (Python doesn\'t understand ~). Code can read granted folders but can only save in the chat folder: to rename, move or delete the user\'s files, use move_files, move_file or delete_file. Save outputs into the current folder. For charts use make_chart; matplotlib only for chart types it can\'t draw. Print what you need to see. To run a skill\'s script instead of code, pass script (e.g. "weekly-report/make_report.py") and its inputs as args.',
+    description: 'Run Python 3.12 in the chat folder (the current directory). Installed: pandas, numpy, matplotlib, openpyxl, python-docx, pypdf and Pillow (images and photo EXIF data, such as the date taken); for other packages call install_packages first. No internet unless you pass internet: true (for downloading data, e.g. stock prices). Use full paths for the user\'s files (Python doesn\'t understand ~). Code can read granted folders but can only save in the chat folder: to rename, move or delete the user\'s files, use move_files, move_file or delete_file. Save outputs into the current folder. For charts use make_chart; matplotlib only for chart types it can\'t draw. Print what you need to see. To run a skill\'s script instead of code, pass script (e.g. "weekly-report/make_report.py") and its inputs as args.',
     params: { type: 'object', properties: {
       code: { type: 'string' },
       script: { type: 'string', description: "a skill's script: skill-name/file.py, or its full path" },
       args: { type: 'array', items: { type: 'string' }, description: 'inputs for the script (sys.argv[1:])' },
+      internet: { type: 'boolean', description: 'true if the code needs the internet (APIs, downloads)' },
     } },
   },
   title: (a) => (typeof a.script === 'string' && a.script.trim() ? `Ran ${basename(a.script.trim())}` : 'Ran code'),
-  // a skill whose scripts use the internet is web work: off when Web access is off, and the turn is untrusted after
-  action: (a, ctx) => (scriptOf(a, ctx)?.network ? { kind: 'web' } : { kind: 'run' }),
+  // code online is web work: only with Web access on, and what it brings back is untrusted. A skill's own scripts
+  // got the user's OK when it was saved; code the model asks to put online after reading web pages asks first
+  refuse: (a, ctx) => (a.internet === true && !ctx.webAccess ? 'Code can only use the internet while Web access is on. Tell the user they can turn it on in Settings, or do it without the internet.' : undefined),
+  action: (a, ctx) => (scriptOf(a, ctx)?.network ? { kind: 'web' } : a.internet === true && ctx.untrusted ? { kind: 'app', ask: true } : { kind: 'run' }),
+  ask: () => 'Let Hob\'s code use the internet? It read web pages earlier in this task, so check this is what you asked for.',
   async run(a, ctx) {
     const wantsScript = typeof a.script === 'string' && a.script.trim() !== ''
     const skill = scriptOf(a, ctx)
@@ -129,10 +137,10 @@ export const runPythonTool: Tool<PyArgs> = {
     const r = await runPython({
       python, runtimeRoot: ctx.python!.dir, cwd: ctx.chatDir, tmpDir: ctx.runTmp, code, signal: ctx.signal,
       readPaths: skill ? [skill.dir, ...ctx.grants] : ctx.grants, packages: ctx.python!.sitePackages?.(),
-      ...(skill?.network ? { network: true } : {}),
+      ...(skill?.network || (a.internet === true && ctx.webAccess) ? { network: true } : {}),
       ...(skill ? { env: { HOB_CHAT_DIR: ctx.chatDir, HOB_SKILL_DIR: skill.dir } } : {}),
     })
-    if (skill?.network) ctx.untrusted = true
+    if (skill?.network || a.internet === true) ctx.untrusted = true
     const files = [...snapshot(ctx.chatDir)].filter(([p, t]) => before.get(p) !== t).map(([p]) => p)
     const status = r.stopped ? 'Stopped by the user.' : r.timedOut ? 'Took longer than 2 minutes and was stopped.' : `Exit code ${r.exitCode}`
     const changed = files.length ? `\nFiles created or changed: ${files.map((f) => f.slice(ctx.chatDir.length + 1)).join(', ')}` : ''

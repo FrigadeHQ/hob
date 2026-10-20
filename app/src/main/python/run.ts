@@ -14,8 +14,11 @@ export const OUTPUT_CAP = 8000
  * - can't start other programs or talk to LaunchServices/AppleEvents (`open x.command`, `osascript`)
  * - reads of user and shared locations limited to the chat folder, temp, runtime and granted folders
  */
-export function sandboxProfile(readCount: number, network = false): string {
+export function sandboxProfile(readCount: number, network = false, ancestors: string[] = []): string {
   const reads = Array.from({ length: readCount }, (_, i) => `(subpath (param "R${i}"))`).join(' ')
+  // SQLite (and others) look up each folder on the way to a file: let code see the folders above
+  // the ones it may use exist, without reading what's in them
+  const above = ancestors.map((a) => `(literal ${JSON.stringify(a)})`).join(' ')
   return `(version 1)
 (allow default)
 ${network ? '' : '(deny network*)\n'}(deny appleevent-send)
@@ -25,7 +28,7 @@ ${network ? '' : '(deny network*)\n'}(deny appleevent-send)
 (deny file-write*)
 (allow file-write* (subpath (param "WS")) (subpath (param "TMP")) (literal "/dev/null"))
 (deny file-read* (subpath (param "HOME")) (subpath "/Users") (subpath "/Volumes") (subpath "/private/tmp") (subpath "/private/var/folders"))
-(allow file-read* (subpath (param "WS")) (subpath (param "TMP")) (subpath (param "RUNTIME")) ${reads})`
+(allow file-read* (subpath (param "WS")) (subpath (param "TMP")) (subpath (param "RUNTIME")) ${reads})${above ? `\n(allow file-read-metadata ${above})` : ''}`
 }
 
 /**
@@ -47,6 +50,13 @@ function lowIntegrity(python: string, writable: string[]): string {
     labelled.add(dir)
   }
   return low
+}
+
+/** every folder above these, e.g. /Users and /Users/me for /Users/me/chat */
+export function foldersAbove(paths: string[]): string[] {
+  const out = new Set<string>()
+  for (const p of paths) for (let d = dirname(p); d !== dirname(d); d = dirname(d)) out.add(d)
+  return [...out].sort()
 }
 
 export function capOutput(s: string, cap = OUTPUT_CAP): string {
@@ -100,7 +110,7 @@ export function runPython(o: RunOpts): Promise<RunResult> {
   if (sandboxed && process.platform === 'darwin') {
     cmd = '/usr/bin/sandbox-exec'
     args = [
-      '-p', sandboxProfile(reads.length, o.network),
+      '-p', sandboxProfile(reads.length, o.network, foldersAbove([o.cwd, o.tmpDir, o.runtimeRoot, ...reads].map((p) => realpathSync(p)))),
       '-D', `WS=${realpathSync(o.cwd)}`, '-D', `TMP=${realpathSync(o.tmpDir)}`,
       '-D', `RUNTIME=${realpathSync(o.runtimeRoot)}`, '-D', `HOME=${realpathSync(homedir())}`,
       ...reads.flatMap((p, i) => ['-D', `R${i}=${p}`]),

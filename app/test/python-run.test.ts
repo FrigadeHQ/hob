@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { capOutput, runPython } from '../src/main/python/run'
 
@@ -55,6 +55,21 @@ describe.skipIf(!python)('runPython', () => {
     expect(r.output).toContain('blocked-write')
     if (process.platform === 'darwin' || landlock >= 4) expect(r.output).toContain('blocked-net')
     expect(existsSync(outside)).toBe(false)
+  })
+  it.runIf(process.platform === 'darwin' || landlock > 0 || process.platform === 'win32')('sandbox: SQLite works in the chat folder and temp (it looks up each parent folder); files beside them stay unreadable', async () => {
+    const b = base()
+    const secret = join(dirname(b.cwd), `hob-secret-${Date.now()}.txt`)
+    writeFileSync(secret, 'secret')
+    const code = [
+      "import os, sqlite3, tempfile",
+      "c = sqlite3.connect('data.db'); c.execute('create table t(a)'); c.commit(); print('db-ok')",
+      "c = sqlite3.connect(os.path.join(tempfile.gettempdir(), 'cache.db')); c.execute('create table t(a)'); print('tmpdb-ok')",
+      `try:\n  open(${JSON.stringify(secret)}).read(); print('READ')\nexcept Exception: print('blocked-read')`,
+    ].join('\n')
+    const r = await runPython({ ...b, code })
+    expect(r.output).toContain('db-ok')
+    expect(r.output).toContain('tmpdb-ok')
+    if (process.platform !== 'win32') expect(r.output).toContain('blocked-read')
   })
   it.runIf(process.platform === 'darwin')('sandbox: cannot launch apps or scripts outside it (open, osascript)', async () => {
     const b = base()
