@@ -97,7 +97,7 @@ function Tips() {
 }
 
 /** what Hob is doing while it looks at the computer; each line shows long enough to read */
-const PROBING = ['Starting Hob…', 'Checking your computer…', 'Finding the best AI model for it…']
+const PROBING = ['Starting Hob…', 'Checking your computer…', 'Finding the best AI model for your computer…']
 function ProbingLine() {
   const [i, setI] = useState(0)
   useEffect(() => {
