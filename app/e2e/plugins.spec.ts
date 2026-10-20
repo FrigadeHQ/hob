@@ -114,3 +114,18 @@ test('an .mcpb bundle is added with its icon and asks for the settings it needs'
   await expect(card.getByTestId('plugin-error')).toHaveCount(0)
   await app.close()
 })
+
+test('Hob saves a skill with a script: the card shows the code, and it lands in the / menu', async () => {
+  const { app, page } = await launch()
+  const save = { name: 'spending', description: 'Monthly spending chart from a bank CSV', instructions: 'Run the script on the CSV.', files: { 'make_report.py': "import sys\nprint('report for', sys.argv[1])\n" } }
+  await page.getByTestId('composer-input').fill(`__tools__ [["save_skill",${JSON.stringify(save)}]]`)
+  await page.keyboard.press('Enter')
+  await expect(page.getByTestId('approval-detail')).toContainText("print('report for', sys.argv[1])")
+  await expect(page.getByTestId('approval-detail')).toContainText('make_report.py')
+  await page.getByTestId('approval-allow').click()
+  await expect(page.getByTestId('message-assistant').last()).not.toBeEmpty()
+  await page.getByTestId('new-chat').click()
+  await page.getByTestId('composer-input').fill('/spen')
+  await expect(page.getByTestId('skill-option').filter({ hasText: '/spending' })).toBeVisible()
+  await app.close()
+})

@@ -24,10 +24,36 @@ A skill is a `SKILL.md` file: a name, a one-line description, and the steps in p
 
 Linked folders reload as you edit, so you see changes on your next message.
 
+## Save a skill from a chat
+
+Once Hob has done something you'll want again, say "save this as a skill". After a longer task that used code, Hob also offers a **Save as a skill** button under its reply.
+
+- Hob writes the steps, and keeps the code that worked as script files next to `SKILL.md`.
+- You see everything first: the steps and each file's code, with Allow or Deny.
+- Saved skills go to **Plugins → My skills**, where you can edit or delete them.
+- Hob won't save a skill in a message where it read web pages: ask again in a new message.
+
+## Skills with scripts
+
+Put Python files next to `SKILL.md` and tell Hob in the steps to run them:
+
+```markdown
+---
+name: spending
+description: Monthly spending chart from a bank CSV.
+---
+1. Run the script with run_python: script "spending/make_report.py", args: the CSV's full path.
+2. Show the chart it saves and sum up the biggest categories.
+```
+
+- The script gets its inputs as `sys.argv[1:]` and runs in the chat folder, so files it saves show up in the chat.
+- It can read files next to it (templates, lookup tables) and folders the user gave Hob.
+- It runs in the same sandbox as Hob's own code. No internet, unless the skill's frontmatter says `network: true` and Web access is on. For a plugin's skills, the plugin must also ask for `"permissions": { "network": true }`.
+
 How Hob uses skills:
 - Hob's instructions list each skill's name and description.
 - When a request matches, Hob loads the full text with `use_skill`.
 - Typing `/name` attaches the skill to that message directly.
-- Files next to `SKILL.md` (templates, examples, scripts) are readable by Hob's code.
+- Files next to `SKILL.md` (templates, examples, scripts) are readable by the skill's scripts.
 
 [Plugins overview](README.md) · [Skills](skills.md) · [Python tools](python-tools.md) · [App connections (MCP)](app-connections.md) · [Reference](reference.md)

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, readdirSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { basename, join, sep } from 'node:path'
+import { basename, isAbsolute, join, sep } from 'node:path'
 import type { ApprovalAnswer, ApprovalRequest, Attachment, Step, StoredMessage } from '../../shared/agent'
 import type { ChatMessage } from '../../shared/types'
 import type { Engine } from '../engine'
@@ -16,6 +16,7 @@ import { asksToProceed, claimCheck, claimsFileChanges, NOTHING_CHANGED, proceedC
 import { chatTitle, cleanTitle, expandCommand, systemPrompt, titleRequest, type PromptSkill } from './prompt'
 import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
+import { isInside } from '../workspace'
 
 const CHANGES = new Set(['write_file', 'move_file', 'move_files', 'delete_file'])
 /** what "renamed / moved / deleted" in a reply has to be backed by */
@@ -44,7 +45,7 @@ export type TurnDeps = {
   /** show a folder (folder: true) or a file in its folder, in the file manager */
   reveal?(path: string, folder: boolean): Promise<void>
   /** skills from plugins that are on: listed in the prompt, and run directly with /name */
-  skills?: { list(): PromptSkill[]; find(name: string): { name: string; body: string; dir: string } | undefined }
+  skills?: { list(): (PromptSkill & { dir?: string; network?: boolean })[]; find(name: string): { name: string; body: string; dir: string; network?: boolean } | undefined }
   /** instructions from plugins that are on, given the tools offered this turn */
   prompts?(offered: string[]): string[]
   /** the chat list changed (e.g. the chat got its title) */
@@ -87,6 +88,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     chatDir: chat.dir, grants, signal: a.signal, untrusted: false, webAccess: d.webAccess(),
     mainFolder: project?.folders[0], missingFolders, reveal: d.reveal,
     journal, trash: d.trash, python: d.python, runTmp: d.runTmp, fetch: d.fetch ?? fetch, search: d.search, render: d.render,
+    skillScript: (ref) => skillScript(ref, d.skills),
   }
   const steps: Step[] = []
   const show = (s: Step) => {
@@ -129,7 +131,9 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     // models sometimes loop on the same call; give back the earlier result instead of running it again
     const earlier = results.get(key)
     if (earlier !== undefined) return `You already did exactly this earlier in this task. The result was:\n${earlier.slice(0, 2000)}\nDon't repeat it; continue with something else.`
-    const step: Step = { id: randomUUID(), title: tool.title(input), status: 'running' }
+    const step: Step = { id: randomUUID(), title: tool.title(input), status: 'running', tool: name }
+    const refused = tool.refuse?.(input, ctx)
+    if (refused) { show({ ...step, status: 'denied' }); return refused }
     show(step)
     try {
       const action = tool.action(input, ctx)
@@ -192,9 +196,11 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   let lastCommand = -1
   if (!command.skill) for (let i = history.length - 1; i >= 0 && lastCommand === -1; i--) if (history[i].role === 'user' && expandCommand(history[i].content, find).skill) lastCommand = i
   const expand = (t: string, i: number) => (i === lastCommand ? expandCommand(t, find).text : t)
+  // "save that as a skill": the model only sees earlier replies' words, so give it the code that worked
+  const lastReply = /\bskill/i.test(a.text) && !command.skill ? history.map((m) => m.role).lastIndexOf('assistant') : -1
   const messages: ChatMessage[] = [
     { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: listing, grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing: missingFolders, files: ctx.mainFolder ? list(ctx.mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
-    ...fitHistory(history.map((m, i) => ({ role: m.role, content: withFiles(expand(m.content, i), m.attachments) }))),
+    ...fitHistory(history.map((m, i) => ({ role: m.role, content: withFiles(expand(m.content, i), m.attachments) + (i === lastReply ? codeThatWorked(m.steps) : '') }))),
     { role: 'user', content: withFiles(command.text, a.attachments) },
   ]
   // a request about their files ("rename the photos on my Desktop") is agent work even before any folder is given
@@ -260,4 +266,24 @@ async function nameChat(d: TurnDeps, chatId: string, placeholder: string, user: 
   } catch (err) {
     console.warn('naming the chat failed', err)
   }
+}
+
+/** a skill's script by "skill-name/file.py" or full path; only skills that are on */
+export function skillScript(ref: string, skills: TurnDeps['skills']): { path: string; dir: string; network: boolean } | undefined {
+  const m = /^([a-z0-9][a-z0-9-]*)[\\/]([^\\/]+)$/.exec(ref)
+  if (m) {
+    const s = skills?.find(m[1])
+    return s ? { path: join(s.dir, m[2]), dir: s.dir, network: !!s.network } : undefined
+  }
+  if (!isAbsolute(ref)) return undefined
+  const s = skills?.list().find((x) => x.dir && isInside(x.dir, ref))
+  return s?.dir ? { path: ref, dir: s.dir, network: !!s.network } : undefined
+}
+
+const CODE_CHARS = 8000
+/** the code of the steps that worked, for saving it as a skill's script */
+function codeThatWorked(steps: Step[]): string {
+  const code = steps.filter((s) => s.tool === 'run_python' && s.status === 'done' && s.detail).map((s) => s.detail!.split('\n\n--- output ---')[0].trim())
+  if (!code.length) return ''
+  return `\n\n[Code you ran for this, which worked:\n${code.map((c) => `\`\`\`python\n${c}\n\`\`\``).join('\n')}]`.slice(0, CODE_CHARS)
 }

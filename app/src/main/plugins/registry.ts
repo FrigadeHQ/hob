@@ -10,7 +10,7 @@ import { isUrlConfig, parseManifest, PLUGIN_ID, type Manifest, type McpServerCon
 import { McpAuthError, McpClient, type McpServerSpec, type McpTool } from './mcp'
 import { expandConfig, fromMcpb, readMcpb, settingDefault, standardVars } from './mcpb'
 import { refreshTokens, signIn as oauthSignIn, tokenFresh, type OAuthState } from './oauth'
-import { parseSkill, skillFile, skillNameOk, slug, type Skill } from './skills'
+import { parseSkill, skillFile, skillFilesProblem, skillNameOk, slug, type Skill } from './skills'
 import { mcpTool, pythonTool, safeToolName, type PluginRef } from './tools'
 
 export const MANIFEST = 'hob-plugin.json'
@@ -232,7 +232,9 @@ export class PluginRegistry {
 
   skills(): (Skill & SkillRef)[] {
     const seen = new Set<string>()
-    return this.on().flatMap((p) => p.skills.map((s) => ({ ...s, pluginId: p.manifest.id, pluginName: p.manifest.name, icon: p.manifest.icon })))
+    // a skill's scripts get the internet only when the user saved it so, or its plugin asked for it when added
+    const online = (p: Loaded) => p.manifest.id === MY_SKILLS || p.manifest.permissions.network
+    return this.on().flatMap((p) => p.skills.map((s) => ({ ...s, network: !!s.network && online(p), pluginId: p.manifest.id, pluginName: p.manifest.name, icon: p.manifest.icon })))
       .filter((s) => (seen.has(s.name) ? false : (seen.add(s.name), true)))
   }
   findSkill(name: string) { return this.skills().find((s) => s.name === name) }
@@ -595,13 +597,21 @@ export class PluginRegistry {
     if (!o.replace && this.findSkill(name)) return { ok: false, error: `There's already a skill called /${name}. Pick another name.` }
     if (!s.description.trim()) return { ok: false, error: 'Say when Hob should use this skill.' }
     if (!s.instructions.trim()) return { ok: false, error: 'Write the instructions for this skill.' }
+    const files = s.files ?? {}
+    const problem = skillFilesProblem(files)
+    if (problem) return { ok: false, error: problem }
     const dir = join(this.d.installDir, MY_SKILLS)
     if (!existsSync(join(dir, MANIFEST))) {
       mkdirSync(dir, { recursive: true })
       writeFileSync(join(dir, MANIFEST), JSON.stringify({ id: MY_SKILLS, name: 'My skills', description: 'Skills you taught Hob.', icon: 'sparkles', version: '1.0.0' }, null, 2))
     }
-    mkdirSync(join(dir, 'skills', name), { recursive: true })
-    writeFileSync(join(dir, 'skills', name, 'SKILL.md'), skillFile({ name, description: s.description, instructions: s.instructions }))
+    const own = join(dir, 'skills', name)
+    // an edit that leaves out internet use (the Plugins form) keeps what the skill had
+    const prev = existsSync(join(own, 'SKILL.md')) ? parseSkill(readFileSync(join(own, 'SKILL.md'), 'utf8'), own) : undefined
+    const network = s.network ?? (!!prev && 'network' in prev && !!prev.network)
+    mkdirSync(own, { recursive: true })
+    for (const [f, text] of Object.entries(files)) writeFileSync(join(own, f), String(text))
+    writeFileSync(join(own, 'SKILL.md'), skillFile({ name, description: s.description, instructions: s.instructions, network }))
     this.reload()
     return { ok: true, id: MY_SKILLS, name }
   }

@@ -40,6 +40,7 @@ export type SkillRef = { name: string; description: string; pluginId: string; pl
 /** file: asks the user for a file first, then sends the prompt with it */
 export type StarterRef = { title: string; prompt: string; icon: string; pluginId: string; file?: boolean }
 
-export type NewSkill = { name: string; description: string; instructions: string }
+/** files: scripts and data saved next to SKILL.md. network: its scripts may use the internet */
+export type NewSkill = { name: string; description: string; instructions: string; files?: Record<string, string>; network?: boolean }
 export type PluginResult = { ok: true; id: string } | { ok: false; error: string }
 export type InstallResult = PluginResult | { ok: false; canceled: true } | null

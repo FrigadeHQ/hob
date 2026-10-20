@@ -1,5 +1,5 @@
-import { readdirSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readdirSync, statSync } from 'node:fs'
+import { basename, join } from 'node:path'
 import { runPython } from '../python/run'
 import { isInside } from '../workspace'
 import type { Tool, TurnCtx } from '../agent/tool'
@@ -74,22 +74,56 @@ export function pythonHint(output: string, code = ''): string {
   return hints.length ? `\n\nHob: ${hints.join(' ')}` : ''
 }
 
-export const runPythonTool: Tool<{ code: string }> = {
+/** runs a skill's script as if started from the command line, with its folder importable */
+export const LAUNCH = (script: string, args: string[] = []) => `import os, runpy, sys
+SCRIPT = ${JSON.stringify(script)}
+sys.argv = [SCRIPT, *${JSON.stringify(args)}]
+sys.path.insert(0, os.path.dirname(SCRIPT))
+runpy.run_path(SCRIPT, run_name='__main__')
+`
+
+type PyArgs = { code?: string; script?: string; args?: unknown[] }
+const scriptOf = (a: PyArgs, ctx: TurnCtx) => {
+  const ref = typeof a.script === 'string' ? a.script.trim() : ''
+  if (!ref) return undefined
+  const s = ctx.skillScript?.(ref)
+  return s && s.path.endsWith('.py') && isInside(s.dir, s.path) && existsSync(s.path) ? s : undefined
+}
+
+export const runPythonTool: Tool<PyArgs> = {
   spec: {
     name: 'run_python',
-    description: 'Run Python 3.12 in the chat folder (the current directory). Installed: pandas, numpy, matplotlib, openpyxl, python-docx, pypdf and Pillow (images and photo EXIF data, such as the date taken). No internet. Use full paths for the user\'s files (Python doesn\'t understand ~). Code can read granted folders but can only save in the chat folder: to rename, move or delete the user\'s files, use move_files, move_file or delete_file. Save outputs into the current folder. For charts use make_chart; matplotlib only for chart types it can\'t draw. Print what you need to see.',
-    params: { type: 'object', properties: { code: { type: 'string' } }, required: ['code'] },
+    description: 'Run Python 3.12 in the chat folder (the current directory). Installed: pandas, numpy, matplotlib, openpyxl, python-docx, pypdf and Pillow (images and photo EXIF data, such as the date taken). No internet. Use full paths for the user\'s files (Python doesn\'t understand ~). Code can read granted folders but can only save in the chat folder: to rename, move or delete the user\'s files, use move_files, move_file or delete_file. Save outputs into the current folder. For charts use make_chart; matplotlib only for chart types it can\'t draw. Print what you need to see. To run a skill\'s script instead of code, pass script (e.g. "weekly-report/make_report.py") and its inputs as args.',
+    params: { type: 'object', properties: {
+      code: { type: 'string' },
+      script: { type: 'string', description: "a skill's script: skill-name/file.py, or its full path" },
+      args: { type: 'array', items: { type: 'string' }, description: 'inputs for the script (sys.argv[1:])' },
+    } },
   },
-  title: () => 'Ran code',
-  action: () => ({ kind: 'run' }),
+  title: (a) => (typeof a.script === 'string' && a.script.trim() ? `Ran ${basename(a.script.trim())}` : 'Ran code'),
+  // a skill whose scripts use the internet is web work: off when Web access is off, and the turn is untrusted after
+  action: (a, ctx) => (scriptOf(a, ctx)?.network ? { kind: 'web' } : { kind: 'run' }),
   async run(a, ctx) {
+    const wantsScript = typeof a.script === 'string' && a.script.trim() !== ''
+    const skill = scriptOf(a, ctx)
+    if (wantsScript && !skill) return { text: `“${a.script}” isn't a script in one of your skills. Use the skill-name/file.py form shown in the skill's instructions.`, failed: true }
+    if (!skill && typeof a.code !== 'string') return { text: 'Pass code to run, or a skill script.', failed: true }
     const python = await ensurePython(ctx)
-    ctx.progress?.('Running code…')
+    ctx.progress?.(skill ? `Running ${basename(skill.path)}…` : 'Running code…')
     const before = snapshot(ctx.chatDir)
-    const r = await runPython({ python, runtimeRoot: ctx.python!.dir, cwd: ctx.chatDir, tmpDir: ctx.runTmp, code: a.code, signal: ctx.signal, readPaths: ctx.grants })
+    const args = (Array.isArray(a.args) ? a.args : []).map(String)
+    const code = skill ? LAUNCH(skill.path, args) : a.code!
+    const r = await runPython({
+      python, runtimeRoot: ctx.python!.dir, cwd: ctx.chatDir, tmpDir: ctx.runTmp, code, signal: ctx.signal,
+      readPaths: skill ? [skill.dir, ...ctx.grants] : ctx.grants,
+      ...(skill?.network ? { network: true } : {}),
+      ...(skill ? { env: { HOB_CHAT_DIR: ctx.chatDir, HOB_SKILL_DIR: skill.dir } } : {}),
+    })
+    if (skill?.network) ctx.untrusted = true
     const files = [...snapshot(ctx.chatDir)].filter(([p, t]) => before.get(p) !== t).map(([p]) => p)
     const status = r.stopped ? 'Stopped by the user.' : r.timedOut ? 'Took longer than 2 minutes and was stopped.' : `Exit code ${r.exitCode}`
     const changed = files.length ? `\nFiles created or changed: ${files.map((f) => f.slice(ctx.chatDir.length + 1)).join(', ')}` : ''
-    return { text: `${status}\n${r.output}${changed}${pythonHint(r.output, a.code)}`, detail: `${a.code}\n\n--- output ---\n${r.output || '(no output)'}`, files, failed: r.exitCode !== 0 }
+    const shown = skill ? `${skill.path} ${args.join(' ')}`.trim() : a.code!
+    return { text: `${status}\n${r.output}${changed}${pythonHint(r.output, skill ? '' : a.code)}`, detail: `${shown}\n\n--- output ---\n${r.output || '(no output)'}`, files, failed: r.exitCode !== 0 }
   },
 }

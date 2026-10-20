@@ -41,6 +41,8 @@ Hob picks from a curated list of open models, from Qwen3 for 8 GB laptops up to 
 
 A plugin is a folder with a `hob-plugin.json`. It can add [skills](plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](plugins/python-tools.md), and [app connections](plugins/app-connections.md) to any MCP server, including `.mcpb` bundles. Hob's own web search, code and PDF features are plugins too, in [`app/plugins/`](../app/plugins).
 
+You don't have to write skills by hand: after Hob does something you'll want again, say "save this as a skill". It keeps the steps and the code that worked, and shows you both before saving.
+
 See the [plugin guide](plugins/README.md) and the [reference](plugins/reference.md).
 
 ## Building

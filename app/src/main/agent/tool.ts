@@ -30,6 +30,8 @@ export type TurnCtx = {
   missingFolders?: string[]
   /** show a folder in the file manager (folder: true) or a file inside its folder; never opens the file itself */
   reveal?(path: string, folder: boolean): Promise<void>
+  /** a script of an enabled skill, by full path or "skill-name/file.py"; undefined if it isn't one */
+  skillScript?(ref: string): { path: string; dir: string; network: boolean } | undefined
   /** progress for slow setup steps, e.g. installing code tools */
   progress?(title: string): void
 }
@@ -48,6 +50,8 @@ export interface Tool<A = Record<string, unknown>> {
   prepare?(args: A, ctx: TurnCtx): A
   /** plain-English step title, e.g. "Read sales.csv" */
   title(args: A): string
+  /** why it can't run right now, checked before anything is asked or shown as waiting */
+  refuse?(args: A, ctx: TurnCtx): string | undefined
   /** what it touches, for the permission gate */
   action(args: A, ctx: TurnCtx): Action
   /** the approval question, when the gate asks */

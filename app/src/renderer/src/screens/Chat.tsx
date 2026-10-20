@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ArrowDown, Paperclip, Undo2 } from 'lucide-react'
+import { ArrowDown, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
 import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../../shared/agent'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
@@ -16,6 +16,7 @@ import { folderName } from '../components/ProjectDialog'
 import { useDictation } from '../speech/useDictation'
 import { tidyMarkdown } from '../../../shared/markdown'
 import { pickStarters } from '../starters'
+import { skillOffer } from '../../../shared/skillOffer'
 
 /** "/plan-trip Rome" shows the command as a label */
 function UserText({ text, skills }: { text: string; skills: SkillRef[] }) {
@@ -182,6 +183,15 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     if (requestId) void hob.chat.stop(requestId)
   }
 
+  // "Save as a skill": once per chat; closing it or saying yes hides it for good (only a convenience, so storage may fail)
+  const offerKey = () => `hob-skill-offer:${chatIdRef.current}`
+  const [offerClosed, setOfferClosed] = useState(() => { try { return !!initialId && localStorage.getItem(`hob-skill-offer:${initialId}`) === 'closed' } catch { return false } })
+  function closeOffer() {
+    setOfferClosed(true)
+    try { localStorage.setItem(offerKey(), 'closed') } catch { /* private window */ }
+  }
+  const offerAt = offerClosed || requestId ? -1 : skillOffer(messages, skills.map((s) => s.name))
+
   const [undoNotes, setUndoNotes] = useState<Record<number, string>>({})
   async function undoTask(id: number) {
     try {
@@ -282,6 +292,13 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                     {typeof m.id === 'number' && m.undoable && (m.undone
                       ? <span data-testid="undone" className="px-1.5 text-meta text-muted">{undoNotes[m.id as number] ?? 'Changes undone'}</span>
                       : <button data-testid="undo" onClick={() => void undoTask(m.id as number)} className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><Undo2 size={14} />Undo changes</button>)}
+                    {i === offerAt && (
+                      <span data-testid="skill-offer" className="inline-flex items-center">
+                        <button data-testid="skill-offer-save" onClick={() => { closeOffer(); void send('Save what you just did as a skill, so I can run it again later.') }}
+                          className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><Sparkles size={14} />Save as a skill</button>
+                        <button data-testid="skill-offer-close" aria-label="Don't save as a skill" onClick={closeOffer} className="rounded-control p-1 text-muted hover:bg-line/70 hover:text-ink"><X size={12} /></button>
+                      </span>
+                    )}
                   </div>
                 )}
               </div>

@@ -377,3 +377,46 @@ it('charts are drawn by Hob (make_chart); Python images only for what it cannot 
   expect(p).toMatch(/matplotlib only for/i)
   expect(allTools().map((t) => t.spec.name)).toContain('make_chart')
 })
+
+it('save_skill after web content in the same message is refused without a card', async () => {
+  const w = world()
+  const { saveSkillTool } = await import('../src/main/plugins/skillTools')
+  let saved = 0
+  const taint = { spec: { name: 'taint', description: 'd', params: { type: 'object', properties: {} } }, title: () => 'Read a page', action: () => ({ kind: 'run' as const }), run: async (_a: unknown, ctx: { untrusted: boolean }) => { ctx.untrusted = true; return { text: 'page' } } }
+  const save = saveSkillTool({ skills: () => [], findSkill: () => undefined, saveSkill: () => { saved++; return { ok: true, name: 'x' } } })
+  w.deps.tools = [...w.deps.tools, taint as never, save as never]
+  const reply = await w.turn('__tools__ [["taint",{}],["save_skill",{"name":"x","description":"d","instructions":"i"}]]')
+  expect(w.asked).toHaveLength(0)
+  expect(saved).toBe(0)
+  expect(reply.steps.map((s) => [s.tool, s.status])).toEqual([['taint', 'done'], ['save_skill', 'denied']])
+})
+
+it('asking to save a skill shows the model the code that worked in the last reply', async () => {
+  const w = world('allow', { grant: false })
+  w.store.addMessage('c', { role: 'user', content: 'chart my spending' })
+  w.store.addMessage('c', { role: 'assistant', content: 'Done.', steps: [
+    { id: '1', title: 'Ran code', status: 'done', tool: 'run_python', detail: "import pandas\nprint('ok')\n\n--- output ---\nok" },
+    { id: '2', title: 'Ran code', status: 'error', tool: 'run_python', detail: 'broken(\n\n--- output ---\nSyntaxError' },
+  ] })
+  await w.turn('save that as a skill')
+  const sent = w.engine.lastRequest!.messages.map((m) => m.content).join('\n')
+  expect(sent).toContain("import pandas\nprint('ok')")
+  expect(sent).not.toContain('broken(')
+  await w.turn('thanks')
+  expect(w.engine.lastRequest!.messages.map((m) => m.content).join('\n')).not.toContain('import pandas')
+})
+
+it("skill scripts are found by skill-name/file.py or by full path, only for skills that are on", async () => {
+  const w = world()
+  const dir = join(w.root, 'skills', 'spending'); mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, 'make.py'), "open('out.txt','w').write('x')\n")
+  const skill = { name: 'spending', description: 'd', body: 'b', dir, network: true }
+  w.deps.skills = { list: () => [skill], find: (n) => (n === skill.name ? skill : undefined) }
+  let seen: unknown
+  const probe = { spec: { name: 'probe', description: 'd', params: { type: 'object', properties: {} } }, title: () => 'Probe', action: () => ({ kind: 'run' as const }),
+    run: async (_a: unknown, ctx: import('../src/main/agent/tool').TurnCtx) => { seen = [ctx.skillScript?.('spending/make.py'), ctx.skillScript?.(join(dir, 'make.py')), ctx.skillScript?.('other/make.py')]; return { text: 'ok' } } }
+  w.deps.tools = [...w.deps.tools, probe as never]
+  await w.turn('__tools__ [["probe",{}]]')
+  const hit = { path: join(dir, 'make.py'), dir, network: true }
+  expect(seen).toEqual([hit, hit, undefined])
+})

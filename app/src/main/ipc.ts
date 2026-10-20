@@ -150,7 +150,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   }
 
   const pluginsChanged = () => send('plugins:changed')
-  const skillSource = { skills: () => d.plugins.skills(), findSkill: (n: string) => d.plugins.findSkill(n), saveSkill: (s: NewSkill) => d.plugins.saveSkill(s), onSaved: pluginsChanged }
+  const skillSource = { skills: () => d.plugins.skills(), findSkill: (n: string) => d.plugins.findSkill(n), saveSkill: (s: NewSkill, o?: { replace?: boolean }) => d.plugins.saveSkill(s, o), onSaved: pluginsChanged }
 
   ipcMain.handle('chat:send', async (_e, chatId: string, requestId: string, text: string, attachments: Attachment[]) => {
     const chat = d.store.getChat(chatId)

@@ -2,6 +2,7 @@ import { readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import type { Tool, TurnCtx } from '../agent/tool'
 import { runPython } from '../python/run'
+import { LAUNCH } from '../tools/python'
 import type { ManifestTool } from './manifest'
 import type { McpCallResult, McpTool } from './mcp'
 
@@ -30,13 +31,6 @@ const files = (dir: string) => {
   walk(dir, 0)
   return m
 }
-
-const LAUNCH = (script: string) => `import os, runpy, sys
-SCRIPT = ${JSON.stringify(script)}
-sys.argv = [SCRIPT]
-sys.path.insert(0, os.path.dirname(SCRIPT))
-runpy.run_path(SCRIPT, run_name='__main__')
-`
 
 /** A plugin's Python tool: args as JSON on stdin, result on stdout, in the same sandbox as run_python. */
 export function pythonTool(p: PluginRef, t: ManifestTool, name = t.name): Tool<Record<string, unknown>> {

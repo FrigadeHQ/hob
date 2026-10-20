@@ -6,26 +6,28 @@ A Python tool is a script Hob can call with arguments. It runs in the same sandb
 
 ```json
 {
-  "id": "money",
-  "name": "Money",
-  "permissions": { "network": true },
+  "id": "text-stats",
+  "name": "Text stats",
   "tools": [{
-    "name": "convert_currency",
-    "description": "Convert money between currencies at today's rate.",
-    "params": { "type": "object", "properties": { "amount": { "type": "number" }, "from": { "type": "string" }, "to": { "type": "string" } }, "required": ["amount", "from", "to"] },
-    "run": "tools/convert.py",
-    "title": "Converted {amount} {from} to {to}"
+    "name": "count_words",
+    "description": "Count the words and sentences in a text file.",
+    "params": { "type": "object", "properties": { "file": { "type": "string" } }, "required": ["file"] },
+    "run": "tools/count.py",
+    "title": "Counted the words in {file}"
   }],
-  "prompt": "For converting money between currencies, use convert_currency."
+  "prompt": "To count words in a file, use count_words."
 }
 ```
 
-`tools/convert.py`:
+`tools/count.py`:
 ```python
-import json, sys
+import json, re, sys
 args = json.load(sys.stdin)      # the model's arguments
-print(f"{args['amount']} {args['from']} is …")   # what you print goes back to Hob
+text = open(args['file'], encoding='utf-8').read()
+print(f"{len(text.split())} words, {len(re.findall(r'[.!?]+', text))} sentences")   # what you print goes back to Hob
 ```
+
+A tool that needs the internet adds `"permissions": { "network": true }`.
 
 **Input**
 - Arguments arrive as JSON on stdin.
