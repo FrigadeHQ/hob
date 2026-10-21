@@ -26,6 +26,9 @@ extraResources:
   # native helpers (scripts/build-native.mjs): hob-pdf reads and fills PDFs with Apple's PDFKit and Vision
   - from: resources/bin
     to: bin
+  # licenses of things bundled into the app (the reply font)
+  - from: resources/licenses
+    to: licenses
 # double-clicking an MCP bundle offers Hob (Claude Desktop stays the default if it's installed)
 fileAssociations:
   - ext: [mcpb, dxt]

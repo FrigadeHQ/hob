@@ -21,6 +21,7 @@
     "recharts": "3.10.1"
   },
   "devDependencies": {
+    "@fontsource-variable/source-serif-4": "5.3.0",
     "@huggingface/transformers": "4.3.0",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/typography": "^0.5.20",

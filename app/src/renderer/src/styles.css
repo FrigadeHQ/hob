@@ -10,6 +10,8 @@
 @theme {
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Hob's replies read like a page: Source Serif 4 (Adobe, SIL Open Font License) */
+  --font-serif: "Source Serif 4 Variable", "Iowan Old Style", Georgia, serif;
 
   --text-meta: 12px;
   --text-meta--line-height: 16px;
@@ -89,10 +91,12 @@ body {
 .drag { -webkit-app-region: drag; }
 .no-drag { -webkit-app-region: no-drag; }
 
-/* Assistant replies: body size, calm rhythm, consistent with the rest of the UI */
+/* Assistant replies: a book-like serif, a touch larger than the UI text (serifs read small), calm rhythm */
 .reply.prose {
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  font-size: calc(var(--text-body) + 1.5px);
+  line-height: 1.6;
   color: var(--color-ink);
   --tw-prose-body: var(--color-ink);
   --tw-prose-headings: var(--color-ink);
@@ -103,10 +107,13 @@ body {
   --tw-prose-code: var(--color-ink);
   --tw-prose-th-borders: var(--color-line-strong);
   --tw-prose-td-borders: var(--color-line);
+  /* section breaks (---): Hob's soft divider, not the prose default (too bright in dark mode) */
+  --tw-prose-hr: var(--color-line);
 }
 .reply.prose :where(p, ul, ol, table, pre) { margin-top: 0.6em; margin-bottom: 0.6em; }
 .reply.prose :where(h1, h2, h3) { font-size: var(--text-body); line-height: var(--text-body--line-height); font-weight: 600; margin: 1em 0 0.4em; }
 .reply.prose :where(li) { margin: 0.2em 0; }
+.reply.prose :where(hr) { border-color: var(--color-line); margin: 1.6em 0; }
 .reply.prose :where(code):not(pre code) { font-size: 0.87em; background: var(--color-line); border-radius: 5px; padding: 0.1em 0.35em; font-weight: 400; }
 .reply.prose :where(code):not(pre code)::before, .reply.prose :where(code):not(pre code)::after { content: none; }
 .reply.prose :where(pre) { background: var(--color-sidebar); color: var(--color-ink); border: 1px solid var(--color-line); border-radius: var(--radius-card); font-size: var(--text-ui); }
