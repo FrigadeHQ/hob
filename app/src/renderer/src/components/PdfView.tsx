@@ -48,3 +48,29 @@ export function PdfView({ path }: { path: string }) {
     </div>
   )
 }
+
+/** a PDF's first page, small: the attachment card's picture */
+export function PdfThumb({ path, width }: { path: string; width: number }) {
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    let cancelled = false
+    let doc: pdfjs.PDFDocumentProxy | undefined
+    void (async () => {
+      try {
+        const data = new Uint8Array(await (await fetch(mabel.fileUrl(path))).arrayBuffer())
+        doc = await pdfjs.getDocument({ data }).promise
+        const page = await doc.getPage(1)
+        const base = page.getViewport({ scale: 1 })
+        const view = page.getViewport({ scale: (width / base.width) * window.devicePixelRatio })
+        const canvas = document.createElement('canvas')
+        canvas.width = view.width; canvas.height = view.height
+        canvas.style.width = `${width}px`
+        canvas.className = 'block bg-white'
+        await page.render({ canvas, viewport: view }).promise
+        if (!cancelled) box.current?.appendChild(canvas)
+      } catch { /* the card still shows the name; clicking opens it */ }
+    })()
+    return () => { cancelled = true; void doc?.cleanup(); if (box.current) box.current.innerHTML = '' }
+  }, [path, width])
+  return <div ref={box} data-testid="attachment-thumb-pdf" className="h-full w-full overflow-hidden bg-white" />
+}

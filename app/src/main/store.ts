@@ -103,6 +103,10 @@ export class Store {
     })
   }
 
+  setAttachments(messageId: number, attachments: Attachment[]) {
+    this.db.prepare('UPDATE messages SET attachments = ? WHERE id = ?').run(JSON.stringify(attachments), messageId)
+  }
+
   /** Repoint every stored path under one folder to another (chat folders, attachments, created files). */
   movePaths(fromPrefix: string, toPrefix: string) {
     const json = (p: string) => JSON.stringify(p).slice(1, -1)

@@ -204,7 +204,7 @@ export class PluginRegistry {
       const stored = this.d.store.pluginSettings(m.id)
       const apps = Object.keys(m.mcpServers)
       const servers = Object.values(m.mcpServers)
-      const trust: PluginTrust = servers.some((c) => !isUrlConfig(c)) ? 'full' : servers.length ? 'online' : m.permissions.network ? 'network' : m.tools.length ? 'code' : 'instructions'
+      const trust: PluginTrust = servers.some((c) => !isUrlConfig(c)) ? 'full' : servers.length ? 'online' : m.permissions.network ? 'network' : m.tools.some((t) => !t.native) ? 'code' : m.tools.length ? 'builtin' : 'instructions'
       const mcpNames = apps.flatMap((a) => (this.mcpTools.get(`${m.id}/${a}`) ?? []).map((t) => t.name))
       const error = p.error ?? this.runtimeErrors.get(m.id)
       return {

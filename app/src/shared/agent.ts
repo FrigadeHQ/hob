@@ -4,7 +4,8 @@ import type { ModelOption } from './types'
 export type ToolSpec = { name: string; description: string; params: Record<string, unknown> }
 
 /** A file copied into a chat's folder. path is absolute. */
-export type Attachment = { name: string; path: string; sizeBytes: number }
+/** seen: what Mabel saw in a photo, kept so follow-ups still know it */
+export type Attachment = { name: string; path: string; sizeBytes: number; seen?: string }
 
 export type StepStatus = 'running' | 'waiting' | 'done' | 'error' | 'denied'
 /** One agent action shown in the thread, e.g. "Read sales.csv". */

@@ -61,8 +61,13 @@ export type TurnDeps = {
 }
 export type TurnArgs = { chatId: string; requestId: string; text: string; attachments: Attachment[]; signal: AbortSignal }
 
-const withFiles = (content: string, attachments: Attachment[]) =>
-  attachments.length ? `${content}\n\n[Attached: ${attachments.map((a) => a.name).join(', ')}]` : content
+const withFiles = (content: string, attachments: Attachment[]) => {
+  if (!attachments.length) return content
+  const seen = attachments.filter((f) => f.seen).map((f) => `[What's in ${f.name}, seen by Mabel's image model: ${f.seen}]`)
+  return [`${content}\n\n[Attached: ${attachments.map((f) => f.name).join(', ')}]`, ...seen].join('\n')
+}
+/** photos the image model can look at */
+const PHOTO = /\.(jpe?g|png|gif|bmp|webp|heic|heif|tiff?|avif)$/i
 
 /** One user message → model + tools → stored assistant reply. */
 export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> {
@@ -74,7 +79,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   const placeholder = chatTitle(a.text)
   if (firstTurn) { d.store.renameChat(a.chatId, placeholder); d.onChatsChanged?.() }
   const history = d.store.messages(a.chatId)
-  d.store.addMessage(a.chatId, { role: 'user', content: a.text, attachments: a.attachments })
+  const userMessage = d.store.addMessage(a.chatId, { role: 'user', content: a.text, attachments: a.attachments })
 
   const project = chat.projectId ? d.store.getProject(chat.projectId) : undefined
   /** a folder that's gone (deleted, drive unplugged) can't be used: making files there would quietly recreate it */
@@ -188,6 +193,19 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     }
   }
 
+  const lookNotes: string[] = []
+  // attached photos: look first. Small models answer from the file name instead of calling the tool
+  const looking = d.tools.some((t) => t.spec.name === 'look_at_image') && d.vision && d.vision.state().phase !== 'off'
+  if (looking && a.attachments.some((f) => PHOTO.test(f.name))) {
+    for (const f of a.attachments) {
+      if (!PHOTO.test(f.name) || a.signal.aborted) continue
+      const said = await onTool('look_at_image', { path: f.path })
+      if (steps.at(-1)?.status === 'done') f.seen = said
+      else lookNotes.push(`[Couldn't look at ${f.name}: ${said}]`)
+    }
+    d.store.setAttachments(userMessage, a.attachments)
+  }
+
   const list = (dir: string) => { try { return readdirSync(dir).filter((n) => !n.startsWith('.')) } catch { return [] } }
   const listing = list(chat.dir)
   const specs = specsFor(d.tools, ctx.webAccess)
@@ -203,7 +221,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   const messages: ChatMessage[] = [
     { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: listing, grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing: missingFolders, files: ctx.mainFolder ? list(ctx.mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
     ...fitHistory(history.map((m, i) => ({ role: m.role, content: withFiles(expand(m.content, i), m.attachments) + (i === lastReply ? codeThatWorked(m.steps) : '') }))),
-    { role: 'user', content: withFiles(command.text, a.attachments) },
+    { role: 'user', content: [withFiles(command.text, a.attachments), ...lookNotes].join('\n') },
   ]
   // a request about their files ("rename the photos on my Desktop") is agent work even before any folder is given
   const mentionsFiles = /~[\\/]|\/Users\/|\/home\/|[A-Z]:\\|\b(folders?|files?|photos?|pictures?|documents?|desktop|downloads)\b/i.test(a.text)

@@ -8,6 +8,7 @@ import { fileManager } from '../../../shared/platform'
 
 const TRUST: Record<PluginTrust, { icon: typeof Box; text: string }> = {
   instructions: { icon: ShieldCheck, text: "Adds know-how. Doesn't run anything." },
+  builtin: { icon: ShieldCheck, text: 'Part of Mabel. Runs nothing extra.' },
   code: { icon: Box, text: "Runs code in Mabel's safe space" },
   network: { icon: Globe, text: 'Uses the internet' },
   online: { icon: Globe, text: 'Connects to an online service' },

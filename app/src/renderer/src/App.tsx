@@ -127,7 +127,6 @@ export function App() {
           history.current = { list: [{ screen: 'chat', chat: null }], i: 0 }
           setSelected(null); setViewKey((k) => k + 1); setRefreshKey((k) => k + 1)
         }} />}
-      <PreviewHost />
       {sidebar && narrow && <div className="fade-in absolute inset-0 z-20 bg-black/20" onClick={() => setSidebar(false)} />}
       {/* stays mounted so it can slide: in and out of the layout when docked, over the chat when the window is narrow */}
       <div inert={!sidebar} aria-hidden={!sidebar} data-testid="sidebar-slot"
@@ -154,6 +153,8 @@ export function App() {
         <IconButton icon={ArrowLeft} label={`Back (${MOD}[)`} testId="go-back" size={15} small disabled={history.current.i === 0} onClick={() => void step(-1)} />
         <IconButton icon={ArrowRight} label={`Forward (${MOD}])`} testId="go-forward" size={15} small disabled={history.current.i >= history.current.list.length - 1} onClick={() => void step(1)} />
       </div>
+      {/* last: over everything, and its title-bar buttons win over the drag strips under it (Electron lets the later area win) */}
+      <PreviewHost />
       {palette && <CommandBar onClose={() => setPalette(false)} onOpenChat={(id) => open(id)} onNew={() => open(null)} onNewInProject={(id) => open(null, id)}
         onNewProject={() => setProjectDialog({})} onPlugins={() => setSettingsAt('skills')} onSettings={() => setSettingsAt('general')} />}
       {projectDialog && (

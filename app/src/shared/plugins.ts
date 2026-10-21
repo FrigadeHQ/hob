@@ -1,7 +1,7 @@
 /** builtin: ships with Mabel · installed: copied into Mabel · linked: a developer's folder, reloaded on change */
 export type PluginSource = 'builtin' | 'installed' | 'linked'
 /** what the plugin can do, in rising order of trust (online: talks to a service on the internet, runs nothing here) */
-export type PluginTrust = 'instructions' | 'code' | 'network' | 'online' | 'full'
+export type PluginTrust = 'instructions' | 'builtin' | 'code' | 'network' | 'online' | 'full'
 export type SettingKind = 'text' | 'number' | 'boolean' | 'directory' | 'file'
 export type PluginSettingInfo = {
   key: string; label: string; secret: boolean; help?: string; set: boolean; value?: string

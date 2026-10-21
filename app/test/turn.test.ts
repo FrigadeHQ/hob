@@ -456,3 +456,26 @@ it('Mabel knows its own features, so "how do I connect Google Calendar?" gets a 
   expect(p).toMatch(/Projects/)
   expect(p).toMatch(/Settings/)
 })
+
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+
+it('looks at attached photos before answering, so the reply is about what is in them, not the file name', async () => {
+  const w = world('allow', { grant: false })
+  const photo = join(w.chatDir, '2023-02-15_lion.png'); writeFileSync(photo, PNG)
+  w.deps.vision = { state: () => ({ phase: 'ready' }), ask: async () => 'Two men smiling next to a Y Combinator sign.' } as never
+  const reply = await w.turn('Roast these guys', [{ name: '2023-02-15_lion.png', path: photo, sizeBytes: PNG.length }])
+  expect(reply.steps.map((s) => [s.title, s.status])).toEqual([['Looked at 2023-02-15_lion.png', 'done']])
+  expect(w.engine.lastRequest?.messages.at(-1)?.content).toContain('Two men smiling next to a Y Combinator sign.')
+  // kept with the message, so follow-ups ("now the one on the left") still know what's in it
+  expect(w.store.messages('c')[0].attachments[0].seen).toBe('Two men smiling next to a Y Combinator sign.')
+  await w.turn('and the one on the right?')
+  expect(w.engine.lastRequest?.messages.at(-3)?.content).toContain('Y Combinator')
+})
+
+it("doesn't try to look at photos when this computer has no image support", async () => {
+  const w = world('allow', { grant: false })
+  const photo = join(w.chatDir, 'a.png'); writeFileSync(photo, PNG)
+  w.deps.vision = { state: () => ({ phase: 'off' }), ask: async () => '' } as never
+  const reply = await w.turn('what is this', [{ name: 'a.png', path: photo, sizeBytes: PNG.length }])
+  expect(reply.steps).toEqual([])
+})

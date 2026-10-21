@@ -250,6 +250,10 @@ test('clicking an attached photo or PDF previews it inside Mabel', async () => {
   await ready(page)
   await stubOpenDialog(app, [join(src, 'receipt.png'), join(src, 'form.pdf')])
   await page.getByTestId('attach').click()
+  // small previews right in the message box: the photo itself, and the PDF's first page
+  await expect(page.getByTestId('attachment-thumb-image')).toBeVisible()
+  await expect(page.getByTestId('attachment-thumb-pdf').locator('canvas')).toBeVisible()
+  await expect(page.getByTestId('attachment-chip').nth(1)).toContainText('form.pdf')
   await page.getByTestId('attachment-open').first().click()
   await expect(page.getByTestId('preview-image')).toBeVisible()
   await page.keyboard.press('Escape')
