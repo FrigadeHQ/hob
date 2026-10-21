@@ -3,7 +3,7 @@ import { Cpu, FolderOpen, Monitor, Moon, Plug, Puzzle, Search, Settings as Cog, 
 import type { Theme, UserSettings } from '../../../shared/agent'
 import type { PluginResult } from '../../../shared/plugins'
 import { hob } from '../api'
-import { appearance, type ChatFont, type TextSize } from '../appearance'
+import { appearance, type TextSize } from '../appearance'
 import { LANGUAGES, prefs } from '../speech/prefs'
 import { FilesSettings, Heading, ModelSettings, PrivacySettings, Row, Segmented } from '../screens/Settings'
 import { Plugins, type Tab } from '../screens/Plugins'
@@ -12,7 +12,7 @@ export type Section = 'general' | 'model' | 'privacy' | 'files' | Tab
 
 const NAV: { group: string; items: { id: Section; label: string; icon: typeof Cog; words: string }[] }[] = [
   { group: 'Settings', items: [
-    { id: 'general', label: 'General', icon: Cog, words: 'appearance theme dark light font serif text size dictation voice language' },
+    { id: 'general', label: 'General', icon: Cog, words: 'appearance theme dark light text size dictation voice language' },
     { id: 'model', label: 'Model', icon: Cpu, words: 'ai model download smarter images vision' },
     { id: 'privacy', label: 'Privacy', icon: Shield, words: 'web access internet offline search' },
     { id: 'files', label: 'Files & storage', icon: FolderOpen, words: 'folder storage space delete chats' },
@@ -24,10 +24,9 @@ const NAV: { group: string; items: { id: Section; label: string; icon: typeof Co
   ] },
 ]
 
-/** how replies look, and dictation */
+/** theme, reply text size, and dictation */
 function GeneralSettings() {
   const [s, setS] = useState<UserSettings | null>(null)
-  const [font, setFont] = useState<ChatFont>(appearance.chatFont())
   const [size, setSize] = useState<TextSize>(appearance.textSize())
   const [language, setLanguage] = useState(prefs.language())
   useEffect(() => { void hob.settings.get().then(setS) }, [])
@@ -37,11 +36,6 @@ function GeneralSettings() {
       <Row label="Theme">
         <Segmented<Theme> testId="theme" value={s?.theme ?? 'system'} onChange={(theme) => void hob.settings.set({ theme }).then(setS)} options={[
           { id: 'system', label: <Monitor size={15} />, title: 'Match the system' }, { id: 'light', label: <Sun size={15} />, title: 'Light' }, { id: 'dark', label: <Moon size={15} />, title: 'Dark' },
-        ]} />
-      </Row>
-      <Row label="Chat font" help="The font of Hob's replies.">
-        <Segmented<ChatFont> testId="chat-font" value={font} onChange={(f) => { setFont(f); appearance.setChatFont(f) }} options={[
-          { id: 'serif', label: <span style={{ fontFamily: 'var(--font-serif)' }}>Serif</span> }, { id: 'sans', label: 'Sans' },
         ]} />
       </Row>
       <Row label="Text size" help="Size of Hob's replies.">

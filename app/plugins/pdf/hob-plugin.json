@@ -5,7 +5,20 @@
   "description": "Reads any PDF, even scanned ones, and fills in forms for you. Text is recognized on this computer.",
   "author": "Hob",
   "icon": "file-text",
-  "tools": [{ "native": "read_pdf" }, { "native": "fill_pdf" }],
-  "starters": [{ "title": "Fill in a PDF form", "prompt": "/fill-pdf Fill in this form for me.", "file": true }],
-  "prompt": "For PDFs, use read_pdf (it reads scanned pages too) and fill_pdf to fill in forms. Don't use run_python for PDFs and don't turn pages into images. To fill a form: read it once, ask only for answers to its listed blanks that you don't have, never sign for the user, then call fill_pdf right away."
+  "tools": [
+    {
+      "native": "read_pdf"
+    },
+    {
+      "native": "fill_pdf"
+    }
+  ],
+  "starters": [
+    {
+      "title": "Fill in a PDF form",
+      "prompt": "Fill in this PDF form for me.",
+      "file": true
+    }
+  ],
+  "prompt": "For PDFs, use read_pdf (it reads scanned pages too) and fill_pdf to fill in forms. Don't use run_python for PDFs and don't turn pages into images. To fill in a form: read it once with read_pdf. Pages meant for someone else (a doctor, a manager, HR) stay empty: say so. Take answers from the conversation and the user's files; never make up personal details (names, dates, addresses, ID numbers, medical information). If you have none yet, ask once, in one short plain list, only for the blanks that are theirs. Once they answer, call fill_pdf right away with everything you have: each answer under the id that matches it; dates the way the form shows them (US forms MM/DD/YYYY); checkboxes take \"yes\"; an address goes street, then \"City, ST ZIP\" on the next line. Never sign for the user. Then say what you filled, what's still empty and who fills it, and that the filled copy is new and the original is unchanged."
 }

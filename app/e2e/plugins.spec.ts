@@ -55,21 +55,15 @@ test('a new skill shows in the / menu and its instructions reach the model', asy
   await app.close()
 })
 
-test('turning a plugin off hides its skills from the / menu', async () => {
+test('skills start empty: nothing in the / menu, and Skills invites you to make one', async () => {
   const { app, page } = await launch()
   await page.getByTestId('composer-input').fill('/')
-  await expect(page.getByTestId('skill-option').filter({ hasText: '/fill-pdf' })).toBeVisible()
+  await expect(page.getByTestId('skill-option')).toHaveCount(0)
   await page.getByTestId('composer-input').fill('')
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-skills').click()
-  // a plugin's skills show as their own cards, marked with where they come from
-  await expect(page.locator('[data-testid=skill-card][data-name=fill-pdf]')).toContainText('From PDF')
-  await page.getByTestId('settings-nav-plugins').click()
-  await page.locator('[data-testid=plugin][data-id=pdf]').getByTestId('plugin-toggle').click()
-  await page.getByTestId('settings-close').click()
-  await page.getByTestId('new-chat').click()
-  await page.getByTestId('composer-input').fill('/fill')
-  await expect(page.getByTestId('skill-option').filter({ hasText: '/fill-pdf' })).toHaveCount(0)
+  await expect(page.getByTestId('skill-card')).toHaveCount(0)
+  await expect(page.getByTestId('settings')).toContainText('Teach Hob something')
   await app.close()
 })
 

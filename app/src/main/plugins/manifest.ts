@@ -132,7 +132,8 @@ export function parseManifest(raw: unknown, opts: { builtin?: boolean } = {}): {
         description: str(r.description, 'description', false), ...(r.author !== undefined ? { author: str(r.author, 'author') } : {}),
         icon: str(r.icon, 'icon', false) || 'puzzle', permissions: { network: perms.network === true },
         starters, tools, mcpServers, settings,
-        ...(r.prompt !== undefined ? { prompt: str(r.prompt, 'prompt').slice(0, 600) } : {}),
+        // built-in plugins carry their how-to here (filling PDF forms); others get a line
+        ...(r.prompt !== undefined ? { prompt: str(r.prompt, 'prompt').slice(0, opts.builtin ? 1500 : 600) } : {}),
         ...(Array.isArray(r.platforms) ? { platforms: r.platforms.map(String) } : {}),
       },
     }
