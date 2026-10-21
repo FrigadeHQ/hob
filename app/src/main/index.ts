@@ -56,7 +56,7 @@ let win: BrowserWindow | undefined
 /** test runs: no window on screen, no Dock icon, never takes focus from what the person is doing */
 const BACKGROUND = process.env.HOB_BACKGROUND === '1'
 
-const MIME: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', json: 'application/json' }
+const MIME: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp', json: 'application/json', pdf: 'application/pdf' }
 const mimeOf = (p: string) => MIME[p.split('.').pop()!.toLowerCase()] ?? 'application/octet-stream'
 
 // shows images the agent made, from chat folders and granted folders only

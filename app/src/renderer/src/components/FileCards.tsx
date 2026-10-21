@@ -3,6 +3,7 @@ import type { Step } from '../../../shared/agent'
 import { hob } from '../api'
 import { fileManager } from '../../../shared/platform'
 import { ChartCard } from './ChartCard'
+import { canPreview, previewFile } from './Preview'
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg)$/i
 const CHART = /\.chart\.json$/i
@@ -24,10 +25,10 @@ export function FileCards({ steps }: { steps: Step[] }) {
         const Icon = image ? ImageIcon : FileText
         return (
           <div key={f} data-testid="file-card" className="overflow-hidden rounded-card border border-line bg-surface">
-            {image && <img data-testid="file-image" src={hob.fileUrl(f)} alt={name(f)} className="block max-h-96 w-full bg-white object-contain" />}
+            {image && <button className="block w-full cursor-zoom-in" title="Preview" onClick={() => previewFile(f)}><img data-testid="file-image" src={hob.fileUrl(f)} alt={name(f)} className="block max-h-96 w-full bg-white object-contain" /></button>}
             <div className="flex items-center gap-2 px-3 py-2 text-ui">
               <Icon size={16} strokeWidth={1.75} className="shrink-0 text-ink-soft" />
-              <span className="min-w-0 flex-1 truncate">{name(f)}</span>
+              <button data-testid="file-open-name" title={canPreview(f) ? 'Preview' : 'Open'} onClick={() => previewFile(f)} className="min-w-0 flex-1 truncate text-left hover:underline underline-offset-2">{name(f)}</button>
               <button onClick={() => void hob.files.open(f)} className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-ink-soft hover:bg-line/70 hover:text-ink"><SquareArrowOutUpRight size={14} />Open</button>
               <button onClick={() => void hob.files.show(f)} className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-ink-soft hover:bg-line/70 hover:text-ink"><FolderOpen size={14} />{reveal}</button>
             </div>

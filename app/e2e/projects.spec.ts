@@ -60,7 +60,7 @@ test('projects: make one with a folder, chat in it, open its folder, edit it, re
 
   // a chat outside the project: no chip menu choice made, so it's under the chat list
   await page.getByTestId('new-chat').click()
-  await expect(page.getByTestId('project-chip')).toContainText('No project')
+  await expect(page.getByTestId('project-chip')).toContainText('Add to project')
   await page.getByTestId('composer-input').fill('hello')
   await page.getByTestId('composer-send').click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hello')
@@ -70,7 +70,7 @@ test('projects: make one with a folder, chat in it, open its folder, edit it, re
   await page.getByTestId('chat-item').first().click()
   await page.getByTestId('new-chat-inline').click()
   await expect(page.getByTestId('message-assistant')).toHaveCount(0)
-  await expect(page.getByTestId('project-chip')).toContainText('No project')
+  await expect(page.getByTestId('project-chip')).toContainText('Add to project')
 
   // the chip picks a project for a new chat
   await page.getByTestId('new-chat').click()

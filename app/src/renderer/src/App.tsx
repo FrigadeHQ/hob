@@ -5,6 +5,7 @@ import { hob } from './api'
 import { Onboarding } from './screens/Onboarding'
 import { ChatView } from './screens/Chat'
 import { ConfirmHost } from './components/Confirm'
+import { PreviewHost } from './components/Preview'
 import { Settings } from './screens/Settings'
 import { Plugins } from './screens/Plugins'
 import type { PluginResult } from '../../shared/plugins'
@@ -119,6 +120,7 @@ export function App() {
   return (
     <div className="reveal relative h-full flex">
       <ConfirmHost />
+      <PreviewHost />
       {sidebar && narrow && <div className="fade-in absolute inset-0 z-20 bg-black/20" onClick={() => setSidebar(false)} />}
       {sidebar && (
         <div className={narrow ? 'absolute inset-y-0 left-0 z-30 flex shadow-xl' : 'flex'}>

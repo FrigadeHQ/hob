@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CornerDownLeft, FileText, Mic, Plus, Square, X } from 'lucide-react'
+import { CornerDownLeft, FileText, Image as ImageIcon, Mic, Plus, Square, X } from 'lucide-react'
+import { canPreview, previewFile } from './Preview'
 import type { Attachment } from '../../../shared/agent'
 import type { SkillRef } from '../../../shared/plugins'
 import { IconButton, PluginIcon } from './ui'
@@ -7,10 +8,15 @@ import { IconButton, PluginIcon } from './ui'
 const size = (b: number) => (b < 1e6 ? `${Math.max(1, Math.round(b / 1e3))} KB` : `${(b / 1e6).toFixed(1)} MB`)
 
 export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () => void }) {
+  const image = /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(a.name)
+  const Icon = image ? ImageIcon : FileText
   return (
     <span data-testid="attachment-chip" className="inline-flex items-center gap-1.5 rounded-control border border-line bg-surface px-2 py-1 text-ui">
-      <FileText size={14} strokeWidth={1.75} className="text-ink-soft" />
-      <span className="max-w-48 truncate">{a.name}</span>
+      {/* click to look at it: photos and PDFs in Hob, anything else in its own app */}
+      <button data-testid="attachment-open" title={canPreview(a.path) ? 'Preview' : 'Open'} onClick={() => previewFile(a.path)} className="inline-flex min-w-0 items-center gap-1.5 hover:text-ink">
+        <Icon size={14} strokeWidth={1.75} className="shrink-0 text-ink-soft" />
+        <span className="max-w-48 truncate underline-offset-2 hover:underline">{a.name}</span>
+      </button>
       <span className="text-meta text-muted">{size(a.sizeBytes)}</span>
       {onRemove && <button aria-label={`Remove ${a.name}`} onClick={onRemove} className="text-muted hover:text-ink"><X size={14} /></button>}
     </span>
