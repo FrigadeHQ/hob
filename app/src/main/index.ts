@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, safeStorage, session, shell } from 'electron'
+import { app, BrowserWindow, nativeTheme, protocol, safeStorage, session, shell } from 'electron'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { readFile } from 'node:fs/promises'
@@ -98,6 +98,8 @@ app.on('open-file', (e, path) => {
 
 app.whenReady().then(() => {
   const paths = makePaths(app.getPath('userData'))
+  // the theme picked in Settings; the system's when none
+  nativeTheme.themeSource = loadSettings(paths.settings).theme ?? 'system'
   const engine = FAKE ? new FakeEngine() : new UtilityEngine(join(__dirname, 'engine.js'))
   /** the computer, as setup found it (the vision model's room is worked out from it) */
   let hardware: Hardware | undefined

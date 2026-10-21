@@ -37,7 +37,8 @@ export type StoredMessage = {
   workedMs?: number
 }
 
-export type UserSettings = { webAccess: boolean; filesDir: string }
+export type Theme = 'system' | 'light' | 'dark'
+export type UserSettings = { webAccess: boolean; filesDir: string; theme: Theme }
 export type ModelRow = ModelOption & { downloaded: boolean; active: boolean }
 
 /** a reply still being written: its chat may be closed and opened again meanwhile */

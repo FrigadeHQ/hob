@@ -12,7 +12,7 @@ Hob connects to any [Model Context Protocol](https://modelcontextprotocol.io) se
 }
 ```
 
-Users can also add one without a folder: **Plugins → Connectors → Add connector**, then paste a link, a command, or a Claude / Cursor / VS Code style `{"mcpServers": …}` config.
+Users can also add one without a folder: **Settings → Connectors → Add connector**, then paste a link, a command, or a Claude / Cursor / VS Code style `{"mcpServers": …}` config.
 
 - Hob starts the server the first time it's needed and stops it when Hob quits.
 - `npx`, `uvx` and similar commands are found through the user's login shell `PATH`.
@@ -38,7 +38,7 @@ Users can also add one without a folder: **Plugins → Connectors → Add connec
 ## MCP bundles (.mcpb)
 
 A [`.mcpb`](https://github.com/anthropics/mcpb) file works in Hob as it is. Build one with `npx @anthropic-ai/mcpb pack`, then:
-- **Plugins → Connectors**, then drop it there or choose it, or double-click it in Finder.
+- **Settings → Connectors**, then drop it there or choose it, or double-click it in Finder.
 - `user_config` fields become settings on the card: text, secret, number, on/off, and folder or file pickers. Required ones must be filled in before it starts.
 - `${__dirname}`, `${HOME}`, `${DESKTOP}`, `${DOCUMENTS}`, `${DOWNLOADS}`, `${/}` and `${user_config.…}` are filled in. Several chosen folders become several arguments.
 - `"type": "node"` bundles run on Hob's built-in Node, and `"python"` bundles on Hob's Python. Nothing extra to install. `uv` bundles need [uv](https://docs.astral.sh/uv/).

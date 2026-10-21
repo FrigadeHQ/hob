@@ -246,7 +246,12 @@ function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; on
 }
 
 
-type Tab = 'skills' | 'connectors' | 'plugins'
+export type Tab = 'skills' | 'connectors' | 'plugins'
+const BLURB: Record<Tab, string> = {
+  skills: 'How-tos Hob uses when a task calls for them. Type / to run one yourself.',
+  connectors: 'Link Hob to your apps and services through MCP.',
+  plugins: 'Bundles of skills, tools and connectors.',
+}
 const TABS: { id: Tab; label: string }[] = [{ id: 'skills', label: 'Skills' }, { id: 'connectors', label: 'Connectors' }, { id: 'plugins', label: 'Plugins' }]
 const tabOf = (p: PluginInfo): Tab => (p.kind === 'skills' ? 'skills' : p.kind === 'connector' ? 'connectors' : 'plugins')
 const slugOf = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -288,9 +293,11 @@ function Empty({ icon: Icon, title, text, onClick, testId }: { icon: typeof Box;
   )
 }
 
-export function Plugins({ opened, tab: startTab }: { opened?: PluginResult | null; tab?: Tab }) {
+/** Settings → Skills, Connectors or Plugins. onSection: something added belongs on another page (an .mcpb is a connector) */
+export function Plugins({ opened, section, onSection }: { opened?: PluginResult | null; section: Tab; onSection(t: Tab): void }) {
   const [plugins, setPlugins] = useState<PluginInfo[]>([])
-  const [tab, setTab] = useState<Tab>(startTab ?? 'skills')
+  const tab = section
+  const setTab = onSection
   const [open, setOpen] = useState<string | null>(null)
   const [dialog, setDialog] = useState<{ kind: 'skill'; edit?: NewSkill } | { kind: 'connect' } | null>(null)
   const [menu, setMenu] = useState(false)
@@ -342,25 +349,15 @@ export function Plugins({ opened, tab: startTab }: { opened?: PluginResult | nul
   ]
 
   return (
-    <main data-testid="plugins" className={`fade-in flex-1 overflow-y-auto transition-colors ${dragging ? 'bg-line/40' : ''}`}
+    <div data-testid="plugins" className={`rounded-card transition-colors ${dragging ? 'bg-line/40' : ''}`}
       onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragging(true) } }}
       onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false) }}
       onDrop={(e) => void drop(e)}>
-      <div className="drag h-12" />
-      <div className="mx-auto max-w-2xl space-y-6 px-6 pb-12">
-        <div className="flex items-start justify-between gap-4">
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-title font-semibold tracking-tight">Plugins</h1>
-            <p className="mt-1 text-body text-ink-soft">Skills teach Hob how you like things done. Connectors link it to your apps. Plugins bundle them.</p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div role="tablist" className="inline-flex rounded-control bg-line/60 p-0.5">
-            {TABS.map((t) => (
-              <button key={t.id} role="tab" aria-selected={tab === t.id} data-testid={`tab-${t.id}`} onClick={() => { setTab(t.id); setNotice(null) }}
-                className={`rounded-[7px] px-3 py-1 text-ui ${tab === t.id ? 'bg-surface font-medium text-ink shadow-sm' : 'text-ink-soft hover:text-ink'}`}>{t.label}</button>
-            ))}
+            <h2 className="text-body font-semibold">{TABS.find((t) => t.id === tab)!.label}</h2>
+            <p className="text-meta text-muted">{BLURB[tab]}</p>
           </div>
           {tab === 'skills' && <button data-testid="new-skill" className={button.primary} onClick={() => setDialog({ kind: 'skill' })}><Sparkles size={14} />New skill</button>}
           {tab === 'connectors' && <button data-testid="connect-app" className={button.primary} onClick={() => setDialog({ kind: 'connect' })}><Plug size={14} />Add connector</button>}
@@ -425,6 +422,6 @@ export function Plugins({ opened, tab: startTab }: { opened?: PluginResult | nul
       </div>
       {dialog?.kind === 'skill' && <SkillDialog initial={dialog.edit} onClose={() => setDialog(null)} onSaved={(n) => { setDialog(null); setTab('skills'); setNotice({ text: `Saved. Type /${slugOf(n)} in a chat to use it.` }) }} />}
       {dialog?.kind === 'connect' && <ConnectDialog onClose={() => setDialog(null)} onDone={(n, id) => { setDialog(null); setNotice(n); if (id) show(id) }} />}
-    </main>
+    </div>
   )
 }

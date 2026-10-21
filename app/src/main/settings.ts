@@ -1,7 +1,8 @@
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 
 /** pendingModelId: a model download that was still in progress when Hob last ran */
-export type Settings = { activeModelId?: string; pendingModelId?: string; webAccess?: boolean; filesDir?: string }
+/** theme: light or dark regardless of the system; follows the system when left out */
+export type Settings = { activeModelId?: string; pendingModelId?: string; webAccess?: boolean; filesDir?: string; theme?: 'light' | 'dark' }
 
 export function loadSettings(path: string): Settings {
   try { return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {} } catch { return {} }

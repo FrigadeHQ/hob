@@ -48,16 +48,16 @@ test('search chats from the top bar or ⌘K, run quick actions, go back and forw
   await page.keyboard.press(`${mod}+k`)
   await bar.getByRole('textbox').fill('plugins')
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('heading', { name: 'Plugins', level: 1 })).toBeVisible()
+  await expect(page.getByTestId('settings').getByRole('heading', { name: 'Skills' })).toBeVisible()
+  await page.getByTestId('settings-close').click()
 
-  // back: the wine chat, then the lisbon chat; forward again
-  await page.getByTestId('go-back').click()
+  // back: the lisbon chat; forward again
   await expect(page.getByTestId('message-assistant').first()).toContainText('shipping wine to canada')
   await page.getByTestId('go-back').click()
   await expect(page.getByTestId('message-assistant').first()).toContainText('lisbon')
+  await expect(page.getByTestId('go-forward')).toBeEnabled()
   await page.keyboard.press(`${mod}+]`)
   await expect(page.getByTestId('message-assistant').first()).toContainText('shipping wine to canada')
-  await expect(page.getByTestId('go-forward')).toBeEnabled()
 
   // ⌘N starts a new chat
   await page.keyboard.press(`${mod}+n`)
@@ -77,6 +77,7 @@ test('Settings → Danger zone deletes every chat', async () => {
   await expect(page.getByTestId('chat-item')).toHaveCount(2)
 
   await page.getByTestId('open-settings').click()
+  await page.getByTestId('settings-nav-files').click()
   await expect(page.getByTestId('files-dir')).not.toBeEmpty()
   const filesDir = (await page.getByTestId('files-dir').textContent())!
   const before = readdirSync(filesDir).length
@@ -93,6 +94,7 @@ test('Settings → Danger zone deletes every chat', async () => {
   expect(before).toBeGreaterThanOrEqual(2)
   expect(readdirSync(filesDir).length).toBe(before)
   // nothing left to go back to; a new chat is ready
+  await page.getByTestId('settings-close').click()
   await expect(page.getByTestId('go-back')).toBeDisabled()
   await page.getByTestId('new-chat').click()
   await expect(page.getByTestId('message-assistant')).toHaveCount(0)

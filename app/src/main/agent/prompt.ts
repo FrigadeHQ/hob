@@ -97,16 +97,16 @@ const ABOUT_HOB = [
   'About Hob (answer questions about the app from this; never say you don\'t know how Hob works):',
   '- Runs on this computer: the model, the files and the chats stay here. The model is picked in Settings → Model.',
   '- Projects (sidebar → Projects → +): a name, folders Hob may use and instructions for every chat in it.',
-  '- Skills: reusable how-tos, run with /name. Plugins → Skills → New skill, or after a task say "save this as a skill" (code included).',
-  '- Connectors link Hob to other apps through MCP (Model Context Protocol): Plugins → Connectors → Add connector, then paste a link to an online MCP server, a command for one on this computer, or a {"mcpServers": …} config made for Claude or Cursor. .mcpb files can be dropped there too. Online ones open the browser to sign in.',
+  '- Skills: reusable how-tos, run with /name. Settings → Skills → New skill, or after a task say "save this as a skill" (code included).',
+  '- Connectors link Hob to other apps through MCP (Model Context Protocol): Settings → Connectors → Add connector, then paste a link to an online MCP server, a command for one on this computer, or a {"mcpServers": …} config made for Claude or Cursor. .mcpb files can be dropped there too. Online ones open the browser to sign in.',
   process.platform === 'darwin'
-    ? '- Email and calendar (Google, iCloud, Outlook…): on this Mac they work through the Calendar & Mail plugin, with the accounts already in the Mac\'s Calendar and Mail apps. To set it up, the user clicks "Connect my email and calendar" on the home screen (or Plugins → Plugins → Calendar & Mail) and allows access; a Google account is added in System Settings → Internet Accounts. No Google Cloud setup needed: never send them there.'
-    : '- Email and calendar: through a connector (an MCP server) in Plugins → Connectors. For Google Calendar today that means creating OAuth keys in Google Cloud (Calendar API, a Desktop app client) and adding the connector npx -y @cocal/google-calendar-mcp with GOOGLE_OAUTH_CREDENTIALS=<path to the keys>. Keep it short and offer to walk them through it.',
-  '- Plugins bundle skills, tools and connectors: Plugins → Plugins → Add plugin (a folder or .zip).',
+    ? '- Email and calendar (Google, iCloud, Outlook…): on this Mac they work through the Calendar & Mail plugin, with the accounts already in the Mac\'s Calendar and Mail apps. To set it up, the user clicks "Connect my email and calendar" on the home screen (or Settings → Plugins → Calendar & Mail) and allows access; a Google account is added in System Settings → Internet Accounts. No Google Cloud setup needed: never send them there.'
+    : '- Email and calendar: through a connector (an MCP server) in Settings → Connectors. For Google Calendar today that means creating OAuth keys in Google Cloud (Calendar API, a Desktop app client) and adding the connector npx -y @cocal/google-calendar-mcp with GOOGLE_OAUTH_CREDENTIALS=<path to the keys>. Keep it short and offer to walk them through it.',
+  '- Plugins bundle skills, tools and connectors: Settings → Plugins → Add plugin (a folder or .zip).',
   '- Web access (Settings) lets Hob search the web, its code fetch data and install Python packages. Off = fully offline.',
   '- Hob can work with files (attach, drop or paste them; or a project folder), write and run Python, make charts, read and fill PDFs, and look at photos and screenshots.',
   '- Dictation: the mic button in the message box; the arrow next to it picks the microphone and language. Speech is turned into text on this computer.',
-  '- Settings (gear, bottom left): model, Web access, where chat files are saved, storage, and deleting chats.',
+  '- Settings (gear, bottom left, or ⌘,): General (theme: System, Light or Dark; chat font; text size; dictation language), Model, Privacy (Web access), Files & storage (where chat files go, deleting chats), and Skills, Connectors and Plugins.',
 ].join('\n')
 
 export const TITLE_PROMPT = 'You name chats for a sidebar.'

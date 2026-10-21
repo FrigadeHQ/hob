@@ -7,21 +7,41 @@ import { Dialog, Switch, button } from '../components/ui'
 const gb = (n: number) => (n < 10 ? `${n.toFixed(1)} GB` : `${Math.round(n)} GB`)
 const left = (s: number) => (s <= 0 ? '' : s < 90 ? ' · about a minute left' : s < 5400 ? ` · about ${Math.round(s / 60)} minutes left` : ` · about ${Math.round(s / 3600)} hours left`)
 
-export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
+/** a row: label (and help) on the left, the control on the right */
+export function Row({ label, help, children, testId }: { label: string; help?: string; children: React.ReactNode; testId?: string }) {
+  return (
+    <div data-testid={testId} className="flex items-center justify-between gap-6 border-b border-line py-3.5 last:border-b-0">
+      <div className="min-w-0"><p className="text-ui font-medium">{label}</p>{help && <p className="text-meta text-muted">{help}</p>}</div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  )
+}
+
+/** a few options side by side, one picked (Small · Medium · Large) */
+export function Segmented<T extends string>({ value, options, onChange, testId }: { value: T; options: { id: T; label: React.ReactNode; title?: string }[]; onChange(v: T): void; testId?: string }) {
+  return (
+    <div data-testid={testId} role="radiogroup" className="inline-flex rounded-control bg-line/60 p-0.5">
+      {options.map((o) => (
+        <button key={o.id} role="radio" aria-checked={value === o.id} title={o.title} aria-label={o.title} onClick={() => onChange(o.id)}
+          className={`inline-flex items-center rounded-[7px] px-3 py-1 text-ui ${value === o.id ? 'bg-surface text-ink shadow-sm' : 'text-ink-soft hover:text-ink'}`}>{o.label}</button>
+      ))}
+    </div>
+  )
+}
+
+export const Heading = ({ children }: { children: React.ReactNode }) => <h2 className="mt-8 mb-1 text-body font-semibold first:mt-0">{children}</h2>
+
+/** the models this computer can run, and Hob's image model */
+export function ModelSettings() {
   const [models, setModels] = useState<ModelRow[]>([])
   const [vision, setVision] = useState<VisionState>({ phase: 'off' })
   useEffect(() => { void hob.vision.getState().then(setVision); return hob.vision.onState(setVision) }, [])
-  const [s, setS] = useState<UserSettings | null>(null)
-  const [storage, setStorage] = useState<{ modelsGB: number; filesGB: number; codeToolsGB: number } | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [chatCount, setChatCount] = useState(0)
   /** the download in progress (or about to start, the moment Download is clicked) */
   const [setup, setSetup] = useState<SetupState | null>(null)
   const [starting, setStarting] = useState<string | null>(null)
-  const reload = () => { void hob.models.list().then(setModels); void hob.storage.get().then(setStorage) }
+  const reload = () => void hob.models.list().then(setModels)
   useEffect(() => {
     reload()
-    void hob.settings.get().then(setS)
     void hob.setup.getState().then(setSetup)
     return hob.setup.onState((st) => { setSetup(st); if (st.phase !== 'downloading') setStarting(null); reload() })
   }, [])
@@ -32,15 +52,10 @@ export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
     setStarting(id)
     void hob.models.use(id).then(reload).finally(() => setStarting((cur) => (cur === id ? null : cur)))
   }
-
   return (
-    <main data-testid="settings" className="fade-in flex-1 overflow-y-auto">
-      <div className="drag h-12" />
-      <div className="max-w-2xl mx-auto px-6 pb-12 space-y-10">
-        <h1 className="text-title font-semibold tracking-tight">Settings</h1>
-
-        <section>
-          <h2 className="text-body font-medium mb-3">Model</h2>
+    <>
+      <Heading>Model</Heading>
+      <p className="mb-3 text-meta text-muted">The AI that runs on this computer. Bigger models are smarter and need more memory.</p>
           <div className="rounded-card border border-line bg-surface divide-y divide-line">
             {models.filter((m) => m.available).map((m) => (
               <div key={m.id} data-testid="settings-model" className="flex items-start gap-3 px-4 py-3">
@@ -77,10 +92,7 @@ export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
           {models.some((m) => !m.available) && (
             <p className="mt-2 text-meta text-muted">{models.filter((m) => !m.available).length} more models need a more powerful computer.</p>
           )}
-        </section>
-
-        <section>
-          <h2 className="text-body font-medium mb-1">Seeing images</h2>
+          <Heading>Seeing images</Heading>
           <p className="text-ui text-muted mb-3">A small extra model that lets Hob look at photos and screenshots. It runs on this computer.</p>
           <div data-testid="settings-vision" className="flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3 text-ui">
             <span className="flex-1">
@@ -91,41 +103,51 @@ export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
             </span>
             {vision.phase === 'error' && <button className={button.secondary} onClick={() => void hob.vision.retry()}>Try again</button>}
           </div>
-        </section>
+    </>
+  )
+}
 
-        <section className="flex items-start justify-between gap-6">
-          <div>
-            <h2 className="text-body font-medium">Web access</h2>
-            <p className="text-ui text-muted">Lets Hob search the web and read pages when it helps. Searches go to public search engines; nothing else leaves your computer.</p>
-          </div>
-          <div className="mt-1"><Switch testId="web-toggle" label="Web access" on={!!s?.webAccess} onChange={(on) => s && void hob.settings.set({ webAccess: on }).then(setS)} /></div>
-        </section>
+/** Web access: the one switch between offline and online */
+export function PrivacySettings() {
+  const [s, setS] = useState<UserSettings | null>(null)
+  useEffect(() => { void hob.settings.get().then(setS) }, [])
+  return (
+    <>
+      <Heading>Privacy</Heading>
+      <p className="mb-2 text-meta text-muted">Hob runs on this computer. Your chats and files never leave it.</p>
+      <Row label="Web access" help="Lets Hob search the web, read pages, and let its code fetch data and install Python packages. Turn it off to stay fully offline.">
+        <Switch testId="web-toggle" label="Web access" on={!!s?.webAccess} onChange={(on) => s && void hob.settings.set({ webAccess: on }).then(setS)} />
+      </Row>
+    </>
+  )
+}
 
-        <section>
-          <h2 className="text-body font-medium">Files</h2>
-          <p className="text-ui text-muted">Each chat keeps its files in its own folder here.</p>
-          <div className="mt-2 flex items-center gap-3 text-ui">
-            <code data-testid="files-dir" className="flex-1 min-w-0 truncate rounded bg-line/50 px-2 py-1">{s?.filesDir}</code>
-            <button
-              onClick={() => void hob.settings.pickFilesDir().then(async (d) => { if (d) setS(await hob.settings.set({ filesDir: d })) })}
-              className={button.secondary}
-            >
-              Change…
-            </button>
-          </div>
-        </section>
-
-        <section data-testid="storage">
-          <h2 className="text-body font-medium mb-2">Storage</h2>
-          {storage && (
-            <dl className="grid grid-cols-[1fr_auto] gap-y-1 text-ui">
-              <dt className="text-muted">Models</dt><dd>{gb(storage.modelsGB)}</dd>
-              <dt className="text-muted">Chat files</dt><dd>{gb(storage.filesGB)}</dd>
-              <dt className="text-muted">Code tools</dt><dd>{gb(storage.codeToolsGB)}</dd>
-            </dl>
-          )}
-        </section>
-
+/** where chat files go, how much space Hob uses, and deleting every chat */
+export function FilesSettings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
+  const [s, setS] = useState<UserSettings | null>(null)
+  const [storage, setStorage] = useState<{ modelsGB: number; filesGB: number; codeToolsGB: number } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [chatCount, setChatCount] = useState(0)
+  const reload = () => void hob.storage.get().then(setStorage)
+  useEffect(() => { reload(); void hob.settings.get().then(setS) }, [])
+  return (
+    <>
+      <Heading>Files</Heading>
+      <Row label="Chat files" help="Each chat keeps its files in its own folder here.">
+        <button onClick={() => void hob.settings.pickFilesDir().then(async (d) => { if (d) setS(await hob.settings.set({ filesDir: d })) })} className={button.secondary}>Change…</button>
+      </Row>
+      <code data-testid="files-dir" className="block truncate rounded bg-line/50 px-2 py-1 text-meta">{s?.filesDir}</code>
+      <Heading>Storage</Heading>
+      <section data-testid="storage">
+        {storage && (
+          <dl className="grid grid-cols-[1fr_auto] gap-y-1 text-ui">
+            <dt className="text-muted">Models</dt><dd>{gb(storage.modelsGB)}</dd>
+            <dt className="text-muted">Chat files</dt><dd>{gb(storage.filesGB)}</dd>
+            <dt className="text-muted">Code tools</dt><dd>{gb(storage.codeToolsGB)}</dd>
+          </dl>
+        )}
+      </section>
+      <div className="mt-8">
         <section data-testid="danger-zone">
           <h2 className="text-body font-medium mb-2 text-danger">Danger zone</h2>
           <div className="flex items-center justify-between gap-6 rounded-card border border-danger/30 px-4 py-3">
@@ -153,6 +175,6 @@ export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
           </div>
         </Dialog>
       )}
-    </main>
+    </>
   )
 }

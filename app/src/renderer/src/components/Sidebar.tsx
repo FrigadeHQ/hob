@@ -30,7 +30,6 @@ type Props = {
   /** null: create a new one */
   onEditProject(p: Project | null): void
   onSettings(): void
-  onPlugins(): void
 }
 
 const WIDTH = { min: 200, max: 420, normal: 256 }
@@ -65,7 +64,7 @@ const label = 'px-2 pb-1 pt-4 text-meta text-muted'
 /** the + next to a heading: shows when the heading is hovered (or focused from the keyboard) */
 const headAction = 'mt-3 rounded-control p-1 text-muted opacity-0 transition-opacity hover:bg-line/70 hover:text-ink focus-visible:opacity-100 group-hover/head:opacity-100'
 
-export function Sidebar({ state, selected, refreshKey, screen, draftProject, onSelect, onNew, onNewInProject, onEditProject, onSettings, onPlugins }: Props) {
+export function Sidebar({ state, selected, refreshKey, screen, draftProject, onSelect, onNew, onNewInProject, onEditProject, onSettings }: Props) {
   const [chats, setChats] = useState<ChatSummary[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   // chats whose reply is still being written, maybe while another chat is open
@@ -107,9 +106,6 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
       <div className="space-y-0.5 px-2">
         <button data-testid="new-chat" onClick={onNew} className={`no-drag w-full ${row} font-medium hover:bg-line/70`}>
           <SquarePen size={16} strokeWidth={1.75} className="text-ink-soft" />New chat
-        </button>
-        <button data-testid="open-plugins" onClick={onPlugins} className={`no-drag w-full ${row} ${screen === 'plugins' ? 'bg-line text-ink' : 'text-ink-soft hover:bg-line/70 hover:text-ink'}`}>
-          <Puzzle size={16} strokeWidth={1.75} className="text-ink-soft" />Plugins
         </button>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 pb-2">
@@ -158,7 +154,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
       </nav>
       <div className="flex items-center justify-between gap-2 border-t border-line py-2.5 pl-4 pr-3">
         <Status state={state} />
-        <IconButton icon={Settings} label="Settings" testId="open-settings" active={screen === 'settings'} onClick={onSettings} />
+        <IconButton icon={Settings} label="Settings" testId="open-settings" onClick={onSettings} />
       </div>
       {/* drag the edge to resize; double-click puts it back. Last in the sidebar so it wins over the window-drag strip */}
       <div

@@ -37,7 +37,7 @@ export function CommandBar({ onClose, onOpenChat, onNew, onNewInProject, onNewPr
 
   const actions: Action[] = useMemo(() => [
     { id: 'new', label: 'New chat', icon: SquarePen, keys: `${MOD}N`, run: onNew },
-    { id: 'plugins', label: 'Plugins', icon: Puzzle, run: onPlugins },
+    { id: 'plugins', label: 'Skills, connectors and plugins', icon: Puzzle, run: onPlugins },
     { id: 'project', label: 'New project', icon: FolderPlus, run: onNewProject },
     { id: 'settings', label: 'Settings', icon: Settings, keys: `${MOD},`, run: onSettings },
   ], [onNew, onNewProject, onPlugins, onSettings])

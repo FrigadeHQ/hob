@@ -95,7 +95,7 @@ body {
 .reply.prose {
   font-family: var(--font-serif);
   font-optical-sizing: auto;
-  font-size: calc(var(--text-body) + 1.5px);
+  font-size: calc(var(--text-body) + 1.5px + var(--reply-step, 0px));
   line-height: 1.6;
   color: var(--color-ink);
   --tw-prose-body: var(--color-ink);
@@ -113,6 +113,10 @@ body {
 .reply.prose :where(p, ul, ol, table, pre) { margin-top: 0.6em; margin-bottom: 0.6em; }
 .reply.prose :where(h1, h2, h3) { font-size: var(--text-body); line-height: var(--text-body--line-height); font-weight: 600; margin: 1em 0 0.4em; }
 .reply.prose :where(li) { margin: 0.2em 0; }
+/* Settings → General: chat font and text size */
+html[data-chat-font="sans"] .reply.prose { font-family: var(--font-sans); font-size: calc(var(--text-body) + var(--reply-step, 0px)); line-height: var(--text-body--line-height); }
+html[data-text-size="small"] { --reply-step: -1.5px; }
+html[data-text-size="large"] { --reply-step: 2px; }
 .reply.prose :where(hr) { border-color: var(--color-line); margin: 1.6em 0; }
 .reply.prose :where(code):not(pre code) { font-size: 0.87em; background: var(--color-line); border-radius: 5px; padding: 0.1em 0.35em; font-weight: 400; }
 .reply.prose :where(code):not(pre code)::before, .reply.prose :where(code):not(pre code)::after { content: none; }

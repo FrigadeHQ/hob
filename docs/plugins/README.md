@@ -29,7 +29,7 @@ Hob's own Web search, Code & charts and PDF features are built-in plugins in thi
 
 ## Share it
 
-Zip the folder (or the folder that contains it). Others add it with **Plugins → Plugins → Add plugin**. Installing a newer zip with the same `id` replaces the old copy.
+Zip the folder (or the folder that contains it). Others add it with **Settings → Plugins → Add plugin**. Installing a newer zip with the same `id` replaces the old copy.
 
 If something's wrong, the plugin's card shows the exact problem, for example `hob-plugin.json: tools[0].run must be a path inside the plugin folder`.
 

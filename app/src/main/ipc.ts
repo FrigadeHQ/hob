@@ -1,4 +1,4 @@
-import { app, clipboard, dialog, ipcMain, net, shell, systemPreferences, type BrowserWindow } from 'electron'
+import { app, clipboard, dialog, ipcMain, nativeTheme, net, shell, systemPreferences, type BrowserWindow } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -51,7 +51,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   const live = new LiveTurns((list) => send('chat:live', list))
   const approvals = new Approvals((req) => { live.approval(req); send('chat:approval', req) })
   const trash = (p: string) => shell.trashItem(p)
-  const userSettings = (): UserSettings => ({ webAccess: webAccessOn(loadSettings(d.paths.settings)), filesDir: d.filesDir() })
+  const userSettings = (): UserSettings => ({ webAccess: webAccessOn(loadSettings(d.paths.settings)), filesDir: d.filesDir(), theme: loadSettings(d.paths.settings).theme ?? 'system' })
   d.setup.onState((s) => send('setup:state', s))
   d.vision?.onState((s) => send('vision:state', s))
   ipcMain.handle('vision:getState', () => d.vision?.state() ?? { phase: 'off' })
@@ -235,7 +235,10 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     updateSettings(d.paths.settings, {
       ...(patch.webAccess !== undefined ? { webAccess: !!patch.webAccess } : {}),
       ...(patch.filesDir && validFilesDir(String(patch.filesDir)) ? { filesDir: String(patch.filesDir) } : {}),
+      ...(patch.theme !== undefined ? { theme: patch.theme === 'light' || patch.theme === 'dark' ? patch.theme : undefined } : {}),
     })
+    // the whole app, system dialogs included, follows it
+    if (patch.theme !== undefined) nativeTheme.themeSource = loadSettings(d.paths.settings).theme ?? 'system'
     // Web access is also the Web search plugin's switch
     if (patch.webAccess !== undefined) send('plugins:changed')
     return userSettings()

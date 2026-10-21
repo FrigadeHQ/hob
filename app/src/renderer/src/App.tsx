@@ -5,9 +5,8 @@ import { hob } from './api'
 import { Onboarding } from './screens/Onboarding'
 import { ChatView } from './screens/Chat'
 import { ConfirmHost } from './components/Confirm'
+import { SettingsOverlay, type Section } from './components/SettingsOverlay'
 import { PreviewHost } from './components/Preview'
-import { Settings } from './screens/Settings'
-import { Plugins } from './screens/Plugins'
 import type { PluginResult } from '../../shared/plugins'
 import { Sidebar } from './components/Sidebar'
 import { IconButton } from './components/ui'
@@ -53,11 +52,11 @@ export function App() {
   }, [])
   // a .mcpb or plugin zip opened from Finder: show it on the Plugins screen
   const [opened, setOpened] = useState<PluginResult | null>(null)
-  /** which Plugins tab to open on (Connectors, from "connect my email and calendar") */
-  const [pluginsTab, setPluginsTab] = useState<'skills' | 'connectors' | 'plugins' | undefined>(undefined)
-  useEffect(() => hob.plugins.onOpened((r) => { setOpened(r); setScreen('plugins') }), [])
-  // a plugin opened from Finder is announced once; leaving the page forgets it
-  useEffect(() => { if (screen !== 'plugins') { setOpened(null); setPluginsTab(undefined) } }, [screen])
+  /** Settings, over the app: which page is open */
+  const [settingsAt, setSettingsAt] = useState<Section | null>(null)
+  useEffect(() => hob.plugins.onOpened((r) => { setOpened(r); setSettingsAt('plugins') }), [])
+  // a plugin opened from Finder is announced once; closing Settings forgets it
+  useEffect(() => { if (!settingsAt) setOpened(null) }, [settingsAt])
   // a file dropped anywhere outside the chat must never navigate the window
   useEffect(() => {
     const stop = (e: DragEvent) => e.preventDefault()
@@ -106,7 +105,7 @@ export function App() {
     const k = e.key.toLowerCase()
     if (k === 'k') { e.preventDefault(); setPalette((p) => !p) }
     else if (k === 'n') { e.preventDefault(); setPalette(false); open(null) }
-    else if (k === ',') { e.preventDefault(); setPalette(false); go('settings') }
+    else if (k === ',') { e.preventDefault(); setPalette(false); setSettingsAt('general') }
     else if (k === '[') { e.preventDefault(); void step(-1) }
     else if (k === ']') { e.preventDefault(); void step(1) }
   }
@@ -122,6 +121,12 @@ export function App() {
   return (
     <div className="reveal relative h-full flex">
       <ConfirmHost />
+      {settingsAt && <SettingsOverlay section={settingsAt} onSection={setSettingsAt} onClose={() => setSettingsAt(null)} opened={opened}
+        onAllChatsDeleted={() => {
+          // nothing to go back to
+          history.current = { list: [{ screen: 'chat', chat: null }], i: 0 }
+          setSelected(null); setViewKey((k) => k + 1); setRefreshKey((k) => k + 1)
+        }} />}
       <PreviewHost />
       {sidebar && narrow && <div className="fade-in absolute inset-0 z-20 bg-black/20" onClick={() => setSidebar(false)} />}
       {/* stays mounted so it can slide: in and out of the layout when docked, over the chat when the window is narrow */}
@@ -132,18 +137,12 @@ export function App() {
         <Sidebar state={state} selected={selected} refreshKey={refreshKey} screen={screen} draftProject={draftProject}
           onSelect={(id) => open(id)} onNew={() => open(null)} onNewInProject={(id) => open(null, id)}
           onEditProject={(p) => setProjectDialog(p ? { project: p } : {})}
-          onSettings={() => go('settings')} onPlugins={() => go('plugins')} />
+          onSettings={() => setSettingsAt('general')} />
       </div>
-      {screen === 'settings' && <Settings onAllChatsDeleted={() => {
-        // nothing to go back to
-        history.current = { list: [{ screen: 'settings', chat: null }], i: 0 }
-        setSelected(null); setViewKey((k) => k + 1); setRefreshKey((k) => k + 1)
-      }} />}
-      {screen === 'plugins' && <Plugins opened={opened} tab={pluginsTab} />}
       {/* stays mounted under other screens: unmounting a chat stops its reply */}
       <div className={screen === 'chat' ? 'contents' : 'hidden'}>
         <ChatView key={viewKey} chatId={selected} projectId={draftProject} onProjectChange={(id) => { setDraftProject(id); const h = history.current; h.list[h.i] = { ...h.list[h.i], project: id } }}
-          onNewProject={(folders) => setProjectDialog({ folders })} onConnectors={() => { setPluginsTab('connectors'); go('plugins') }} onChatChanged={(id) => { setSelected(id); setRefreshKey((k) => k + 1); const h = history.current; h.list[h.i] = { ...h.list[h.i], chat: id } }} onRefresh={() => setRefreshKey((k) => k + 1)} />
+          onNewProject={(folders) => setProjectDialog({ folders })} onConnectors={() => setSettingsAt('connectors')} onChatChanged={(id) => { setSelected(id); setRefreshKey((k) => k + 1); const h = history.current; h.list[h.i] = { ...h.list[h.i], chat: id } }} onRefresh={() => setRefreshKey((k) => k + 1)} />
       </div>
       {/* next to the window buttons, like Notes and Mail. Last in the page on purpose:
           Electron lets the later of overlapping drag/no-drag areas win, so before the
@@ -155,7 +154,7 @@ export function App() {
         <IconButton icon={ArrowRight} label={`Forward (${MOD}])`} testId="go-forward" size={15} small disabled={history.current.i >= history.current.list.length - 1} onClick={() => void step(1)} />
       </div>
       {palette && <CommandBar onClose={() => setPalette(false)} onOpenChat={(id) => open(id)} onNew={() => open(null)} onNewInProject={(id) => open(null, id)}
-        onNewProject={() => setProjectDialog({})} onPlugins={() => go('plugins')} onSettings={() => go('settings')} />}
+        onNewProject={() => setProjectDialog({})} onPlugins={() => setSettingsAt('skills')} onSettings={() => setSettingsAt('general')} />}
       {projectDialog && (
         <ProjectDialog project={projectDialog.project} folders={projectDialog.folders} onClose={() => setProjectDialog(null)} onDone={(id) => {
           const editing = projectDialog.project
