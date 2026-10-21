@@ -101,8 +101,12 @@ export class FakeEngine implements Engine {
 }
 
 export const fakeDownloadDeps = (opts: { freeDiskGB?: number; stepMs?: number } = {}): DownloadDeps => ({
-  async download(_url, dir, fileName, onProgress) {
-    for (const f of [0.25, 0.5, 0.75, 1]) { onProgress({ fraction: f, etaSec: 0 }); await new Promise((r) => setTimeout(r, opts.stepMs ?? 20)) }
+  async download(_url, dir, fileName, onProgress, signal) {
+    for (const f of [0.25, 0.5, 0.75, 1]) {
+      if (signal?.aborted) throw Object.assign(new Error('Download stopped'), { name: 'AbortError' })
+      onProgress({ fraction: f, etaSec: 0 }); await new Promise((r) => setTimeout(r, opts.stepMs ?? 20))
+    }
+    if (signal?.aborted) throw Object.assign(new Error('Download stopped'), { name: 'AbortError' })
     writeFileSync(join(dir, fileName), 'fake')
   },
   async hashFile() { return 'FAKE' },

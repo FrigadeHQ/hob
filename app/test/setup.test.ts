@@ -70,6 +70,21 @@ describe('SetupController', () => {
     const again = new SetupController(deps)
     expect(again.state).toEqual({ phase: 'probing', firstRun: false })
   })
+  it('a model download from Settings can be cancelled: chat stays on the current model, nothing is flagged as failed', async () => {
+    const { c, engine, deps } = setup({ download: fakeDownloadDeps({ stepMs: 200 }) })
+    await c.start(); await c.confirm()
+    const before = (c.state as { model: { id: string } }).model.id
+    const other = c.listModels().find((m) => m.available && !m.downloaded && !m.active)!
+    const going = c.useModel(other.id)
+    await new Promise((r) => setTimeout(r, 250))
+    expect(c.state.phase).toBe('downloading')
+    expect(c.cancel()).toBe(true)
+    await going
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: before } })
+    expect(c.state).not.toHaveProperty('note')
+    expect(JSON.parse(readFileSync(deps.settingsPath, 'utf8')).pendingModelId).toBeUndefined()
+    expect(c.cancel()).toBe(false)
+  })
   it('start → choose with recommendation', async () => {
     const { c } = setup()
     await c.start()

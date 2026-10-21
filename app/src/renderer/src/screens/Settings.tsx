@@ -55,7 +55,7 @@ export function ModelSettings() {
   return (
     <>
       <Heading>Model</Heading>
-      <p className="mb-3 text-meta text-muted">The AI that runs on this computer. Bigger models are smarter and need more memory.</p>
+      <p className="mb-3 text-meta text-muted">Every model here runs well on this computer. Ones that need more memory than it has aren't listed. Bigger ones are smarter but slower.</p>
           <div className="rounded-card border border-line bg-surface divide-y divide-line">
             {models.filter((m) => m.available).map((m) => (
               <div key={m.id} data-testid="settings-model" className="flex items-start gap-3 px-4 py-3">
@@ -74,8 +74,14 @@ export function ModelSettings() {
                         ? `Downloading… ${Math.min(99, Math.floor(downloading.progress * 100))}%${left(downloading.etaSec)}`
                         : m.downloaded ? 'Switching…' : 'Starting…'}
                     </p>
-                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
-                      <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${downloading && downloading.target.id === m.id ? Math.max(3, downloading.progress * 100) : 3}%` }} />
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
+                        <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${downloading && downloading.target.id === m.id ? Math.max(3, downloading.progress * 100) : 3}%` }} />
+                      </div>
+                      {/* stop it: chat stays on the model in use; what came down so far is kept for later */}
+                      {downloading && downloading.target.id === m.id && (
+                        <button data-testid="model-cancel" onClick={() => void hob.models.cancel()} className="text-meta text-muted underline-offset-2 hover:text-ink hover:underline">Cancel</button>
+                      )}
                     </div>
                   </div>
                 ) : !m.active && (

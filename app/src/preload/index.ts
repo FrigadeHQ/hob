@@ -41,7 +41,7 @@ const api: HobApi = {
   vision: { getState: invoke('vision:getState'), onState: (cb) => listen<[VisionState]>('vision:state', cb), retry: invoke('vision:retry') },
   task: { undo: invoke('task:undo') },
   settings: { get: invoke('settings:get'), set: invoke('settings:set'), pickFilesDir: invoke('settings:pickFilesDir') },
-  models: { list: invoke('models:list'), use: invoke('models:use'), remove: invoke('models:remove') },
+  models: { list: invoke('models:list'), use: invoke('models:use'), remove: invoke('models:remove'), cancel: invoke('models:cancel') },
   storage: { get: invoke('storage:get') },
   plugins: {
     list: invoke('plugins:list'), setEnabled: invoke('plugins:setEnabled'), add: invoke('plugins:add'), link: invoke('plugins:link'),

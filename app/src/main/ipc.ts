@@ -274,6 +274,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   ipcMain.handle('models:list', () => d.setup.listModels())
   ipcMain.handle('models:use', (_e, id: string) => { void d.setup.useModel(id) })
   ipcMain.handle('models:remove', (_e, id: string) => d.setup.deleteModel(id))
+  ipcMain.handle('models:cancel', () => d.setup.cancel())
   ipcMain.handle('storage:get', () => ({ modelsGB: (sizeOf(d.paths.models) + sizeOf(d.paths.speech)) / 1e9, filesGB: sizeOf(d.filesDir()) / 1e9, codeToolsGB: sizeOf(d.paths.python) / 1e9 }))
 
   ipcMain.handle('plugins:list', () => d.plugins.list())

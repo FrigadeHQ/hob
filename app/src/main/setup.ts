@@ -58,6 +58,8 @@ export class SetupController {
   private active: Choice | undefined
   /** target whose download failed while the user kept chatting on the starter */
   private pendingTarget: Choice | undefined
+  /** stops the download in progress (Settings → Cancel) */
+  private stopping: AbortController | undefined
 
   constructor(private deps: SetupDeps) {
     this._state = { phase: 'probing', firstRun: this.firstRun() }
@@ -173,9 +175,17 @@ export class SetupController {
     return r ? [...r.all, ...(r.smarter ? [r.smarter] : [])] : []
   }
 
+  /** Stop the model download in progress. Chat stays on the model it has; what's downloaded so far is kept to resume. */
+  cancel(): boolean {
+    if (!this.stopping || this._state.phase !== 'downloading') return false
+    this.stopping.abort()
+    return true
+  }
+
   private async install(target: Choice) {
     const summary = summarize(target)
     const dir = this.deps.modelsDir
+    this.stopping = new AbortController()
     try {
       const starter = this.starter
       // first run only: while switching models later, the current one keeps chat working
@@ -208,6 +218,7 @@ export class SetupController {
       await this.loadWithFallback(target)
       this.pendingTarget = undefined
     } catch (err) {
+      if (this.stopping?.signal.aborted) return this.cancelled()
       if (this.active) {
         this.pendingTarget = target
         this.set({ phase: 'ready', model: summarize(this.active), liteMode: this.active.model.agentScore < LITE_AGENT_SCORE, note: friendly(err), canRetry: true })
@@ -217,14 +228,23 @@ export class SetupController {
     }
   }
 
+  /** cancelled from Settings: back to the model in use, as if nothing was started */
+  private cancelled(): void {
+    this.pendingTarget = undefined
+    updateSettings(this.deps.settingsPath, { pendingModelId: undefined })
+    if (this.active) this.set({ phase: 'ready', model: summarize(this.active), liteMode: this.active.model.agentScore < LITE_AGENT_SCORE })
+    else this.set({ phase: 'error', message: 'Download stopped. Try again when you’re ready.' })
+  }
+
   /** Download (or reuse) a verified model file, retrying transient failures. */
   private async fetch(c: Choice, onProgress?: (p: Progress) => void): Promise<string> {
     const delays = this.deps.retryDelaysMs ?? [2000, 8000]
+    const signal = this.stopping?.signal
     for (let attempt = 0; ; attempt++) {
       try {
-        return await ensureModelFile({ url: c.build.url, sha256: this.sha(c), sizeGB: c.build.sizeGB, dir: this.deps.modelsDir, onProgress }, this.deps.download)
+        return await ensureModelFile({ url: c.build.url, sha256: this.sha(c), sizeGB: c.build.sizeGB, dir: this.deps.modelsDir, onProgress, signal }, this.deps.download)
       } catch (err) {
-        if (err instanceof DiskSpaceError || err instanceof ChecksumError || attempt >= delays.length) throw err
+        if (signal?.aborted || err instanceof DiskSpaceError || err instanceof ChecksumError || attempt >= delays.length) throw err
         await new Promise((r) => setTimeout(r, delays[attempt]))
       }
     }

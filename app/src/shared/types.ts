@@ -118,6 +118,8 @@ export interface HobApi {
     list(): Promise<ModelRow[]>
     use(id: string): Promise<void>
     remove(id: string): Promise<boolean>
+    /** stop the model download in progress; false when there's none */
+    cancel(): Promise<boolean>
   }
   storage: { get(): Promise<{ modelsGB: number; filesGB: number; codeToolsGB: number }> }
   plugins: {
