@@ -57,3 +57,45 @@ test('Garth moves from the greeting to the sidebar without watching the cursor',
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight)).toBe(true)
   } finally { await app.close() }
 })
+
+test('setup Garth follows the cursor, looks around, and respects reduced motion', async () => {
+  const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
+  try {
+    const page = await app.firstWindow()
+    await page.clock.install()
+    await page.reload()
+    await expect(page.getByTestId('setup-download')).toBeVisible()
+    await page.clock.pauseAt(new Date(Date.now() + 1000))
+    const mascot = page.getByTestId('mascot')
+    const eye = mascot.getByTestId('mascot-eyes').locator('rect').first()
+    const box = (await mascot.boundingBox())!
+    await page.mouse.move(box.x + box.width / 2 + 400, box.y + box.height / 2)
+    await expect(eye).toHaveAttribute('x', '18')
+    await page.mouse.move(box.x + box.width / 2 - 400, box.y + box.height / 2)
+    await expect(eye).toHaveAttribute('x', '12')
+
+    // Deterministic choices, while the real timers still drive the expressions and idle glances.
+    await page.evaluate(() => { Math.random = () => .05 })
+    await expect.poll(async () => { await page.clock.runFor(100); return mascot.getAttribute('data-expression') }, { intervals: [10] }).toBe('skeptical')
+    await page.evaluate(() => { Math.random = () => .3 })
+    await expect.poll(async () => { await page.clock.runFor(100); return mascot.getAttribute('data-expression') }, { intervals: [10] }).toBe('smile')
+    await page.evaluate(() => { Math.random = () => .9 })
+    await expect.poll(async () => { await page.clock.runFor(100); return mascot.getAttribute('data-expression') }, { intervals: [10] }).toBe('neutral-blink')
+    await page.clock.runFor(4000)
+    await expect(eye).not.toHaveAttribute('x', '12')
+
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(eye).toHaveAttribute('x', '15')
+    await expect(mascot).toHaveAttribute('data-expression', 'neutral')
+    await page.mouse.move(1000, 20)
+    await page.clock.runFor(8000)
+    await expect(eye).toHaveAttribute('x', '15')
+    await expect(mascot).toHaveAttribute('data-expression', 'neutral')
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect.poll(async () => {
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await page.mouse.move(box.x + box.width / 2 + 400, box.y + box.height / 2)
+      return eye.getAttribute('x')
+    }).toBe('18')
+  } finally { await app.close() }
+})
