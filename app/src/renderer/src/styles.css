@@ -145,3 +145,7 @@ html[data-text-size="large"] { --reply-step: 2px; }
 @keyframes mabel-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
 @keyframes mabel-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.08 } 50% { transform: scaleX(0.85); opacity: 0.05 } }
 @media (prefers-reduced-motion: reduce) { .mabel-alive * { animation: none !important } }
+
+/* one dimmed layer at a time: a dialog over Settings (or over another dialog) takes over the dimming */
+[data-scrim] { transition: background-color 150ms ease-out; }
+body:has(> [data-scrim]) #root [data-scrim], body > [data-scrim]:has(~ [data-scrim]) { background-color: transparent; }

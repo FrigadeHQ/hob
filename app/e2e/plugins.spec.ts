@@ -137,3 +137,23 @@ test('Mabel saves a skill with a script: the card shows the code, and it lands i
   await expect(page.getByTestId('skill-option').filter({ hasText: '/spending' })).toBeVisible()
   await app.close()
 })
+
+test('a dialog opened from Settings sits in the middle of the window, with one dimmed layer behind it', async () => {
+  const { app, page } = await launch()
+  await page.getByTestId('open-settings').click()
+  await page.getByTestId('settings-nav-skills').click()
+  await page.getByTestId('new-skill').click()
+  await page.waitForTimeout(400) // the dialog's pop-in
+  const box = (await page.getByTestId('skill-dialog').boundingBox())!
+  const win = page.viewportSize() ?? await page.evaluate(() => ({ width: innerWidth, height: innerHeight }))
+  expect(Math.abs(box.x + box.width / 2 - win.width / 2)).toBeLessThan(2)
+  expect(Math.abs(box.y + box.height / 2 - win.height / 2)).toBeLessThan(2)
+  // whole dialog visible, not cut off by the Settings panel
+  expect(box.y).toBeGreaterThan(0)
+  const dimmed = await page.evaluate(() => Array.from(document.querySelectorAll('[data-scrim]')).filter((e) => getComputedStyle(e).backgroundColor !== 'rgba(0, 0, 0, 0)').length)
+  expect(dimmed).toBe(1)
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('skill-dialog')).toHaveCount(0)
+  await expect(page.getByTestId('settings')).toBeVisible()
+  await app.close()
+})
