@@ -46,6 +46,10 @@ jobs:
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: End-to-end tests
         shell: bash
+        # windows are shown on CI (nobody is watching): hidden ones pause animation frames on Linux and Windows,
+        # which stalls clicks that wait for animations to settle
+        env:
+          HOB_BACKGROUND: '0'
         run: |
           cd app
           if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a pnpm exec playwright test --grep-invert zz; else pnpm exec playwright test --grep-invert zz; fi
