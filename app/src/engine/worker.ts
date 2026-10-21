@@ -1,4 +1,4 @@
-import { getLlama, InsufficientMemoryError, LlamaChatSession, type ChatSessionModelFunctions, type Llama, type LlamaContext, type LlamaModel, type ChatHistoryItem } from 'node-llama-cpp'
+import { getLlama, InsufficientMemoryError, LlamaChatSession, type ChatSessionModelFunctions, type Llama, type LlamaContext, type LlamaContextSequence, type LlamaModel, type ChatHistoryItem } from 'node-llama-cpp'
 import { finalAnswer } from './answer'
 import { serial } from './serial'
 import { toolFunctions } from './tools'
@@ -23,6 +23,14 @@ export const SAMPLING = {
 let llama: Llama | undefined
 let model: LlamaModel | undefined
 let context: LlamaContext | undefined
+/**
+ * One sequence kept for the model's whole life: it remembers what it last read, and a new request that starts
+ * the same way (same system prompt, tools and history) only reads what's new. 3.6 s → 0.35 s to the first word
+ * for a follow-up on gpt-oss-20b (M1 Max), where a fresh sequence per message re-read ~3,000 tokens every time.
+ */
+let main: LlamaContextSequence | undefined
+/** the small model for side jobs (naming chats), so they don't push the conversation out of `main` */
+let side: { model: LlamaModel; context: LlamaContext; sequence: LlamaContextSequence } | undefined
 const aborts = new Map<number, AbortController>()
 // load/unload/chat must never overlap: a load disposes the context a chat is using.
 const run = serial()
@@ -52,8 +60,24 @@ async function probe(): Promise<GpuProbe> {
 }
 
 async function unload() {
+  main = undefined
   await context?.dispose(); context = undefined
   await model?.dispose(); model = undefined
+  await unloadSide()
+}
+
+async function unloadSide() {
+  const s = side
+  side = undefined
+  await s?.context.dispose(); await s?.model.dispose()
+}
+
+async function loadSide(modelPath: string, contextSize: number) {
+  await unloadSide()
+  const l = await getL()
+  const m = await l.loadModel({ modelPath })
+  const c = await m.createContext({ contextSize })
+  side = { model: m, context: c, sequence: c.getSequence() }
 }
 
 async function load(modelPath: string, contextSize: number) {
@@ -63,8 +87,8 @@ async function load(modelPath: string, contextSize: number) {
   context = await model.createContext({ contextSize: { min: contextSize, max: Math.max(contextSize, AGENT_CONTEXT) } })
   // The first evaluation pages the weights in from disk (~8 s for a 21 GB model).
   // Pay that here, while setup shows progress, not on the user's first message.
-  const warm = context.getSequence()
-  try { await warm.evaluateWithoutGeneratingNewTokens(model.tokenize('Hello')) } finally { warm.dispose() }
+  main = context.getSequence()
+  await main.evaluateWithoutGeneratingNewTokens(model.tokenize('Hello'))
 }
 
 function toHistory(messages: ChatMessage[]): ChatHistoryItem[] {
@@ -74,27 +98,29 @@ function toHistory(messages: ChatMessage[]): ChatHistoryItem[] {
     : { type: 'model', response: [m.content] })
 }
 
-/** the previous reply's sequence can take a moment to be released after it finished */
-async function freeSequence(ctx: LlamaContext) {
-  for (let i = 0; ctx.sequencesLeft === 0 && i < 100; i++) await new Promise((r) => setTimeout(r, 50))
-  return ctx.getSequence()
-}
-
-async function chat(id: number, messages: ChatMessage[], tools: ToolSpec[], thoughtBudget: number, maxTokens?: number) {
-  if (!context) throw new Error('No model loaded')
+async function chat(id: number, req: { messages: ChatMessage[]; tools: ToolSpec[]; thoughtBudget: number; thoughtBudgetWithTools?: number; maxTokens?: number; side?: boolean }) {
+  const sequence = req.side && side ? side.sequence : main
+  if (!sequence) throw new Error('No model loaded')
+  const { messages, tools, maxTokens } = req
   const last = messages.at(-1)
   if (!last || last.role !== 'user') throw new Error('Last message must be from the user')
-  const sequence = await freeSequence(context)
   const session = new LlamaChatSession({ contextSequence: sequence })
   session.setChatHistory(toHistory(messages.slice(0, -1)))
   const ac = new AbortController()
   aborts.set(id, ac)
   let thought = ''
+  // read again after every tool call: a quick question thinks briefly; once it turns into a task (a tool was
+  // called, in whatever language it was asked) it gets the longer budget for the rest of the reply
+  const budgets = { thoughtTokens: req.thoughtBudget }
+  const onTool = (name: string, args: unknown) => {
+    if (req.thoughtBudgetWithTools) budgets.thoughtTokens = Math.max(budgets.thoughtTokens, req.thoughtBudgetWithTools)
+    return callMain(id, name, args, ac.signal)
+  }
   try {
     const response = await session.prompt(last.content, {
       ...SAMPLING,
-      signal: ac.signal, stopOnAbortSignal: true, budgets: { thoughtTokens: thoughtBudget }, ...(maxTokens ? { maxTokens } : {}),
-      functions: tools.length ? (toolFunctions(tools, (name, args) => callMain(id, name, args, ac.signal)) as unknown as ChatSessionModelFunctions) : undefined,
+      signal: ac.signal, stopOnAbortSignal: true, budgets, ...(maxTokens ? { maxTokens } : {}),
+      functions: tools.length ? (toolFunctions(tools, onTool) as unknown as ChatSessionModelFunctions) : undefined,
       onTextChunk: (text) => send({ id, type: 'token', text }),
       onResponseChunk: (c) => {
         if (c.type === 'segment' && c.segmentType === 'thought') { thought += c.text; send({ id, type: 'token', text: c.text, thought: true }) }
@@ -103,15 +129,29 @@ async function chat(id: number, messages: ChatMessage[], tools: ToolSpec[], thou
     return finalAnswer(response, thought)
   } finally {
     aborts.delete(id)
-    session.dispose()
-    sequence.dispose()
+    // the sequence stays: it holds what was just read, for the next message
+    session.dispose({ disposeSequence: false })
+  }
+}
+
+/** read the conversation so far (and the start of the next user turn) into `main`, answering nothing */
+async function preload(messages: ChatMessage[], tools: ToolSpec[]) {
+  if (!main) return
+  const session = new LlamaChatSession({ contextSequence: main })
+  session.setChatHistory(toHistory(messages))
+  try {
+    await session.preloadPrompt('', { functions: tools.length ? (toolFunctions(tools, async () => '') as unknown as ChatSessionModelFunctions) : undefined })
+  } finally {
+    session.dispose({ disposeSequence: false })
   }
 }
 
 async function handle(req: EngineRequest): Promise<unknown> {
   if (req.type === 'probe') return probe()
   if (req.type === 'load') return load(req.modelPath, req.contextSize)
-  if (req.type === 'chat') return chat(req.id, req.messages, req.tools ?? [], req.thoughtBudget ?? CHAT_THOUGHT_BUDGET, req.maxTokens)
+  if (req.type === 'chat') return chat(req.id, { ...req, tools: req.tools ?? [], thoughtBudget: req.thoughtBudget ?? CHAT_THOUGHT_BUDGET })
+  if (req.type === 'preload') return preload(req.messages, req.tools ?? [])
+  if (req.type === 'loadSide') return loadSide(req.modelPath, req.contextSize)
   if (req.type === 'unload') return unload()
 }
 

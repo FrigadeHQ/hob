@@ -27,6 +27,7 @@ const api: MabelApi = {
   projects: { list: invoke('projects:list'), create: invoke('projects:create'), update: invoke('projects:update'), remove: invoke('projects:remove'), pickFolders: invoke('projects:pickFolders'), checkFolders: invoke('projects:checkFolders'), open: invoke('projects:open') },
   chat: {
     send: invoke('chat:send'),
+    warm: invoke('chat:warm'),
     stop: invoke('chat:stop'),
     onToken: (cb) => listen<[string, string, boolean]>('chat:token', cb),
     onStep: (cb) => listen<[string, Step]>('chat:step', cb),

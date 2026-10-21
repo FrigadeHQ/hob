@@ -37,6 +37,11 @@ docs/                user and plugin-author docs, README assets
 - First run: a small **starter** model downloads first so chat opens in minutes, then the recommended model downloads in the background ("Getting smarter… N%") and replaces it.
 - Downloads (`downloader.ts`) resume, restart stalled connections, and are checked against a pinned sha256. They can be cancelled from Settings.
 - `main/engine.ts` talks to `src/engine/worker.ts` (a separate process running node-llama-cpp). Loads, unloads and chats never overlap (`engine/serial.ts`).
+- **Speed:**
+  - The worker keeps one sequence for the model's whole life, so a request that starts like the last one only reads what's new.
+  - Mabel reads ahead whatever the user is looking at (`chat:warm`, `readAhead` in `agent/turn.ts`): at start-up, when a chat opens, after each reply, and for a new chat before it exists, in the folder it will get. Anything that changes the system prompt or tool list early (a different chat folder, a different tool set) means reading ~3,000 tokens again (about 4 s on gpt-oss-20b), so keep what a reply sends and what is read ahead identical (`conversation()`).
+  - With memory for both, the starter model stays loaded next to the big one for naming chats (`loadSide`), so that doesn't push the conversation out.
+  - Thinking starts short and grows once the model calls a tool (`thoughtBudgetWithTools`), so it works the same in any language.
 
 ### A chat turn (`main/agent/turn.ts`)
 1. The user message is stored (`store.ts`, node:sqlite), and the system prompt is built (`agent/prompt.ts`): the chat's folder, project folders and instructions, skills, plugin lines, and an "About Mabel" section so it can answer questions about itself.

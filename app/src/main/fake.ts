@@ -14,6 +14,12 @@ export class FakeEngine implements Engine {
     if ([...this.failLoadFor].some((f) => modelPath.includes(f))) throw new InsufficientMemoryError('fake OOM')
     this.loaded = modelPath
   }
+  /** what was read ahead last (system prompt + history) */
+  lastPreload: ChatRequest['messages'] | undefined
+  preloads = 0
+  async preload(messages: ChatRequest['messages']) { this.lastPreload = messages; this.preloads++ }
+  side: string | undefined
+  async loadSide(modelPath: string) { this.side = modelPath }
   lastRequest: ChatRequest | undefined
   /** the last "name this chat" request (kept apart so lastRequest stays the conversation) */
   lastTitleRequest: ChatRequest | undefined

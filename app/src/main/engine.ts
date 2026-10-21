@@ -8,7 +8,8 @@ export type { GpuProbe }
 export class InsufficientMemoryError extends Error { name = 'InsufficientMemoryError' }
 
 /** maxTokens: cap on the answer (short jobs like naming a chat) */
-export type ChatRequest = { messages: ChatMessage[]; tools?: ToolSpec[]; thoughtBudget?: number; maxTokens?: number }
+/** thoughtBudgetWithTools: the budget once a tool has been called. side: the small second model, if loaded */
+export type ChatRequest = { messages: ChatMessage[]; tools?: ToolSpec[]; thoughtBudget?: number; thoughtBudgetWithTools?: number; maxTokens?: number; side?: boolean }
 export type ChatHandlers = {
   onToken(t: string, thought?: boolean): void
   /** run a tool the model asked for; the string goes back to the model */
@@ -19,6 +20,10 @@ export interface Engine {
   probe(): Promise<GpuProbe>
   load(modelPath: string, contextSize: number): Promise<void>
   chat(req: ChatRequest, h: ChatHandlers, signal?: AbortSignal): Promise<string>
+  /** read a conversation ahead so its next message starts at once; a newer preload replaces one still waiting */
+  preload(messages: ChatMessage[], tools: ToolSpec[]): Promise<void>
+  /** a small second model for side jobs (naming chats) */
+  loadSide(modelPath: string, contextSize: number): Promise<void>
   unload(): Promise<void>
   /** Called when the engine process dies unexpectedly (not on dispose). */
   onExit(cb: () => void): void
@@ -75,8 +80,29 @@ export class UtilityEngine implements Engine {
   async load(modelPath: string, contextSize: number) { await this.call({ type: 'load', modelPath, contextSize }).done }
   async unload() { await this.call({ type: 'unload' }).done }
 
+  async loadSide(modelPath: string, contextSize: number) { await this.call({ type: 'loadSide', modelPath, contextSize }).done }
+
+  /** the preload waiting its turn: only the newest is worth reading (the user moved on) */
+  private queued: { messages: ChatMessage[]; tools: ToolSpec[]; done: Promise<void> } | undefined
+  /** requests sent and not answered yet; a preload goes out once the worker is free */
+  private busy = 0
+  preload(messages: ChatMessage[], tools: ToolSpec[]): Promise<void> {
+    if (this.queued) { this.queued.messages = messages; this.queued.tools = tools; return this.queued.done }
+    const q = { messages, tools, done: Promise.resolve() }
+    this.queued = q
+    q.done = (async () => {
+      // wait for chats in progress: the worker runs one thing at a time, and a stale preload would delay the next chat
+      while (this.busy > 0) await new Promise((r) => setTimeout(r, 100))
+      this.queued = undefined
+      await this.call({ type: 'preload', messages: q.messages, tools: q.tools }).done.catch(() => {})
+    })()
+    return q.done
+  }
+
   chat(req: ChatRequest, h: ChatHandlers, signal?: AbortSignal) {
-    const { id, done } = this.call<string>({ type: 'chat', messages: req.messages, tools: req.tools ?? [], thoughtBudget: req.thoughtBudget ?? 256, ...(req.maxTokens ? { maxTokens: req.maxTokens } : {}) }, h)
+    const { id, done } = this.call<string>({ type: 'chat', messages: req.messages, tools: req.tools ?? [], thoughtBudget: req.thoughtBudget ?? 256, ...(req.thoughtBudgetWithTools ? { thoughtBudgetWithTools: req.thoughtBudgetWithTools } : {}), ...(req.maxTokens ? { maxTokens: req.maxTokens } : {}), ...(req.side ? { side: true } : {}) }, h)
+    this.busy++
+    void done.catch(() => {}).finally(() => { this.busy-- })
     signal?.addEventListener('abort', () => { this.call({ type: 'abort', targetId: id }).done.catch(() => {}) }, { once: true })
     return done
   }

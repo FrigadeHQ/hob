@@ -16,4 +16,5 @@ export class RunningTurns {
   }
   stopAll() { for (const ac of this.live.values()) ac.abort() }
   finish(id: string) { this.live.delete(id) }
+  get size() { return this.live.size }
 }

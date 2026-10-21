@@ -5,7 +5,7 @@ import { expect, it } from 'vitest'
 import { FakeEngine } from '../src/main/fake'
 import { Store } from '../src/main/store'
 import { allTools } from '../src/main/tools'
-import { AGENT_BUDGET, runTurn, type TurnDeps } from '../src/main/agent/turn'
+import { AGENT_BUDGET, readAhead, runTurn, type TurnDeps } from '../src/main/agent/turn'
 import { systemPrompt } from '../src/main/agent/prompt'
 import type { ApprovalAnswer, ApprovalRequest, Attachment, Step } from '../src/shared/agent'
 
@@ -310,12 +310,29 @@ it('stops to ask "shall I go ahead?" on a task about their files: Mabel tells it
   expect(r2.content).toBe('You said: Want me to go ahead?')
 })
 
-it('a request about their files gets room to think, even before any folder is given', async () => {
+it('a quick question thinks briefly and gets room to think once it uses a tool, in any language; a path gets it at once', async () => {
   const w = world('allow', { grant: false })
-  await w.turn('rename the photos on my Desktop by date')
+  for (const text of ['hi, how are you?', 'omdøb billederne på mit skrivebord efter dato']) {
+    await w.turn(text)
+    expect(w.engine.lastRequest).toMatchObject({ thoughtBudget: 256, thoughtBudgetWithTools: AGENT_BUDGET })
+  }
+  await w.turn('rename the photos in ~/Desktop by date')
   expect(w.engine.lastRequest?.thoughtBudget).toBe(AGENT_BUDGET)
-  await w.turn('hi, how are you?')
-  expect(w.engine.lastRequest?.thoughtBudget).toBe(256)
+})
+
+it('reading a chat ahead gives exactly what its next message will start with', async () => {
+  const w = world('allow', { grant: false })
+  let idle = 0
+  w.deps.onIdle = () => { idle++ }
+  await w.turn('hello there')
+  const { vi } = await import('vitest')
+  await vi.waitFor(() => expect(idle).toBe(1))
+  const chat = w.store.getChat('c')!
+  await readAhead(w.deps, { id: 'c', dir: chat.dir, projectId: chat.projectId })
+  const readAheadMsgs = w.engine.lastPreload
+  await w.turn('and again')
+  // the reply's conversation starts with what was read ahead
+  expect(w.engine.lastRequest?.messages.slice(0, -1)).toEqual(readAheadMsgs)
 })
 
 it('in a project: new files go in without asking, changes still ask, and the prompt names the project', async () => {
@@ -486,4 +503,14 @@ it('a web address given to read_file is read as a web page, not looked for on di
   w.deps.fetch = (async () => new Response('<html><body><h1>Top stories</h1><p>' + 'Story one is about databases. '.repeat(20) + '</p></body></html>', { headers: { 'content-type': 'text/html' } })) as never
   const reply = await w.turn('__tools__ [["read_file",{"path":"https://orangebot.ai/hacker-news-top-stories"}]]')
   expect(reply.steps.map((s) => [s.title, s.status])).toEqual([['Read orangebot.ai', 'done']])
+})
+
+it('a new chat read ahead in its future folder matches its first message', async () => {
+  const w = world('allow', { grant: false })
+  const dir = join(w.root, 'next chat')
+  await readAhead(w.deps, { dir, projectId: null })
+  const readAheadMsgs = w.engine.lastPreload
+  mkdirSync(dir); w.store.createChat('n', dir)
+  await runTurn(w.deps, { chatId: 'n', requestId: 'r2', text: 'hej', attachments: [], signal: new AbortController().signal })
+  expect(w.engine.lastRequest?.messages.slice(0, -1)).toEqual(readAheadMsgs)
 })

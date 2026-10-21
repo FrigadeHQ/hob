@@ -113,6 +113,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const project = projects.find((p) => p.id === projectId)
   // a project made from this new chat (chip, too-big notice): use it here, keeping what was typed
   useEffect(() => { if (!created) { projectRef.current = initialProject; setProjectId(initialProject) } }, [initialProject])
+  // let the model read this chat ahead (or the new chat about to start), so the reply starts right away
+  useEffect(() => { void mabel.chat.warm(chatIdRef.current, projectId) }, [projectId, pending.length])
   const pickProject = (id: string | null) => { projectRef.current = id; setProjectId(id); onProjectChange(id) }
   const [dragging, setDragging] = useState(false)
   const [requestId, setRequestId] = useState<string | null>(null)

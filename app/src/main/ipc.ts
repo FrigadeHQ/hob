@@ -1,7 +1,7 @@
 import { app, clipboard, dialog, ipcMain, nativeTheme, net, shell, systemPreferences, type BrowserWindow } from 'electron'
 import { randomUUID } from 'node:crypto'
-import { existsSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { homedir } from 'node:os'
 import type { ApprovalAnswer, Attachment, UserSettings } from '../shared/agent'
 import type { VisionState } from '../shared/types'
@@ -11,7 +11,7 @@ import type { PythonRuntime } from './python/runtime'
 import type { Paths } from './paths'
 import { micAccess, type SpeechModel } from './speech'
 import { renderPage } from './render'
-import { runTurn } from './agent/turn'
+import { readAhead, runTurn } from './agent/turn'
 import { Approvals } from './agent/approvals'
 import { LiveTurns } from './agent/live'
 import { askMacAccess, macAccess } from './tools/mac'
@@ -21,7 +21,7 @@ import { coreTools } from './tools'
 import { PLUGIN_FILES, type PluginRegistry } from './plugins/registry'
 import { saveSkillTool, useSkillTool } from './plugins/skillTools'
 import type { NewSkill } from '../shared/plugins'
-import { AlreadyHereError, copyIn, isInside, isRunnable, newChatDir, sizeOf, TooBigError, validFilesDir } from './workspace'
+import { AlreadyHereError, copyIn, isInside, isRunnable, nextChatDir, sizeOf, TooBigError, validFilesDir } from './workspace'
 import { loadSettings, updateSettings, webAccessOn } from './settings'
 import { checkFolders, cleanProject, withMissing } from './projects'
 import type { SearchResult } from './search/searxng'
@@ -69,9 +69,18 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     const turn = live.get(id)
     return chat ? { chat, messages: d.store.messages(id), ...(turn ? { live: turn } : {}) } : null
   })
+  /** the folder the next new chat gets: chosen early, so the new chat can be read ahead before it exists */
+  let reserved: string | undefined
+  const reservedDir = () => {
+    if (!reserved || existsSync(reserved) || dirname(reserved) !== d.filesDir()) reserved = nextChatDir(d.filesDir())
+    return reserved
+  }
   ipcMain.handle('chats:create', (_e, projectId?: string | null) => {
     const project = projectId ? d.store.getProject(String(projectId)) : undefined
-    return d.store.createChat(randomUUID(), newChatDir(d.filesDir()), Date.now(), project?.id ?? null)
+    const dir = reservedDir()
+    reserved = undefined
+    mkdirSync(dir, { recursive: true })
+    return d.store.createChat(randomUUID(), dir, Date.now(), project?.id ?? null)
   })
   const removeChat = async (id: string, keepFiles = false) => {
     const chat = d.store.getChat(id)
@@ -176,19 +185,52 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   const pluginsChanged = () => send('plugins:changed')
   const skillSource = { skills: () => d.plugins.skills(), findSkill: (n: string) => d.plugins.findSkill(n), saveSkill: (s: NewSkill, o?: { replace?: boolean }) => d.plugins.saveSkill(s, o), onSaved: pluginsChanged }
 
+  const turnTools = async (waitMs: number, signal?: AbortSignal) => {
+    const skills = d.plugins.skills()
+    return [...coreTools(), ...(await d.plugins.tools({ waitMs, signal })), ...(skills.length ? [useSkillTool(skillSource)] : []), saveSkillTool(skillSource)]
+  }
+  const promptDeps = {
+    store: d.store,
+    skills: { list: () => d.plugins.skills(), find: (n: string) => d.plugins.findSkill(n) },
+    prompts: (offered: string[]) => d.plugins.prompts(offered),
+    webAccess: () => webAccessOn(loadSettings(d.paths.settings)),
+  }
+
+  // Read ahead what the user is looking at (a chat, or the new chat about to start), so the model has already
+  // read the instructions, tools and history when they press Enter: the first word comes in well under a second
+  let viewing: { chatId: string | null; projectId: string | null } = { chatId: null, projectId: null }
+  const warm = async () => {
+    if (d.setup.state.phase !== 'ready' || running.size > 0) return
+    const chat = viewing.chatId ? d.store.getChat(viewing.chatId) : undefined
+    const target = chat ? { id: chat.id, dir: chat.dir, projectId: chat.projectId } : { dir: reservedDir(), projectId: viewing.projectId }
+    await readAhead({ ...promptDeps, engine: d.setup.engine, tools: await turnTools(0) }, target).catch(() => {})
+  }
+  ipcMain.handle('chat:warm', (_e, chatId: string | null, projectId: string | null) => {
+    viewing = { chatId: chatId ? String(chatId) : null, projectId: projectId ? String(projectId) : null }
+    void warm()
+  })
+  // a model just loaded (start-up, or a switch): read ahead at once, before the first message
+  let readyModel: string | undefined
+  d.setup.onState((s) => {
+    const id = s.phase === 'ready' ? s.model.id : undefined
+    if (id && id !== readyModel) void warm()
+    readyModel = id
+  })
+
   ipcMain.handle('chat:send', async (_e, chatId: string, requestId: string, text: string, attachments: Attachment[]) => {
     const chat = d.store.getChat(chatId)
+    // the user is in this chat now (a new one has just been made): read it ahead after the reply
+    if (chat) viewing = { chatId: chat.id, projectId: chat.projectId }
     const ac = running.start(requestId)
     live.start(chatId, requestId)
     try {
-      const skills = d.plugins.skills()
       // connectors still starting get a few seconds; they're ready for the next message
-      const tools = [...coreTools(), ...(await d.plugins.tools({ waitMs: 8000, signal: ac.signal })), ...(skills.length ? [useSkillTool(skillSource)] : []), saveSkillTool(skillSource)]
+      const tools = await turnTools(8000, ac.signal)
       const reply = await runTurn({
-        engine: d.setup.engine, vision: d.vision, store: d.store, tools, python: d.python,
-        skills: { list: () => d.plugins.skills(), find: (n) => d.plugins.findSkill(n) },
-        prompts: (offered) => d.plugins.prompts(offered),
-        webAccess: () => webAccessOn(loadSettings(d.paths.settings)),
+        ...promptDeps,
+        engine: d.setup.engine, vision: d.vision, tools, python: d.python,
+        // after this request is marked finished below
+        onIdle: () => { setTimeout(() => void warm(), 0) },
         search: d.search,
         // Chromium's network stack: pages see a normal browser, not a script
         fetch: d.fake ? undefined : (net.fetch as unknown as typeof fetch),

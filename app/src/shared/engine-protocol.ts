@@ -6,7 +6,13 @@ export type GpuProbe = { gpuType: 'metal' | 'cuda' | 'vulkan' | false; vramTotal
 export type EngineRequest =
   | { id: number; type: 'probe' }
   | { id: number; type: 'load'; modelPath: string; contextSize: number }
-  | { id: number; type: 'chat'; messages: ChatMessage[]; tools: ToolSpec[]; thoughtBudget: number; maxTokens?: number }
+  /** thoughtBudgetWithTools: the budget once the model has called a tool (a task, not a quick answer).
+   *  side: run on the small second model when one is loaded (naming a chat) */
+  | { id: number; type: 'chat'; messages: ChatMessage[]; tools: ToolSpec[]; thoughtBudget: number; thoughtBudgetWithTools?: number; maxTokens?: number; side?: boolean }
+  /** read a conversation ahead (system prompt, tools, history) so the next message in it starts at once */
+  | { id: number; type: 'preload'; messages: ChatMessage[]; tools: ToolSpec[] }
+  /** a small second model for side jobs; contextSize kept small */
+  | { id: number; type: 'loadSide'; modelPath: string; contextSize: number }
   | { id: number; type: 'abort'; targetId: number }
   | { id: number; type: 'unload' }
   /** main → worker: answer to a tool-call event; gets no reply */

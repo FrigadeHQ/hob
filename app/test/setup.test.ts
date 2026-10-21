@@ -28,6 +28,17 @@ function setup(over: Partial<SetupDeps> = {}) {
 }
 
 describe('SetupController', () => {
+  it('keeps the small starter model loaded next to the big one for side jobs, when there is memory for both', async () => {
+    const big = setup()
+    await big.c.start(); await big.c.confirm()
+    const { vi } = await import('vitest')
+    await vi.waitFor(() => expect(big.engine.side).toMatch(/1\.7B/i))
+    const small = setup({ getHardware: async () => ({ ...m1max, totalRamGB: 12, gpu: { kind: 'unified' as const, name: 'Apple M1', vramGB: 8 } }) })
+    await small.c.start(); await small.c.confirm()
+    await new Promise((r) => setTimeout(r, 50))
+    expect(small.engine.side).toBeUndefined()
+  })
+
   it('lists models with downloaded/active flags and switches without dropping chat', async () => {
     const { c, engine } = setup()
     await c.start(); await c.confirm()

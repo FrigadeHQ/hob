@@ -48,6 +48,9 @@ export function friendly(err: unknown): string {
   return "Setup didn't finish. Try again."
 }
 
+/** memory to leave for the image model (~3 GB), the system and other apps, besides both language models */
+const SIDE_HEADROOM_GB = 11
+
 export class SetupController {
   private _state: SetupState
   private listeners = new Set<(s: SetupState) => void>()
@@ -72,7 +75,28 @@ export class SetupController {
   get state() { return this._state }
   get engine() { return this.deps.engine }
   onState(cb: (s: SetupState) => void) { this.listeners.add(cb); return () => this.listeners.delete(cb) }
-  private set(s: SetupState) { this._state = s; for (const l of this.listeners) l(s) }
+  private set(s: SetupState) {
+    this._state = s
+    if (s.phase === 'ready') void this.loadSide()
+    else this.sideFor = undefined
+    for (const l of this.listeners) l(s)
+  }
+
+  private hw: Hardware | undefined
+  /** the big model the small side model was loaded next to (a reload of the big one drops it) */
+  private sideFor: string | undefined
+  /**
+   * The starter model stays loaded next to the big one for side jobs (naming chats), so they don't push the
+   * conversation the big model has read out of its memory. Only when there's room for both, the image model
+   * and the rest of the computer; it's already downloaded (it got chat going on day one).
+   */
+  private async loadSide() {
+    const s = this.starter, a = this.active, hw = this.hw
+    if (!s || !a || !hw || a.model.id === s.model.id || this.sideFor === a.model.id || !this.verified(s)) return
+    if (hw.totalRamGB < a.build.sizeGB + s.build.sizeGB + SIDE_HEADROOM_GB) return
+    this.sideFor = a.model.id
+    try { await this.deps.engine.loadSide(join(this.deps.modelsDir, fileNameFor(s.build.url)), 2048) } catch (err) { console.warn('the side model did not load', err) }
+  }
 
   private sha(c: Choice) { return this.deps.sha256Override ?? c.build.sha256 }
   private verified(c: Choice) { return isVerified(this.deps.modelsDir, c.build.url) }
@@ -90,6 +114,7 @@ export class SetupController {
       this.set({ phase: 'probing', firstRun: this.firstRun() })
       try {
         const [hw, catalog] = await Promise.all([this.deps.getHardware(), this.deps.getCatalog()])
+        this.hw = hw
         this.result = pick(hw, catalog.models)
         const r = this.result
         if (!r.recommended) return this.set({ phase: 'error', message: 'Mabel needs at least 8 GB of memory to run on this computer.' })

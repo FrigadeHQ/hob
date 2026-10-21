@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { existsSync, readdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, isAbsolute, join, sep } from 'node:path'
-import type { ApprovalAnswer, ApprovalRequest, Attachment, Step, StoredMessage } from '../../shared/agent'
+import type { ApprovalAnswer, ApprovalRequest, Attachment, Step, StoredMessage, ToolSpec } from '../../shared/agent'
 import type { ChatMessage } from '../../shared/types'
 import type { Engine } from '../engine'
 import type { PythonRuntime } from '../python/runtime'
@@ -52,6 +52,8 @@ export type TurnDeps = {
   prompts?(offered: string[]): string[]
   /** the chat list changed (e.g. the chat got its title) */
   onChatsChanged?(): void
+  /** the reply and its follow-up jobs are done: the model is free to read ahead */
+  onIdle?(): void
   emit: {
     token(requestId: string, text: string, thought: boolean): void
     step(requestId: string, step: Step): void
@@ -209,29 +211,20 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     d.store.setAttachments(userMessage, a.attachments)
   }
 
-  const list = (dir: string) => { try { return readdirSync(dir).filter((n) => !n.startsWith('.')) } catch { return [] } }
-  const listing = list(chat.dir)
+  const listing = listDir(chat.dir)
   const specs = specsFor(d.tools, ctx.webAccess)
-  const find = (n: string) => d.skills?.find(n)
-  const command = expandCommand(a.text, find)
-  // the latest earlier /command keeps its instructions, so follow-ups ("make it shorter") still know them;
-  // older ones stay short to save room
-  let lastCommand = -1
-  if (!command.skill) for (let i = history.length - 1; i >= 0 && lastCommand === -1; i--) if (history[i].role === 'user' && expandCommand(history[i].content, find).skill) lastCommand = i
-  const expand = (t: string, i: number) => (i === lastCommand ? expandCommand(t, find).text : t)
-  // "save that as a skill": the model only sees earlier replies' words, so give it the code that worked
-  const lastReply = /\bskill/i.test(a.text) && !command.skill ? history.map((m) => m.role).lastIndexOf('assistant') : -1
+  const command = expandCommand(a.text, (n) => d.skills?.find(n))
   const messages: ChatMessage[] = [
-    { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: listing, grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing: missingFolders, files: ctx.mainFolder ? list(ctx.mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
-    ...fitHistory(history.map((m, i) => ({ role: m.role, content: withFiles(expand(m.content, i), m.attachments) + (i === lastReply ? codeThatWorked(m.steps) : '') }))),
+    ...conversation(d, chat, history, specs, a.text),
     { role: 'user', content: [withFiles(command.text, a.attachments), ...lookNotes].join('\n') },
   ]
-  // a request about their files ("rename the photos on my Desktop") is agent work even before any folder is given
-  const mentionsFiles = /~[\\/]|\/Users\/|\/home\/|[A-Z]:\\|\b(folders?|files?|photos?|pictures?|documents?|desktop|downloads)\b/i.test(a.text)
-  const usesFiles = listing.length > 0 || grants.length > 0 || a.attachments.length > 0 || command.skill !== undefined || mentionsFiles
+  // file work from the start: signals that don't depend on the language the user writes in. Anything else
+  // starts with a short think and gets the long one as soon as the model calls a tool
+  const namesPath = /~[\\/]|\/Users\/|\/home\/|[A-Z]:\\/.test(a.text)
+  const usesFiles = listing.length > 0 || grants.length > 0 || a.attachments.length > 0 || command.skill !== undefined || namesPath
   let content: string
   const ask = (msgs: ChatMessage[]) => d.engine.chat(
-    { messages: msgs, tools: specs, thoughtBudget: usesFiles ? AGENT_BUDGET : CHAT_BUDGET },
+    { messages: msgs, tools: specs, thoughtBudget: usesFiles ? AGENT_BUDGET : CHAT_BUDGET, thoughtBudgetWithTools: AGENT_BUDGET },
     { onToken, onTool },
     AbortSignal.any([a.signal, loop.signal]),
   ).then((t) => t.trim())
@@ -267,8 +260,46 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   const undoable = journal.count > 0
   const workedMs = Date.now() - started
   const id = d.store.addMessage(a.chatId, { role: 'assistant', content, steps, taskId, undoable, workedMs })
-  if (firstTurn && !a.signal.aborted && cut === -1 && content !== 'Something went wrong. Try again.') void nameChat(d, a.chatId, placeholder, a.text, content)
+  const naming = firstTurn && !a.signal.aborted && cut === -1 && content !== 'Something went wrong. Try again.' ? nameChat(d, a.chatId, placeholder, a.text, content) : Promise.resolve()
+  // the model is free again (naming done too): time to read ahead whatever the user looks at now
+  void naming.then(() => d.onIdle?.()).catch(() => {})
   return { id, role: 'assistant', content, attachments: [], steps, taskId, undoable, undone: false, workedMs }
+}
+
+const listDir = (dir: string) => { try { return readdirSync(dir).filter((n) => !n.startsWith('.')) } catch { return [] } }
+
+type PromptDeps = Pick<TurnDeps, 'store' | 'skills' | 'prompts' | 'home'>
+type ChatRef = { id?: string; dir: string; projectId: string | null }
+
+/**
+ * The conversation as the model reads it, before the new message: the system prompt and the history.
+ * Built the same way for a reply and for reading ahead, so what was read ahead is reused (any difference
+ * means reading again from that point). text: the new message, when known (it changes a few details).
+ */
+export function conversation(d: PromptDeps, chat: ChatRef, history: StoredMessage[], specs: ToolSpec[], text = ''): ChatMessage[] {
+  const project = chat.projectId ? d.store.getProject(chat.projectId) : undefined
+  const missing = (project?.folders ?? []).filter((f) => !existsSync(f))
+  const chatGrants = chat.id ? d.store.chatGrants(chat.id) : []
+  const mainFolder = project?.folders[0]
+  const find = (n: string) => d.skills?.find(n)
+  const command = expandCommand(text, find)
+  // the latest earlier /command keeps its instructions, so follow-ups ("make it shorter") still know them;
+  // older ones stay short to save room
+  let lastCommand = -1
+  if (!command.skill) for (let i = history.length - 1; i >= 0 && lastCommand === -1; i--) if (history[i].role === 'user' && expandCommand(history[i].content, find).skill) lastCommand = i
+  const expand = (t: string, i: number) => (i === lastCommand ? expandCommand(t, find).text : t)
+  // "save that as a skill": the model only sees earlier replies' words, so give it the code that worked
+  const lastReply = /\bskill/i.test(text) && !command.skill ? history.map((m) => m.role).lastIndexOf('assistant') : -1
+  return [
+    { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: listDir(chat.dir), grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing, files: mainFolder ? listDir(mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
+    ...fitHistory(history.map((m, i) => ({ role: m.role, content: withFiles(expand(m.content, i), m.attachments) + (i === lastReply ? codeThatWorked(m.steps) : '') }))),
+  ]
+}
+
+/** Read a chat ahead (or a new chat that will use this folder), so its next message starts at once. */
+export async function readAhead(d: PromptDeps & Pick<TurnDeps, 'engine' | 'tools' | 'webAccess'>, chat: ChatRef): Promise<void> {
+  const specs = specsFor(d.tools, d.webAccess())
+  await d.engine.preload(conversation(d, chat, chat.id ? d.store.messages(chat.id) : [], specs), specs)
 }
 
 /** what the model can now do in a folder the user just allowed */
@@ -277,7 +308,7 @@ export const grantedNote = (folder: string) =>
 
 /** Ask the model for a short title; keeps the first-line title if anything goes wrong. */
 async function nameChat(d: TurnDeps, chatId: string, placeholder: string, user: string, reply: string) {
-  const ask = () => d.engine.chat({ messages: titleRequest(user, reply), tools: [], thoughtBudget: 0, maxTokens: 24 }, { onToken: () => {} }, AbortSignal.timeout(30_000))
+  const ask = () => d.engine.chat({ messages: titleRequest(user, reply), tools: [], thoughtBudget: 0, maxTokens: 24, side: true }, { onToken: () => {} }, AbortSignal.timeout(30_000))
   try {
     // one retry: the engine can be briefly busy right after a reply
     const raw = await ask().catch(async () => { await new Promise((r) => setTimeout(r, 1500)); return ask() })

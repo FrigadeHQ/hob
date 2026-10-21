@@ -36,11 +36,17 @@ export function isInside(root: string, p: string): boolean {
   return r === '' || (r !== '..' && !r.startsWith('..' + sep) && !isAbsolute(r))
 }
 
-export function newChatDir(filesDir: string, now = new Date()): string {
+/** the folder a new chat would get now, not made yet */
+export function nextChatDir(filesDir: string, now = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   const base = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}.${pad(now.getMinutes())}`
   let dir = join(filesDir, base)
   for (let i = 2; existsSync(dir); i++) dir = join(filesDir, `${base} (${i})`)
+  return dir
+}
+
+export function newChatDir(filesDir: string, now = new Date()): string {
+  const dir = nextChatDir(filesDir, now)
   mkdirSync(dir, { recursive: true })
   return dir
 }
