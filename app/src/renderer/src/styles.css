@@ -2,7 +2,7 @@
 @plugin "@tailwindcss/typography";
 
 /*
- * Mabel design system
+ * Garth design system
  * Type: four sizes only. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
  * Color: paper (app) · sidebar · surface (composer, cards) · ink · ink-soft (secondary text) · muted (hints, placeholders) · line · line-strong · accent
  * Radius: 8 controls · 12 cards · 18 composer. Icons: lucide, 16px in UI, 14px in steps.
@@ -10,7 +10,7 @@
 @theme {
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  /* Mabel's replies read like a page: Source Serif 4 (Adobe, SIL Open Font License) */
+  /* Garth's replies read like a page: Source Serif 4 (Adobe, SIL Open Font License) */
   --font-serif: "Source Serif 4 Variable", "Iowan Old Style", Georgia, serif;
 
   --text-meta: 12px;
@@ -108,7 +108,7 @@ body {
   --tw-prose-code: var(--color-ink);
   --tw-prose-th-borders: var(--color-line-strong);
   --tw-prose-td-borders: var(--color-line);
-  /* section breaks (---): Mabel's soft divider, not the prose default (too bright in dark mode) */
+  /* section breaks (---): Garth's soft divider, not the prose default (too bright in dark mode) */
   --tw-prose-hr: var(--color-line);
 }
 .reply.prose :where(p, ul, ol, table, pre) { margin-top: 0.6em; margin-bottom: 0.6em; }
@@ -143,21 +143,21 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .fw { animation: fw 650ms cubic-bezier(0.2, 0.6, 0.2, 1) both; }
 @media (prefers-reduced-motion: reduce) { .reveal, .pop, .fade-in, .fw { animation: none; } }
 
-/* the mabel on the start-up screen: floats, breathes, its tip flickers, it blinks now and then */
-/* Mabel on the start-up screen: a gentle bob in whole pixels (steps keep the pixel-art look) */
-.mabel-alive .mabel-body { animation: mabel-bob 2.4s steps(4, jump-none) infinite; }
-.mabel-alive .mabel-shadow { animation: mabel-shadow 2.4s steps(4, jump-none) infinite; transform-box: fill-box; transform-origin: 50% 50%; }
-@keyframes mabel-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
-@keyframes mabel-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.08 } 50% { transform: scaleX(0.85); opacity: 0.05 } }
-/* the mini one in the status corner stays put unless she's busy */
-.mabel-mini.mabel-alive .mabel-body { animation: none; }
+/* the garth on the start-up screen: floats, breathes, its tip flickers, it blinks now and then */
+/* Garth on the start-up screen: a gentle bob in whole pixels (steps keep the pixel-art look) */
+.garth-alive .garth-body { animation: garth-bob 2.4s steps(4, jump-none) infinite; }
+.garth-alive .garth-shadow { animation: garth-shadow 2.4s steps(4, jump-none) infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+@keyframes garth-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
+@keyframes garth-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.08 } 50% { transform: scaleX(0.85); opacity: 0.05 } }
+/* the mini one in the status corner stays put unless busy */
+.garth-mini.garth-alive .garth-body { animation: none; }
 /* getting smarter: a small hop, one art pixel at a time */
-.mabel-busy .mabel-body, .mabel-mini.mabel-busy .mabel-body { animation: mabel-hop 1.2s steps(2, jump-none) infinite; }
-@keyframes mabel-hop { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-1px) } }
-/* tickled: a quick pixel wiggle while she laughs */
-.mabel-giggle .mabel-body { animation: mabel-giggle 0.16s steps(1, end) 8; transform-box: fill-box; transform-origin: 50% 100%; }
-@keyframes mabel-giggle { 0% { transform: translateX(-0.5px) rotate(-6deg) } 50% { transform: translateX(0.5px) rotate(6deg) } }
-@media (prefers-reduced-motion: reduce) { .mabel-alive *, .mabel-busy *, .mabel-giggle * { animation: none !important } }
+.garth-busy .garth-body, .garth-mini.garth-busy .garth-body { animation: garth-hop 1.2s steps(2, jump-none) infinite; }
+@keyframes garth-hop { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-1px) } }
+/* tickled: a quick pixel wiggle while laughing */
+.garth-giggle .garth-body { animation: garth-giggle 0.16s steps(1, end) 8; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes garth-giggle { 0% { transform: translateX(-0.5px) rotate(-6deg) } 50% { transform: translateX(0.5px) rotate(6deg) } }
+@media (prefers-reduced-motion: reduce) { .garth-alive *, .garth-busy *, .garth-giggle * { animation: none !important } }
 
 /* the dimmed layer behind Settings, dialogs and search: one shade everywhere */
 .scrim { background-color: rgb(0 0 0 / 0.3); }

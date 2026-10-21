@@ -38,7 +38,7 @@ ${network ? '' : '(deny network*)\n'}(deny appleevent-send)
  */
 const labelled = new Set<string>()
 function lowIntegrity(python: string, writable: string[]): string {
-  const low = join(dirname(python), 'mabel-python-low.exe')
+  const low = join(dirname(python), 'garth-python-low.exe')
   if (!existsSync(low)) {
     copyFileSync(python, low)
     execFileSync('icacls', [low, '/setintegritylevel', 'low'], { stdio: 'ignore' })
@@ -118,11 +118,11 @@ export function runPython(o: RunOpts): Promise<RunResult> {
       realpathSync(o.python), script,
     ]
   } else if (sandboxed && process.platform === 'linux') {
-    const boot = join(o.tmpDir, 'mabel-sandbox.py')
+    const boot = join(o.tmpDir, 'garth-sandbox.py')
     writeFileSync(boot, LANDLOCK_PY)
     args = [boot, script]
-    env.MABEL_SB = JSON.stringify({ write: [realpathSync(o.cwd), realpathSync(o.tmpDir)], exec: [realpathSync(o.runtimeRoot)], read: reads })
-    if (o.network) env.MABEL_SB_NET = '1'
+    env.GARTH_SB = JSON.stringify({ write: [realpathSync(o.cwd), realpathSync(o.tmpDir)], exec: [realpathSync(o.runtimeRoot)], read: reads })
+    if (o.network) env.GARTH_SB_NET = '1'
   } else if (sandboxed && win) {
     cmd = lowIntegrity(o.python, [o.cwd, o.tmpDir])
   }

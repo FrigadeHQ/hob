@@ -5,8 +5,8 @@ import { join } from 'node:path'
 
 const main = join(import.meta.dirname, '../out/main/index.js')
 
-test('charts: Mabel draws them in the chat, and they download as PNG', async () => {
-  const app = await electron.launch({ args: [main], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: mkdtempSync(join(tmpdir(), 'mabel-e2e-')) } })
+test('charts: Garth draws them in the chat, and they download as PNG', async () => {
+  const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
   const page = await app.firstWindow()
   const errors: string[] = []
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
@@ -25,7 +25,7 @@ test('charts: Mabel draws them in the chat, and they download as PNG', async () 
   await expect(card.getByTestId('chart-legend')).toContainText('costs')
   await expect(page.getByTestId('file-image')).toHaveCount(0)
 
-  const out = join(mkdtempSync(join(tmpdir(), 'mabel-png-')), 'chart.png')
+  const out = join(mkdtempSync(join(tmpdir(), 'garth-png-')), 'chart.png')
   await app.evaluate(({ dialog }, p) => { dialog.showSaveDialog = (async () => ({ canceled: false, filePath: p })) as never }, out)
   await card.getByTestId('chart-download').click()
   await expect.poll(() => { try { return readFileSync(out).subarray(1, 4).toString() } catch { return '' } }).toBe('PNG')

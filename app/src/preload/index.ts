@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
 import type { ApprovalRequest, LiveSummary, Step, StoredMessage } from '../shared/agent'
-import type { SetupState, MabelApi, VisionState } from '../shared/types'
+import type { SetupState, GarthApi, VisionState } from '../shared/types'
 import type { PluginResult } from '../shared/plugins'
 
 const invoke = (channel: string) => (...args: unknown[]) => ipcRenderer.invoke(channel, ...args)
@@ -10,12 +10,12 @@ function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void) 
   return () => { ipcRenderer.off(channel, h) }
 }
 
-const api: MabelApi = {
+const api: GarthApi = {
   platform: process.platform,
-  fake: process.env.MABEL_FAKE === '1',
+  fake: process.env.GARTH_FAKE === '1',
   copy: invoke('copy'),
   pathsForFiles: (files) => files.map((f) => webUtils.getPathForFile(f)).filter(Boolean),
-  fileUrl: (p) => `mabel-file://f/${encodeURIComponent(p)}`,
+  fileUrl: (p) => `garth-file://f/${encodeURIComponent(p)}`,
   setup: {
     getState: invoke('setup:getState'),
     confirm: invoke('setup:confirm'),
@@ -55,5 +55,5 @@ const api: MabelApi = {
     onOpened: (cb) => listen<[PluginResult]>('plugins:opened', cb),
   },
   speech: { prepare: invoke('speech:prepare'), onProgress: (cb) => listen<[number]>('speech:progress', cb), mic: invoke('speech:mic'), openMicSettings: invoke('speech:micSettings') },
-} as MabelApi
-contextBridge.exposeInMainWorld('mabel', api)
+} as GarthApi
+contextBridge.exposeInMainWorld('garth', api)

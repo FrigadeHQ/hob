@@ -16,7 +16,7 @@ it('package names: plain PyPI names and pins only', () => {
 })
 
 it('reads installed versions from dist-info folders; the first folder wins', () => {
-  const a = mkdtempSync(join(tmpdir(), 'mabel-site-')); const b = mkdtempSync(join(tmpdir(), 'mabel-site-'))
+  const a = mkdtempSync(join(tmpdir(), 'garth-site-')); const b = mkdtempSync(join(tmpdir(), 'garth-site-'))
   mkdirSync(join(a, 'yfinance-0.2.54.dist-info')); mkdirSync(join(a, 'numpy-2.5.4.dist-info'))
   mkdirSync(join(b, 'numpy-2.5.3.dist-info')); mkdirSync(join(b, 'python_dateutil-2.9.0.post0.dist-info'))
   const v = installedVersions([a, b])
@@ -26,7 +26,7 @@ it('reads installed versions from dist-info folders; the first folder wins', () 
 })
 
 it('install makes the venv once, then only runs pip; bad names never reach pip', async () => {
-  const venv = join(mkdtempSync(join(tmpdir(), 'mabel-venv-')), 'packages')
+  const venv = join(mkdtempSync(join(tmpdir(), 'garth-venv-')), 'packages')
   const calls: string[][] = []
   const exec = async (_cmd: string, args: string[]) => { calls.push(args) }
   expect(await installPackages('/py', venv, '3.12.14', ['--index-url=http://evil'], exec)).toMatchObject({ ok: false })
@@ -38,14 +38,14 @@ it('install makes the venv once, then only runs pip; bad names never reach pip',
   calls.length = 0
   await installPackages('/py', venv, '3.12.14', ['six'], exec)
   expect(calls.map((c) => c[1])).toEqual(['pip'])
-  // a new Mabel Python remakes it
+  // a new Garth Python remakes it
   calls.length = 0
   await installPackages('/py', venv, '3.13.0', ['six'], exec)
   expect(calls[0][1]).toBe('venv')
 })
 
 it('a failed install says why in plain words', async () => {
-  const venv = join(mkdtempSync(join(tmpdir(), 'mabel-venv-')), 'packages')
+  const venv = join(mkdtempSync(join(tmpdir(), 'garth-venv-')), 'packages')
   const fail = (msg: string) => async (_c: string, args: string[]) => { if (args[1] === 'pip') throw new Error(msg) }
   expect(await installPackages('/py', venv, '1', ['nope-x'], fail('ERROR: No matching distribution found for nope-x'))).toMatchObject({ ok: false, error: expect.stringContaining('prebuilt') })
 })
@@ -77,9 +77,9 @@ describe('install_packages tool', () => {
 // a real install from PyPI into a venv on the test machine's Python, then sandboxed code imports it
 const exec = (cmd: string, args: string[]) => new Promise<void>((res, rej) => execFile(cmd, args, (err, _o, e) => (err ? rej(new Error(`${err.message}\n${e}`)) : res())))
 
-describe.skipIf(!python || !!process.env.MABEL_OFFLINE)('installing from PyPI', () => {
+describe.skipIf(!python || !!process.env.GARTH_OFFLINE)('installing from PyPI', () => {
   it('installs a package and sandboxed code can import it', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'mabel-pypi-'))
+    const root = mkdtempSync(join(tmpdir(), 'garth-pypi-'))
     const venv = join(root, 'packages')
     expect(await installPackages(python, venv, 'test', ['cowsay==6.1'], exec)).toEqual({ ok: true })
     const site = sitePackagesOf(venv)

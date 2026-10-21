@@ -3,7 +3,7 @@
   "name": "PDF",
   "version": "1.0.0",
   "description": "Reads any PDF, even scanned ones, and fills in forms for you. Text is recognized on this computer.",
-  "author": "Mabel",
+  "author": "Garth",
   "icon": "file-text",
   "tools": [
     {

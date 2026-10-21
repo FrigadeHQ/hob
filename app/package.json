@@ -1,5 +1,5 @@
 {
-  "name": "@mabel/app",
+  "name": "@garth/app",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "native": "node scripts/build-native.mjs"
   },
   "dependencies": {
-    "@mabel/picker": "workspace:^",
+    "@garth/picker": "workspace:^",
     "@mozilla/readability": "0.6.0",
     "linkedom": "0.18.13",
     "node-llama-cpp": "3.22.1",
@@ -45,9 +45,9 @@
     "vite": "^8.3.4",
     "vitest": "^5.0.4"
   },
-  "productName": "Mabel",
+  "productName": "Garth",
   "description": "The full AI coworker experience. None of the cloud.",
   "author": "Frigade",
   "license": "MIT",
-  "repository": "github:FrigadeHQ/mabel"
+  "repository": "github:FrigadeHQ/garth"
 }

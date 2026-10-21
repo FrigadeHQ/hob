@@ -1,4 +1,4 @@
-# Contributing to Mabel
+# Contributing to Garth
 
 Thanks for helping. Bug reports, plugins and pull requests are all welcome.
 
@@ -8,7 +8,7 @@ Requires Node.js 24 and pnpm 10.
 
 ```sh
 pnpm install
-pnpm dev              # run Mabel
+pnpm dev              # run Garth
 pnpm -C app test      # unit tests
 pnpm -C app e2e       # end-to-end tests (hidden window, stand-in model)
 ```
@@ -21,7 +21,7 @@ pnpm -C app e2e       # end-to-end tests (hidden window, stand-in model)
 
 ## Plugins
 
-Most new abilities can be a plugin instead of a change to Mabel itself. See the [plugin guide](docs/plugins/README.md).
+Most new abilities can be a plugin instead of a change to Garth itself. See the [plugin guide](docs/plugins/README.md).
 
 ## Bugs
 

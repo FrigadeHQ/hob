@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { bodyRects, faceRects, miniBodyRects, miniFaceRects, type Expression } from '../../../shared/mascot'
 
-/** how far the face moves toward where Mabel looks, in grid units (whole units keep it pixel-sharp) */
+/** how far the face moves toward where Garth looks, in grid units (whole units keep it pixel-sharp) */
 const LOOK_X = 3
 const LOOK_Y = 2
 const BODY = bodyRects()
@@ -52,11 +52,11 @@ function useExpression(on: boolean, base: Expression = 'smile'): Expression {
 const rect = (r: { x: number; y: number; w: number; h: number; fill: string }, i: number) => <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill} />
 
 /**
- * Mabel, in pixels. alive: looks at the cursor (or around), blinks, and sometimes looks skeptical.
- * mini: her small drawing, for the status corner. busy: bobs while she works on something (getting smarter).
- * ticklish: click her and she laughs.
+ * Garth, in pixels. alive: looks at the cursor (or around), blinks, and sometimes looks skeptical.
+ * mini: the small drawing, for the status corner. busy: bobs while working on something (getting smarter).
+ * ticklish: a click makes Garth laugh.
  */
-export function Mascot({ size = 96, alive = false, mini = false, busy = false, base, ticklish = false, label = 'Mabel' }: {
+export function Mascot({ size = 96, alive = false, mini = false, busy = false, base, ticklish = false, label = 'Garth' }: {
   size?: number; alive?: boolean; mini?: boolean; busy?: boolean; base?: Expression; ticklish?: boolean; label?: string
 }) {
   const [ref, gaze] = useGaze(alive)
@@ -68,15 +68,15 @@ export function Mascot({ size = 96, alive = false, mini = false, busy = false, b
     return () => clearTimeout(t)
   }, [laughing])
   const expression = laughing ? 'laugh' : mood
-  // a step of the small drawing is two screen pixels: one is enough to see where she looks
+  // a step of the small drawing is two screen pixels: one is enough to see where Garth looks
   const dx = Math.round(gaze.x * (mini ? 1 : LOOK_X)), dy = Math.round(gaze.y * (mini ? 1 : LOOK_Y))
   const face = mini ? miniFaceRects(expression, dx, dy) : faceRects(expression, dx, dy)
   const grid = mini ? 12 : 60
   const svg = (
     <svg ref={ref} data-testid="mascot" data-expression={expression} width={size} height={size} viewBox={`0 0 ${grid} ${grid}`} shapeRendering="crispEdges" role="img" aria-label={label}
-      className={`overflow-visible ${mini ? 'mabel-mini' : ''} ${alive ? 'mabel-alive' : ''} ${busy && !laughing ? 'mabel-busy' : ''} ${laughing ? 'mabel-giggle' : ''}`}>
-      {!mini && <ellipse className="mabel-shadow" cx="30" cy="62" rx="16" ry="2" fill="currentColor" opacity="0.08" />}
-      <g className="mabel-body">
+      className={`overflow-visible ${mini ? 'garth-mini' : ''} ${alive ? 'garth-alive' : ''} ${busy && !laughing ? 'garth-busy' : ''} ${laughing ? 'garth-giggle' : ''}`}>
+      {!mini && <ellipse className="garth-shadow" cx="30" cy="62" rx="16" ry="2" fill="currentColor" opacity="0.08" />}
+      <g className="garth-body">
         {(mini ? MINI_BODY : BODY).map(rect)}
         <g data-testid="mascot-eyes">{face.map(rect)}</g>
       </g>

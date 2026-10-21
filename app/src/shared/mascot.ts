@@ -1,5 +1,5 @@
 /**
- * Mabel, in pixels: a round lavender face on a 60×60 grid. The body is drawn in 2×2 "pixels" (a 30-wide
+ * Garth, in pixels: a round lavender face on a 60×60 grid. The body is drawn in 2×2 "pixels" (a 30-wide
  * circle with a darker rim and dithered shading at the bottom); the face uses the finer grid, so the eyes,
  * smile and eyebrow sit where the original art has them. Shared by the app (animated) and the icon script.
  */
@@ -54,14 +54,14 @@ export function faceRects(e: Expression, dx = 0, dy = 0): Rect[] {
   return [...eyes, ...brow, ...mouth]
 }
 
-/** an SVG of Mabel (for the icon and logo); size in pixels, square */
+/** an SVG of Garth (for the icon and logo); size in pixels, square */
 export function mascotSvg(e: Expression = 'smile', size = 512): string {
   const rect = (r: Rect) => `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${r.fill}"/>`
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 60 60" shape-rendering="crispEdges">${[...bodyRects(), ...faceRects(e)].map(rect).join('')}</svg>`
 }
 
 /**
- * Mini Mabel (the status corner): her own 12×12 drawing, not the big one shrunk. At ~24 px the big face's
+ * Mini Garth (the status corner): a separate 12×12 drawing, not the big one shrunk. At ~24 px the big face's
  * details are a pixel or less and blur away; here each art pixel is 2 screen pixels, so the eyes stay clear
  * and moving them a step is visible.
  */

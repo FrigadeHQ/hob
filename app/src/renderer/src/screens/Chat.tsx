@@ -6,7 +6,7 @@ import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../
 import type { MacAccess } from '../../../shared/types'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
-import { mabel } from '../api'
+import { garth } from '../api'
 import { CopyButton } from '../components/CopyButton'
 import { ThinkingIndicator, WorkLog } from '../components/WorkLog'
 import { FileCards } from '../components/FileCards'
@@ -40,7 +40,7 @@ const MARKDOWN_COMPONENTS = {
   th: ({ children, style }: { children?: React.ReactNode; style?: React.CSSProperties }) => <th style={style} className={short(children) ? 'whitespace-nowrap' : undefined}>{children}</th>,
   td: ({ children, style }: { children?: React.ReactNode; style?: React.CSSProperties }) => <td style={style} className={short(children) ? 'whitespace-nowrap' : undefined}>{children}</td>,
   img: ({ src, alt }: { src?: unknown; alt?: string }) =>
-    typeof src === 'string' && src.startsWith('mabel-file:') ? <img src={src} alt={alt ?? ''} /> : <span>{alt}</span>,
+    typeof src === 'string' && src.startsWith('garth-file:') ? <img src={src} alt={alt ?? ''} /> : <span>{alt}</span>,
 }
 
 /** uiKey: a finished reply keeps the key it had while live, so its work log folds shut instead of remounting */
@@ -106,15 +106,15 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   /** the chat exists, so its project is settled */
   const [created, setCreated] = useState(!!initialId)
   useEffect(() => {
-    const load = () => void mabel.projects.list().then(setProjects)
+    const load = () => void garth.projects.list().then(setProjects)
     load()
-    return mabel.chats.onChanged(load)
+    return garth.chats.onChanged(load)
   }, [])
   const project = projects.find((p) => p.id === projectId)
   // a project made from this new chat (chip, too-big notice): use it here, keeping what was typed
   useEffect(() => { if (!created) { projectRef.current = initialProject; setProjectId(initialProject) } }, [initialProject])
   // let the model read this chat ahead (or the new chat about to start), so the reply starts right away
-  useEffect(() => { void mabel.chat.warm(chatIdRef.current, projectId) }, [projectId, pending.length])
+  useEffect(() => { void garth.chat.warm(chatIdRef.current, projectId) }, [projectId, pending.length])
   const pickProject = (id: string | null) => { projectRef.current = id; setProjectId(id); onProjectChange(id) }
   const [dragging, setDragging] = useState(false)
   const [requestId, setRequestId] = useState<string | null>(null)
@@ -123,9 +123,9 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const [starters, setStarters] = useState<StarterRef[]>([])
   const [seed] = useState(() => Math.floor(Math.random() * 1000))
   useEffect(() => {
-    const load = () => { void mabel.plugins.skills().then(setSkills); void mabel.plugins.starters().then(setStarters) }
+    const load = () => { void garth.plugins.skills().then(setSkills); void garth.plugins.starters().then(setStarters) }
     load()
-    return mabel.plugins.onChanged(load)
+    return garth.plugins.onChanged(load)
   }, [])
   const scroller = useRef<HTMLDivElement>(null)
   const dictation = useDictation((text) => { setInput((cur) => (cur.trim() ? `${cur.trimEnd()} ${text}` : text)); inputRef.current?.focus() })
@@ -144,7 +144,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   // the view is keyed per chat, so history loads once; later chatId changes are this view creating its chat
   useEffect(() => {
     if (!initialId) return
-    void mabel.chats.get(initialId).then((r) => {
+    void garth.chats.get(initialId).then((r) => {
       if (!r || !alive.current) return
       setProjectId(r.chat.projectId)
       // a reply that kept going while another chat was open: show it so far and follow it again
@@ -159,14 +159,14 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   }, [])
   // leaving this chat (New chat, another chat) doesn't stop its reply: it keeps going and is saved
   useEffect(() => () => { alive.current = false }, [])
-  useEffect(() => mabel.chat.onDone((rid, reply) => {
+  useEffect(() => garth.chat.onDone((rid, reply) => {
     if (rid !== currentId.current) return
     currentId.current = null
     setMessages((ms) => [...ms.slice(0, -1), reply ? { ...reply, uiKey: `a-${rid}` } : { ...placeholder(rid), content: 'Something went wrong. Try again.' }])
     setRequestId(null); setApproval(null); clearThinking(); inputRef.current?.focus()
   }), [])
 
-  useEffect(() => mabel.chat.onToken((id, text, thought) => {
+  useEffect(() => garth.chat.onToken((id, text, thought) => {
     if (id !== currentId.current) return
     if (thought) { thoughtBuf.current += text; return }
     clearThinking()
@@ -176,14 +176,14 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       return [...ms.slice(0, -1), { ...last, content: last.content + text }]
     })
   }), [])
-  useEffect(() => mabel.chat.onReset((rid) => {
+  useEffect(() => garth.chat.onReset((rid) => {
     if (rid !== currentId.current) return
     setMessages((ms) => {
       const last = ms.at(-1)
       return last?.role === 'assistant' ? [...ms.slice(0, -1), { ...last, content: '' }] : ms
     })
   }), [])
-  useEffect(() => mabel.chat.onStep((rid, step) => {
+  useEffect(() => garth.chat.onStep((rid, step) => {
     if (rid !== currentId.current) return
     setMessages((ms) => {
       const last = ms.at(-1)
@@ -193,7 +193,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       return [...ms.slice(0, -1), { ...last, steps }]
     })
   }), [])
-  useEffect(() => mabel.chat.onApproval((req) => { if (req.requestId === currentId.current) setApproval(req) }), [])
+  useEffect(() => garth.chat.onApproval((req) => { if (req.requestId === currentId.current) setApproval(req) }), [])
   useEffect(() => { if (pinned.current) scroller.current?.scrollTo({ top: scroller.current.scrollHeight }) }, [messages])
   function onScroll() {
     const el = scroller.current
@@ -210,7 +210,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
 
   async function ensureChat() {
     if (chatIdRef.current) return chatIdRef.current
-    const c = await mabel.chats.create(projectRef.current)
+    const c = await garth.chats.create(projectRef.current)
     chatIdRef.current = c.id
     setCreated(true)
     onChatChanged(c.id)
@@ -219,9 +219,9 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
 
   async function addFiles(paths: string[]): Promise<Attachment[] | undefined> {
     if (!paths.length) return
-    let r: Awaited<ReturnType<typeof mabel.files.add>>
+    let r: Awaited<ReturnType<typeof garth.files.add>>
     try {
-      r = await mabel.files.add(await ensureChat(), paths)
+      r = await garth.files.add(await ensureChat(), paths)
     } catch (err) {
       console.error(err)
       setNotice({ text: "Couldn't add those files." })
@@ -229,7 +229,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
     if ('error' in r) {
       setNotice(r.error === 'too-big'
-        ? { text: `That's ${r.gb.toFixed(1)} GB, too big to copy. Make a project for its folder instead, so Mabel can use it where it is.`, folders: paths }
+        ? { text: `That's ${r.gb.toFixed(1)} GB, too big to copy. Make a project for its folder instead, so Garth can use it where it is.`, folders: paths }
         : { text: `${r.message}.` })
       return
     }
@@ -241,12 +241,12 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
 
   /** files copied in Finder paste with their paths; a screenshot from the clipboard only has its bytes */
   async function pasteFiles(files: File[]) {
-    const paths = mabel.pathsForFiles(files)
+    const paths = garth.pathsForFiles(files)
     if (paths.length) { await addFiles(paths); return }
     const id = await ensureChat()
     const added: Attachment[] = []
-    for (const f of files) if (f.type.startsWith('image/')) added.push(...await mabel.files.paste(id, new Uint8Array(await f.arrayBuffer()), f.type))
-    if (!added.length) { setNotice({ text: 'Mabel can only take pasted images or files.' }); return }
+    for (const f of files) if (f.type.startsWith('image/')) added.push(...await garth.files.paste(id, new Uint8Array(await f.arrayBuffer()), f.type))
+    if (!added.length) { setNotice({ text: 'Garth can only take pasted images or files.' }); return }
     setNotice(null)
     setPending((p) => [...p, ...added])
     inputRef.current?.focus()
@@ -254,17 +254,17 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
 
   /** an idea that needs a file: pick one, then send */
   async function startWithFile(prompt: string) {
-    const added = await addFiles(await mabel.files.pick())
+    const added = await addFiles(await garth.files.pick())
     if (added?.length) await send(prompt, [...pending, ...added])
   }
 
   function stop() {
-    if (requestId) void mabel.chat.stop(requestId)
+    if (requestId) void garth.chat.stop(requestId)
   }
 
   // "Save as a skill": once per chat; closing it or saying yes hides it for good (only a convenience, so storage may fail)
-  const offerKey = () => `mabel-skill-offer:${chatIdRef.current}`
-  const [offerClosed, setOfferClosed] = useState(() => { try { return !!initialId && localStorage.getItem(`mabel-skill-offer:${initialId}`) === 'closed' } catch { return false } })
+  const offerKey = () => `garth-skill-offer:${chatIdRef.current}`
+  const [offerClosed, setOfferClosed] = useState(() => { try { return !!initialId && localStorage.getItem(`garth-skill-offer:${initialId}`) === 'closed' } catch { return false } })
   function closeOffer() {
     setOfferClosed(true)
     try { localStorage.setItem(offerKey(), 'closed') } catch { /* private window */ }
@@ -276,8 +276,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const [hasConnector, setHasConnector] = useState(true)
   const [connectOpen, setConnectOpen] = useState(false)
   useEffect(() => {
-    void mabel.mac.access().then(setMacAccess)
-    void mabel.plugins.list().then((l) => setHasConnector(l.some((p) => p.kind === 'connector')))
+    void garth.mac.access().then(setMacAccess)
+    void garth.plugins.list().then((l) => setHasConnector(l.some((p) => p.kind === 'connector')))
   }, [])
   const showConnect = macAccess === undefined ? false : macAccess ? !connected(macAccess) : !hasConnector
   // other systems: through a connector (Plugins → Connectors)
@@ -286,7 +286,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const [undoNotes, setUndoNotes] = useState<Record<number, string>>({})
   async function undoTask(id: number) {
     try {
-      const r = await mabel.task.undo(id)
+      const r = await garth.task.undo(id)
       if (!r.done) return
       setMessages((ms) => ms.map((m) => (m.id === id ? { ...m, undone: true } : m)))
       if (r.failed) setUndoNotes((n) => ({ ...n, [id]: `Undone, except ${r.failed} change${r.failed > 1 ? 's' : ''} that changed since or ${r.failed > 1 ? 'are' : 'is'} in the Trash` }))
@@ -296,7 +296,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
   }
 
-  // typed while Mabel was still working: sent as soon as the reply is done
+  // typed while Garth was still working: sent as soon as the reply is done
   const [queued, setQueued] = useState<string | null>(null)
   useEffect(() => {
     if (requestId || !queued) return
@@ -318,7 +318,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     let id: string | undefined
     try {
       id = await ensureChat()
-      const reply = await mabel.chat.send(id, rid, text, files)
+      const reply = await garth.chat.send(id, rid, text, files)
       if (currentId.current === rid) setMessages((ms) => [...ms.slice(0, -1), { ...reply, uiKey: `a-${rid}` }])
     } catch (err) {
       console.error(err)
@@ -335,9 +335,9 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       onDragEnter={(e) => { if (!e.dataTransfer.types.includes('Files')) return; e.preventDefault(); dragDepth.current++; setDragging(true) }}
       onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault() }}
       onDragLeave={() => { dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDragging(false) }}
-      onDrop={(e) => { e.preventDefault(); dragDepth.current = 0; setDragging(false); void addFiles(mabel.pathsForFiles(Array.from(e.dataTransfer.files))) }}
+      onDrop={(e) => { e.preventDefault(); dragDepth.current = 0; setDragging(false); void addFiles(garth.pathsForFiles(Array.from(e.dataTransfer.files))) }}
     >
-      {connectOpen && <ConnectApps onClose={() => { setConnectOpen(false); void mabel.mac.access().then(setMacAccess) }} onTry={(p) => { setConnectOpen(false); void mabel.mac.access().then(setMacAccess); void send(p) }} />}
+      {connectOpen && <ConnectApps onClose={() => { setConnectOpen(false); void garth.mac.access().then(setMacAccess) }} onTry={(p) => { setConnectOpen(false); void garth.mac.access().then(setMacAccess); void send(p) }} />}
       {dragging && (
         <div data-testid="drop-overlay" className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-composer border-2 border-dashed border-line-strong bg-paper/85 text-body font-medium">
           Drop files to add them
@@ -356,7 +356,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                         <p data-testid="project-folders-line" className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-body text-ink-soft">
                           Working in
                           {project.folders.map((f) => (
-                            <button key={f} title={`Open ${f}`} onClick={() => void mabel.projects.open(project.id, f)} className="inline-flex items-center gap-1 rounded-control bg-line/60 px-2 py-0.5 text-ui text-ink hover:bg-line">
+                            <button key={f} title={`Open ${f}`} onClick={() => void garth.projects.open(project.id, f)} className="inline-flex items-center gap-1 rounded-control bg-line/60 px-2 py-0.5 text-ui text-ink hover:bg-line">
                               <FolderOpen size={14} strokeWidth={1.75} className="text-ink-soft" />{folderName(f)}
                             </button>
                           ))}
@@ -365,10 +365,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                       : <p className="mt-2 text-body text-ink-soft">Chats here follow this project's instructions.</p>}
                   </>
                 : <>
-                    <h1 className="text-title font-semibold tracking-tight">What can Mabel do for you?</h1>
+                    <h1 className="text-title font-semibold tracking-tight">What can Garth do for you?</h1>
                     <p className="mt-2 text-body text-ink-soft">
                       Private, on your computer. Drop in files, or{' '}
-                      <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Mabel a folder to work in</button>.
+                      <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Garth a folder to work in</button>.
                     </p>
                   </>}
               <div className="mt-8 grid gap-2 text-left sm:grid-cols-2">
@@ -396,7 +396,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
               <div key={m.uiKey ?? m.id}>
                 <WorkLog steps={m.steps} running={live} writing={!!m.content} thinking={live ? thoughtBuf : undefined} workedMs={m.workedMs} />
                 {approval && i === messages.length - 1 && (
-                  <ApprovalCard req={approval} onAnswer={(a) => { void mabel.approval.answer(approval.id, a); setApproval(null) }} />
+                  <ApprovalCard req={approval} onAnswer={(a) => { void garth.approval.answer(approval.id, a); setApproval(null) }} />
                 )}
                 <div data-testid="message-assistant" className="reply prose max-w-none [overflow-wrap:anywhere]">
                   {live && !m.content && !m.steps.length && <ThinkingIndicator thinking={thoughtBuf} />}
@@ -435,7 +435,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         {dictation.error && (
           <p data-testid="dictation-error" className="mb-2 text-ui text-ink-soft">
             {dictation.error.text}{' '}
-            {dictation.error.micSettings && <button onClick={() => void mabel.speech.openMicSettings()} className="underline underline-offset-2 hover:text-ink">Open microphone settings</button>}
+            {dictation.error.micSettings && <button onClick={() => void garth.speech.openMicSettings()} className="underline underline-offset-2 hover:text-ink">Open microphone settings</button>}
           </p>
         )}
         {notice && (
@@ -446,7 +446,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         {queued && (
           <div data-testid="queued" className="fade-in mb-1.5 flex items-center gap-2 rounded-control bg-line/50 px-3 py-1.5 text-ui text-ink-soft">
             <Clock size={14} className="shrink-0 text-muted" />
-            <span className="min-w-0 flex-1 truncate">Sends when Mabel is done: {queued}</span>
+            <span className="min-w-0 flex-1 truncate">Sends when Garth is done: {queued}</span>
             <button aria-label="Don't send" title="Don't send" onClick={() => { setInput(queued); setQueued(null) }} className="text-muted hover:text-ink"><X size={14} /></button>
           </div>
         )}
@@ -455,12 +455,12 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         </div>
         <Composer
           value={input} onChange={setInput} onSend={() => void send()} onStop={stop} running={!!requestId}
-          onAttach={() => void mabel.files.pick().then(addFiles)}
+          onAttach={() => void garth.files.pick().then(addFiles)}
           onPasteFiles={(files) => void pasteFiles(files)}
           pending={pending} onRemovePending={(a) => setPending((p) => p.filter((x) => x.path !== a.path))}
           inputRef={inputRef} dictation={dictation} skills={skills}
         />
-        <p className="mt-2 text-center text-meta text-muted">Mabel can make mistakes.</p>
+        <p className="mt-2 text-center text-meta text-muted">Garth can make mistakes.</p>
       </div>
     </main>
   )

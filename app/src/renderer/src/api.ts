@@ -1,3 +1,3 @@
-import type { MabelApi } from '../../shared/types'
-declare global { interface Window { mabel: MabelApi } }
-export const mabel = window.mabel
+import type { GarthApi } from '../../shared/types'
+declare global { interface Window { garth: GarthApi } }
+export const garth = window.garth

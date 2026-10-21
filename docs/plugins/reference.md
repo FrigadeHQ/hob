@@ -1,8 +1,8 @@
 # Plugin reference
 
-Everything a `mabel-plugin.json` can hold.
+Everything a `garth-plugin.json` can hold.
 
-## `mabel-plugin.json` reference
+## `garth-plugin.json` reference
 
 | Field | | |
 |---|---|---|
@@ -11,7 +11,7 @@ Everything a `mabel-plugin.json` can hold.
 | `version`, `description`, `author` | | |
 | `icon` | | a [lucide](https://lucide.dev) name: `map`, `coins`, `chef-hat`, `globe`, `calendar`, `music`, `book-open`, `graduation-cap`, `code`, `mail`, `heart`, `briefcase`, `palette`, `plane`, `sparkles`, `plug`, … (others show a puzzle piece) |
 | `permissions.network` | | Python tools may use the internet |
-| `prompt` | | one or two sentences added to Mabel's instructions while the plugin is on |
+| `prompt` | | one or two sentences added to Garth's instructions while the plugin is on |
 | `tools[]` | | `name`, `description`, `params` (JSON schema), `run`, `title` |
 | `mcpServers` | | `{ name: { command, args, env } }` or `{ name: { url, headers, type, oauth } }` |
 | `settings[]` | | `key` (UPPER_CASE), `label`, `secret`, `help`, `type` (`text`, `number`, `boolean`, `directory`, `file`), `required`, `multiple`, `default` |
@@ -25,7 +25,7 @@ Everything a `mabel-plugin.json` can hold.
 
 - Users fill these in on the plugin's card.
 - Secret values are encrypted with the system keychain.
-- Mabel passes the values to your tools and MCP servers as environment variables.
+- Garth passes the values to your tools and MCP servers as environment variables.
 
 ## Home screen starters
 

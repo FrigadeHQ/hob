@@ -1,23 +1,23 @@
-# Mabel plugins
+# Garth plugins
 
-A plugin is a folder with a `mabel-plugin.json`. It can add any mix of:
+A plugin is a folder with a `garth-plugin.json`. It can add any mix of:
 
 - **Skills**: plain-English instructions for a kind of task. Anyone can write one.
-- **Python tools**: small scripts Mabel can call. They run in Mabel's sandbox.
+- **Python tools**: small scripts Garth can call. They run in Garth's sandbox.
 - **Connectors**: any [MCP](https://modelcontextprotocol.io) server: a program on this computer, or an online one at a link.
 
-Mabel also installs **MCP bundles** (`.mcpb`, the format Claude Desktop uses) as they are.
+Garth also installs **MCP bundles** (`.mcpb`, the format Claude Desktop uses) as they are.
 
-Mabel's own Web search, Code & charts and PDF features are built-in plugins in this same format. See [`app/plugins/`](../../app/plugins).
+Garth's own Web search, Code & charts and PDF features are built-in plugins in this same format. See [`app/plugins/`](../../app/plugins).
 
 ## Pages
 
 | | |
 |---|---|
 | [Skills](skills.md) | Plain-English instructions for a kind of task. Anyone can write one, in 5 minutes. |
-| [Python tools](python-tools.md) | Small scripts Mabel can call, run in Mabel's sandbox. |
+| [Python tools](python-tools.md) | Small scripts Garth can call, run in Garth's sandbox. |
 | [Connectors (MCP)](connectors.md) | Any MCP server, on this computer or online, plus `.mcpb` bundles. |
-| [Reference](reference.md) | Every `mabel-plugin.json` field, settings, home screen starters. |
+| [Reference](reference.md) | Every `garth-plugin.json` field, settings, home screen starters. |
 
 ## What's built in
 
@@ -31,6 +31,6 @@ Mabel's own Web search, Code & charts and PDF features are built-in plugins in t
 
 Zip the folder (or the folder that contains it). Others add it with **Settings → Plugins → Add plugin**. Installing a newer zip with the same `id` replaces the old copy.
 
-If something's wrong, the plugin's card shows the exact problem, for example `mabel-plugin.json: tools[0].run must be a path inside the plugin folder`.
+If something's wrong, the plugin's card shows the exact problem, for example `garth-plugin.json: tools[0].run must be a path inside the plugin folder`.
 
 [Plugins overview](README.md) · [Skills](skills.md) · [Python tools](python-tools.md) · [Connectors (MCP)](connectors.md) · [Reference](reference.md)

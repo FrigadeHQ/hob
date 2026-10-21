@@ -1,12 +1,12 @@
 # AGENTS.md
 
-Guide for anyone (person or coding agent) working on this repository: what Mabel is, how it's put together, how to run and test it, and the rules the code follows. User-facing docs live in [README.md](README.md) and [docs/](docs/README.md).
+Guide for anyone (person or coding agent) working on this repository: what Garth is, how it's put together, how to run and test it, and the rules the code follows. User-facing docs live in [README.md](README.md) and [docs/](docs/README.md).
 
-## What Mabel is
+## What Garth is
 
 A desktop AI assistant that runs entirely on the user's computer (Mac, Windows, Linux). It picks the best open model the machine can run, downloads it once, and then works offline. Like a cloud coworker app, it can work with the user's files and folders, run Python, make charts, read and fill PDFs, look at images, search the web (optional), and connect to other apps through MCP. Chats, files and models never leave the machine.
 
-Mascot and brand: Mabel, a round lavender pixel-art face (`app/src/shared/mascot.ts`). The UI is a warm, light/dark theme. MIT licensed.
+Mascot and brand: Garth, a round lavender pixel-art face (`app/src/shared/mascot.ts`). The UI is a warm, light/dark theme. MIT licensed.
 
 ## Repository layout
 
@@ -16,16 +16,16 @@ app/                 the Electron app (everything users run)
   src/engine/        the model worker (node-llama-cpp in a utility process)
   src/renderer/src/  React UI (screens, components, styles)
   src/shared/        types and pure logic used by both sides
-  src/preload/       the window.mabel bridge (contextIsolation)
+  src/preload/       the window.garth bridge (contextIsolation)
   plugins/           built-in plugins (code, pdf, web, mac-apps), plain folders
-  native/            Swift helpers for macOS (mabel-pdf: PDFKit + Vision; mabel-mac: Calendar via EventKit, Mail permission)
+  native/            Swift helpers for macOS (garth-pdf: PDFKit + Vision; garth-mac: Calendar via EventKit, Mail permission)
   resources/         things shipped next to the app (built helpers in resources/bin, licenses)
   build/             icons, installer art, entitlements, render scripts
   scripts/           native build, icon/brand generation, Mac release
   test/              unit tests (vitest)
   e2e/               end-to-end tests (Playwright driving Electron)
 packages/picker/     picks the best model for the hardware (pure, tested)
-catalog/             catalog.json: the models Mabel can offer, pinned files and checksums
+catalog/             catalog.json: the models Garth can offer, pinned files and checksums
 docs/                user and plugin-author docs, README assets
 .github/workflows/   ci.yml (tests on Mac, Windows, Linux), release.yml (installers on v* tags)
 ```
@@ -33,18 +33,18 @@ docs/                user and plugin-author docs, README assets
 ## How it works
 
 ### Start-up and models
-- `main/setup.ts` (SetupController) probes the hardware (`hardware.ts`, via the engine), loads the catalog (`catalog.ts`, remote with a bundled fallback) and asks `@mabel/picker` for a recommendation.
+- `main/setup.ts` (SetupController) probes the hardware (`hardware.ts`, via the engine), loads the catalog (`catalog.ts`, remote with a bundled fallback) and asks `@garth/picker` for a recommendation.
 - First run: a small **starter** model downloads first so chat opens in minutes, then the recommended model downloads in the background ("Getting smarter… N%") and replaces it.
 - Downloads (`downloader.ts`) resume, restart stalled connections, and are checked against a pinned sha256. They can be cancelled from Settings.
 - `main/engine.ts` talks to `src/engine/worker.ts` (a separate process running node-llama-cpp). Loads, unloads and chats never overlap (`engine/serial.ts`).
 - **Speed:**
   - The worker keeps one sequence for the model's whole life, so a request that starts like the last one only reads what's new.
-  - Mabel reads ahead whatever the user is looking at (`chat:warm`, `readAhead` in `agent/turn.ts`): at start-up, when a chat opens, after each reply, and for a new chat before it exists, in the folder it will get. Anything that changes the system prompt or tool list early (a different chat folder, a different tool set) means reading ~3,000 tokens again (about 4 s on gpt-oss-20b), so keep what a reply sends and what is read ahead identical (`conversation()`).
+  - Garth reads ahead whatever the user is looking at (`chat:warm`, `readAhead` in `agent/turn.ts`): at start-up, when a chat opens, after each reply, and for a new chat before it exists, in the folder it will get. Anything that changes the system prompt or tool list early (a different chat folder, a different tool set) means reading ~3,000 tokens again (about 4 s on gpt-oss-20b), so keep what a reply sends and what is read ahead identical (`conversation()`).
   - With memory for both, the starter model stays loaded next to the big one for naming chats (`loadSide`), so that doesn't push the conversation out.
   - Thinking starts short and grows once the model calls a tool (`thoughtBudgetWithTools`), so it works the same in any language.
 
 ### A chat turn (`main/agent/turn.ts`)
-1. The user message is stored (`store.ts`, node:sqlite), and the system prompt is built (`agent/prompt.ts`): the chat's folder, project folders and instructions, skills, plugin lines, and an "About Mabel" section so it can answer questions about itself.
+1. The user message is stored (`store.ts`, node:sqlite), and the system prompt is built (`agent/prompt.ts`): the chat's folder, project folders and instructions, skills, plugin lines, and an "About Garth" section so it can answer questions about itself.
 2. The model streams tokens and calls tools. Each tool call goes through:
    - `tool.refuse` (e.g. no saving skills after reading web pages);
    - the permission gate `agent/permissions.ts` `decide()`: chat folder automatic; project folders read automatically, new files automatic, changes ask; elsewhere asks for access or is denied; system and hidden folders are never offered;
@@ -73,7 +73,7 @@ docs/                user and plugin-author docs, README assets
 - `look_at_image` shrinks images to 768 px, sends them, and returns text. Never probe the engine while a turn is running: it's busy and would deadlock.
 
 ### Plugins (`main/plugins/`)
-- A plugin is a folder with `mabel-plugin.json` (`manifest.ts`). It can carry:
+- A plugin is a folder with `garth-plugin.json` (`manifest.ts`). It can carry:
   - skills (`skills/<name>/SKILL.md`, Agent Skills format);
   - Python tools;
   - MCP servers: stdio (`mcp.ts`), HTTP with OAuth (`mcpHttp.ts`, `oauth.ts`), and `.mcpb` bundles (`mcpb.ts`).
@@ -95,10 +95,10 @@ docs/                user and plugin-author docs, README assets
 - Dictation runs Whisper in a web worker (`speech/`), fully local.
 
 ### Data on disk
-- App data: `~/Library/Application Support/Mabel` (or the OS equivalent). It holds `mabel.db`, `settings.json`, models, python, vision, plugins and speech.
-- Chat files: a folder per chat under `~/Documents/Mabel` (configurable).
+- App data: `~/Library/Application Support/Garth` (or the OS equivalent). It holds `garth.db`, `settings.json`, models, python, vision, plugins and speech.
+- Chat files: a folder per chat under `~/Documents/Garth` (configurable).
 - `migrate.ts` moves data over from the app's earlier names.
-- `MABEL_USER_DATA=<dir>` uses a separate profile (tests do this).
+- `GARTH_USER_DATA=<dir>` uses a separate profile (tests do this).
 
 ## Commands
 
@@ -114,14 +114,14 @@ pnpm -C app native            # rebuild the Swift helpers (Mac)
 sh app/scripts/make-icons.sh  # regenerate icon and logo from the pixel art
 ```
 
-- **Test mode:** `MABEL_FAKE=1` swaps in a fake engine, fake downloads, a fake image model and fake Calendar/Mail, so the whole app runs without models. Messages starting with `__tools__ [[name, args], …]` make the fake model call those tools; see `main/fake.ts` for other triggers (`__slow__`, `__think__`, …).
-- **Hidden window:** `MABEL_BACKGROUND=1` hides the window. Playwright sets it locally; CI shows windows, because hidden ones pause animation frames on Linux and Windows.
-- **Local-only evals:** files named `e2e/zz-*.spec.ts` are gitignored. They're for evals against real models (`MABEL_REAL=1`) and screenshots, never in CI.
+- **Test mode:** `GARTH_FAKE=1` swaps in a fake engine, fake downloads, a fake image model and fake Calendar/Mail, so the whole app runs without models. Messages starting with `__tools__ [[name, args], …]` make the fake model call those tools; see `main/fake.ts` for other triggers (`__slow__`, `__think__`, …).
+- **Hidden window:** `GARTH_BACKGROUND=1` hides the window. Playwright sets it locally; CI shows windows, because hidden ones pause animation frames on Linux and Windows.
+- **Local-only evals:** files named `e2e/zz-*.spec.ts` are gitignored. They're for evals against real models (`GARTH_REAL=1`) and screenshots, never in CI.
 
 ## Releasing
 
 - **CI:** `ci.yml` runs typecheck, unit and e2e tests on macOS, Windows and Linux for every push to main.
-- **Releases:** push a tag `vX.Y.Z` matching `app/package.json`. `release.yml` builds `Mabel-mac-arm64.dmg`, `Mabel-windows-x64.exe` and `Mabel-linux-x86_64.AppImage`, signs and notarizes the Mac one with repository secrets, and publishes a GitHub release. The README download links point at the latest release.
+- **Releases:** push a tag `vX.Y.Z` matching `app/package.json`. `release.yml` builds `Garth-mac-arm64.dmg`, `Garth-windows-x64.exe` and `Garth-linux-x86_64.AppImage`, signs and notarizes the Mac one with repository secrets, and publishes a GitHub release. The README download links point at the latest release.
 - **A signed Mac build by hand:** `sh app/scripts/release-mac.sh`. It needs the Developer ID certificate and a notarytool profile.
 - **electron-builder gotchas:**
   - Build into `dist/` only; another output folder makes it pack the whole project.

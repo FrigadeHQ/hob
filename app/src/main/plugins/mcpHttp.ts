@@ -182,7 +182,7 @@ export class HttpTransport implements Transport {
       if (r.value.event === 'endpoint') {
         const endpoint = new URL(r.value.data.trim(), this.spec.url)
         // requests carry the user's key or token: they only go to the server the user connected
-        if (endpoint.origin !== new URL(this.spec.url).origin) { done(); await events.return(undefined); throw new Error(`${host(this.spec.url)} tried to send requests to another site. Mabel won't connect to it.`) }
+        if (endpoint.origin !== new URL(this.spec.url).origin) { done(); await events.return(undefined); throw new Error(`${host(this.spec.url)} tried to send requests to another site. Garth won't connect to it.`) }
         this.legacy = endpoint.toString()
         break
       }

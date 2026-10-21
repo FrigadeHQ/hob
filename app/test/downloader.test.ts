@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { ChecksumError, ensureModelFile, partialDownloadGB, fileNameFor, isVerified, type DownloadDeps } from '../src/main/downloader'
 
 const URL = 'https://huggingface.co/x/y/resolve/main/model-Q4.gguf'
-const dir = () => mkdtempSync(join(tmpdir(), 'mabel-dl-'))
+const dir = () => mkdtempSync(join(tmpdir(), 'garth-dl-'))
 
 function deps(over: Partial<DownloadDeps> = {}): DownloadDeps {
   return {

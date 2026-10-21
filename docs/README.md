@@ -1,33 +1,33 @@
-# Mabel
+# Garth
 
-The full AI coworker experience. None of the cloud. Tell Mabel what you need done: it works on your files, figures out the steps, and hands back finished work, all on your own computer using open-weight models.
+The full AI coworker experience. None of the cloud. Tell Garth what you need done: it works on your files, figures out the steps, and hands back finished work, all on your own computer using open-weight models.
 
-[Download](https://github.com/FrigadeHQ/mabel/releases/latest) · [Plugin guide](plugins/README.md) · [Contributing](../CONTRIBUTING.md) · [MIT license](../LICENSE)
+[Download](https://github.com/FrigadeHQ/garth/releases/latest) · [Plugin guide](plugins/README.md) · [Contributing](../CONTRIBUTING.md) · [MIT license](../LICENSE)
 
-## Why Mabel
+## Why Garth
 
 Desktop AI apps like Claude and ChatGPT work on your files, run code, search the web and ask before changing anything. Existing solutions that run AI locally mostly give you a raw chat sandbox with no tools and requires you to understand which models are most compatible with your system.
 
-Mabel strives to work with the same quality and functionality as Claude and ChatGPT, except running its models entirely on your own computer.
+Garth strives to work with the same quality and functionality as Claude and ChatGPT, except running its models entirely on your own computer.
 
-- **No setup.** Mabel checks your hardware and downloads the best model it can run well. No account or model understanding required.
+- **No setup.** Garth checks your hardware and downloads the best model it can run well. No account or model understanding required.
 - **Works on your files.** Projects, folders, spreadsheets, PDFs, photos, and much more.
 - **Safe by default.** Approval confirmations before anything in your folders changes, Undo for every task, and code runs in a sandbox.
 - **Free and open source.** [MIT licensed](../LICENSE). No account, no subscription, no limits.
 
-*A mabel is a household spirit from English folklore that quietly helps with the chores.*
+*A garth is a household spirit from English folklore that quietly helps with the chores.*
 
 ## Private
 
-The model runs on your computer with [llama.cpp](https://github.com/ggml-org/llama.cpp) (Metal on Mac, CUDA or Vulkan elsewhere). Chats and files stay on your machine, and there is no telemetry. Mabel only goes online to download models and check for new ones, and, while Web access is on, to search the web, let its code fetch data (like stock prices) and install Python packages from PyPI. Turn Web access off in Settings to keep everything offline. Connectors you add also go online.
+The model runs on your computer with [llama.cpp](https://github.com/ggml-org/llama.cpp) (Metal on Mac, CUDA or Vulkan elsewhere). Chats and files stay on your machine, and there is no telemetry. Garth only goes online to download models and check for new ones, and, while Web access is on, to search the web, let its code fetch data (like stock prices) and install Python packages from PyPI. Turn Web access off in Settings to keep everything offline. Connectors you add also go online.
 
 ## Models
 
-Mabel picks from a curated list of open models, from Qwen3 for 8 GB laptops up to gpt-oss 120B for workstations. Models are ranked on agent work (multi-step tasks and tool use), and split between graphics and system memory when that's faster. You can switch models any time.
+Garth picks from a curated list of open models, from Qwen3 for 8 GB laptops up to gpt-oss 120B for workstations. Models are ranked on agent work (multi-step tasks and tool use), and split between graphics and system memory when that's faster. You can switch models any time.
 
 ## What it can do
 
-| Feature | What Mabel does |
+| Feature | What Garth does |
 |---|---|
 | Files and projects | Work on attached files, or on folders grouped into projects with their own instructions |
 | Code | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow, plus any package from PyPI it needs; sandboxed to the chat's folder |
@@ -40,9 +40,9 @@ Mabel picks from a curated list of open models, from Qwen3 for 8 GB laptops up t
 
 ## Plugins
 
-A plugin is a folder with a `mabel-plugin.json`. It can add [skills](plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](plugins/python-tools.md), and [connectors](plugins/connectors.md) to any MCP server, including `.mcpb` bundles. Mabel's own web search, code and PDF features are plugins too, in [`app/plugins/`](../app/plugins).
+A plugin is a folder with a `garth-plugin.json`. It can add [skills](plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](plugins/python-tools.md), and [connectors](plugins/connectors.md) to any MCP server, including `.mcpb` bundles. Garth's own web search, code and PDF features are plugins too, in [`app/plugins/`](../app/plugins).
 
-You don't have to write skills by hand: after Mabel does something you'll want again, say "save this as a skill". It keeps the steps and the code that worked, and shows you both before saving.
+You don't have to write skills by hand: after Garth does something you'll want again, say "save this as a skill". It keeps the steps and the code that worked, and shows you both before saving.
 
 See the [plugin guide](plugins/README.md) and the [reference](plugins/reference.md).
 
@@ -52,7 +52,7 @@ Requires Node.js 24 and pnpm 10.
 
 ```sh
 pnpm install
-pnpm dev              # run Mabel
+pnpm dev              # run Garth
 pnpm -C app test      # unit tests
 pnpm -C app e2e       # end-to-end tests (hidden window, stand-in model)
 pnpm -C app dist      # installer for this computer

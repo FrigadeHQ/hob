@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { SetupState, VisionState } from '../../../shared/types'
-import { mabel } from '../api'
+import { garth } from '../api'
 import { Mascot } from './Mascot'
 
 const gbOf = (n: number) => (n < 10 ? n.toFixed(1) : Math.round(n).toString())
@@ -29,10 +29,10 @@ function Tooltip({ content, children }: { content: React.ReactNode; children: Re
   )
 }
 
-/** Mabel's eyes download after the main model; shown here until they're ready */
+/** Garth's eyes download after the main model; shown here until they're ready */
 function useVision() {
   const [v, setV] = useState<VisionState>({ phase: 'off' })
-  useEffect(() => { void mabel.vision.getState().then(setV); return mabel.vision.onState(setV) }, [])
+  useEffect(() => { void garth.vision.getState().then(setV); return garth.vision.onState(setV) }, [])
   return v
 }
 
@@ -44,7 +44,7 @@ export function Status({ state }: { state: SetupState }) {
     return (
       <span className="flex min-w-0 items-center gap-2 text-meta text-ink-soft">
         <Mascot mini size={24} alive busy ticklish />
-        <Tooltip content={<><span className="block font-medium">Mabel is ready to use</span><span className="block text-ink-soft">It's adding photo support, so it can look at images and screenshots: {pct}%.</span></>}>
+        <Tooltip content={<><span className="block font-medium">Garth is ready to use</span><span className="block text-ink-soft">It's adding photo support, so it can look at images and screenshots: {pct}%.</span></>}>
           <span data-testid="status" tabIndex={0} className="flex items-center gap-2 cursor-default outline-none">
             <span>Adding photo support… {pct}%</span>
           </span>
@@ -56,11 +56,11 @@ export function Status({ state }: { state: SetupState }) {
   const label = state.phase === 'downloading' ? (state.note ?? `Getting smarter… ${pct}%`) : (state.note ?? 'Ready')
   const tip = state.phase === 'downloading' ? (
     <>
-      <span className="block font-medium">{state.chatReady ? 'Mabel is ready to use' : 'Setting up Mabel'}</span>
+      <span className="block font-medium">{state.chatReady ? 'Garth is ready to use' : 'Setting up Garth'}</span>
       <span className="block text-ink-soft">
         {state.chatReady ? 'A smarter model is downloading' : `Downloading ${state.target.name}`}: {gbOf(state.target.sizeGB * Math.min(1, state.progress))} of {gbOf(state.target.sizeGB)} GB{timeLeft(state.etaSec) && `, ${timeLeft(state.etaSec)}`}.
       </span>
-      {state.chatReady && <span className="mt-1 block text-ink-soft">Mabel switches to it by itself when it's done.</span>}
+      {state.chatReady && <span className="mt-1 block text-ink-soft">Garth switches to it by itself when it's done.</span>}
     </>
   ) : (
     <>
@@ -70,7 +70,7 @@ export function Status({ state }: { state: SetupState }) {
   )
   return (
     <span className="flex min-w-0 items-center gap-2 text-meta text-ink-soft">
-      {/* Mabel herself shows how she's doing: smiling when ready, hopping while she gets smarter, unsure when something went wrong */}
+      {/* Garth shows how things are going: smiling when ready, hopping while getting smarter, unsure when something went wrong */}
       <Mascot mini size={24} alive busy={state.phase === 'downloading'} base={state.phase === 'ready' && state.canRetry ? 'skeptical' : 'smile'} ticklish />
       <Tooltip content={tip}>
         <span data-testid="status" tabIndex={0} className="flex items-center gap-2 cursor-default outline-none">
@@ -78,7 +78,7 @@ export function Status({ state }: { state: SetupState }) {
         </span>
       </Tooltip>
       {state.phase === 'ready' && state.canRetry && (
-        <button data-testid="status-retry" onClick={() => mabel.setup.retry()} className="underline underline-offset-2 hover:text-ink">Try again</button>
+        <button data-testid="status-retry" onClick={() => garth.setup.retry()} className="underline underline-offset-2 hover:text-ink">Try again</button>
       )}
     </span>
   )

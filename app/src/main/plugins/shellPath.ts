@@ -11,8 +11,8 @@ export function loginPath(): Promise<string> {
   const fallback = [process.env.PATH, '/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin'].filter(Boolean).join(':')
   if (process.platform === 'win32') return (cached = Promise.resolve(process.env.PATH ?? ''))
   cached = new Promise((resolve) => {
-    execFile(process.env.SHELL || '/bin/zsh', ['-ilc', 'printf "__MABEL__%s__MABEL__" "$PATH"'], { timeout: 5000 }, (err, out) => {
-      const m = /__MABEL__(.*)__MABEL__/.exec(String(out))
+    execFile(process.env.SHELL || '/bin/zsh', ['-ilc', 'printf "__GARTH__%s__GARTH__" "$PATH"'], { timeout: 5000 }, (err, out) => {
+      const m = /__GARTH__(.*)__GARTH__/.exec(String(out))
       resolve(!err && m?.[1] ? `${m[1]}:${fallback}` : fallback)
     })
   })

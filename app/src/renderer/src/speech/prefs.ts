@@ -11,8 +11,8 @@ export const LANGUAGES: Language[] = [
 const get = (k: string) => { try { return localStorage.getItem(k) ?? '' } catch { return '' } }
 const set = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* private window: just for this session */ } }
 export const prefs = {
-  mic: () => get('mabel-mic') || 'default',
-  setMic: (id: string) => set('mabel-mic', id),
-  language: () => get('mabel-dictation-language'),
-  setLanguage: (id: string) => set('mabel-dictation-language', id),
+  mic: () => get('garth-mic') || 'default',
+  setMic: (id: string) => set('garth-mic', id),
+  language: () => get('garth-dictation-language'),
+  setLanguage: (id: string) => set('garth-dictation-language', id),
 }

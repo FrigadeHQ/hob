@@ -1,11 +1,11 @@
 {
-  "name": "mabel",
+  "name": "garth",
   "private": true,
   "packageManager": "pnpm@10.7.0",
   "scripts": {
     "test": "pnpm -r test",
-    "dev": "pnpm --filter @mabel/app dev",
-    "validate-catalog": "pnpm --filter @mabel/picker exec tsx ../../catalog/validate.ts"
+    "dev": "pnpm --filter @garth/app dev",
+    "validate-catalog": "pnpm --filter @garth/picker exec tsx ../../catalog/validate.ts"
   },
   "license": "MIT"
 }

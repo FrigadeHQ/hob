@@ -45,7 +45,7 @@ function withRunLine(name: string, instructions: string, files: Record<string, s
   return `${instructions.trim()}\n\nScripts in this skill: run them with run_python, passing ${missing.map((f) => `script "${name}/${f}"`).join(' or ')} and the inputs as args.`
 }
 
-/** Mabel writes down a routine the user taught it, with the code that worked. Always asks: it changes how Mabel behaves later. */
+/** Garth writes down a routine the user taught it, with the code that worked. Always asks: it changes how Garth behaves later. */
 export const saveSkillTool = (src: SkillSource): Tool<SaveArgs> => ({
   spec: {
     name: 'save_skill',
@@ -66,7 +66,7 @@ export const saveSkillTool = (src: SkillSource): Tool<SaveArgs> => ({
   },
   title: (a) => `Saved the “${nameOf(a.name)}” skill`,
   // a web page read in this message could be steering the model; a skill would keep that going in later chats
-  refuse: (_a, ctx) => (ctx.untrusted ? "Mabel can't save skills after reading web pages in the same message. Tell the user to ask again in a new message." : undefined),
+  refuse: (_a, ctx) => (ctx.untrusted ? "Garth can't save skills after reading web pages in the same message. Tell the user to ask again in a new message." : undefined),
   action: () => ({ kind: 'app', ask: true }),
   ask: (a) => {
     const n = nameOf(a.name)

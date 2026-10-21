@@ -1,18 +1,18 @@
 import { isAbsolute, normalize } from 'node:path'
 
-/** A tool a plugin adds: a Python script (any plugin) or Mabel's own code (built-in plugins only). */
+/** A tool a plugin adds: a Python script (any plugin) or Garth's own code (built-in plugins only). */
 export type ManifestTool = {
   name: string
   description: string
   params: Record<string, unknown>
   /** Python script, relative to the plugin folder */
   run?: string
-  /** built-in plugins only: one of Mabel's own tools, by name */
+  /** built-in plugins only: one of Garth's own tools, by name */
   native?: string
   /** step title, with {arg} placeholders */
   title?: string
 }
-/** a program on this computer (runtime: how an .mcpb bundle runs it, so Mabel can use its own Node or Python) */
+/** a program on this computer (runtime: how an .mcpb bundle runs it, so Garth can use its own Node or Python) */
 export type McpStdioConfig = { command: string; args?: string[]; env?: Record<string, string>; runtime?: 'node' | 'python' | 'uv' | 'binary' }
 /** a server on the internet; oauth.clientId when its maker hands out client ids instead of letting apps register */
 export type McpUrlConfig = { url: string; type?: 'http' | 'sse'; headers?: Record<string, string>; oauth?: { clientId: string; clientSecret?: string } }
@@ -33,7 +33,7 @@ export type Manifest = {
   tools: ManifestTool[]
   mcpServers: Record<string, McpServerConfig>
   settings: PluginSetting[]
-  /** a line added to Mabel's instructions while the plugin is on, e.g. "For PDFs, use read_pdf." */
+  /** a line added to Garth's instructions while the plugin is on, e.g. "For PDFs, use read_pdf." */
   prompt?: string
   /** only on these systems (process.platform names, e.g. ["darwin"]); everywhere when left out */
   platforms?: string[]
@@ -45,7 +45,7 @@ const SETTING_KEY = /^[A-Z][A-Z0-9_]{0,63}$/
 const KINDS: SettingKind[] = ['text', 'number', 'boolean', 'directory', 'file']
 
 class Bad extends Error {}
-function fail(msg: string): never { throw new Bad(`mabel-plugin.json: ${msg}`) }
+function fail(msg: string): never { throw new Bad(`garth-plugin.json: ${msg}`) }
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 const str = (v: unknown, field: string, required = true): string => {
   if (v === undefined && !required) return ''
@@ -63,7 +63,7 @@ const inside = (p: string, field: string) => {
   return p
 }
 
-/** Check a plugin's mabel-plugin.json and fill in defaults. Errors are written for the plugin's author. */
+/** Check a plugin's garth-plugin.json and fill in defaults. Errors are written for the plugin's author. */
 export function parseManifest(raw: unknown, opts: { builtin?: boolean } = {}): { manifest: Manifest } | { error: string } {
   try {
     if (!isObj(raw)) fail('must be a JSON object')
@@ -74,8 +74,8 @@ export function parseManifest(raw: unknown, opts: { builtin?: boolean } = {}): {
       const f = `tools[${i}]`
       if (!isObj(t)) fail(`${f} must be an object`)
       const native = t.native === undefined ? undefined : str(t.native, `${f}.native`)
-      if (native && !opts.builtin) fail(`${f}.native is only for plugins that ship with Mabel; use "run" with a Python script`)
-      // Mabel's own tools bring their name, description and parameters
+      if (native && !opts.builtin) fail(`${f}.native is only for plugins that ship with Garth; use "run" with a Python script`)
+      // Garth's own tools bring their name, description and parameters
       const name = native && t.name === undefined ? native : str(t.name, `${f}.name`)
       if (!TOOL_NAME.test(name)) fail(`${f}.name must be letters, digits or _, starting with a letter`)
       const params = t.params === undefined ? { type: 'object', properties: {} } : t.params

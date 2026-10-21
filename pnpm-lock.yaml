@@ -10,7 +10,7 @@ importers:
 
   app:
     dependencies:
-      '@mabel/picker':
+      '@garth/picker':
         specifier: workspace:^
         version: link:../packages/picker
       '@mozilla/readability':

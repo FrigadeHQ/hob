@@ -1,5 +1,5 @@
-// Mabel's icon and logo, from the same pixels as the app (src/shared/mascot.ts):
-//   build/icon.svg  (the app icon: Mabel on a warm rounded square), docs/assets/mabel-logo.svg (Mabel alone)
+// Garth's icon and logo, from the same pixels as the app (src/shared/mascot.ts):
+//   build/icon.svg  (the app icon: Garth on a warm rounded square), docs/assets/garth-logo.svg (Garth alone)
 // Then: build/render.cjs turns each into a PNG, and iconutil makes build/icon.icns (see scripts/make-icons.sh).
 import { writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -21,5 +21,5 @@ const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"
 </svg>
 `
 writeFileSync(join(root, 'build/icon.svg'), icon)
-writeFileSync(join(root, '../docs/assets/mabel-logo.svg'), `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 60 60" shape-rendering="crispEdges">${rects}</svg>\n`)
-console.log('wrote build/icon.svg and docs/assets/mabel-logo.svg')
+writeFileSync(join(root, '../docs/assets/garth-logo.svg'), `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 60 60" shape-rendering="crispEdges">${rects}</svg>\n`)
+console.log('wrote build/icon.svg and docs/assets/garth-logo.svg')

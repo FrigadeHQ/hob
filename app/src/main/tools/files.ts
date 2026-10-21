@@ -68,7 +68,7 @@ export const readFile: Tool<{ path: string }> = {
       return { text: `${head}${lines} lines\n---\n${all.slice(0, PREVIEW_CHARS)}${cut}` }
     }
     if (ext === '.pdf') {
-      // Mabel's PDF reader also reads scanned pages and lists a form's blanks
+      // Garth's PDF reader also reads scanned pages and lists a form's blanks
       try {
         const r = await readPdf.run({ path: p }, ctx)
         if (!r.failed) return { text: r.text }
@@ -149,7 +149,7 @@ function movesFromFile(file: string, ctx: TurnCtx): MoveArgs {
   const moves = movesOf(o)
   return moves.length ? { moves, listFile: p } : fail('it has no {"from", "to"} pairs')
 }
-/** "Rename 20 files in mabel-test" or "Move 3 files" */
+/** "Rename 20 files in garth-test" or "Move 3 files" */
 function describeMoves(moves: Move[]): { verb: 'Rename' | 'Move'; where: string } {
   const dirs = new Set(moves.flatMap((m) => [dirname(m.from), dirname(m.to)]))
   return dirs.size === 1 ? { verb: 'Rename', where: ` in ${basename([...dirs][0])}` } : { verb: 'Move', where: '' }
@@ -180,7 +180,7 @@ export const moveFiles: Tool<MoveArgs> = {
   async run(a, ctx) {
     if (a.fileError) return { text: a.fileError, failed: true, title: "Couldn't read the list of files" }
     const moves = movesOf(a).map((m) => ({ from: resolvePath(ctx, m.from), to: resolvePath(ctx, m.to) }))
-    if (!moves.length) return { text: 'No files given. Pass file: "moves.json" (a JSON list of {"from", "to"} full paths that run_python saved in the chat folder), or moves as a list of {"from", "to"} paths.', failed: true, title: "Couldn't move files: none given", detail: `Mabel got: ${JSON.stringify(a).slice(0, 500)}` }
+    if (!moves.length) return { text: 'No files given. Pass file: "moves.json" (a JSON list of {"from", "to"} full paths that run_python saved in the chat folder), or moves as a list of {"from", "to"} paths.', failed: true, title: "Couldn't move files: none given", detail: `Garth got: ${JSON.stringify(a).slice(0, 500)}` }
     if (moves.length > MAX_MOVES) return { text: `Too many at once (${moves.length}). Do at most ${MAX_MOVES} per call.`, failed: true, title: `Couldn't move ${files(moves.length)}: too many at once` }
     // check everything first, so a bad name doesn't leave the folder half renamed
     const done = moves.filter((m) => existsSync(m.to) && !lexists(m.from))

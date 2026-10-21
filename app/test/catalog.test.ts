@@ -6,7 +6,7 @@ import { loadCatalog } from '../src/main/catalog'
 import bundled from '../../catalog/catalog.json'
 import licenses from '../../catalog/licenses.json'
 
-const cachePath = () => join(mkdtempSync(join(tmpdir(), 'mabel-cat-')), 'catalog.json')
+const cachePath = () => join(mkdtempSync(join(tmpdir(), 'garth-cat-')), 'catalog.json')
 const remote = { ...bundled, models: bundled.models.slice(0, 2) }
 const ok = (body: unknown) => (async () => new Response(JSON.stringify(body))) as unknown as typeof fetch
 const fail = (async () => { throw new Error('offline') }) as unknown as typeof fetch

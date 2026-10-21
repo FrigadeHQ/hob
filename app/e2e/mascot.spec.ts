@@ -3,8 +3,8 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-test('mini Mabel in the status corner watches the cursor and laughs when tickled', async () => {
-  const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: mkdtempSync(join(tmpdir(), 'mabel-e2e-')) } })
+test('mini Garth in the status corner watches the cursor and laughs when tickled', async () => {
+  const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })

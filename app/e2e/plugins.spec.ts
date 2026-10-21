@@ -6,7 +6,7 @@ import { join } from 'node:path'
 const main = join(import.meta.dirname, '../out/main/index.js')
 
 async function launch() {
-  const app = await electron.launch({ args: [main], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: mkdtempSync(join(tmpdir(), 'mabel-e2e-')) } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
@@ -63,7 +63,7 @@ test('skills start empty: nothing in the / menu, and Skills invites you to make 
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-skills').click()
   await expect(page.getByTestId('skill-card')).toHaveCount(0)
-  await expect(page.getByTestId('settings')).toContainText('Teach Mabel something')
+  await expect(page.getByTestId('settings')).toContainText('Teach Garth something')
   await app.close()
 })
 
@@ -78,7 +78,7 @@ test('connecting an online app by link signs in through the browser and shows on
   await page.getByTestId('connect-command').fill(fx.url)
   await expect(page.getByTestId('connect-dialog')).toContainText('Headers (optional)')
   await page.getByTestId('connect-save').click()
-  await expect(page.getByTestId('plugins-notice')).toHaveText('Connected. Mabel can use it in your next message.')
+  await expect(page.getByTestId('plugins-notice')).toHaveText('Connected. Garth can use it in your next message.')
   expect(fx.state.registered).toHaveLength(1)
   const card = page.locator('[data-testid=plugin][data-id=local-app]')
   await expect(card).toContainText('Connects to an online service')
@@ -91,7 +91,7 @@ test('connecting an online app by link signs in through the browser and shows on
 test('an .mcpb bundle is added with its icon and asks for the settings it needs', async () => {
   const { execFileSync } = await import('node:child_process')
   const { copyFileSync, mkdirSync, renameSync, writeFileSync } = await import('node:fs')
-  const root = mkdtempSync(join(tmpdir(), 'mabel-mcpb-'))
+  const root = mkdtempSync(join(tmpdir(), 'garth-mcpb-'))
   const dir = join(root, 'b')
   mkdirSync(join(dir, 'server'), { recursive: true })
   copyFileSync(join(import.meta.dirname, '../test/fixtures/mcp-server.mjs'), join(dir, 'server/index.mjs'))
@@ -109,7 +109,7 @@ test('an .mcpb bundle is added with its icon and asks for the settings it needs'
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-skills').click()
   await page.getByTestId('settings-nav-connectors').click()
-  await page.evaluate((f) => (window as unknown as { mabel: { plugins: { addFile(p: string): Promise<unknown> } } }).mabel.plugins.addFile(f), file)
+  await page.evaluate((f) => (window as unknown as { garth: { plugins: { addFile(p: string): Promise<unknown> } } }).garth.plugins.addFile(f), file)
   const card = page.locator('[data-testid=plugin][data-id=bundle-notes]')
   await expect(card).toContainText('Bundle Notes')
   await expect(card.locator('img')).toHaveAttribute('src', /^data:image\/png/)
@@ -123,7 +123,7 @@ test('an .mcpb bundle is added with its icon and asks for the settings it needs'
   await app.close()
 })
 
-test('Mabel saves a skill with a script: the card shows the code, and it lands in the / menu', async () => {
+test('Garth saves a skill with a script: the card shows the code, and it lands in the / menu', async () => {
   const { app, page } = await launch()
   const save = { name: 'spending', description: 'Monthly spending chart from a bank CSV', instructions: 'Run the script on the CSV.', files: { 'make_report.py': "import sys\nprint('report for', sys.argv[1])\n" } }
   await page.getByTestId('composer-input').fill(`__tools__ [["save_skill",${JSON.stringify(save)}]]`)

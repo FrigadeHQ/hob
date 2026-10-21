@@ -16,7 +16,7 @@ it("doesn't count plans, offers, questions or honest failures", () => {
     "I haven't renamed anything yet.",
     'Here is how they would be renamed:',
     'Want me to move them into a folder?',
-    "I couldn't move the files because Mabel doesn't have access.",
+    "I couldn't move the files because Garth doesn't have access.",
     'Once you allow it, the files will be renamed.',
     'Should these be deleted?',
     'Here are the new names:\n```\nIMG_1.jpg → renamed.jpg\n```',
@@ -25,8 +25,8 @@ it("doesn't count plans, offers, questions or honest failures", () => {
 })
 
 it('explains blocked code in plain next steps', () => {
-  expect(pythonHint("PermissionError: [Errno 1] Operation not permitted: '/Users/eric/Desktop/mabel-test/IMG_1.jpg'")).toContain('move_files')
-  expect(pythonHint("FileNotFoundError: [Errno 2] No such file or directory: '~/Desktop/mabel-test'")).toContain("doesn't understand ~")
+  expect(pythonHint("PermissionError: [Errno 1] Operation not permitted: '/Users/eric/Desktop/garth-test/IMG_1.jpg'")).toContain('move_files')
+  expect(pythonHint("FileNotFoundError: [Errno 2] No such file or directory: '~/Desktop/garth-test'")).toContain("doesn't understand ~")
   expect(pythonHint('all good')).toBe('')
 })
 
@@ -39,7 +39,7 @@ it('spots replies that stop to ask "shall I go ahead?"', () => {
     'Please approve this request. Once I have the file list, I’ll rename them.',
   ]) expect(asksToProceed(t), t).toBe(true)
   for (const t of [
-    'Renamed 20 files in mabel-test.',
+    'Renamed 20 files in garth-test.',
     'Which folder do you mean, Desktop or Downloads?',
     'Here are 5 dinner ideas. Enjoy!',
   ]) expect(asksToProceed(t), t).toBe(false)

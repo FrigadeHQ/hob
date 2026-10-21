@@ -8,7 +8,7 @@ import { deleteFile, listFiles, moveFile, moveFiles, openFolder, readFile, write
 import { resolvePath } from '../src/main/agent/tool'
 
 function ctx(): TurnCtx & { ops: UndoOp[]; trashed: string[] } {
-  const root = mkdtempSync(join(tmpdir(), 'mabel-tools-'))
+  const root = mkdtempSync(join(tmpdir(), 'garth-tools-'))
   const chatDir = join(root, 'chat'); const grant = join(root, 'Downloads')
   mkdirSync(chatDir); mkdirSync(grant)
   const ops: UndoOp[] = []; const trashed: string[] = []
@@ -109,7 +109,7 @@ it('approval text names the real folder', () => {
 
 it('paths starting with ~ or $HOME mean the home folder, not a folder called "~" in the chat', () => {
   const c = { chatDir: '/chat' }
-  expect(resolvePath(c, '~/Desktop/mabel-test', '/Users/eric')).toBe(join('/Users/eric', 'Desktop', 'mabel-test'))
+  expect(resolvePath(c, '~/Desktop/garth-test', '/Users/eric')).toBe(join('/Users/eric', 'Desktop', 'garth-test'))
   expect(resolvePath(c, '~', '/Users/eric')).toBe(join('/Users/eric'))
   expect(resolvePath(c, '$HOME/Desktop', '/Users/eric')).toBe(join('/Users/eric', 'Desktop'))
   expect(resolvePath(c, '~notes.txt', '/Users/eric')).toBe(join('/chat', '~notes.txt'))

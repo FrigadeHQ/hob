@@ -7,7 +7,7 @@ let fx: Awaited<ReturnType<typeof startHttpFixture>> | undefined
 let client: McpClient | undefined
 afterEach(async () => { client?.close(); await fx?.close(); fx = undefined; client = undefined })
 
-/** stands in for the user's browser: follows the server's redirect back to Mabel */
+/** stands in for the user's browser: follows the server's redirect back to Garth */
 const browser = (opened: string[] = []) => async (url: string) => {
   opened.push(url)
   const r = await fetch(url, { redirect: 'manual' })
@@ -16,7 +16,7 @@ const browser = (opened: string[] = []) => async (url: string) => {
 }
 const www = async (url: string) => (await fetch(url, { method: 'POST', body: '{}' })).headers.get('www-authenticate') ?? ''
 
-it('signs in: finds the auth server, registers Mabel, uses PKCE, and the token works', async () => {
+it('signs in: finds the auth server, registers Garth, uses PKCE, and the token works', async () => {
   fx = await startHttpFixture({ auth: true })
   const opened: string[] = []
   const s = await signIn({ serverUrl: fx.url, wwwAuthenticate: await www(fx.url), open: browser(opened) })

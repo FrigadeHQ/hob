@@ -23,7 +23,7 @@ const ENGINES: { name: string; weight?: number }[] = [
 export function searxSettings(o: { port: number; secret: string }): string {
   return `use_default_settings: true
 general:
-  instance_name: "Mabel"
+  instance_name: "Garth"
 server:
   secret_key: "${o.secret}"
   bind_address: "127.0.0.1"

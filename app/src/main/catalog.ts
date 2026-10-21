@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
-import { validateCatalog, type Catalog } from '@mabel/picker'
+import { validateCatalog, type Catalog } from '@garth/picker'
 
-export const CATALOG_URL = 'https://raw.githubusercontent.com/FrigadeHQ/mabel/main/catalog/catalog.json'
+export const CATALOG_URL = 'https://raw.githubusercontent.com/FrigadeHQ/garth/main/catalog/catalog.json'
 
 export async function loadCatalog(opts: { url: string; cachePath: string; bundled: unknown; licenses: string[]; fetchFn?: typeof fetch }): Promise<Catalog> {
   const fetchFn = opts.fetchFn ?? fetch

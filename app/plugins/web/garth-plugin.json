@@ -3,7 +3,7 @@
   "name": "Web search",
   "version": "1.0.0",
   "description": "Searches the web and reads pages when it helps. Searches run through a search engine on your computer.",
-  "author": "Mabel",
+  "author": "Garth",
   "icon": "globe",
   "permissions": { "network": true },
   "tools": [{ "native": "web_search" }, { "native": "fetch_url" }],

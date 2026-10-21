@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Download } from 'lucide-react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts'
 import { validateChart, type ChartSpec } from '../../../shared/chart'
-import { mabel } from '../api'
+import { garth } from '../api'
 
 const HEIGHT = 280
 const VARS = ['paper', 'surface', 'ink', 'ink-soft', 'muted', 'line', ...Array.from({ length: 8 }, (_, i) => `chart-${i + 1}`)] as const
@@ -150,7 +150,7 @@ async function toPng(svg: SVGSVGElement, spec: ChartSpec, c: Colors, items: { la
   return canvas.toDataURL('image/png')
 }
 
-/** A chart Mabel made (a .chart.json in the chat folder), drawn live; Download PNG saves an image of it. */
+/** A chart Garth made (a .chart.json in the chat folder), drawn live; Download PNG saves an image of it. */
 export function ChartCard({ path }: { path: string }) {
   const [spec, setSpec] = useState<ChartSpec | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -158,7 +158,7 @@ export function ChartCard({ path }: { path: string }) {
   const box = useRef<HTMLDivElement>(null)
   const c = useColors()
   useEffect(() => {
-    fetch(mabel.fileUrl(path)).then((r) => r.json()).then((j) => {
+    fetch(garth.fileUrl(path)).then((r) => r.json()).then((j) => {
       const v = validateChart(j)
       if ('error' in v) setError("This chart can't be shown.")
       else setSpec(v.spec)
@@ -171,7 +171,7 @@ export function ChartCard({ path }: { path: string }) {
   async function download() {
     const svg = box.current?.querySelector('svg.recharts-surface') as SVGSVGElement | null
     if (!svg || !spec) return
-    const where = await mabel.files.saveImage(await toPng(svg, spec, c, items), spec.title)
+    const where = await garth.files.saveImage(await toPng(svg, spec, c, items), spec.title)
     if (where) { setSaved(where.split(/[\\/]/).pop() ?? where); setTimeout(() => setSaved(null), 3000) }
   }
 

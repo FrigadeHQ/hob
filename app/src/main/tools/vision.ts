@@ -30,7 +30,7 @@ export function imageSize(buf: Buffer): { w: number; h: number } | undefined {
 
 /**
  * A copy the vision model can read quickly: at most MAX_SIDE pixels on its longest side, as JPEG or PNG.
- * Converts iPhone photos (HEIC), WebP and TIFF too. macOS's sips where there is one, else Pillow in Mabel's sandbox.
+ * Converts iPhone photos (HEIC), WebP and TIFF too. macOS's sips where there is one, else Pillow in Garth's sandbox.
  * Small JPEGs and PNGs go as they are.
  */
 async function readable(path: string, ctx: TurnCtx): Promise<string> {
@@ -44,7 +44,7 @@ async function readable(path: string, ctx: TurnCtx): Promise<string> {
     await promisify(execFile)('/usr/bin/sips', ['-Z', String(MAX_SIDE), '-s', 'format', 'jpeg', path, '--out', out])
     return out
   }
-  if (!ctx.python) throw new Error('Mabel needs its code tools to open this kind of image.')
+  if (!ctx.python) throw new Error('Garth needs its code tools to open this kind of image.')
   const python = await ctx.python.ensure()
   const r = await runPython({ python, runtimeRoot: ctx.python.dir, cwd: dir, tmpDir: ctx.runTmp, readPaths: [path], timeoutMs: 60_000, signal: ctx.signal,
     code: `from PIL import Image, ImageOps\nim = ImageOps.exif_transpose(Image.open(${JSON.stringify(path)})).convert('RGB')\nim.thumbnail((${MAX_SIDE}, ${MAX_SIDE}))\nim.save(${JSON.stringify(out)}, quality=90)` })
@@ -52,7 +52,7 @@ async function readable(path: string, ctx: TurnCtx): Promise<string> {
   return out
 }
 
-/** Mabel's eyes: a small vision model looks at the image and answers in words; the main model does the rest. */
+/** Garth's eyes: a small vision model looks at the image and answers in words; the main model does the rest. */
 export const lookAtImage: Tool<{ path: string; question?: string }> = {
   spec: {
     name: 'look_at_image',
@@ -67,12 +67,12 @@ export const lookAtImage: Tool<{ path: string; question?: string }> = {
   async run(a, ctx) {
     const v = ctx.vision
     const s = v?.state()
-    if (!v || !s || s.phase === 'off') return { text: "Mabel can't see images yet: its image support downloads after the main model. Tell the user, and work from the file name or details only if they're enough.", failed: true }
-    if (s.phase === 'downloading') return { text: `Mabel's image support is still downloading (${Math.round(s.progress * 100)}%). Tell the user it'll be ready soon; you can't see the image yet.`, failed: true }
-    if (s.phase === 'error') return { text: `Mabel's image support couldn't be set up: ${s.message}`, failed: true }
+    if (!v || !s || s.phase === 'off') return { text: "Garth can't see images yet: its image support downloads after the main model. Tell the user, and work from the file name or details only if they're enough.", failed: true }
+    if (s.phase === 'downloading') return { text: `Garth's image support is still downloading (${Math.round(s.progress * 100)}%). Tell the user it'll be ready soon; you can't see the image yet.`, failed: true }
+    if (s.phase === 'error') return { text: `Garth's image support couldn't be set up: ${s.message}`, failed: true }
     const path = resolvePath(ctx, String(a.path ?? ''))
     const ext = extname(path).toLowerCase()
-    if (!DIRECT[ext] && !CONVERT.has(ext)) return { text: `${basename(path)} isn't an image Mabel can look at (JPG, PNG, HEIC, WebP, GIF or TIFF).`, failed: true }
+    if (!DIRECT[ext] && !CONVERT.has(ext)) return { text: `${basename(path)} isn't an image Garth can look at (JPG, PNG, HEIC, WebP, GIF or TIFF).`, failed: true }
     if (statSync(path).size > MAX_BYTES) return { text: `${basename(path)} is too big to look at (over 30 MB).`, failed: true }
     ctx.progress?.(`Looking at ${basename(path)}…`)
     const file = await readable(path, ctx)

@@ -7,7 +7,7 @@ type Pending = ConfirmOptions & { resolve(yes: boolean): void }
 
 let show: ((p: Pending) => void) | undefined
 
-/** Mabel's own yes/no dialog (the system one ignores the theme): resolves true for yes. */
+/** Garth's own yes/no dialog (the system one ignores the theme): resolves true for yes. */
 export function confirmAction(o: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => { if (show) show({ ...o, resolve }); else resolve(false) })
 }

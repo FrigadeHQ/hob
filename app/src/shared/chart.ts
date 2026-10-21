@@ -1,4 +1,4 @@
-/** A chart Mabel draws itself (Recharts in the app), saved as <title>.chart.json in the chat folder. */
+/** A chart Garth draws itself (Recharts in the app), saved as <title>.chart.json in the chat folder. */
 export const CHART_TYPES = ['bar', 'line', 'area', 'pie', 'scatter'] as const
 export type ChartType = (typeof CHART_TYPES)[number]
 export type ChartSeries = { key: string; label: string }

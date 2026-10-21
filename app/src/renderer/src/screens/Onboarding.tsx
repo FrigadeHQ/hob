@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ModelOption, SetupState } from '../../../shared/types'
-import { mabel } from '../api'
+import { garth } from '../api'
 import { Check, ChevronDown } from 'lucide-react'
 import { Mascot } from '../components/Mascot'
 
@@ -82,11 +82,11 @@ function ModelPicker({ models, selected, onSelect }: { models: ModelOption[]; se
 /** while the first download runs: things to try once it's ready, like a game's loading screen */
 const TIPS = [
   'Drop a spreadsheet into a chat and ask for a chart.',
-  'Make a project to let Mabel work with a folder on your computer.',
+  'Make a project to let Garth work with a folder on your computer.',
   'Type / in a chat to use a skill, like /fill-pdf.',
-  'After Mabel does something you’ll want again, say “save this as a skill”.',
+  'After Garth does something you’ll want again, say “save this as a skill”.',
   'Everything stays on your computer. Turn Web access off in Settings to stay fully offline.',
-  'Mabel can rename, sort and tidy files for you, and Undo puts them back.',
+  'Garth can rename, sort and tidy files for you, and Undo puts them back.',
   `Press ${navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl+'}K to search your chats.`,
   'You can keep chatting while a reply runs; switch chats and it keeps going.',
 ]
@@ -96,7 +96,7 @@ function Tips() {
   return <p key={i} data-testid="setup-tip" className="fade-in mt-10 text-ui text-muted"><span className="font-medium text-ink-soft">Tip:</span> {TIPS[i]}</p>
 }
 
-/** first launch: what Mabel is doing while it looks at the computer. Loops; each line shows long enough to read */
+/** first launch: what Garth is doing while it looks at the computer. Loops; each line shows long enough to read */
 const FIRST_RUN = ['Checking your computer…', 'Finding the most optimal model for your computer\'s memory and graphics…', 'Finding the best AI model for your computer…', 'Getting everything ready…']
 /** every other start: a bit of warmth while the model loads */
 const EVERYDAY_START = ['Stoking the fire…', 'Waking up the model…', 'Warming up…', 'Putting the kettle on…', 'Gathering your chats…', 'Fluffing the cushions…', 'Almost there…']
@@ -130,7 +130,7 @@ export function Onboarding({ state }: { state: SetupState }) {
       <Frame>
         <h1 className="text-title font-semibold mb-2">Something went wrong</h1>
         <p data-testid="setup-error" className="text-body text-ink-soft mb-6">{state.message}</p>
-        <button onClick={() => mabel.setup.retry()} className="px-5 py-2.5 rounded-card bg-ink text-paper font-medium">Try again</button>
+        <button onClick={() => garth.setup.retry()} className="px-5 py-2.5 rounded-card bg-ink text-paper font-medium">Try again</button>
       </Frame>
     )
   }
@@ -142,7 +142,7 @@ export function Onboarding({ state }: { state: SetupState }) {
     return (
       <Frame>
         <div className="mb-4 flex justify-center"><Mascot size={84} alive /></div>
-        <h1 className="text-title font-semibold tracking-tight mb-2">Welcome to Mabel</h1>
+        <h1 className="text-title font-semibold tracking-tight mb-2">Welcome to Garth</h1>
         <p className="text-body text-ink-soft mb-6">A private AI that runs entirely on your computer.</p>
         <div data-testid="setup-recommended" className="rounded-card border border-line bg-surface p-4 text-left mb-6">
           <p className="text-body font-medium">{selected.recommended ? 'We found the best AI model for your computer' : 'Your pick'}</p>
@@ -151,18 +151,18 @@ export function Onboarding({ state }: { state: SetupState }) {
             {starter
               ? <>
                   <li className="flex gap-2.5"><Step n={1} /><span>A small model downloads first ({gb(starter.sizeGB)}), so you can start chatting in a few minutes.</span></li>
-                  <li className="flex gap-2.5"><Step n={2} /><span>The full model ({gb(selected.sizeGB)}) keeps downloading in the background. Mabel switches to it by itself when it's done, and gets a lot smarter.</span></li>
+                  <li className="flex gap-2.5"><Step n={2} /><span>The full model ({gb(selected.sizeGB)}) keeps downloading in the background. Garth switches to it by itself when it's done, and gets a lot smarter.</span></li>
                 </>
               : <li className="flex gap-2.5"><Step n={1} /><span>One-time {gb(selected.sizeGB)} download, then it works offline.</span></li>}
           </ol>
         </div>
         {selected.needsDiskGB > 0 && <p className="text-accent mb-4">Not enough disk space. Free up {Math.ceil(selected.needsDiskGB)} GB to continue.</p>}
-        <button data-testid="setup-download" onClick={() => mabel.setup.confirm(selected.id)} disabled={selected.needsDiskGB > 0} className="w-full py-3 rounded-card bg-ink text-paper font-medium text-body disabled:opacity-30">
+        <button data-testid="setup-download" onClick={() => garth.setup.confirm(selected.id)} disabled={selected.needsDiskGB > 0} className="w-full py-3 rounded-card bg-ink text-paper font-medium text-body disabled:opacity-30">
           Download and start
         </button>
-        {selected.needsDiskGB > 0 && <button onClick={() => mabel.setup.retry()} className="mt-3 w-full py-2.5 rounded-card border border-line font-medium">Check again</button>}
+        {selected.needsDiskGB > 0 && <button onClick={() => garth.setup.retry()} className="mt-3 w-full py-2.5 rounded-card border border-line font-medium">Check again</button>}
         <ModelPicker models={state.models} selected={selected} onSelect={setSelectedId} />
-        {state.liteMode && <p className="mt-6 text-meta text-muted">Mabel will use a smaller model on this computer, so answers may be simpler.</p>}
+        {state.liteMode && <p className="mt-6 text-meta text-muted">Garth will use a smaller model on this computer, so answers may be simpler.</p>}
       </Frame>
     )
   }
@@ -173,7 +173,7 @@ export function Onboarding({ state }: { state: SetupState }) {
     return (
       <Frame>
         <div className="mb-4 flex justify-center"><Mascot size={84} alive /></div>
-        <h1 className="text-title font-semibold mb-2">{state.starter ? 'Getting you started' : 'Setting up Mabel'}</h1>
+        <h1 className="text-title font-semibold mb-2">{state.starter ? 'Getting you started' : 'Setting up Garth'}</h1>
         <p data-testid="setup-downloading" className="text-body text-ink-soft mb-6">
           {state.starter
             ? `Downloading a small model (${gb(state.starter.sizeGB)}) so you can chat in a few minutes. The full model (${gb(state.target.sizeGB)}) downloads after that, in the background.`

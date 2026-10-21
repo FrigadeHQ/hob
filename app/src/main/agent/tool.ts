@@ -33,7 +33,7 @@ export type TurnCtx = {
   reveal?(path: string, folder: boolean): Promise<void>
   /** a script of an enabled skill, by full path or "skill-name/file.py"; undefined if it isn't one */
   skillScript?(ref: string): { path: string; dir: string; network: boolean; packages?: string[] } | undefined
-  /** Mabel's eyes: the small model that looks at images (absent when it can't run here) */
+  /** Garth's eyes: the small model that looks at images (absent when it can't run here) */
   vision?: { state(): VisionState; ask(image: string, question: string, signal?: AbortSignal): Promise<string> }
   /** progress for slow setup steps, e.g. installing code tools */
   progress?(title: string): void

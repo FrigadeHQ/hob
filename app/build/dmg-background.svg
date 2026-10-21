@@ -10,7 +10,7 @@
     </marker>
   </defs>
   <rect width="660" height="400" fill="url(#glow)"/>
-  <text x="330" y="70" text-anchor="middle" font-family="-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif" font-size="22" font-weight="600" fill="#2A2420">Drag Mabel into Applications</text>
+  <text x="330" y="70" text-anchor="middle" font-family="-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif" font-size="22" font-weight="600" fill="#2A2420">Drag Garth into Applications</text>
   <text x="330" y="98" text-anchor="middle" font-family="-apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif" font-size="13" fill="#7A6E66">Then open it from your Applications folder.</text>
   <path d="M250 196 C 300 160, 360 160, 410 196" fill="none" stroke="#E2651F" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 9" marker-end="url(#head)"/>
   <text x="330" y="360" text-anchor="middle" font-family="-apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif" font-size="11" fill="#A59A91">Private AI that runs on your computer</text>
