@@ -142,7 +142,9 @@ test('home ideas: two work on a file — they ask for one, then send it with the
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
   await expect(page.locator('[data-testid="suggestion"][data-file="true"]')).toHaveCount(2)
-  await expect(page.locator('[data-testid="suggestion"][data-file="false"]')).toHaveCount(2)
+  // until email and calendar are connected, that idea takes one of the four
+  await expect(page.locator('[data-testid="suggestion"][data-connect="true"]')).toHaveCount(1)
+  await expect(page.locator('[data-testid="suggestion"][data-file="false"][data-connect="false"]')).toHaveCount(1)
 
   // cancelling the file picker does nothing
   await app.evaluate(({ dialog }) => { dialog.showOpenDialog = (async () => ({ canceled: true, filePaths: [] })) as never })

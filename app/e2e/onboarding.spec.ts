@@ -21,7 +21,7 @@ test('first run: recommend → download → chat', async () => {
   await expect(page.getByTestId('composer-input')).toBeFocused()
 
   // a suggestion sends straight away
-  await page.locator('[data-testid="suggestion"][data-file="false"]').first().click()
+  await page.locator('[data-testid="suggestion"][data-file="false"][data-connect="false"]').first().click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('You said:')
   await page.getByTestId('new-chat').click()
 

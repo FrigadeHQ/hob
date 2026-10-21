@@ -363,7 +363,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                   </>}
               <div className="mt-8 grid gap-2 text-left sm:grid-cols-2">
                 {pickStarters(starters, seed, { connect: showConnect }).map((s) => (
-                  <button key={s.title} data-testid="suggestion" data-file={!!s.file} onClick={() => void (s.connect ? openConnect() : s.file ? startWithFile(s.prompt) : send(s.prompt))} className="group flex items-center gap-3 rounded-card border border-line bg-surface px-3.5 py-3 text-ui text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
+                  <button key={s.title} data-testid="suggestion" data-file={!!s.file} data-connect={!!s.connect} onClick={() => void (s.connect ? openConnect() : s.file ? startWithFile(s.prompt) : send(s.prompt))} className="group flex items-center gap-3 rounded-card border border-line bg-surface px-3.5 py-3 text-ui text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
                     <PluginIcon name={s.icon} className="shrink-0 text-muted transition-colors group-hover:text-ink-soft" />
                     <span title={s.title} className="min-w-0 flex-1 truncate text-left">{s.title}</span>
                     {s.file && <Paperclip size={14} strokeWidth={1.75} aria-label="Asks for a file" className="shrink-0 text-muted" />}
