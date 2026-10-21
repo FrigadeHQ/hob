@@ -287,8 +287,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     : accounts.current ? false
     : macAccess ? !connected(macAccess)
     : accounts.available.length > 0 || !hasConnector
-  // other systems: through a connector (Plugins → Connectors)
-  const openConnect = () => (macAccess ? setConnectOpen(true) : onConnectors())
+  // the Mac's apps or a Google/Microsoft sign-in; with neither, a connector (Plugins → Connectors)
+  const openConnect = () => (macAccess || accounts?.available.length ? setConnectOpen(true) : onConnectors())
 
   const [undoNotes, setUndoNotes] = useState<Record<number, string>>({})
   async function undoTask(id: number) {
