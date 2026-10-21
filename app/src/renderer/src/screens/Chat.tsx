@@ -7,6 +7,7 @@ import type { MacAccess } from '../../../shared/types'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
 import { mabel } from '../api'
+import { Mascot } from '../components/Mascot'
 import { CopyButton } from '../components/CopyButton'
 import { ThinkingIndicator, WorkLog } from '../components/WorkLog'
 import { FileCards } from '../components/FileCards'
@@ -229,7 +230,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
     if ('error' in r) {
       setNotice(r.error === 'too-big'
-        ? { text: `That's ${r.gb.toFixed(1)} GB, too big to copy. Make a project for its folder instead, so Mabel can use it where it is.`, folders: paths }
+        ? { text: `That's ${r.gb.toFixed(1)} GB, too big to copy. Make a project for its folder instead, so Garth can use it where it is.`, folders: paths }
         : { text: `${r.message}.` })
       return
     }
@@ -246,7 +247,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     const id = await ensureChat()
     const added: Attachment[] = []
     for (const f of files) if (f.type.startsWith('image/')) added.push(...await mabel.files.paste(id, new Uint8Array(await f.arrayBuffer()), f.type))
-    if (!added.length) { setNotice({ text: 'Mabel can only take pasted images or files.' }); return }
+    if (!added.length) { setNotice({ text: 'Garth can only take pasted images or files.' }); return }
     setNotice(null)
     setPending((p) => [...p, ...added])
     inputRef.current?.focus()
@@ -296,7 +297,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
   }
 
-  // typed while Mabel was still working: sent as soon as the reply is done
+  // typed while Garth was still working: sent as soon as the reply is done
   const [queued, setQueued] = useState<string | null>(null)
   useEffect(() => {
     if (requestId || !queued) return
@@ -345,9 +346,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       )}
       <div className="drag h-12 shrink-0" />
       <div ref={scroller} onScroll={onScroll} className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[720px] space-y-8 px-6 pb-10">
+        <div className="mx-auto max-w-[768px] space-y-8 px-6 pb-10 sm:px-8">
           {messages.length === 0 && (
-            <div className="pt-24 text-center">
+            <div className="chat-greeting pt-12 text-center sm:pt-[63px]">
+              <div className="mb-[23px] flex justify-center"><Mascot size={48} alive /></div>
               {project
                 ? <>
                     <h1 className="text-title font-semibold tracking-tight">What should we do in {project.name}?</h1>
@@ -365,10 +367,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                       : <p className="mt-2 text-body text-ink-soft">Chats here follow this project's instructions.</p>}
                   </>
                 : <>
-                    <h1 className="text-title font-semibold tracking-tight">What can Mabel do for you?</h1>
-                    <p className="mt-2 text-body text-ink-soft">
+                    <h1 className="text-[clamp(24px,4vw,32px)] font-semibold leading-[1.2] tracking-[-.95px]">What are we working on?</h1>
+                    <p className="mt-2 text-[14px] leading-[22px] text-ink-soft">
                       Private, on your computer. Drop in files, or{' '}
-                      <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Mabel a folder to work in</button>.
+                      <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Garth a folder to work in</button>.
                     </p>
                   </>}
               <div className="mt-8 grid gap-2 text-left sm:grid-cols-2">
@@ -388,7 +390,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
               return (
                 <div key={m.id} className="flex flex-col items-end gap-1.5">
                   {m.attachments.length > 0 && <div className="flex flex-wrap items-end justify-end gap-2">{m.attachments.map((a) => <AttachmentChip key={a.path} a={a} />)}</div>}
-                  <div className="max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-line/70 px-4 py-2.5 text-body"><UserText text={m.content} skills={skills} /></div>
+                  <div className="max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-selection px-4 py-2.5 text-body"><UserText text={m.content} skills={skills} /></div>
                 </div>
               )
             }
@@ -424,7 +426,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         </div>
       </div>
 
-      <div className="relative mx-auto w-full max-w-[720px] px-6 pb-5">
+      <div className="relative mx-auto w-full max-w-[768px] px-6 pb-5 sm:px-8">
         {/* text scrolls under a soft fade instead of being cut by the composer */}
         <div className="pointer-events-none absolute inset-x-0 -top-10 h-10 bg-gradient-to-b from-transparent to-paper" />
         {/* always rendered so it can fade in and out */}
@@ -446,7 +448,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         {queued && (
           <div data-testid="queued" className="fade-in mb-1.5 flex items-center gap-2 rounded-control bg-line/50 px-3 py-1.5 text-ui text-ink-soft">
             <Clock size={14} className="shrink-0 text-muted" />
-            <span className="min-w-0 flex-1 truncate">Sends when Mabel is done: {queued}</span>
+            <span className="min-w-0 flex-1 truncate">Sends when Garth is done: {queued}</span>
             <button aria-label="Don't send" title="Don't send" onClick={() => { setInput(queued); setQueued(null) }} className="text-muted hover:text-ink"><X size={14} /></button>
           </div>
         )}
@@ -460,7 +462,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
           pending={pending} onRemovePending={(a) => setPending((p) => p.filter((x) => x.path !== a.path))}
           inputRef={inputRef} dictation={dictation} skills={skills}
         />
-        <p className="mt-2 text-center text-meta text-muted">Mabel can make mistakes.</p>
+        <p className="mt-2 text-center text-meta text-muted">Garth can make mistakes.</p>
       </div>
     </main>
   )

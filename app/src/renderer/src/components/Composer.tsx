@@ -59,7 +59,7 @@ export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () =
   const Icon = image ? ImageIcon : FileText
   return (
     <span data-testid="attachment-chip" className="group relative inline-flex items-center gap-1.5 rounded-control border border-line bg-surface px-2 py-1 text-ui">
-      {/* click to look at it: photos and PDFs in Mabel, anything else in its own app */}
+      {/* click to look at it: photos and PDFs in Garth, anything else in its own app */}
       <button data-testid="attachment-open" title={canPreview(a.path) ? 'Preview' : 'Open'} onClick={() => previewFile(a.path)} className="inline-flex min-w-0 items-center gap-1.5 hover:text-ink">
         <Icon size={14} strokeWidth={1.75} className="shrink-0 text-ink-soft" />
         <span className="max-w-48 truncate underline-offset-2 hover:underline">{a.name}</span>
@@ -166,13 +166,13 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
       if ((e.key === 'Enter' || e.key === 'Tab') && items[active] && !e.shiftKey) { e.preventDefault(); pick(items[active]); return }
       if (e.key === 'Escape') { e.preventDefault(); setDismissed(value); return }
     }
-    // while Mabel works, Enter queues the message (the chat sends it when the reply is done)
+    // while Garth works, Enter queues the message (the chat sends it when the reply is done)
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (value.trim()) onSend() }
   }
   return (
     <div className="relative">
       {items && <SkillMenu items={items} active={Math.min(active, items.length - 1)} onPick={pick} onHover={setActive} />}
-      <div className="rounded-composer border border-line-strong bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] transition-colors focus-within:border-muted">
+      <div className="rounded-composer border border-line-strong bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] transition-colors focus-within:border-focus focus-within:ring-2 focus-within:ring-focus/10">
         {pending.length > 0 && (
           <div className="flex flex-wrap items-end gap-2.5 px-3 pt-3">{pending.map((a) => <AttachmentChip key={a.path} a={a} onRemove={() => onRemovePending(a)} />)}</div>
         )}
@@ -185,7 +185,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
           onKeyDown={onKeyDown}
           // a pasted screenshot or copied file becomes an attachment; pasted text stays text
           onPaste={(e) => { const files = Array.from(e.clipboardData.files); if (files.length && onPasteFiles) { e.preventDefault(); onPasteFiles(files) } }}
-          placeholder={dictation?.hint ?? (running ? 'Mabel is working. Type your next message, it sends when Mabel is done' : skills.length ? 'Ask Mabel anything, type / for skills' : 'Ask Mabel anything, or drop files here')}
+          placeholder={dictation?.hint ?? (running ? 'Garth is working. Type your next message, it sends when Garth is done' : skills.length ? 'Ask Garth anything, type / for skills' : 'Ask Garth anything, or drop files here')}
           rows={1}
           className={`block max-h-60 min-h-[48px] w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-body outline-none placeholder:text-muted [field-sizing:content] ${dictation?.hint ? 'placeholder:italic' : ''}`}
         />
@@ -214,7 +214,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
           ) : (
             <button
               data-testid="composer-send" aria-label="Send (Enter)" title="Send (Enter)" onClick={onSend} disabled={!canSend}
-              className="inline-flex size-8 items-center justify-center rounded-control text-muted transition-colors enabled:text-ink enabled:hover:bg-line/70 disabled:opacity-60"
+              className="inline-flex size-8 items-center justify-center rounded-control text-muted transition-colors enabled:bg-action enabled:text-on-action enabled:hover:opacity-90 disabled:opacity-60"
             >
               <CornerDownLeft size={16} strokeWidth={1.75} />
             </button>

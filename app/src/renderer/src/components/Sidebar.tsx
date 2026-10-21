@@ -79,7 +79,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
   useEffect(() => mabel.chats.onChanged(reload), [])
 
   async function remove(c: ChatSummary) {
-    if (!await confirmAction({ title: `Delete “${c.title}”?`, body: 'The chat is removed from Mabel. Files you added to it, or that Mabel made in it, move to the Trash.', ok: 'Delete chat', danger: true })) return
+    if (!await confirmAction({ title: `Delete “${c.title}”?`, body: 'The chat is removed from Garth. Files you added to it, or that Garth made in it, move to the Trash.', ok: 'Delete chat', danger: true })) return
     await mabel.chats.remove(c.id)
     if (c.id === selected) onNew()
     reload()
@@ -87,7 +87,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
 
   const fm = fileManager(mabel.platform)
   const chatRow = (c: ChatSummary, inProject: boolean) => (
-    <div key={c.id} className={`${row} ${inProject ? 'pl-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-line text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
+    <div key={c.id} className={`${row} ${inProject ? 'pl-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
       <button data-testid="chat-item" onClick={() => onSelect(c.id)} className="min-w-0 flex-1 truncate text-left">{c.title}</button>
       {(() => {
         const l = live.find((x) => x.chatId === c.id)
@@ -104,7 +104,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
     <aside data-testid="sidebar" style={{ width }} className="relative flex shrink-0 flex-col border-r border-line bg-sidebar">
       <div className="drag h-12 shrink-0" />
       <div className="space-y-0.5 px-2">
-        <button data-testid="new-chat" onClick={onNew} className={`no-drag w-full ${row} font-medium hover:bg-line/70`}>
+        <button data-testid="new-chat" onClick={onNew} className={`no-drag w-full ${row} font-medium ${!selected && !draftProject && screen === 'chat' ? 'bg-selection' : 'hover:bg-line/70'}`}>
           <SquarePen size={16} strokeWidth={1.75} className="text-ink-soft" />New chat
         </button>
       </div>
@@ -124,7 +124,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
           const here = screen === 'chat' && selected === null && draftProject === p.id
           return (
             <div key={p.id} data-testid="project-item">
-              <div className={`${row} ${here ? 'bg-line text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`} title={p.folders[0]}>
+              <div className={`${row} ${here ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`} title={p.folders[0]}>
                 <button aria-label={open ? `Hide chats in ${p.name}` : `Show chats in ${p.name}`} onClick={() => toggle(p.id)} className="shrink-0 text-ink-soft hover:text-ink">
                   {open ? <FolderOpen size={16} strokeWidth={1.75} /> : <Folder size={16} strokeWidth={1.75} />}
                 </button>
@@ -153,7 +153,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
         ))}
       </nav>
       <div className="flex items-center justify-between gap-2 border-t border-line py-2.5 pl-4 pr-3">
-        <Status state={state} />
+        <Status state={state} working={live.some((c) => c.chatId === selected && !c.waiting)} />
         <IconButton icon={Settings} label="Settings" testId="open-settings" onClick={onSettings} />
       </div>
       {/* drag the edge to resize; double-click puts it back. Last in the sidebar so it wins over the window-drag strip */}

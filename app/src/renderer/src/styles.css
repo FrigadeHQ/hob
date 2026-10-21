@@ -1,17 +1,24 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* The same variable font as the marketing site, bundled for offline use. */
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("./assets/hanken-grotesk.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 /*
- * Mabel design system
- * Type: four sizes only. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
+ * Garth design system
+ * Type: core sizes. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
  * Color: paper (app) · sidebar · surface (composer, cards) · ink · ink-soft (secondary text) · muted (hints, placeholders) · line · line-strong · accent
  * Radius: 8 controls · 12 cards · 18 composer. Icons: lucide, 16px in UI, 14px in steps.
  */
 @theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
+  --font-sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  /* Mabel's replies read like a page: Source Serif 4 (Adobe, SIL Open Font License) */
-  --font-serif: "Source Serif 4 Variable", "Iowan Old Style", Georgia, serif;
 
   --text-meta: 12px;
   --text-meta--line-height: 16px;
@@ -27,9 +34,13 @@
   --color-surface: #ffffff;
   --color-ink: #1c1917;
   --color-ink-soft: #57534e;
-  --color-muted: #a29d98;
+  --color-muted: #817b75;
   --color-line: #e9e6e3;
   --color-line-strong: #d6d2cd;
+  --color-action: #242424;
+  --color-on-action: #ffffff;
+  --color-selection: #e8e5e1;
+  --color-focus: #8a847f;
   --color-accent: #c2410c;
   /* the mic while it's recording */
   --color-rec: #dbe7fb;
@@ -61,9 +72,13 @@
     --color-surface: #22201e;
     --color-ink: #f2f1ef;
     --color-ink-soft: #c4beb8;
-    --color-muted: #8a847e;
+    --color-muted: #938c85;
     --color-line: #2f2c29;
     --color-line-strong: #423e3a;
+    --color-action: #e6e2de;
+    --color-on-action: #211f1d;
+    --color-selection: #302d2a;
+    --color-focus: #77716b;
     --color-rec: #24344f;
     --color-rec-ink: #9cc0ff;
     --color-danger: #f97066;
@@ -92,12 +107,12 @@ body {
 .drag { -webkit-app-region: drag; }
 .no-drag { -webkit-app-region: no-drag; }
 
-/* Assistant replies: a book-like serif, a touch larger than the UI text (serifs read small), calm rhythm */
+/* Replies use the same face, with more room to read. */
 .reply.prose {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-optical-sizing: auto;
-  font-size: calc(var(--text-body) + 1.5px + var(--reply-step, 0px));
-  line-height: 1.6;
+  font-size: calc(var(--text-body) + 1px + var(--reply-step, 0px));
+  line-height: 1.65;
   color: var(--color-ink);
   --tw-prose-body: var(--color-ink);
   --tw-prose-headings: var(--color-ink);
@@ -213,10 +228,9 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .setup-detail-row small { display: block; margin-top: 5px; font-size: 11px; color: var(--color-muted); }
 .setup-detail-row > span { font-size: 11px; color: var(--color-muted); white-space: nowrap; padding-top: 2px; }
 .setup-detail-explanation { font-size: 12px; color: var(--color-ink-soft); margin-top: 2px; }
-.onboarding button:focus-visible, .onboarding input:focus-visible, .setup-dialog button:focus-visible, .setup-dialog input:focus-visible { outline: 2px solid #78639e; outline-offset: 4px; }
+.onboarding button:focus-visible, .onboarding input:focus-visible, .setup-dialog button:focus-visible, .setup-dialog input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
 @media (prefers-color-scheme: dark) {
   .onboarding, .setup-dialog { --color-muted: #9b948d; --setup-selection: #37312c; --setup-hover: #2b2723; color-scheme: dark; }
-  .onboarding button:focus-visible, .onboarding input:focus-visible, .setup-dialog button:focus-visible, .setup-dialog input:focus-visible { outline-color: #c8b9ef; }
 }
 @media (max-width: 800px) {
   .onboarding-screen { padding: 20px 30px 36px; }
@@ -241,3 +255,22 @@ html[data-text-size="large"] { --reply-step: 2px; }
    so the background never changes shade; only the layer under the new dialog gets dimmer */
 body:has(> [data-scrim]) #root [data-scrim], body > [data-scrim]:has(~ [data-scrim]) { background-color: transparent; }
 body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] { animation: none; }
+
+/* One Garth at a time: the greeting owns him until a conversation starts. */
+.status-presence { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; }
+.status-presence:has(.garth-mascot) > .status-dot { display: none; }
+#root:has(.chat-greeting) .status-presence .garth-mascot { display: none; }
+#root:has(.chat-greeting) .status-presence > .status-dot { display: block; }
+.garth-smile { opacity: 0; }
+.garth-eyes { transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .garth-alive .garth-eyes { animation: garth-blink 37s steps(1, end) infinite; }
+  .garth-alive:not(.garth-working) .garth-neutral { animation: garth-neutral 43s steps(1, end) infinite; }
+  .garth-alive:not(.garth-working) .garth-smile { animation: garth-smile 43s steps(1, end) infinite; }
+  .garth-working .garth-face { transform: translateY(1px); }
+}
+@keyframes garth-blink { 0%, 21.4%, 50.4%, 84.4%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
+@keyframes garth-neutral { 0%, 46%, 100% { opacity: 1; } 42% { opacity: 0; } }
+@keyframes garth-smile { 0%, 46%, 100% { opacity: 0; } 42% { opacity: 1; } }
+
+@media (max-height: 620px) { .chat-greeting { padding-top: 16px; } }
