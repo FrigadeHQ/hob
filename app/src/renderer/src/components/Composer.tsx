@@ -4,11 +4,19 @@ import { canPreview, previewFile } from './Preview'
 import { MicMenu } from './MicMenu'
 import { PdfThumb } from './PdfView'
 import { mabel } from '../api'
+import { useThumbnail } from '../thumbnail'
 import type { Attachment } from '../../../shared/agent'
 import type { SkillRef } from '../../../shared/plugins'
 import { IconButton, PluginIcon } from './ui'
 
 const size = (b: number) => (b < 1e6 ? `${Math.max(1, Math.round(b / 1e3))} KB` : `${(b / 1e6).toFixed(1)} MB`)
+
+/** the attachment card's photo, shrunk smoothly (see useThumbnail) */
+function PhotoThumb({ path }: { path: string }) {
+  const url = mabel.fileUrl(path)
+  const thumb = useThumbnail(url, 128, 104)
+  return <img data-testid="attachment-thumb-image" data-smooth={thumb ? 'yes' : 'no'} src={thumb ?? url} alt="" className="block h-full w-full rounded-card object-cover" />
+}
 
 const THUMB_IMAGE = /\.(png|jpe?g|gif|webp|bmp|svg)$/i
 
@@ -38,7 +46,7 @@ export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () =
           ) : (
             <>
               {/* the photo is rounded itself, with the border drawn over it: clipping it inside a bordered box leaves jagged corners */}
-              <img data-testid="attachment-thumb-image" src={mabel.fileUrl(a.path)} alt="" className="block h-full w-full rounded-card object-cover" />
+              <PhotoThumb path={a.path} />
               <span className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-black/10 dark:ring-white/10" />
               <span className="sr-only">{a.name}</span>
             </>

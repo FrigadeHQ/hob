@@ -207,7 +207,7 @@ test('the microphone is available to the page; the camera is not', async () => {
   await app.close()
 })
 
-const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d605bb0000000049454e44ae426082', 'hex')
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
 
 test('Mabel looks at an attached photo and answers from what it sees', async () => {
   const src = mkdtempSync(join(tmpdir(), 'mabel-src-'))
@@ -251,7 +251,7 @@ test('clicking an attached photo or PDF previews it inside Mabel', async () => {
   await stubOpenDialog(app, [join(src, 'receipt.png'), join(src, 'form.pdf')])
   await page.getByTestId('attach').click()
   // small previews right in the message box: the photo itself, and the PDF's first page
-  await expect(page.getByTestId('attachment-thumb-image')).toBeVisible()
+  await expect(page.getByTestId('attachment-thumb-image')).toHaveAttribute('data-smooth', 'yes')
   await expect(page.getByTestId('attachment-thumb-pdf').locator('canvas')).toBeVisible()
   await expect(page.getByTestId('attachment-chip').nth(1)).toContainText('form.pdf')
   await page.getByTestId('attachment-open').first().click()
