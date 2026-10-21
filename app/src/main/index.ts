@@ -119,9 +119,16 @@ app.whenReady().then(() => {
   const python = FAKE ? undefined : new PythonRuntime(paths.python, realRuntimeDeps)
   // E2E / custom profiles keep chat files inside the profile, never in the real Documents
   if (!process.env.MABEL_USER_DATA && !loadSettings(paths.settings).filesDir) {
-    // chat files from the app's earlier names
-    migrateFilesDir(join(app.getPath('documents'), 'Hob'), join(app.getPath('documents'), 'Mabel'), store)
-    migrateFilesDir(join(app.getPath('documents'), 'Thrum'), join(app.getPath('documents'), 'Mabel'), store)
+    // chat files from the app's earlier names. macOS may refuse the move (no access to Documents yet):
+    // then the old folder stays the chat files folder, and start-up carries on
+    for (const name of ['Hob', 'Thrum']) {
+      const from = join(app.getPath('documents'), name)
+      try { migrateFilesDir(from, join(app.getPath('documents'), 'Mabel'), store) } catch (err) {
+        console.warn(`couldn't move ${from}; keeping it as the chat files folder`, err)
+        updateSettings(paths.settings, { filesDir: from })
+        break
+      }
+    }
   }
   const filesDir = () => loadSettings(paths.settings).filesDir ?? (process.env.MABEL_USER_DATA ? join(paths.root, 'Files') : join(app.getPath('documents'), 'Mabel'))
   const speech = new SpeechModel(paths.speech, realRuntimeDeps)
