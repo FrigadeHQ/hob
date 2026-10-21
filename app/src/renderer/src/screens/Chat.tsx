@@ -223,6 +223,19 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     return r
   }
 
+  /** files copied in Finder paste with their paths; a screenshot from the clipboard only has its bytes */
+  async function pasteFiles(files: File[]) {
+    const paths = hob.pathsForFiles(files)
+    if (paths.length) { await addFiles(paths); return }
+    const id = await ensureChat()
+    const added: Attachment[] = []
+    for (const f of files) if (f.type.startsWith('image/')) added.push(...await hob.files.paste(id, new Uint8Array(await f.arrayBuffer()), f.type))
+    if (!added.length) { setNotice({ text: 'Hob can only take pasted images or files.' }); return }
+    setNotice(null)
+    setPending((p) => [...p, ...added])
+    inputRef.current?.focus()
+  }
+
   /** an idea that needs a file: pick one, then send */
   async function startWithFile(prompt: string) {
     const added = await addFiles(await hob.files.pick())
@@ -414,6 +427,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         <Composer
           value={input} onChange={setInput} onSend={() => void send()} onStop={stop} running={!!requestId}
           onAttach={() => void hob.files.pick().then(addFiles)}
+          onPasteFiles={(files) => void pasteFiles(files)}
           pending={pending} onRemovePending={(a) => setPending((p) => p.filter((x) => x.path !== a.path))}
           inputRef={inputRef} dictation={dictation} skills={skills}
         />

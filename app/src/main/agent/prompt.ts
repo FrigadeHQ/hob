@@ -75,6 +75,7 @@ export function systemPrompt(o: {
           'To rename or move many files: in run_python, work out the new names and save the list as moves.json in the current folder (a JSON list of {"from", "to"} with full paths), then call move_files with file: "moves.json". Do not type the list out yourself.',
         ].join('\n')
       : '',
+    has('look_at_image') ? "To know what's in a photo, screenshot or other image, call look_at_image with its path and what you want to find out (it can read text in images). Never guess from the file name. Then do the rest yourself: answer, rename, sort or chart." : '',
     !o.tools && has('web_search') ? 'For anything else current or that you are unsure about (news, prices, facts), search the web with web_search and read pages with fetch_url.' : '',
     ...(o.extra ?? []),
     skills.length

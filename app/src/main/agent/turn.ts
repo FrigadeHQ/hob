@@ -27,6 +27,8 @@ export const AGENT_BUDGET = 8192
 
 export type TurnDeps = {
   engine: Engine
+  /** Hob's eyes, for look_at_image */
+  vision?: TurnCtx['vision']
   store: Store
   tools: Tool<any>[]
   python: PythonRuntime | undefined
@@ -88,7 +90,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     chatDir: chat.dir, grants, signal: a.signal, untrusted: false, webAccess: d.webAccess(),
     mainFolder: project?.folders[0], missingFolders, reveal: d.reveal,
     journal, trash: d.trash, python: d.python, runTmp: d.runTmp, fetch: d.fetch ?? fetch, search: d.search, render: d.render,
-    skillScript: (ref) => skillScript(ref, d.skills),
+    skillScript: (ref) => skillScript(ref, d.skills), vision: d.vision,
   }
   const steps: Step[] = []
   const show = (s: Step) => {

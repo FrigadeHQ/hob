@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
 import type { ApprovalRequest, LiveSummary, Step, StoredMessage } from '../shared/agent'
-import type { SetupState, HobApi } from '../shared/types'
+import type { SetupState, HobApi, VisionState } from '../shared/types'
 import type { PluginResult } from '../shared/plugins'
 
 const invoke = (channel: string) => (...args: unknown[]) => ipcRenderer.invoke(channel, ...args)
@@ -23,7 +23,7 @@ const api: HobApi = {
     onState: (cb) => listen<[SetupState]>('setup:state', cb),
   },
   chats: { list: invoke('chats:list'), search: invoke('chats:search'), get: invoke('chats:get'), create: invoke('chats:create'), remove: invoke('chats:remove'), removeAll: invoke('chats:removeAll'), onChanged: (cb) => listen<[]>('chats:changed', cb) },
-  files: { add: invoke('files:add'), pick: invoke('files:pick'), open: invoke('files:open'), show: invoke('files:show'), saveImage: invoke('files:saveImage') },
+  files: { add: invoke('files:add'), paste: invoke('files:paste'), pick: invoke('files:pick'), open: invoke('files:open'), show: invoke('files:show'), saveImage: invoke('files:saveImage') },
   projects: { list: invoke('projects:list'), create: invoke('projects:create'), update: invoke('projects:update'), remove: invoke('projects:remove'), pickFolders: invoke('projects:pickFolders'), checkFolders: invoke('projects:checkFolders'), open: invoke('projects:open') },
   chat: {
     send: invoke('chat:send'),
@@ -37,6 +37,7 @@ const api: HobApi = {
     onLive: (cb) => listen<[LiveSummary[]]>('chat:live', cb),
   },
   approval: { answer: invoke('approval:answer') },
+  vision: { getState: invoke('vision:getState'), onState: (cb) => listen<[VisionState]>('vision:state', cb), retry: invoke('vision:retry') },
   task: { undo: invoke('task:undo') },
   settings: { get: invoke('settings:get'), set: invoke('settings:set'), pickFilesDir: invoke('settings:pickFilesDir') },
   models: { list: invoke('models:list'), use: invoke('models:use'), remove: invoke('models:remove') },

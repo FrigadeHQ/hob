@@ -16,8 +16,10 @@ export function makePaths(userData: string) {
     runTmp: join(userData, 'run-tmp'),
     /** plugins the user added */
     plugins: join(userData, 'plugins'),
+    /** Hob's eyes: the vision model and llama.cpp's server */
+    vision: join(userData, 'vision'),
   }
-  for (const d of [p.models, p.python, p.undo, p.runTmp, p.speech, p.plugins]) mkdirSync(d, { recursive: true })
+  for (const d of [p.models, p.python, p.undo, p.runTmp, p.speech, p.plugins, p.vision]) mkdirSync(d, { recursive: true })
   return p
 }
 export type Paths = ReturnType<typeof makePaths>

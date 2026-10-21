@@ -4,6 +4,7 @@ import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import type { ApprovalAnswer, Attachment, UserSettings } from '../shared/agent'
+import type { VisionState } from '../shared/types'
 import type { SetupController } from './setup'
 import type { Store } from './store'
 import type { PythonRuntime } from './python/runtime'
@@ -37,6 +38,8 @@ export type IpcDeps = {
   /** absent in fake mode: dictation returns a fixed sentence */
   speech?: SpeechModel
   plugins: PluginRegistry
+  /** Hob's eyes: state for the UI, and asking about an image */
+  vision?: { state(): VisionState; onState(cb: (s: VisionState) => void): void; ask(image: string, question: string, signal?: AbortSignal): Promise<string>; retry(): void }
   fake?: boolean
 }
 
@@ -49,6 +52,9 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   const trash = (p: string) => shell.trashItem(p)
   const userSettings = (): UserSettings => ({ webAccess: webAccessOn(loadSettings(d.paths.settings)), filesDir: d.filesDir() })
   d.setup.onState((s) => send('setup:state', s))
+  d.vision?.onState((s) => send('vision:state', s))
+  ipcMain.handle('vision:getState', () => d.vision?.state() ?? { phase: 'off' })
+  ipcMain.handle('vision:retry', () => d.vision?.retry())
 
   ipcMain.handle('copy', (_e, text: string) => clipboard.writeText(String(text)))
   ipcMain.handle('setup:getState', () => d.setup.state)
@@ -91,6 +97,17 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
       if (err instanceof AlreadyHereError) return { error: 'already-here', message: err.message }
       throw err
     }
+  })
+  /** a pasted screenshot or copied image: saved into the chat's folder, then attached like a dropped file */
+  ipcMain.handle('files:paste', (_e, chatId: string, bytes: Uint8Array, type: string) => {
+    const chat = d.store.getChat(chatId)
+    const ext = ({ 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' } as Record<string, string>)[String(type)]
+    if (!chat || !ext || !(bytes instanceof Uint8Array) || bytes.length > 30 * 1024 * 1024) return []
+    const stamp = new Date().toISOString().slice(0, 19).replace('T', ' at ').replace(/:/g, '.')
+    let name = `Pasted image ${stamp}.${ext}`
+    for (let i = 2; existsSync(join(chat.dir, name)); i++) name = `Pasted image ${stamp} (${i}).${ext}`
+    writeFileSync(join(chat.dir, name), bytes)
+    return [{ name, path: join(chat.dir, name), sizeBytes: bytes.length }]
   })
   ipcMain.handle('files:pick', async () => {
     const r = await dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] })
@@ -167,7 +184,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
       // connectors still starting get a few seconds; they're ready for the next message
       const tools = [...coreTools(), ...(await d.plugins.tools({ waitMs: 8000, signal: ac.signal })), ...(skills.length ? [useSkillTool(skillSource)] : []), saveSkillTool(skillSource)]
       const reply = await runTurn({
-        engine: d.setup.engine, store: d.store, tools, python: d.python,
+        engine: d.setup.engine, vision: d.vision, store: d.store, tools, python: d.python,
         skills: { list: () => d.plugins.skills(), find: (n) => d.plugins.findSkill(n) },
         prompts: (offered) => d.plugins.prompts(offered),
         webAccess: () => webAccessOn(loadSettings(d.paths.settings)),

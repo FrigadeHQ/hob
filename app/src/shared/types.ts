@@ -15,6 +15,13 @@ export type ModelOption = ModelSummary & {
   needsDiskGB: number
 }
 
+/** Hob's eyes: the small model that looks at images. off: not downloaded yet (it comes after the main model) */
+export type VisionState =
+  | { phase: 'off' }
+  | { phase: 'downloading'; progress: number }
+  | { phase: 'ready'; name: string; sizeGB: number }
+  | { phase: 'error'; message: string }
+
 export type SetupState =
   /** firstRun: no model set up yet, so this is onboarding (not a normal start); unknown until the app has asked */
   | { phase: 'probing'; firstRun?: boolean }
@@ -56,6 +63,8 @@ export interface HobApi {
   files: {
     /** copy into the chat folder */
     add(chatId: string, paths: string[]): Promise<Attachment[] | { error: 'too-big'; gb: number } | { error: 'already-here'; message: string }>
+    /** a pasted image, saved into the chat folder and attached */
+    paste(chatId: string, bytes: Uint8Array, type: string): Promise<Attachment[]>
     pick(): Promise<string[]>
     open(path: string): Promise<void>
     show(path: string): Promise<void>
@@ -91,6 +100,8 @@ export interface HobApi {
     onLive(cb: (list: LiveSummary[]) => void): () => void
   }
   approval: { answer(id: string, answer: ApprovalAnswer): Promise<void> }
+  /** Hob's eyes (the image model) */
+  vision: { getState(): Promise<VisionState>; onState(cb: (s: VisionState) => void): () => void; retry(): Promise<void> }
   /** failed: changes that couldn't be reversed (changed since, or too big to back up) */
   task: { undo(messageId: number): Promise<{ done: boolean; failed: number }> }
   settings: {

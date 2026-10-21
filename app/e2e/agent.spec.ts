@@ -203,3 +203,36 @@ test('the microphone is available to the page; the camera is not', async () => {
   expect(r.camera).not.toBe('ok')
   await app.close()
 })
+
+const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d605bb0000000049454e44ae426082', 'hex')
+
+test('Hob looks at an attached photo and answers from what it sees', async () => {
+  const src = mkdtempSync(join(tmpdir(), 'hob-src-'))
+  writeFileSync(join(src, 'receipt.png'), PNG)
+  const { app, page } = await launch()
+  await ready(page)
+  await stubOpenDialog(app, [join(src, 'receipt.png')])
+  await page.getByTestId('attach').click()
+  await page.getByTestId('composer-input').fill('__tools__ [["look_at_image",{"path":"receipt.png","question":"What is the total?"}]]')
+  await page.getByTestId('composer-send').click()
+  await expect(page.getByTestId('message-assistant').last()).toContainText('Total: $23.40')
+  await expandWork(page)
+  await expect(page.getByTestId('step').first()).toContainText('Looked at receipt.png')
+  // Settings says image support is ready
+  await page.getByTestId('open-settings').click()
+  await expect(page.getByTestId('settings-vision')).toContainText('Ready')
+  await app.close()
+})
+
+test('a pasted screenshot becomes an attachment', async () => {
+  const { app, page } = await launch()
+  await ready(page)
+  await page.getByTestId('composer-input').focus()
+  await page.evaluate((bytes) => {
+    const dt = new DataTransfer()
+    dt.items.add(new File([new Uint8Array(bytes)], 'image.png', { type: 'image/png' }))
+    document.querySelector('[data-testid=composer-input]')!.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
+  }, [...PNG])
+  await expect(page.getByTestId('attachment-chip')).toContainText('Pasted image')
+  await app.close()
+})

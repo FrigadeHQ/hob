@@ -1,3 +1,4 @@
+import { lookAtImage } from './vision'
 import type { ToolSpec } from '../../shared/agent'
 import type { Tool } from '../agent/tool'
 import { deleteFile, listFiles, moveFile, moveFiles, openFolder, readFile, writeFile } from './files'
@@ -8,7 +9,7 @@ import { fetchUrl, webSearch } from './web'
 import { fillPdf, readPdf } from './pdf'
 
 /** always there: working with files is what Hob is for */
-export const coreTools = (): Tool<any>[] => [listFiles, readFile, writeFile, moveFile, moveFiles, deleteFile, openFolder, makeChart]
+export const coreTools = (): Tool<any>[] => [listFiles, readFile, writeFile, moveFile, moveFiles, deleteFile, openFolder, makeChart, lookAtImage]
 /** Hob's own tools that its built-in plugins switch on (hob-plugin.json "native") */
 export const nativeTools = (): Record<string, Tool<any>> => Object.fromEntries([runPythonTool, installPackagesTool, photoInfo, webSearch, fetchUrl, readPdf, fillPdf].map((t) => [t.spec.name, t]))
 export const allTools = (): Tool<any>[] => [...coreTools(), ...Object.values(nativeTools())]

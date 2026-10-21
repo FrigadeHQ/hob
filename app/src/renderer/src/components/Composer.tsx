@@ -23,6 +23,8 @@ type Props = {
   onSend(): void
   onStop(): void
   onAttach(): void
+  /** images or files pasted into the message box (a screenshot from the clipboard) */
+  onPasteFiles?(files: File[]): void
   running: boolean
   pending: Attachment[]
   onRemovePending(a: Attachment): void
@@ -86,7 +88,7 @@ function Waveform({ level }: { level(): number }) {
 }
 
 /** The message box: text on top, tools along the bottom, Enter sends. */
-export function Composer({ value, onChange, onSend, onStop, onAttach, running, pending, onRemovePending, inputRef, dictation, skills = [] }: Props) {
+export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFiles, running, pending, onRemovePending, inputRef, dictation, skills = [] }: Props) {
   const canSend = !!value.trim() && !running
   const [active, setActive] = useState(0)
   /** Esc hides the menu until the text changes */
@@ -128,6 +130,8 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, running, p
           value={value}
           onChange={(e) => { onChange(e.target.value); setActive(0) }}
           onKeyDown={onKeyDown}
+          // a pasted screenshot or copied file becomes an attachment; pasted text stays text
+          onPaste={(e) => { const files = Array.from(e.clipboardData.files); if (files.length && onPasteFiles) { e.preventDefault(); onPasteFiles(files) } }}
           placeholder={dictation?.hint ?? (running ? 'Hob is working. Type your next message, it sends when Hob is done' : skills.length ? 'Ask Hob anything, type / for skills' : 'Ask Hob anything, or drop files here')}
           rows={1}
           className={`block max-h-60 min-h-[48px] w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-body outline-none placeholder:text-muted [field-sizing:content] ${dictation?.hint ? 'placeholder:italic' : ''}`}

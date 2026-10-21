@@ -16,6 +16,11 @@ import { Store } from './store'
 import { migrateFilesDir, migrateProfile } from './migrate'
 import { pruneUndo } from './agent/journal'
 import { PythonRuntime, realRuntimeDeps } from './python/runtime'
+import { VisionInstaller } from './vision/install'
+import { VisionServer } from './vision/server'
+import { visionFitsGpu } from './vision/catalog'
+import type { VisionState } from '../shared/types'
+import os from 'node:os'
 import { loadSettings, updateSettings, webAccessOn } from './settings'
 import { PluginRegistry } from './plugins/registry'
 import { loginPath } from './plugins/shellPath'
@@ -161,7 +166,17 @@ app.whenReady().then(() => {
     onChange: () => win?.webContents.send('plugins:changed'),
   })
   app.on('before-quit', () => plugins.close())
-  const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, fake: FAKE })
+  // Hob's eyes: downloaded after the main model (when Hob "gets smarter"), started when a chat has an image
+  const vision = FAKE ? fakeVision() : realVision(paths.vision, async () => {
+    // fully on the graphics chip only if it fits next to the main model; otherwise the main model would run out
+    const s = setup.state
+    const mainModelGB = s.phase === 'ready' ? s.model.sizeGB : s.phase === 'downloading' ? s.target.sizeGB : 0
+    const p = await engine.probe()
+    return visionFitsGpu({ totalRamGB: os.totalmem() / 1e9, unified: p.gpuType === 'metal' || p.unifiedGB > 0, vramGB: p.vramTotalGB, mainModelGB, visionGB: 3.5 })
+  })
+  setup.onState((s) => { if ((s.phase === 'downloading' && s.chatReady) || s.phase === 'ready') vision.start() })
+  app.on('before-quit', () => vision.stop())
+  const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, fake: FAKE })
   // install code tools quietly once a model is ready, so they're there before the first file task
   let codeToolsStarted = false
   setup.onState((s) => {
@@ -190,3 +205,33 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
+
+/** the real vision model and server; downloads once, in the background */
+function realVision(root: string, useGpu: () => Promise<boolean>) {
+  const listeners = new Set<(s: VisionState) => void>()
+  const installer = new VisionInstaller(root, {
+    platformKey: `${process.platform}-${process.arch}`, totalRamGB: os.totalmem() / 1e9,
+    download: realDeps, fetchFile: realRuntimeDeps.fetchFile, exec: realRuntimeDeps.exec,
+  }, (s) => { for (const l of listeners) l(s) })
+  const server = new VisionServer({
+    command: async () => ({ cmd: await installer.serverBinary() }),
+    cpuCommand: async () => { const b = await installer.cpuServerBinary(); return b ? { cmd: b } : undefined },
+    model: installer.modelPath, mmproj: installer.mmprojPath, useGpu,
+  })
+  const start = () => { if (installer.supported) void installer.ensure().catch((err) => console.warn('image support download failed; will retry', err)) }
+  return {
+    state: () => installer.state, onState: (cb: (s: VisionState) => void) => { listeners.add(cb) },
+    ask: (image: string, q: string, signal?: AbortSignal) => server.ask(image, q, signal),
+    start, retry: start, stop: () => server.stop(),
+  }
+}
+
+/** fake mode: always ready; answers like a vision model would */
+function fakeVision() {
+  return {
+    state: (): VisionState => ({ phase: 'ready', name: 'Qwen3-VL 4B', sizeGB: 2.9 }),
+    onState: () => {},
+    ask: async (_image: string, q: string) => `A receipt from Joe's Cafe. Total: $23.40. (Asked: ${q})`,
+    start: () => {}, retry: () => {}, stop: () => {},
+  }
+}

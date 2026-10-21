@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ModelRow, UserSettings } from '../../../shared/agent'
-import type { SetupState } from '../../../shared/types'
+import type { SetupState, VisionState } from '../../../shared/types'
 import { hob } from '../api'
 import { Dialog, Switch, button } from '../components/ui'
 
@@ -9,6 +9,8 @@ const left = (s: number) => (s <= 0 ? '' : s < 90 ? ' · about a minute left' : 
 
 export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
   const [models, setModels] = useState<ModelRow[]>([])
+  const [vision, setVision] = useState<VisionState>({ phase: 'off' })
+  useEffect(() => { void hob.vision.getState().then(setVision); return hob.vision.onState(setVision) }, [])
   const [s, setS] = useState<UserSettings | null>(null)
   const [storage, setStorage] = useState<{ modelsGB: number; filesGB: number; codeToolsGB: number } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -75,6 +77,20 @@ export function Settings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
           {models.some((m) => !m.available) && (
             <p className="mt-2 text-meta text-muted">{models.filter((m) => !m.available).length} more models need a more powerful computer.</p>
           )}
+        </section>
+
+        <section>
+          <h2 className="text-body font-medium mb-1">Seeing images</h2>
+          <p className="text-ui text-muted mb-3">A small extra model that lets Hob look at photos and screenshots. It runs on this computer.</p>
+          <div data-testid="settings-vision" className="flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3 text-ui">
+            <span className="flex-1">
+              {vision.phase === 'ready' ? `Ready · ${vision.name} · ${gb(vision.sizeGB)}`
+                : vision.phase === 'downloading' ? `Downloading… ${Math.min(99, Math.floor(vision.progress * 100))}%`
+                : vision.phase === 'error' ? `Couldn't download it: ${vision.message}`
+                : 'Downloads after the main model'}
+            </span>
+            {vision.phase === 'error' && <button className={button.secondary} onClick={() => void hob.vision.retry()}>Try again</button>}
+          </div>
         </section>
 
         <section className="flex items-start justify-between gap-6">

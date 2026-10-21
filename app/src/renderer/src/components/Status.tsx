@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import type { SetupState } from '../../../shared/types'
+import { useEffect, useRef, useState } from 'react'
+import type { SetupState, VisionState } from '../../../shared/types'
 import { hob } from '../api'
 
 const gbOf = (n: number) => (n < 10 ? n.toFixed(1) : Math.round(n).toString())
@@ -28,8 +28,29 @@ function Tooltip({ content, children }: { content: React.ReactNode; children: Re
   )
 }
 
+/** Hob's eyes download after the main model; shown here until they're ready */
+function useVision() {
+  const [v, setV] = useState<VisionState>({ phase: 'off' })
+  useEffect(() => { void hob.vision.getState().then(setV); return hob.vision.onState(setV) }, [])
+  return v
+}
+
 export function Status({ state }: { state: SetupState }) {
+  const vision = useVision()
   if (state.phase !== 'downloading' && state.phase !== 'ready') return null
+  if (state.phase === 'ready' && !state.note && vision.phase === 'downloading') {
+    const pct = Math.min(99, Math.floor(vision.progress * 100))
+    return (
+      <span className="flex min-w-0 items-center gap-2 text-meta text-ink-soft">
+        <Tooltip content={<><span className="block font-medium">Hob is ready to use</span><span className="block text-ink-soft">It's adding photo support, so it can look at images and screenshots: {pct}%.</span></>}>
+          <span data-testid="status" tabIndex={0} className="flex items-center gap-2 cursor-default outline-none">
+            <span className="size-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
+            <span>Adding photo support… {pct}%</span>
+          </span>
+        </Tooltip>
+      </span>
+    )
+  }
   const pct = state.phase === 'downloading' ? Math.min(99, Math.floor(state.progress * 100)) : 100
   const label = state.phase === 'downloading' ? (state.note ?? `Getting smarter… ${pct}%`) : (state.note ?? 'Ready')
   const tip = state.phase === 'downloading' ? (
