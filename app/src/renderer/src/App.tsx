@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, PanelLeft, Search } from 'lucide-react'
 import type { SetupState } from '../../shared/types'
-import { hob } from './api'
+import { mabel } from './api'
 import { Onboarding } from './screens/Onboarding'
 import { ChatView } from './screens/Chat'
 import { ConfirmHost } from './components/Confirm'
@@ -47,14 +47,14 @@ export function App() {
   const [sidebar, setSidebar] = useState(!narrow)
   useEffect(() => setSidebar(!narrow), [narrow])
   useEffect(() => {
-    void hob.setup.getState().then(setState)
-    return hob.setup.onState(setState)
+    void mabel.setup.getState().then(setState)
+    return mabel.setup.onState(setState)
   }, [])
   // a .mcpb or plugin zip opened from Finder: show it on the Plugins screen
   const [opened, setOpened] = useState<PluginResult | null>(null)
   /** Settings, over the app: which page is open */
   const [settingsAt, setSettingsAt] = useState<Section | null>(null)
-  useEffect(() => hob.plugins.onOpened((r) => { setOpened(r); setSettingsAt('plugins') }), [])
+  useEffect(() => mabel.plugins.onOpened((r) => { setOpened(r); setSettingsAt('plugins') }), [])
   // a plugin opened from Finder is announced once; closing Settings forgets it
   useEffect(() => { if (!settingsAt) setOpened(null) }, [settingsAt])
   // a file dropped anywhere outside the chat must never navigate the window
@@ -86,7 +86,7 @@ export function App() {
   }
   const step = async (by: -1 | 1) => {
     const h = history.current
-    const alive = new Set((await hob.chats.list()).map((c) => c.id))
+    const alive = new Set((await mabel.chats.list()).map((c) => c.id))
     // skip chats deleted since
     let i = h.i + by
     while (i >= 0 && i < h.list.length && h.list[i].chat && !alive.has(h.list[i].chat!)) i += by
@@ -101,7 +101,7 @@ export function App() {
   // a ref so the shortcut handler always calls the latest closures
   const keys = useRef<(e: KeyboardEvent) => void>(() => {})
   keys.current = (e) => {
-    if (!(hob.platform === 'darwin' ? e.metaKey : e.ctrlKey) || e.altKey || e.shiftKey) return
+    if (!(mabel.platform === 'darwin' ? e.metaKey : e.ctrlKey) || e.altKey || e.shiftKey) return
     const k = e.key.toLowerCase()
     if (k === 'k') { e.preventDefault(); setPalette((p) => !p) }
     else if (k === 'n') { e.preventDefault(); setPalette(false); open(null) }
@@ -117,7 +117,7 @@ export function App() {
 
   const chatReady = state.phase === 'ready' || (state.phase === 'downloading' && state.chatReady)
   if (!chatReady) return <Onboarding state={state} />
-  const mac = hob.platform === 'darwin'
+  const mac = mabel.platform === 'darwin'
   return (
     <div className="reveal relative h-full flex">
       <ConfirmHost />

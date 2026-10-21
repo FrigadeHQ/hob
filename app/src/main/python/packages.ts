@@ -2,9 +2,9 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { join } from 'node:path'
 
 /**
- * Extra packages the user's code asked for, from PyPI. They live in a venv layered on Hob's Python
+ * Extra packages the user's code asked for, from PyPI. They live in a venv layered on Mabel's Python
  * (--system-site-packages), so pip only adds what isn't there yet instead of a second numpy and pandas.
- * Code still runs with Hob's own Python, in its sandbox: the venv's site-packages is added to the path.
+ * Code still runs with Mabel's own Python, in its sandbox: the venv's site-packages is added to the path.
  */
 
 const SPEC = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}(\[[A-Za-z0-9,._-]{1,100}\])?(==[A-Za-z0-9.!+_-]{1,50})?$/
@@ -42,9 +42,9 @@ export function installedVersions(dirs: string[]): Map<string, string> {
 }
 
 export type Exec = (cmd: string, args: string[]) => Promise<void>
-const MARK = 'hob-packages.json'
+const MARK = 'mabel-packages.json'
 
-/** Install specs into the venv (made on first use, remade when Hob's Python changes). Wheels only: nothing runs while installing. */
+/** Install specs into the venv (made on first use, remade when Mabel's Python changes). Wheels only: nothing runs while installing. */
 export async function installPackages(python: string, venv: string, pyVersion: string, specs: string[], exec: Exec): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!specs.length) return { ok: true }
   if (specs.length > MAX_PACKAGES) return { ok: false, error: `Install up to ${MAX_PACKAGES} packages at a time.` }
@@ -68,7 +68,7 @@ export async function installPackages(python: string, venv: string, pyVersion: s
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     const why = /No matching distribution|Could not find a version/i.test(msg)
-      ? `PyPI has no ready-to-install version of ${specs.join(', ')} for this computer (Hob only installs prebuilt packages). Check the name, or try without a version.`
+      ? `PyPI has no ready-to-install version of ${specs.join(', ')} for this computer (Mabel only installs prebuilt packages). Check the name, or try without a version.`
       : /resolve|Temporary failure|ConnectionError|Max retries/i.test(msg) ? "Couldn't reach PyPI. Check the internet connection." : msg.split('\n').slice(-6).join('\n')
     return { ok: false, error: why }
   }

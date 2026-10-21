@@ -67,9 +67,9 @@ const EVERYDAY: StarterRef[] = [
 ]
 /** a different few each new chat */
 const rotate = <T,>(list: T[], seed: number, n: number) => list.map((_, i) => list[(i + seed) % list.length]).slice(0, n)
-/** always shown: charts are what people most want to see Hob do with a file */
+/** always shown: charts are what people most want to see Mabel do with a file */
 const CHART_IDEA: StarterRef = { title: 'Turn a spreadsheet into a chart', prompt: 'Make a clear chart from this spreadsheet and tell me the main takeaway.', icon: 'chart-column', pluginId: '', file: true }
-/** shown until email and calendar are connected: the thing that makes Hob most useful day to day */
+/** shown until email and calendar are connected: the thing that makes Mabel most useful day to day */
 export const CONNECT_IDEA: StarterRef = { title: 'Connect my email and calendar', prompt: '', icon: 'calendar', pluginId: '', connect: true }
 
 /** the chart idea, one more that works on a file, two others (plugins first); the rest rotate each new chat.

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { hob } from '../api'
+import { mabel } from '../api'
 import { startRecording } from './record'
 import { prefs } from './prefs'
 
-type Prepared = Awaited<ReturnType<typeof hob.speech.prepare>>
+type Prepared = Awaited<ReturnType<typeof mabel.speech.prepare>>
 
 /**
  * Mic button behaviour: first press records, second press transcribes on this computer and hands
@@ -17,27 +17,27 @@ export function useDictation(onText: (text: string) => void) {
   const recording = useRef<Awaited<ReturnType<typeof startRecording>> | null>(null)
   const prepared = useRef<Promise<Prepared> | null>(null)
 
-  useEffect(() => hob.speech.onProgress((f) => setProgress(f < 1 ? f : null)), [])
+  useEffect(() => mabel.speech.onProgress((f) => setProgress(f < 1 ? f : null)), [])
   useEffect(() => () => recording.current?.cancel(), [])
 
   async function start() {
     setError(null)
     // the system prompt appears here the first time; after a "no", point to Settings
-    if (!(await hob.speech.mic())) return setError({ text: 'Hob needs microphone access for dictation.', micSettings: true })
+    if (!(await mabel.speech.mic())) return setError({ text: 'Mabel needs microphone access for dictation.', micSettings: true })
     if (!prepared.current) {
-      prepared.current = hob.speech.prepare()
+      prepared.current = mabel.speech.prepare()
       prepared.current.catch(() => { prepared.current = null })
       // load the model while the user talks (first use of a session takes a while)
       void prepared.current.then(async (r) => { if ('modelBase' in r) (await import('./index')).warm(r.modelBase) }).catch(() => {})
     }
     try {
-      recording.current = hob.fake ? null : await startRecording(prefs.mic())
+      recording.current = mabel.fake ? null : await startRecording(prefs.mic())
       setState('listening')
     } catch (err) {
       console.error(err)
       const name = (err as Error).name
       setError(name === 'NotAllowedError' || name === 'SecurityError'
-        ? { text: 'Hob needs microphone access for dictation.', micSettings: true }
+        ? { text: 'Mabel needs microphone access for dictation.', micSettings: true }
         : { text: name === 'NotFoundError' ? 'No microphone found.' : "Couldn't start the microphone. Try again." })
     }
   }
@@ -51,7 +51,7 @@ export function useDictation(onText: (text: string) => void) {
   }
 
   /** how loud the mic is right now, 0–1; a gentle made-up voice in test mode */
-  const level = useCallback(() => recording.current?.level() ?? (hob.fake ? Math.abs(0.6 * Math.sin(Date.now() / 180) * Math.sin(Date.now() / 530)) : 0), [])
+  const level = useCallback(() => recording.current?.level() ?? (mabel.fake ? Math.abs(0.6 * Math.sin(Date.now() / 180) * Math.sin(Date.now() / 530)) : 0), [])
 
   async function finish() {
     setState('transcribing')

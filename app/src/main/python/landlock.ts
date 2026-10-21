@@ -1,7 +1,7 @@
 /** Python start-up step for the Linux sandbox (Landlock). Written next to each run's script, then runs it. */
-export const LANDLOCK_PY = `# Hob's Linux sandbox: limits this Python with Landlock (kernel 5.13+), then runs the code.
+export const LANDLOCK_PY = `# Mabel's Linux sandbox: limits this Python with Landlock (kernel 5.13+), then runs the code.
 # Writes: the chat folder and temp. Reads: system files, the runtime, temp and allowed folders. Runs programs: only the runtime's.
-# Network (kernel 6.7+): none, unless HOB_SB_NET=1. Without Landlock (older kernels) the code runs unlimited.
+# Network (kernel 6.7+): none, unless MABEL_SB_NET=1. Without Landlock (older kernels) the code runs unlimited.
 import ctypes, json, os, platform, sys
 
 def _landlock():
@@ -27,7 +27,7 @@ def _landlock():
         _pack_ = 1
         _fields_ = [('allowed', ctypes.c_uint64), ('fd', ctypes.c_int32)]
 
-    net = abi >= 4 and os.environ.get('HOB_SB_NET') != '1'
+    net = abi >= 4 and os.environ.get('MABEL_SB_NET') != '1'
     attr = Attr(fs_all, 3 if net else 0)   # 3 = bind + connect over TCP
     size = ctypes.sizeof(Attr) if abi >= 4 else 8
     rs = libc.syscall(create, ctypes.byref(attr), ctypes.c_size_t(size), ctypes.c_uint32(0))
@@ -50,7 +50,7 @@ def _landlock():
     for p in ('/usr', '/lib', '/lib64', '/lib32', '/bin', '/sbin', '/etc', '/proc', '/sys', '/dev', '/opt', '/run', '/nix', '/snap'):
         allow(p, read)
     allow('/dev/null', file_rw)
-    cfg = json.loads(os.environ.get('HOB_SB', '{}'))
+    cfg = json.loads(os.environ.get('MABEL_SB', '{}'))
     for p in cfg.get('exec', []):
         allow(p, read | EXEC)
     for p in cfg.get('read', []):
@@ -64,7 +64,7 @@ def _landlock():
 
 _landlock()
 del _landlock
-for _k in ('HOB_SB', 'HOB_SB_NET'):
+for _k in ('MABEL_SB', 'MABEL_SB_NET'):
     os.environ.pop(_k, None)
 _script = sys.argv[1]
 sys.argv = sys.argv[1:]

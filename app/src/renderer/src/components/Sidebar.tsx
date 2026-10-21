@@ -4,7 +4,7 @@ import type { ChatSummary, LiveSummary, Project } from '../../../shared/agent'
 import { fileManager } from '../../../shared/platform'
 import type { SetupState } from '../../../shared/types'
 import type { Screen } from '../App'
-import { hob } from '../api'
+import { mabel } from '../api'
 import { Status } from './Status'
 import { confirmAction } from './Confirm'
 import { IconButton } from './ui'
@@ -33,7 +33,7 @@ type Props = {
 }
 
 const WIDTH = { min: 200, max: 420, normal: 256 }
-const KEY = 'hob.sidebarWidth'
+const KEY = 'mabel.sidebarWidth'
 const clamp = (w: number) => Math.round(Math.min(WIDTH.max, Math.max(WIDTH.min, w)))
 
 /** sidebar width the user dragged to, remembered on this computer */
@@ -45,7 +45,7 @@ function useWidth() {
   return [width, save] as const
 }
 
-const COLLAPSED = 'hob.collapsedProjects'
+const COLLAPSED = 'mabel.collapsedProjects'
 /** projects whose chats the user folded away, remembered on this computer */
 function useCollapsed() {
   const [ids, setIds] = useState<string[]>(() => {
@@ -69,23 +69,23 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
   const [projects, setProjects] = useState<Project[]>([])
   // chats whose reply is still being written, maybe while another chat is open
   const [live, setLive] = useState<LiveSummary[]>([])
-  useEffect(() => { void hob.chat.live().then(setLive); return hob.chat.onLive(setLive) }, [])
+  useEffect(() => { void mabel.chat.live().then(setLive); return mabel.chat.onLive(setLive) }, [])
   const [collapsed, toggle] = useCollapsed()
   const [width, setWidth] = useWidth()
   const [resizing, setResizing] = useState(false)
   const drag = useRef<{ x: number; w: number } | null>(null)
-  const reload = () => { void hob.chats.list().then(setChats); void hob.projects.list().then(setProjects) }
+  const reload = () => { void mabel.chats.list().then(setChats); void mabel.projects.list().then(setProjects) }
   useEffect(reload, [refreshKey])
-  useEffect(() => hob.chats.onChanged(reload), [])
+  useEffect(() => mabel.chats.onChanged(reload), [])
 
   async function remove(c: ChatSummary) {
-    if (!await confirmAction({ title: `Delete “${c.title}”?`, body: 'The chat is removed from Hob. Files you added to it, or that Hob made in it, move to the Trash.', ok: 'Delete chat', danger: true })) return
-    await hob.chats.remove(c.id)
+    if (!await confirmAction({ title: `Delete “${c.title}”?`, body: 'The chat is removed from Mabel. Files you added to it, or that Mabel made in it, move to the Trash.', ok: 'Delete chat', danger: true })) return
+    await mabel.chats.remove(c.id)
     if (c.id === selected) onNew()
     reload()
   }
 
-  const fm = fileManager(hob.platform)
+  const fm = fileManager(mabel.platform)
   const chatRow = (c: ChatSummary, inProject: boolean) => (
     <div key={c.id} className={`${row} ${inProject ? 'pl-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-line text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
       <button data-testid="chat-item" onClick={() => onSelect(c.id)} className="min-w-0 flex-1 truncate text-left">{c.title}</button>
@@ -130,7 +130,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
                 </button>
                 <button data-testid="project-open" onClick={() => onNewInProject(p.id)} className="min-w-0 flex-1 truncate text-left">{p.name}</button>
                 {p.folders.length > 0 && (
-                  <button data-testid="project-reveal" aria-label={`Open in ${fm}`} title={`Open in ${fm}`} onClick={() => void hob.projects.open(p.id)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><ExternalLink size={14} /></button>
+                  <button data-testid="project-reveal" aria-label={`Open in ${fm}`} title={`Open in ${fm}`} onClick={() => void mabel.projects.open(p.id)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><ExternalLink size={14} /></button>
                 )}
                 <button data-testid="project-edit" aria-label="Edit project" title="Edit project" onClick={() => onEditProject(p)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><Pencil size={14} /></button>
               </div>

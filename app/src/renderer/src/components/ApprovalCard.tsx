@@ -10,7 +10,7 @@ export function ApprovalCard({ req, onAnswer }: { req: ApprovalRequest; onAnswer
         <Icon size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-ink-soft" />
         <div className="min-w-0 flex-1">
           <p className="text-body font-medium">{req.text}</p>
-          {req.access && req.detail && <p className="mt-1 text-ui text-ink-soft">Hob can then see the files in {req.detail} in this chat, and asks before changing any.</p>}
+          {req.access && req.detail && <p className="mt-1 text-ui text-ink-soft">Mabel can then see the files in {req.detail} in this chat, and asks before changing any.</p>}
           {!req.access && req.detail && (
             <pre data-testid="approval-detail" className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-control bg-line/40 px-3 py-2 font-mono text-ui text-ink-soft">{req.detail}</pre>
           )}

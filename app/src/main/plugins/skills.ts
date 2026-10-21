@@ -36,7 +36,7 @@ export function parseSkill(text: string, dir: string): Skill | { error: string }
   const { meta, body } = frontmatter(text)
   const name = meta.name || basename(dir)
   if (!skillNameOk(name)) return { error: `${basename(dir)}/SKILL.md: name must be lowercase words with dashes, like "plan-trip"` }
-  if (!meta.description) return { error: `${basename(dir)}/SKILL.md: add a description in the frontmatter so Hob knows when to use it` }
+  if (!meta.description) return { error: `${basename(dir)}/SKILL.md: add a description in the frontmatter so Mabel knows when to use it` }
   const packages = (meta.packages ?? '').split(/[,\s]+/).filter(Boolean)
   return { name, description: meta.description, body: body.trim(), dir, ...(meta.network === 'true' ? { network: true } : {}), ...(packages.length ? { packages } : {}) }
 }

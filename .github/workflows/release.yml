@@ -1,4 +1,4 @@
-# Push a tag like v0.2.0 (matching app/package.json "version") to build Hob for Mac, Windows and Linux
+# Push a tag like v0.2.0 (matching app/package.json "version") to build Mabel for Mac, Windows and Linux
 # and publish them as a GitHub release. The download links in README.md always point at the newest one.
 # Running it by hand (Actions → Release → Run workflow) only builds: the installers are attached to the run, nothing is published.
 #
@@ -66,7 +66,7 @@ jobs:
         if: github.ref_type != 'tag'
         uses: actions/upload-artifact@v4
         with:
-          name: hob-${{ runner.os }}
+          name: mabel-${{ runner.os }}
           path: |
             app/dist/*.dmg
             app/dist/*.exe

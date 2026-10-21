@@ -12,7 +12,7 @@ beforeAll(() => {
   // the helper is built from Swift; build it for the tests if needed
   if (mac && !existsSync(pdfHelper())) {
     mkdirSync(join(import.meta.dirname, '../resources/bin'), { recursive: true })
-    execFileSync('swiftc', ['-O', join(import.meta.dirname, '../native/hob-pdf/main.swift'), '-o', pdfHelper()])
+    execFileSync('swiftc', ['-O', join(import.meta.dirname, '../native/mabel-pdf/main.swift'), '-o', pdfHelper()])
   }
 }, 180_000)
 
@@ -53,7 +53,7 @@ describe('labelBlanks: what each blank is for', () => {
 
 describe.runIf(mac)('read_pdf and fill_pdf with the PDF helper', () => {
   const ctxFor = () => {
-    const chatDir = mkdtempSync(join(tmpdir(), 'hob-pdf-'))
+    const chatDir = mkdtempSync(join(tmpdir(), 'mabel-pdf-'))
     return { chatDir, grants: [], signal: new AbortController().signal, untrusted: false, webAccess: true, runTmp: chatDir } as never as Parameters<typeof readPdf.run>[1]
   }
 

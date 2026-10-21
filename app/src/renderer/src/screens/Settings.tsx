@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ModelRow, UserSettings } from '../../../shared/agent'
 import type { SetupState, VisionState } from '../../../shared/types'
-import { hob } from '../api'
+import { mabel } from '../api'
 import { Dialog, Switch, button } from '../components/ui'
 
 const gb = (n: number) => (n < 10 ? `${n.toFixed(1)} GB` : `${Math.round(n)} GB`)
@@ -31,26 +31,26 @@ export function Segmented<T extends string>({ value, options, onChange, testId }
 
 export const Heading = ({ children }: { children: React.ReactNode }) => <h2 className="mt-8 mb-1 text-body font-semibold first:mt-0">{children}</h2>
 
-/** the models this computer can run, and Hob's image model */
+/** the models this computer can run, and Mabel's image model */
 export function ModelSettings() {
   const [models, setModels] = useState<ModelRow[]>([])
   const [vision, setVision] = useState<VisionState>({ phase: 'off' })
-  useEffect(() => { void hob.vision.getState().then(setVision); return hob.vision.onState(setVision) }, [])
+  useEffect(() => { void mabel.vision.getState().then(setVision); return mabel.vision.onState(setVision) }, [])
   /** the download in progress (or about to start, the moment Download is clicked) */
   const [setup, setSetup] = useState<SetupState | null>(null)
   const [starting, setStarting] = useState<string | null>(null)
-  const reload = () => void hob.models.list().then(setModels)
+  const reload = () => void mabel.models.list().then(setModels)
   useEffect(() => {
     reload()
-    void hob.setup.getState().then(setSetup)
-    return hob.setup.onState((st) => { setSetup(st); if (st.phase !== 'downloading') setStarting(null); reload() })
+    void mabel.setup.getState().then(setSetup)
+    return mabel.setup.onState((st) => { setSetup(st); if (st.phase !== 'downloading') setStarting(null); reload() })
   }, [])
   const downloading = setup?.phase === 'downloading' ? setup : null
   const busyId = downloading?.target.id ?? starting
   function use(id: string) {
     if (busyId) return
     setStarting(id)
-    void hob.models.use(id).then(reload).finally(() => setStarting((cur) => (cur === id ? null : cur)))
+    void mabel.models.use(id).then(reload).finally(() => setStarting((cur) => (cur === id ? null : cur)))
   }
   return (
     <>
@@ -80,7 +80,7 @@ export function ModelSettings() {
                       </div>
                       {/* stop it: chat stays on the model in use; what came down so far is kept for later */}
                       {downloading && downloading.target.id === m.id && (
-                        <button data-testid="model-cancel" onClick={() => void hob.models.cancel()} className="text-meta text-muted underline-offset-2 hover:text-ink hover:underline">Cancel</button>
+                        <button data-testid="model-cancel" onClick={() => void mabel.models.cancel()} className="text-meta text-muted underline-offset-2 hover:text-ink hover:underline">Cancel</button>
                       )}
                     </div>
                   </div>
@@ -90,7 +90,7 @@ export function ModelSettings() {
                   </button>
                 )}
                 {m.downloaded && !m.active && busyId !== m.id && (
-                  <button data-testid="model-delete" onClick={() => void hob.models.remove(m.id).then(reload)} className="text-ui text-muted hover:text-ink py-1.5">Delete</button>
+                  <button data-testid="model-delete" onClick={() => void mabel.models.remove(m.id).then(reload)} className="text-ui text-muted hover:text-ink py-1.5">Delete</button>
                 )}
               </div>
             ))}
@@ -99,7 +99,7 @@ export function ModelSettings() {
             <p className="mt-2 text-meta text-muted">{models.filter((m) => !m.available).length} more models need a more powerful computer.</p>
           )}
           <Heading>Seeing images</Heading>
-          <p className="text-ui text-muted mb-3">A small extra model that lets Hob look at photos and screenshots. It runs on this computer.</p>
+          <p className="text-ui text-muted mb-3">A small extra model that lets Mabel look at photos and screenshots. It runs on this computer.</p>
           <div data-testid="settings-vision" className="flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3 text-ui">
             <span className="flex-1">
               {vision.phase === 'ready' ? `Ready · ${vision.name} · ${gb(vision.sizeGB)}`
@@ -107,7 +107,7 @@ export function ModelSettings() {
                 : vision.phase === 'error' ? `Couldn't download it: ${vision.message}`
                 : 'Downloads after the main model'}
             </span>
-            {vision.phase === 'error' && <button className={button.secondary} onClick={() => void hob.vision.retry()}>Try again</button>}
+            {vision.phase === 'error' && <button className={button.secondary} onClick={() => void mabel.vision.retry()}>Try again</button>}
           </div>
     </>
   )
@@ -116,31 +116,31 @@ export function ModelSettings() {
 /** Web access: the one switch between offline and online */
 export function PrivacySettings() {
   const [s, setS] = useState<UserSettings | null>(null)
-  useEffect(() => { void hob.settings.get().then(setS) }, [])
+  useEffect(() => { void mabel.settings.get().then(setS) }, [])
   return (
     <>
       <Heading>Privacy</Heading>
-      <p className="mb-2 text-meta text-muted">Hob runs on this computer. Your chats and files never leave it.</p>
-      <Row label="Web access" help="Lets Hob search the web, read pages, and let its code fetch data and install Python packages. Turn it off to stay fully offline.">
-        <Switch testId="web-toggle" label="Web access" on={!!s?.webAccess} onChange={(on) => s && void hob.settings.set({ webAccess: on }).then(setS)} />
+      <p className="mb-2 text-meta text-muted">Mabel runs on this computer. Your chats and files never leave it.</p>
+      <Row label="Web access" help="Lets Mabel search the web, read pages, and let its code fetch data and install Python packages. Turn it off to stay fully offline.">
+        <Switch testId="web-toggle" label="Web access" on={!!s?.webAccess} onChange={(on) => s && void mabel.settings.set({ webAccess: on }).then(setS)} />
       </Row>
     </>
   )
 }
 
-/** where chat files go, how much space Hob uses, and deleting every chat */
+/** where chat files go, how much space Mabel uses, and deleting every chat */
 export function FilesSettings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
   const [s, setS] = useState<UserSettings | null>(null)
   const [storage, setStorage] = useState<{ modelsGB: number; filesGB: number; codeToolsGB: number } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [chatCount, setChatCount] = useState(0)
-  const reload = () => void hob.storage.get().then(setStorage)
-  useEffect(() => { reload(); void hob.settings.get().then(setS) }, [])
+  const reload = () => void mabel.storage.get().then(setStorage)
+  useEffect(() => { reload(); void mabel.settings.get().then(setS) }, [])
   return (
     <>
       <Heading>Files</Heading>
       <Row label="Chat files" help="Each chat keeps its files in its own folder here.">
-        <button onClick={() => void hob.settings.pickFilesDir().then(async (d) => { if (d) setS(await hob.settings.set({ filesDir: d })) })} className={button.secondary}>Change…</button>
+        <button onClick={() => void mabel.settings.pickFilesDir().then(async (d) => { if (d) setS(await mabel.settings.set({ filesDir: d })) })} className={button.secondary}>Change…</button>
       </Row>
       <code data-testid="files-dir" className="block truncate rounded bg-line/50 px-2 py-1 text-meta">{s?.filesDir}</code>
       <Heading>Storage</Heading>
@@ -159,9 +159,9 @@ export function FilesSettings({ onAllChatsDeleted }: { onAllChatsDeleted(): void
           <div className="flex items-center justify-between gap-6 rounded-card border border-danger/30 px-4 py-3">
             <div>
               <p className="font-medium">Delete all chats</p>
-              <p className="text-ui text-muted">Removes every chat from Hob. Files they made stay in your files folder. This can’t be undone.</p>
+              <p className="text-ui text-muted">Removes every chat from Mabel. Files they made stay in your files folder. This can’t be undone.</p>
             </div>
-            <button data-testid="delete-all-chats" onClick={() => void hob.chats.list().then((c) => { setChatCount(c.length); setConfirmDelete(true) })}
+            <button data-testid="delete-all-chats" onClick={() => void mabel.chats.list().then((c) => { setChatCount(c.length); setConfirmDelete(true) })}
               className="shrink-0 rounded-control border border-danger/40 px-3 py-1.5 text-ui font-medium text-danger transition-colors hover:bg-danger/10">
               Delete all chats
             </button>
@@ -170,11 +170,11 @@ export function FilesSettings({ onAllChatsDeleted }: { onAllChatsDeleted(): void
       </div>
       {confirmDelete && (
         <Dialog title={`Delete all ${chatCount} ${chatCount === 1 ? 'chat' : 'chats'}?`} testId="confirm-delete-all" onClose={() => setConfirmDelete(false)}>
-          <p className="text-ui text-ink-soft">Every chat will be removed from Hob. Files they made stay in your files folder.</p>
+          <p className="text-ui text-ink-soft">Every chat will be removed from Mabel. Files they made stay in your files folder.</p>
           <p className="mt-2 text-ui font-medium">This can’t be undone.</p>
           <div className="mt-5 flex justify-end gap-2">
             <button autoFocus onClick={() => setConfirmDelete(false)} className={button.secondary}>Cancel</button>
-            <button data-testid="confirm-delete-all-yes" onClick={() => { setConfirmDelete(false); void hob.chats.removeAll().then(() => { onAllChatsDeleted(); reload() }) }}
+            <button data-testid="confirm-delete-all-yes" onClick={() => { setConfirmDelete(false); void mabel.chats.removeAll().then(() => { onAllChatsDeleted(); reload() }) }}
               className="inline-flex items-center rounded-control bg-danger px-3 py-1.5 text-ui font-medium text-white transition-opacity hover:opacity-90">
               Delete all chats
             </button>

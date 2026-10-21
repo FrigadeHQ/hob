@@ -72,12 +72,12 @@ export function pythonHint(output: string, code = ''): string {
   if (netError) {
     hints.push('Code has no internet unless you run it with internet: true (Web access must be on). Run it again with internet: true.')
   } else if (/PermissionError|Operation not permitted/.test(output)) {
-    hints.push("Hob blocked this: code can only read the chat folder and folders the user gave access to, and can only save in the chat folder. To rename, move or delete the user's files, use move_files, move_file or delete_file. If it's a folder Hob can't see yet, call list_files with its full path and Hob will ask the user.")
+    hints.push("Mabel blocked this: code can only read the chat folder and folders the user gave access to, and can only save in the chat folder. To rename, move or delete the user's files, use move_files, move_file or delete_file. If it's a folder Mabel can't see yet, call list_files with its full path and Mabel will ask the user.")
   }
   if (/(FileNotFoundError|No such file or directory)[^\n]*['"]~/.test(output)) hints.push("Python doesn't understand ~ in paths. Use the full path instead.")
   const missing = /ModuleNotFoundError: No module named '([\w.]+)'/.exec(output)
   if (missing) hints.push(`To use ${missing[1].split('.')[0]}, install it first with install_packages (its name on PyPI, which can differ from the import name, e.g. beautifulsoup4 for bs4), then run the code again.`)
-  return hints.length ? `\n\nHob: ${hints.join(' ')}` : ''
+  return hints.length ? `\n\nMabel: ${hints.join(' ')}` : ''
 }
 
 /** runs a skill's script as if started from the command line, with its folder importable */
@@ -136,7 +136,7 @@ export const runPythonTool: Tool<PyArgs> = {
       python, runtimeRoot: ctx.python!.dir, cwd: ctx.chatDir, tmpDir: ctx.runTmp, code, signal: ctx.signal,
       readPaths: skill ? [skill.dir, ...ctx.grants] : ctx.grants, packages: ctx.python!.sitePackages?.(),
       ...(skill?.network || (a.internet === true && ctx.webAccess) ? { network: true } : {}),
-      ...(skill ? { env: { HOB_CHAT_DIR: ctx.chatDir, HOB_SKILL_DIR: skill.dir } } : {}),
+      ...(skill ? { env: { MABEL_CHAT_DIR: ctx.chatDir, MABEL_SKILL_DIR: skill.dir } } : {}),
     })
     if (skill?.network || a.internet === true) ctx.untrusted = true
     const files = [...snapshot(ctx.chatDir)].filter(([p, t]) => before.get(p) !== t).map(([p]) => p)

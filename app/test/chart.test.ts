@@ -29,7 +29,7 @@ it('reads simple CSV, quotes and all', () => {
 })
 
 function ctx(): TurnCtx {
-  const chatDir = mkdtempSync(join(tmpdir(), 'hob-chart-'))
+  const chatDir = mkdtempSync(join(tmpdir(), 'mabel-chart-'))
   return { chatDir, grants: [], signal: new AbortController().signal, untrusted: false, webAccess: false, journal: undefined as never, trash: async () => {}, python: undefined, runTmp: chatDir, fetch } as TurnCtx
 }
 

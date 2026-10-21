@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import type { Catalog } from '@hob/picker'
+import type { Catalog } from '@mabel/picker'
 import bundled from '../../catalog/catalog.json'
 import { computerName, SetupController, type SetupDeps } from '../src/main/setup'
 import { FakeEngine, fakeDownloadDeps } from '../src/main/fake'
@@ -14,7 +14,7 @@ const catalog = bundled as Catalog
 const m1max = { os: 'darwin' as const, arch: 'arm64', cpuModel: 'Apple M1 Max', totalRamGB: 32, freeDiskGB: 500, gpu: { kind: 'unified' as const, name: 'Apple M1 Max', vramGB: 24 } }
 
 function setup(over: Partial<SetupDeps> = {}) {
-  const root = mkdtempSync(join(tmpdir(), 'hob-setup-'))
+  const root = mkdtempSync(join(tmpdir(), 'mabel-setup-'))
   const engine = new FakeEngine()
   const deps: SetupDeps = {
     engine, modelsDir: root, settingsPath: join(root, 'settings.json'),

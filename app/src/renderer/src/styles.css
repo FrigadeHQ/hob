@@ -2,7 +2,7 @@
 @plugin "@tailwindcss/typography";
 
 /*
- * Hob design system
+ * Mabel design system
  * Type: four sizes only. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
  * Color: paper (app) · sidebar · surface (composer, cards) · ink · ink-soft (secondary text) · muted (hints, placeholders) · line · line-strong · accent
  * Radius: 8 controls · 12 cards · 18 composer. Icons: lucide, 16px in UI, 14px in steps.
@@ -10,7 +10,7 @@
 @theme {
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  /* Hob's replies read like a page: Source Serif 4 (Adobe, SIL Open Font License) */
+  /* Mabel's replies read like a page: Source Serif 4 (Adobe, SIL Open Font License) */
   --font-serif: "Source Serif 4 Variable", "Iowan Old Style", Georgia, serif;
 
   --text-meta: 12px;
@@ -78,7 +78,8 @@
   }
 }
 
-html, body, #root { height: 100%; }
+/* the window never scrolls as a page (that slid the whole app up under the title bar); panels scroll inside */
+html, body, #root { height: 100%; overflow: hidden; }
 body {
   background: var(--color-paper);
   color: var(--color-ink);
@@ -107,7 +108,7 @@ body {
   --tw-prose-code: var(--color-ink);
   --tw-prose-th-borders: var(--color-line-strong);
   --tw-prose-td-borders: var(--color-line);
-  /* section breaks (---): Hob's soft divider, not the prose default (too bright in dark mode) */
+  /* section breaks (---): Mabel's soft divider, not the prose default (too bright in dark mode) */
   --tw-prose-hr: var(--color-line);
 }
 .reply.prose :where(p, ul, ol, table, pre) { margin-top: 0.6em; margin-bottom: 0.6em; }
@@ -137,16 +138,10 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .fw { animation: fw 650ms cubic-bezier(0.2, 0.6, 0.2, 1) both; }
 @media (prefers-reduced-motion: reduce) { .reveal, .pop, .fade-in, .fw { animation: none; } }
 
-/* the hob on the start-up screen: floats, breathes, its tip flickers, it blinks now and then */
-.hob-alive .hob-body { animation: hob-float 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
-.hob-alive .hob-flame { animation: hob-flicker 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
-.hob-alive .hob-eyes { animation: hob-blink 4.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
-.hob-alive .hob-glow { animation: hob-glow 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
-@keyframes hob-float { 0%, 100% { transform: translateY(0) scale(1, 1) } 50% { transform: translateY(-14px) scale(1.02, 0.985) } }
-@keyframes hob-flicker { 0%, 100% { transform: skewX(0deg) scaleY(1) } 30% { transform: skewX(-2deg) scaleY(1.025) } 65% { transform: skewX(1.5deg) scaleY(0.99) } }
-@keyframes hob-blink { 0%, 92%, 100% { transform: scaleY(1) } 95% { transform: scaleY(0.1) } }
-@keyframes hob-glow { 0%, 100% { opacity: 0.7; transform: scale(0.96) } 50% { opacity: 1; transform: scale(1.04) } }
-/* watching the cursor: eyes and a small lean, smoothed */
-.hob-alive .hob-look { transition: transform 160ms ease-out; }
-.hob-alive .hob-lean { transition: transform 400ms ease-out; transform-box: fill-box; transform-origin: 50% 100%; }
-@media (prefers-reduced-motion: reduce) { .hob-alive * { animation: none !important } }
+/* the mabel on the start-up screen: floats, breathes, its tip flickers, it blinks now and then */
+/* Mabel on the start-up screen: a gentle bob in whole pixels (steps keep the pixel-art look) */
+.mabel-alive .mabel-body { animation: mabel-bob 2.4s steps(4, jump-none) infinite; }
+.mabel-alive .mabel-shadow { animation: mabel-shadow 2.4s steps(4, jump-none) infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+@keyframes mabel-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
+@keyframes mabel-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.08 } 50% { transform: scaleX(0.85); opacity: 0.05 } }
+@media (prefers-reduced-motion: reduce) { .mabel-alive * { animation: none !important } }

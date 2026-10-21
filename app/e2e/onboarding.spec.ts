@@ -6,8 +6,8 @@ import { join } from 'node:path'
 const main = join(import.meta.dirname, '../out/main/index.js')
 
 test('first run: recommend → download → chat', async () => {
-  const userData = mkdtempSync(join(tmpdir(), 'hob-e2e-'))
-  const env = { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: userData }
+  const userData = mkdtempSync(join(tmpdir(), 'mabel-e2e-'))
+  const env = { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: userData }
   const app = await electron.launch({ args: [main], env })
   const page = await app.firstWindow()
 
@@ -34,7 +34,7 @@ test('first run: recommend → download → chat', async () => {
   await page.getByTestId('copy-reply').last().click()
   expect(await app.evaluate(({ clipboard }) => clipboard.readText())).toContain('You said: hello there')
 
-  // typing while Hob works queues the message; it sends when the reply is done
+  // typing while Mabel works queues the message; it sends when the reply is done
   await page.getByTestId('composer-input').fill('__slow__')
   await page.getByTestId('composer-send').click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('one')
@@ -105,8 +105,8 @@ test('first run: recommend → download → chat', async () => {
 })
 
 test('choose a different model from the list', async () => {
-  const userData = mkdtempSync(join(tmpdir(), 'hob-e2e-'))
-  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: userData } })
+  const userData = mkdtempSync(join(tmpdir(), 'mabel-e2e-'))
+  const app = await electron.launch({ args: [main], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: userData } })
   const page = await app.firstWindow()
 
   await page.getByTestId('setup-other-options').click()

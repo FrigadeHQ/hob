@@ -37,7 +37,7 @@ export function Switch({ on, onChange, label, testId }: { on: boolean; onChange(
   )
 }
 
-/** Icons plugins may name in hob-plugin.json ("icon": "map"); anything else shows a puzzle piece. */
+/** Icons plugins may name in mabel-plugin.json ("icon": "map"); anything else shows a puzzle piece. */
 export const PLUGIN_ICONS: Record<string, LucideIcon> = {
   puzzle: Puzzle, globe: Globe, 'cloud-sun': CloudSun, 'chart-column': ChartColumn, map: Map, 'graduation-cap': GraduationCap, coins: Coins,
   sparkles: Sparkles, plug: Plug, 'book-open': BookOpen, calendar: Calendar, music: Music, camera: Camera, code: Code, mail: Mail,

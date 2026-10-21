@@ -11,7 +11,7 @@ import type { ApprovalAnswer, ApprovalRequest, Attachment, Step } from '../src/s
 
 /** grant: the chat was given the Downloads folder. project: instead, the chat is in a project with that folder */
 function world(answer: ApprovalAnswer = 'allow', o: { grant?: boolean; project?: boolean; instructions?: string } = {}) {
-  const root = mkdtempSync(join(tmpdir(), 'hob-turn-'))
+  const root = mkdtempSync(join(tmpdir(), 'mabel-turn-'))
   const chatDir = join(root, 'chat'); const grant = join(root, 'Downloads')
   mkdirSync(chatDir); mkdirSync(grant)
   const store = new Store(':memory:')
@@ -60,7 +60,7 @@ it('denies paths outside allowed folders and tells the model why', async () => {
   const w = world()
   const reply = await w.turn(`__tools__ [["read_file",{"path":"/etc/hosts"}]]`)
   expect(reply.steps[0].status).toBe('denied')
-  expect(reply.content).toContain("Hob can't use /etc/hosts")
+  expect(reply.content).toContain("Mabel can't use /etc/hosts")
   expect(w.asked).toHaveLength(0)
 })
 
@@ -219,23 +219,23 @@ it('titles start with a capital letter', async () => {
   expect(cleanTitle('dinosaur birthday party')).toBe('Dinosaur birthday party')
 })
 
-/** a pretend home folder with ~/Desktop/hob-test in it, which Hob has no access to yet */
+/** a pretend home folder with ~/Desktop/mabel-test in it, which Mabel has no access to yet */
 function withHome(answer: ApprovalAnswer = 'allow') {
   const w = world(answer)
-  const home = join(w.root, 'home'); const photos = join(home, 'Desktop', 'hob-test')
+  const home = join(w.root, 'home'); const photos = join(home, 'Desktop', 'mabel-test')
   mkdirSync(photos, { recursive: true })
   for (const n of ['IMG_1.jpg', 'IMG_2.jpg']) writeFileSync(join(photos, n), n)
   w.deps.home = home
   return { ...w, home, photos }
 }
 
-it("a folder Hob can't use yet: asks for access right in the chat, then carries on", async () => {
+it("a folder Mabel can't use yet: asks for access right in the chat, then carries on", async () => {
   const w = withHome('allow')
   const reply = await w.turn(`__tools__ [["list_files",{"path":${JSON.stringify(w.photos)}}]]`)
-  expect(w.asked[0]).toMatchObject({ text: 'Let Hob use your “hob-test” folder?', access: true, detail: join('~', 'Desktop', 'hob-test') })
+  expect(w.asked[0]).toMatchObject({ text: 'Let Mabel use your “mabel-test” folder?', access: true, detail: join('~', 'Desktop', 'mabel-test') })
   expect(reply.steps[0].status).toBe('done')
   expect(reply.content).toContain('IMG_1.jpg')
-  expect(reply.content).toContain('The user just gave Hob access')
+  expect(reply.content).toContain('The user just gave Mabel access')
   expect(w.store.chatGrants('c')).toContain(w.photos)
   // the prompt names the home folder so "my Desktop" becomes a real path
   expect(w.engine.lastRequest?.messages[0].content).toContain(`${w.home}/Desktop`)
@@ -245,7 +245,7 @@ it('Not now: nothing is read, and the model is told to say so', async () => {
   const w = withHome('deny')
   const reply = await w.turn(`__tools__ [["list_files",{"path":${JSON.stringify(w.photos)}}]]`)
   expect(reply.steps[0].status).toBe('denied')
-  expect(reply.content).toContain("didn't give Hob access")
+  expect(reply.content).toContain("didn't give Mabel access")
   expect(w.store.chatGrants('c')).not.toContain(w.photos)
 })
 
@@ -255,17 +255,17 @@ it('many renames: one approval card that lists them all', async () => {
   const moves = [1, 2].map((i) => ({ from: join(w.photos, `IMG_${i}.jpg`), to: join(w.photos, `2024-01-0${i}_001.jpg`) }))
   const reply = await w.turn(`__tools__ [["move_files",${JSON.stringify({ moves })}]]`)
   expect(w.asked).toHaveLength(1)
-  expect(w.asked[0]).toMatchObject({ text: 'Rename 2 files in hob-test?', detail: 'IMG_1.jpg → 2024-01-01_001.jpg\nIMG_2.jpg → 2024-01-02_001.jpg' })
+  expect(w.asked[0]).toMatchObject({ text: 'Rename 2 files in mabel-test?', detail: 'IMG_1.jpg → 2024-01-01_001.jpg\nIMG_2.jpg → 2024-01-02_001.jpg' })
   expect(existsSync(join(w.photos, '2024-01-02_001.jpg'))).toBe(true)
   expect(reply.undoable).toBe(true)
 })
 
-it('says files were renamed when nothing was: Hob catches it and the model owns up', async () => {
+it('says files were renamed when nothing was: Mabel catches it and the model owns up', async () => {
   const w = withHome()
   w.store.addChatGrant('c', w.photos)
   const resets: string[] = []
   w.deps.emit.reset = (r) => resets.push(r)
-  const reply = await w.turn('__claim__ rename the photos in ~/Desktop/hob-test by date taken')
+  const reply = await w.turn('__claim__ rename the photos in ~/Desktop/mabel-test by date taken')
   expect(reply.content).toBe("Sorry, I haven't renamed them yet. I only made a list of the new names.")
   expect(resets).toEqual(['r'])
   // the model was told what really happened
@@ -276,8 +276,8 @@ it('says files were renamed when nothing was: Hob catches it and the model owns 
 it('if the model says it again, the reply carries a plain note that nothing changed', async () => {
   const w = withHome()
   w.store.addChatGrant('c', w.photos)
-  const reply = await w.turn('__claim__ stubborn: rename the photos in hob-test')
-  expect(reply.content).toContain("Hob didn't change any files in this reply.")
+  const reply = await w.turn('__claim__ stubborn: rename the photos in mabel-test')
+  expect(reply.content).toContain("Mabel didn't change any files in this reply.")
 })
 
 it('a real rename is not second-guessed', async () => {
@@ -286,11 +286,11 @@ it('a real rename is not second-guessed', async () => {
   const moves = [{ from: join(w.photos, 'IMG_1.jpg'), to: join(w.photos, 'renamed.jpg') }]
   const reply = await w.turn(`__tools__ [["move_files",${JSON.stringify({ moves })}]]`)
   expect(reply.content).toBe('Done. Moved 1 file.')
-  expect(w.engine.lastRequest?.messages.at(-1)?.content).not.toContain('Note from Hob')
+  expect(w.engine.lastRequest?.messages.at(-1)?.content).not.toContain('Note from Mabel')
 })
 
 it('the prompt points photo work at Pillow and EXIF, not modified dates', () => {
-  const p = systemPrompt({ chatDir: '/c', files: [], grants: ['/Users/eric/Desktop/hob-test'], home: '/Users/eric' })
+  const p = systemPrompt({ chatDir: '/c', files: [], grants: ['/Users/eric/Desktop/mabel-test'], home: '/Users/eric' })
   expect(p).toContain('Pillow')
   expect(p).toContain('DateTimeOriginal')
   expect(p).toContain('move_files')
@@ -299,7 +299,7 @@ it('the prompt points photo work at Pillow and EXIF, not modified dates', () => 
   expect(p).toContain('Only say you did something if a tool result shows it worked')
 })
 
-it('stops to ask "shall I go ahead?" on a task about their files: Hob tells it to just do it', async () => {
+it('stops to ask "shall I go ahead?" on a task about their files: Mabel tells it to just do it', async () => {
   const w = withHome()
   w.store.addChatGrant('c', w.photos)
   await w.turn(`__ask__ ${w.photos}`)
@@ -361,7 +361,7 @@ it('long project instructions are cut; the prompt says how to open folders', () 
   expect(p).toMatch(/open_folder[^\n]*File Explorer/)
 })
 
-it('stops with nothing to say after doing some work: Hob sends it back once to finish', async () => {
+it('stops with nothing to say after doing some work: Mabel sends it back once to finish', async () => {
   const w = world()
   const reply = await w.turn('__quit__')
   expect(w.engine.lastRequest?.messages.at(-1)?.content).toContain('you stopped before finishing')
@@ -371,7 +371,7 @@ it('stops with nothing to say after doing some work: Hob sends it back once to f
   expect((await w2.turn('__empty__')).content).toContain("couldn't come up with an answer")
 })
 
-it('charts are drawn by Hob (make_chart); Python images only for what it cannot draw', () => {
+it('charts are drawn by Mabel (make_chart); Python images only for what it cannot draw', () => {
   const p = systemPrompt({ chatDir: '/c', files: [], grants: [] })
   expect(p).toMatch(/charts?[^\n]*make_chart/i)
   expect(p).toMatch(/matplotlib only for/i)
@@ -433,7 +433,7 @@ it('folder paths in the prompt are quoted, so names with spaces stay whole; the 
 it('a failed or refused step keeps a short reason the user can read', async () => {
   const w = world()
   const reply = await w.turn(`__tools__ [["read_file",{"path":"/etc/hosts"}],["read_file",{"path":"nope.txt"}]]`)
-  expect(reply.steps[0]).toMatchObject({ status: 'denied', reason: expect.stringContaining("Hob can't use") })
+  expect(reply.steps[0]).toMatchObject({ status: 'denied', reason: expect.stringContaining("Mabel can't use") })
   expect(reply.steps[1].status).toBe('error')
   expect(reply.steps[1].reason).toBeTruthy()
   expect(reply.steps[1].reason!.length).toBeLessThanOrEqual(160)
@@ -447,9 +447,9 @@ it('in a project, listing files with no folder named lists the project folder, n
   expect(reply.content).toContain('budget.xlsx')
 })
 
-it('Hob knows its own features, so "how do I connect Google Calendar?" gets a real answer', () => {
+it('Mabel knows its own features, so "how do I connect Google Calendar?" gets a real answer', () => {
   const p = systemPrompt({ chatDir: '/c', files: [], grants: [] })
-  expect(p).toContain('About Hob')
+  expect(p).toContain('About Mabel')
   expect(p).toMatch(/Settings → Connectors → Add connector/)
   expect(p).toMatch(/MCP/)
   expect(p).toMatch(process.platform === 'darwin' ? /Connect my email and calendar/ : /Google Calendar/)

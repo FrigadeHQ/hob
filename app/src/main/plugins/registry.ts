@@ -14,7 +14,7 @@ import { parseSkill, skillFile, skillFilesProblem, skillNameOk, slug, type Skill
 import { packageSpecProblem } from '../python/packages'
 import { mcpTool, pythonTool, safeToolName, type PluginRef } from './tools'
 
-export const MANIFEST = 'hob-plugin.json'
+export const MANIFEST = 'mabel-plugin.json'
 export const MY_SKILLS = 'my-skills'
 
 type Loaded = {
@@ -29,16 +29,16 @@ type Loaded = {
 }
 
 export type RegistryDeps = {
-  /** plugins that ship with Hob (read-only) */
+  /** plugins that ship with Mabel (read-only) */
   builtinDir: string
   /** process.platform, for plugins made for one system (tests set it) */
   platform?: string
   /** plugins the user added, one folder each */
   installDir: string
   store: Store
-  /** Hob's own tools that built-in plugins may expose, by name */
+  /** Mabel's own tools that built-in plugins may expose, by name */
   native: Record<string, Tool<any>>
-  /** names plugin tools must not take (Hob's core tools) */
+  /** names plugin tools must not take (Mabel's core tools) */
   reserved: string[]
   /** plugins whose switch is an existing setting (the Web plugin is "Web access") */
   bound?: Record<string, { get(): boolean; set(on: boolean): void }>
@@ -48,17 +48,17 @@ export type RegistryDeps = {
   path(): Promise<string>
   /** opens the browser for signing in to online connectors */
   openExternal?(url: string): unknown
-  /** Hob's own Node (Electron as Node), so bundles made for Node run without installing it */
+  /** Mabel's own Node (Electron as Node), so bundles made for Node run without installing it */
   node?: { command: string; env: Record<string, string> }
-  /** Hob's own Python, for Python bundles */
+  /** Mabel's own Python, for Python bundles */
   python?(): Promise<string>
   onChange?(): void
 }
 
-/** zips Hob can add: its own plugins and MCP bundles (.mcpb, and .dxt from before the rename) */
+/** zips Mabel can add: its own plugins and MCP bundles (.mcpb, and .dxt from before the rename) */
 export const PLUGIN_FILES = ['zip', 'mcpb', 'dxt']
 const isPluginFile = (p: string) => PLUGIN_FILES.includes(extname(p).slice(1).toLowerCase())
-/** a folder Hob can load: a Hob plugin or an MCP bundle */
+/** a folder Mabel can load: a Mabel plugin or an MCP bundle */
 const hasPlugin = (dir: string) => existsSync(join(dir, MANIFEST)) || !!readMcpb(dir)
 const OAUTH = (server: string) => `oauth:${server}`
 /** "https://mcp.linear.app/mcp" → "Linear" */
@@ -131,7 +131,7 @@ function load(dir: string, source: PluginSource): Loaded | undefined {
 
 const subdirs = (d: string) => (existsSync(d) ? readdirSync(d).filter((n) => !n.startsWith('.')).map((n) => join(d, n)).filter((p) => { try { return statSync(p).isDirectory() } catch { return false } }) : [])
 
-/** Every plugin Hob knows: what's on, what it adds, and how to add or remove one. */
+/** Every plugin Mabel knows: what's on, what it adds, and how to add or remove one. */
 export class PluginRegistry {
   private plugins: Loaded[] = []
   private clients = new Map<string, Promise<McpClient>>()
@@ -302,7 +302,7 @@ export class PluginRegistry {
     return r
   }
 
-  /** what the client needs to reach a server: settings filled in, Hob's own Node/Python, the sign-in token */
+  /** what the client needs to reach a server: settings filled in, Mabel's own Node/Python, the sign-in token */
   private async spec(p: Loaded, server: string, cfg: McpServerConfig): Promise<McpServerSpec> {
     const id = p.manifest.id
     const env = this.envFor(id)
@@ -328,7 +328,7 @@ export class PluginRegistry {
     }
     let command = c.command
     let extra: Record<string, string> = {}
-    // bundles run on Hob's own runtimes, so the user doesn't have to install Node or Python
+    // bundles run on Mabel's own runtimes, so the user doesn't have to install Node or Python
     if (c.runtime === 'node' && command === 'node' && this.d.node) { command = this.d.node.command; extra = this.d.node.env }
     if (c.runtime === 'python' && /^python3?$/.test(command) && this.d.python) command = await this.d.python()
     return { command, args: c.args, cwd: p.dir, env: { PATH: await this.d.path(), ...c.env, ...env, ...extra } }
@@ -446,7 +446,7 @@ export class PluginRegistry {
   }
 
   private async signIn(id: string, server: string, cfg: McpUrlConfig, wwwAuthenticate: string | undefined, signal?: AbortSignal) {
-    if (!this.d.openExternal) throw new Error("Hob can't open a browser to sign in.")
+    if (!this.d.openExternal) throw new Error("Mabel can't open a browser to sign in.")
     const key = `${id}/${server}`
     const p = this.get(id)!
     const url = (await this.spec(p, server, cfg) as { url: string }).url
@@ -513,7 +513,7 @@ export class PluginRegistry {
     let tmp: string | undefined
     try {
       if (isPluginFile(path)) {
-        tmp = mkdtempSync(join(tmpdir(), 'hob-plugin-'))
+        tmp = mkdtempSync(join(tmpdir(), 'mabel-plugin-'))
         if (process.platform === 'darwin') execFileSync('/usr/bin/ditto', ['-x', '-k', path, tmp])
         // Windows' own tar reads zips; another tar earlier on the PATH (Git's) may not
         else if (process.platform === 'win32') execFileSync(join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe'), ['-xf', path, '-C', tmp])
@@ -527,12 +527,12 @@ export class PluginRegistry {
     }
   }
 
-  /** what a plugin file is before adding it, so Hob can warn about ones that run their own programs */
+  /** what a plugin file is before adding it, so Mabel can warn about ones that run their own programs */
   inspect(path: string): { ok: true; name: string; trust: PluginTrust } | { ok: false; error: string } {
     try {
       return this.opened(path, (src) => {
         const p = load(src, 'installed')
-        if (!p) return { ok: false as const, error: `That isn't a Hob plugin or MCP bundle: there's no ${MANIFEST} in it.` }
+        if (!p) return { ok: false as const, error: `That isn't a Mabel plugin or MCP bundle: there's no ${MANIFEST} in it.` }
         if (p.error) return { ok: false as const, error: p.error }
         const servers = Object.values(p.manifest.mcpServers)
         const trust: PluginTrust = servers.some((c) => !isUrlConfig(c)) ? 'full' : servers.length ? 'online' : 'code'
@@ -541,7 +541,7 @@ export class PluginRegistry {
     } catch (e) { return { ok: false, error: `Couldn't open that file: ${errText(e)}` } }
   }
 
-  /** copy a plugin folder (or a .zip / .mcpb of one) into Hob; replaces an older copy */
+  /** copy a plugin folder (or a .zip / .mcpb of one) into Mabel; replaces an older copy */
   install(path: string): { ok: true; id: string } | { ok: false; error: string } {
     try {
       return this.opened(path, (src) => this.installFrom(src))
@@ -554,12 +554,12 @@ export class PluginRegistry {
     {
       if (existsSync(src) && isInside(realpathSync(this.d.installDir), realpathSync(src))) return { ok: false, error: 'That plugin is already added.' }
       const p = load(src, 'installed')
-      if (!p) return { ok: false, error: `That isn't a Hob plugin or MCP bundle: there's no ${MANIFEST} in it.` }
+      if (!p) return { ok: false, error: `That isn't a Mabel plugin or MCP bundle: there's no ${MANIFEST} in it.` }
       if (p.error) return { ok: false, error: p.error }
       const id = p.manifest.id
       if (id === MY_SKILLS) return { ok: false, error: `The id “${MY_SKILLS}” is reserved for your own skills.` }
       const existing = this.get(id)
-      if (existing?.source === 'builtin') return { ok: false, error: `“${p.manifest.name}” comes with Hob already.` }
+      if (existing?.source === 'builtin') return { ok: false, error: `“${p.manifest.name}” comes with Mabel already.` }
       if (existing?.source === 'linked') return { ok: false, error: `“${p.manifest.name}” is linked from a folder. Unlink it first.` }
       // copy next to the old version, then swap: a failed copy never loses what was installed
       const dest = join(this.d.installDir, id)
@@ -596,12 +596,12 @@ export class PluginRegistry {
     this.reload()
   }
 
-  /** a skill the user (or Hob, with the user's OK) wrote; saved in "My skills" */
+  /** a skill the user (or Mabel, with the user's OK) wrote; saved in "My skills" */
   saveSkill(s: NewSkill, o: { replace?: boolean } = {}): { ok: true; id: string; name: string } | { ok: false; error: string } {
     const name = skillName(s.name)
     if (!name) return { ok: false, error: 'Give the skill a name with letters or numbers.' }
     if (!o.replace && this.findSkill(name)) return { ok: false, error: `There's already a skill called /${name}. Pick another name.` }
-    if (!s.description.trim()) return { ok: false, error: 'Say when Hob should use this skill.' }
+    if (!s.description.trim()) return { ok: false, error: 'Say when Mabel should use this skill.' }
     if (!s.instructions.trim()) return { ok: false, error: 'Write the instructions for this skill.' }
     const files = s.files ?? {}
     const problem = skillFilesProblem(files) ?? (s.packages ?? []).map(packageSpecProblem).find(Boolean)
@@ -609,7 +609,7 @@ export class PluginRegistry {
     const dir = join(this.d.installDir, MY_SKILLS)
     if (!existsSync(join(dir, MANIFEST))) {
       mkdirSync(dir, { recursive: true })
-      writeFileSync(join(dir, MANIFEST), JSON.stringify({ id: MY_SKILLS, name: 'My skills', description: 'Skills you taught Hob.', icon: 'sparkles', version: '1.0.0' }, null, 2))
+      writeFileSync(join(dir, MANIFEST), JSON.stringify({ id: MY_SKILLS, name: 'My skills', description: 'Skills you taught Mabel.', icon: 'sparkles', version: '1.0.0' }, null, 2))
     }
     const own = join(dir, 'skills', name)
     // an edit that leaves out internet use (the Plugins form) keeps what the skill had

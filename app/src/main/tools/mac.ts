@@ -5,11 +5,11 @@ import type { Tool } from '../agent/tool'
 
 /**
  * Calendar and Mail on a Mac, through the apps' own accounts (iCloud, Google, Exchange… whatever the Mac has):
- * no sign-in to set up. Calendar goes through Hob's helper (EventKit); Mail through the Mail app (JavaScript
- * for Automation). Hob never sends mail: it writes drafts the user sends.
+ * no sign-in to set up. Calendar goes through Mabel's helper (EventKit); Mail through the Mail app (JavaScript
+ * for Automation). Mabel never sends mail: it writes drafts the user sends.
  */
 export type MacDeps = {
-  /** native/hob-mac: JSON out, or a readable error */
+  /** native/mabel-mac: JSON out, or a readable error */
   helper(args: string[], signal?: AbortSignal): Promise<unknown>
   /** a script for the Mail app; returns what it printed */
   mail(script: string, args: string[], signal?: AbortSignal): Promise<string>
@@ -17,9 +17,9 @@ export type MacDeps = {
 
 export function macHelperPath(): string {
   const candidates = [
-    process.resourcesPath && join(process.resourcesPath, 'bin', 'hob-mac'),
-    join(__dirname, '../../resources/bin/hob-mac'),
-    join(__dirname, '../../../resources/bin/hob-mac'),
+    process.resourcesPath && join(process.resourcesPath, 'bin', 'mabel-mac'),
+    join(__dirname, '../../resources/bin/mabel-mac'),
+    join(__dirname, '../../../resources/bin/mabel-mac'),
   ].filter((x): x is string => !!x)
   return candidates.find((c) => existsSync(c)) ?? candidates.at(-1)!
 }
@@ -28,7 +28,7 @@ export const realMacDeps: MacDeps = {
   helper: (args, signal) => new Promise((resolve, reject) => {
     execFile(macHelperPath(), args, { timeout: 150_000, signal, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
       if (err) return reject(new Error(stderr.trim() || err.message))
-      try { resolve(JSON.parse(stdout)) } catch { reject(new Error('The Calendar helper gave an answer Hob could not read.')) }
+      try { resolve(JSON.parse(stdout)) } catch { reject(new Error('The Calendar helper gave an answer Mabel could not read.')) }
     })
   }),
   mail: (script, args, signal) => new Promise((resolve, reject) => {
@@ -36,7 +36,7 @@ export const realMacDeps: MacDeps = {
       if (!err) return resolve(stdout.trim())
       const e = stderr.trim()
       reject(new Error(/-1743|not allowed|Not authorized/i.test(e)
-        ? "Hob isn't allowed to use Mail yet. Allow it in System Settings → Privacy & Security → Automation → Hob → Mail."
+        ? "Mabel isn't allowed to use Mail yet. Allow it in System Settings → Privacy & Security → Automation → Mabel → Mail."
         : /-600|isn.t running/i.test(e) ? 'Mail needs to be set up on this Mac (open Mail and add your account).' : e || err.message))
     })
   }),
@@ -157,7 +157,7 @@ export const mailRead: Tool<{ id: number }> = {
   async run(a, ctx) {
     const m = JSON.parse(await deps.mail(READ, [String(a.id)], ctx.signal)) as { missing?: boolean; subject: string; from: string; date: string; to: string[]; content: string }
     if (m.missing) return { text: `There's no email with id ${a.id} in the inbox. Search again.`, failed: true }
-    // whatever an email says comes from someone else: it could try to steer Hob
+    // whatever an email says comes from someone else: it could try to steer Mabel
     ctx.untrusted = true
     return { text: `From: ${m.from}\nTo: ${m.to.join(', ')}\nDate: ${when(m.date, false)}\nSubject: ${m.subject}\n\n${m.content}`, title: `Read “${m.subject}”` }
   },
@@ -166,7 +166,7 @@ export const mailRead: Tool<{ id: number }> = {
 export const mailDraft: Tool<{ to: string; subject: string; body: string }> = {
   spec: {
     name: 'mail_draft',
-    description: 'Write an email as a draft in the Mail app, for the user to check and send. Hob never sends email itself.',
+    description: 'Write an email as a draft in the Mail app, for the user to check and send. Mabel never sends email itself.',
     params: { type: 'object', properties: { to: { type: 'string', description: 'Addresses, separated by commas' }, subject: { type: 'string' }, body: { type: 'string' } }, required: ['to', 'subject', 'body'] },
   },
   title: (a) => `Drafted an email to ${a.to}`,
@@ -177,7 +177,7 @@ export const mailDraft: Tool<{ to: string; subject: string; body: string }> = {
   },
 }
 
-/** may Hob use Calendar and Mail? (no prompts) */
+/** may Mabel use Calendar and Mail? (no prompts) */
 export async function macAccess(): Promise<{ calendar: string; mail: string }> {
   const [c, m] = await Promise.all([
     deps.helper(['calendar-status']).catch(() => ({ status: 'unavailable' })),

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Mic } from 'lucide-react'
-import { hob } from '../api'
+import { mabel } from '../api'
 import { LANGUAGES, prefs } from '../speech/prefs'
 
 type Device = { id: string; label: string }
@@ -34,7 +34,7 @@ export function MicMenu({ disabled }: { disabled?: boolean }) {
 
   // while open: list the microphones and show how loud the chosen one is (names appear once access is allowed)
   useEffect(() => {
-    if (!open || hob.fake) { void (open ? microphones().then(setDevices).catch(() => {}) : undefined); return }
+    if (!open || mabel.fake) { void (open ? microphones().then(setDevices).catch(() => {}) : undefined); return }
     let stream: MediaStream | undefined
     let ctx: AudioContext | undefined
     let t: ReturnType<typeof setInterval> | undefined
@@ -42,7 +42,7 @@ export function MicMenu({ disabled }: { disabled?: boolean }) {
     const refresh = () => void microphones().then(setDevices).catch(() => {})
     void (async () => {
       refresh()
-      if (!(await hob.speech.mic()) || stopped) return
+      if (!(await mabel.speech.mic()) || stopped) return
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: mic === 'default' ? true : { deviceId: { ideal: mic } } })
         if (stopped) { stream.getTracks().forEach((x) => x.stop()); return }

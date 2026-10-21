@@ -5,7 +5,7 @@ import { basename, extname, join } from 'node:path'
 import { resolvePath, type Tool, type TurnCtx } from '../agent/tool'
 
 /**
- * PDFs, including scanned ones: Hob's PDF helper (native/hob-pdf, Apple PDFKit + Vision) reads the text,
+ * PDFs, including scanned ones: Mabel's PDF helper (native/mabel-pdf, Apple PDFKit + Vision) reads the text,
  * recognizes it on scanned pages, finds the blanks of a form, and writes answers onto a copy.
  */
 export type PdfLine = { t: string; x: number; y: number; w: number; h: number }
@@ -20,10 +20,10 @@ const MAX_PAGES = 40
 /** the helper next to the app (packaged), or built into resources/bin (development and tests) */
 export function pdfHelper(): string {
   const candidates = [
-    process.env.HOB_PDF_HELPER,
-    process.resourcesPath && join(process.resourcesPath, 'bin', 'hob-pdf'),
-    join(__dirname, '../../resources/bin/hob-pdf'),
-    join(__dirname, '../../../resources/bin/hob-pdf'),
+    process.env.MABEL_PDF_HELPER,
+    process.resourcesPath && join(process.resourcesPath, 'bin', 'mabel-pdf'),
+    join(__dirname, '../../resources/bin/mabel-pdf'),
+    join(__dirname, '../../../resources/bin/mabel-pdf'),
   ].filter((x): x is string => !!x)
   return candidates.find((c) => existsSync(c)) ?? candidates.at(-1)!
 }
@@ -33,7 +33,7 @@ export function runHelper(args: string[], signal?: AbortSignal): Promise<PdfRead
     if (process.platform !== 'darwin' || !existsSync(pdfHelper())) return reject(new Error("Reading PDFs this way isn't available on this computer yet."))
     execFile(pdfHelper(), args, { maxBuffer: 64 * 1024 * 1024, timeout: 180_000, signal }, (err, stdout, stderr) => {
       if (err) return reject(new Error(stderr.trim() || (signal?.aborted ? 'Stopped by the user.' : err.message)))
-      try { resolve(JSON.parse(stdout)) } catch { reject(new Error('The PDF helper gave an answer Hob could not read.')) }
+      try { resolve(JSON.parse(stdout)) } catch { reject(new Error('The PDF helper gave an answer Mabel could not read.')) }
     })
   })
 }
@@ -232,7 +232,7 @@ export function spreadLines(answers: Record<string, string>, blanks: { id: strin
 
 const outName = (ctx: TurnCtx, src: string, wanted?: string) => {
   const stem = wanted ? basename(wanted).replace(/\.pdf$/i, '') : `${basename(src).replace(/\.pdf$/i, '').replace(/ \(filled\)$/, '')} (filled)`
-  // filling again (to fix an answer) replaces Hob's earlier filled copy; anything else gets a new name
+  // filling again (to fix an answer) replaces Mabel's earlier filled copy; anything else gets a new name
   const p = join(ctx.chatDir, `${stem}.pdf`)
   if (!existsSync(p) || / \(filled\)\.pdf$/.test(p)) return p
   let q = p
@@ -290,7 +290,7 @@ export const fillPdf: Tool<{ path: string; answers: Record<string, unknown>; sav
     if (wrongKind.length) return { text: `Nothing saved: ${wrongKind.join(', ')} ${wrongKind.length === 1 ? 'is a line' : 'are lines'} to write on, not a checkbox. Write the actual answer there (a date, a name…) or leave it out.`, failed: true }
     if (!done.length) return { text: 'Nothing to fill in: every answer was empty.', failed: true }
     const out = outName(ctx, path, a.save_as)
-    const tmp = mkdtempSync(join(tmpdir(), 'hob-pdf-'))
+    const tmp = mkdtempSync(join(tmpdir(), 'mabel-pdf-'))
     try {
       const answers = join(tmp, 'answers.json')
       writeFileSync(answers, JSON.stringify({ fields, marks }))

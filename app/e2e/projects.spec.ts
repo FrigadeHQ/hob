@@ -8,11 +8,11 @@ const pick = (app: ElectronApplication, paths: string[]) =>
   app.evaluate(({ dialog }, filePaths) => { dialog.showOpenDialog = (async () => ({ canceled: false, filePaths })) as never }, paths)
 
 test('projects: make one with a folder, chat in it, open its folder, edit it, remove it', async () => {
-  const home = mkdtempSync(join(tmpdir(), 'hob-home-'))
+  const home = mkdtempSync(join(tmpdir(), 'mabel-home-'))
   const trip = join(home, 'Documents', 'Japan trip')
   mkdirSync(trip, { recursive: true })
   writeFileSync(join(trip, 'old.txt'), 'keep')
-  const app = await electron.launch({ args: [main], env: { ...process.env, HOME: home, USERPROFILE: home, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOME: home, USERPROFILE: home, MABEL_FAKE: '1', MABEL_USER_DATA: mkdtempSync(join(tmpdir(), 'mabel-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })

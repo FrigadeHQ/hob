@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { accessFolder, decide, folderProblem, type GateCtx } from '../src/main/agent/permissions'
 
-const root = mkdtempSync(join(tmpdir(), 'hob-gate-'))
+const root = mkdtempSync(join(tmpdir(), 'mabel-gate-'))
 const chat = join(root, 'chat'); const dl = join(root, 'Downloads'); mkdirSync(chat); mkdirSync(dl)
 const ctx = (o: Partial<GateCtx> = {}): GateCtx => ({ chatDir: chat, grants: [dl], always: [], untrusted: false, webAccess: false, ...o })
 
@@ -30,8 +30,8 @@ it('web: automatic when on (the default), denied when switched off', () => {
   expect(decide({ kind: 'web' }, ctx()).verdict).toBe('deny')
 })
 
-it("a folder Hob can't use yet: asks the user for access to it instead of refusing", () => {
-  const home = join(root, 'home'); const photos = join(home, 'Desktop', 'hob-test')
+it("a folder Mabel can't use yet: asks the user for access to it instead of refusing", () => {
+  const home = join(root, 'home'); const photos = join(home, 'Desktop', 'mabel-test')
   mkdirSync(photos, { recursive: true })
   expect(decide({ kind: 'read', paths: [photos] }, ctx({ home }))).toEqual({ verdict: 'grant', folder: photos })
   // a file, or a file that doesn't exist yet: its folder
@@ -40,7 +40,7 @@ it("a folder Hob can't use yet: asks the user for access to it instead of refusi
 })
 it('never offers the home folder itself, settings, hidden or system folders', () => {
   const home = join(root, 'home2'); mkdirSync(join(home, 'Library', 'Mail'), { recursive: true }); mkdirSync(join(home, '.ssh'), { recursive: true })
-  const appData = join(home, 'Library', 'Application Support', 'Hob')
+  const appData = join(home, 'Library', 'Application Support', 'Mabel')
   expect(accessFolder(home, home)).toBeUndefined()
   expect(accessFolder(join(home, 'nope.txt'), home)).toBeUndefined()
   expect(accessFolder(join(home, 'Library', 'Mail'), home)).toBeUndefined()
@@ -63,16 +63,16 @@ it('project folders: reads and new files are automatic; changing what is there a
   expect(decide({ kind: 'create', paths: [join(chat, 'out.png'), join(proj, 'out.png')] }, c).verdict).toBe('auto')
 })
 
-it('folders the user picks for a project: says why Hob cannot use some', () => {
+it('folders the user picks for a project: says why Mabel cannot use some', () => {
   const home = join(root, 'h'); const docs = join(home, 'Documents'); const lib = join(home, 'Library', 'Mail'); const ssh = join(home, '.ssh')
   for (const d of [docs, lib, ssh]) mkdirSync(d, { recursive: true })
   expect(folderProblem(docs, home)).toBeUndefined()
   expect(folderProblem(home, home)).toMatch(/inside your home folder/)
   expect(folderProblem(root, home)).toMatch(/inside your home folder/)
-  expect(folderProblem(lib, home)).toBe("Hob can't use that folder.")
-  expect(folderProblem(ssh, home)).toBe("Hob can't use that folder.")
+  expect(folderProblem(lib, home)).toBe("Mabel can't use that folder.")
+  expect(folderProblem(ssh, home)).toBe("Mabel can't use that folder.")
   expect(folderProblem(join(home, 'gone'), home)).toBe("Can't find this folder.")
-  expect(folderProblem(join(docs, "Hob data"), home, [docs])).toBe("That's Hob's own folder.")
+  expect(folderProblem(join(docs, "Mabel data"), home, [docs])).toBe("That's Mabel's own folder.")
 })
 
 it('the deny reason tells the user how to add a folder', () => {
@@ -89,11 +89,11 @@ it('project folders: new hidden files (.git/hooks, .envrc) and anything after we
   expect(decide({ kind: 'create', paths: [join(proj, 'notes.txt')] }, { ...c, untrusted: true }).verdict).toBe('ask')
 })
 
-it("Hob's own files folder can't be a project folder", () => {
-  const home = join(root, 'h2'); const docs = join(home, 'Documents'); const files = join(docs, 'Hob')
+it("Mabel's own files folder can't be a project folder", () => {
+  const home = join(root, 'h2'); const docs = join(home, 'Documents'); const files = join(docs, 'Mabel')
   mkdirSync(files, { recursive: true })
-  expect(folderProblem(docs, home, [files])).toBe("That's Hob's own folder.")
-  expect(folderProblem(files, home, [files])).toBe("That's Hob's own folder.")
+  expect(folderProblem(docs, home, [files])).toBe("That's Mabel's own folder.")
+  expect(folderProblem(files, home, [files])).toBe("That's Mabel's own folder.")
 })
 
 it.runIf(process.platform === 'darwin')('a path typed in other letter case is still the home folder, Library or a hidden folder', () => {
@@ -107,7 +107,7 @@ it.runIf(process.platform === 'linux')('Linux system folders are never offered',
   for (const p of ['/proc/self', '/sys/kernel', '/boot', '/root', '/run/user']) expect(accessFolder(p, '/home/me')).toBeUndefined()
 })
 
-it('a mistyped path next to a folder Hob can use: the refusal suggests the right one', () => {
+it('a mistyped path next to a folder Mabel can use: the refusal suggests the right one', () => {
   const typo = join(root, 'Downlaods-x', '..', 'typo', 'Downloads', 'IMG_1.jpg').replace('typo', 'tpyo')
   const d = decide({ kind: 'change', paths: [typo] }, ctx())
   expect(d.verdict).toBe('deny')

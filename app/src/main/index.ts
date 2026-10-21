@@ -10,7 +10,7 @@ import { FakeEngine, fakeDownloadDeps } from './fake'
 import { realDeps } from './downloader'
 import { CATALOG_URL, loadCatalog } from './catalog'
 import { readSysInfo, toHardware } from './hardware'
-import type { Hardware } from '@hob/picker'
+import type { Hardware } from '@mabel/picker'
 import { SetupController } from './setup'
 import { registerIpc } from './ipc'
 import { Store } from './store'
@@ -31,14 +31,14 @@ import { isInside } from './workspace'
 import { SearxngServer, type SearchResult } from './search/searxng'
 import { SpeechModel } from './speech'
 
-const FAKE = process.env.HOB_FAKE === '1'
-// One profile folder however Hob is started (dev, packaged, tests): ~/Library/Application Support/Hob etc.
-app.setName('Hob')
+const FAKE = process.env.MABEL_FAKE === '1'
+// One profile folder however Mabel is started (dev, packaged, tests): ~/Library/Application Support/Mabel etc.
+app.setName('Mabel')
 // renamed from Thrum: carry an existing profile (models, chats, settings) over once
-if (!process.env.HOB_USER_DATA) migrateProfile(app.getPath('appData'))
-app.setPath('userData', process.env.HOB_USER_DATA ?? join(app.getPath('appData'), 'Hob'))
+if (!process.env.MABEL_USER_DATA) migrateProfile(app.getPath('appData'))
+app.setPath('userData', process.env.MABEL_USER_DATA ?? join(app.getPath('appData'), 'Mabel'))
 
-// One Hob at a time: a second launch focuses the existing window instead of
+// One Mabel at a time: a second launch focuses the existing window instead of
 // starting a second engine and a second download.
 if (!app.requestSingleInstanceLock()) app.quit()
 app.on('second-instance', () => {
@@ -55,13 +55,13 @@ function openExternally(url: string) {
 
 let win: BrowserWindow | undefined
 /** test runs: no window on screen, no Dock icon, never takes focus from what the person is doing */
-const BACKGROUND = process.env.HOB_BACKGROUND === '1'
+const BACKGROUND = process.env.MABEL_BACKGROUND === '1'
 
 const MIME: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp', json: 'application/json', pdf: 'application/pdf' }
 const mimeOf = (p: string) => MIME[p.split('.').pop()!.toLowerCase()] ?? 'application/octet-stream'
 
 // shows images the agent made, from chat folders and granted folders only
-protocol.registerSchemesAsPrivileged([{ scheme: 'hob-file', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }])
+protocol.registerSchemesAsPrivileged([{ scheme: 'mabel-file', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }])
 
 function createWindow() {
   win = new BrowserWindow({
@@ -107,10 +107,10 @@ app.whenReady().then(() => {
     engine,
     modelsDir: paths.models,
     settingsPath: paths.settings,
-    download: FAKE ? fakeDownloadDeps({ stepMs: Number(process.env.HOB_FAKE_STEP_MS) || undefined, freeDiskGB: Number(process.env.HOB_FAKE_FREE_GB) || undefined }) : realDeps,
+    download: FAKE ? fakeDownloadDeps({ stepMs: Number(process.env.MABEL_FAKE_STEP_MS) || undefined, freeDiskGB: Number(process.env.MABEL_FAKE_FREE_GB) || undefined }) : realDeps,
     sha256Override: FAKE ? 'FAKE' : undefined,
     getHardware: FAKE
-      ? async () => ({ os: 'darwin' as const, arch: 'arm64', cpuModel: 'Apple M1 Max', totalRamGB: 32, freeDiskGB: Number(process.env.HOB_FAKE_FREE_GB) || 500, gpu: { kind: 'unified' as const, name: 'Apple M1 Max', vramGB: 24 } })
+      ? async () => ({ os: 'darwin' as const, arch: 'arm64', cpuModel: 'Apple M1 Max', totalRamGB: 32, freeDiskGB: Number(process.env.MABEL_FAKE_FREE_GB) || 500, gpu: { kind: 'unified' as const, name: 'Apple M1 Max', vramGB: 24 } })
       : async () => (hardware = toHardware(await engine.probe(), await readSysInfo(paths.models))),
     getCatalog: () => loadCatalog({ url: CATALOG_URL, cachePath: paths.catalogCache, bundled: bundledCatalog, licenses, fetchFn: FAKE ? (async () => { throw new Error('offline') }) as unknown as typeof fetch : undefined }),
   })
@@ -118,19 +118,21 @@ app.whenReady().then(() => {
   pruneUndo(paths.undo, { olderThanDays: 30 })
   const python = FAKE ? undefined : new PythonRuntime(paths.python, realRuntimeDeps)
   // E2E / custom profiles keep chat files inside the profile, never in the real Documents
-  if (!process.env.HOB_USER_DATA && !loadSettings(paths.settings).filesDir) {
-    migrateFilesDir(join(app.getPath('documents'), 'Thrum'), join(app.getPath('documents'), 'Hob'), store)
+  if (!process.env.MABEL_USER_DATA && !loadSettings(paths.settings).filesDir) {
+    // chat files from the app's earlier names
+    migrateFilesDir(join(app.getPath('documents'), 'Hob'), join(app.getPath('documents'), 'Mabel'), store)
+    migrateFilesDir(join(app.getPath('documents'), 'Thrum'), join(app.getPath('documents'), 'Mabel'), store)
   }
-  const filesDir = () => loadSettings(paths.settings).filesDir ?? (process.env.HOB_USER_DATA ? join(paths.root, 'Files') : join(app.getPath('documents'), 'Hob'))
+  const filesDir = () => loadSettings(paths.settings).filesDir ?? (process.env.MABEL_USER_DATA ? join(paths.root, 'Files') : join(app.getPath('documents'), 'Mabel'))
   const speech = new SpeechModel(paths.speech, realRuntimeDeps)
   const allowed = (p: string) => isInside(filesDir(), p) || isInside(paths.speech, p) || store.listChats().some((c) => isInside(c.dir, p)) || store.knownFolders().some((g) => isInside(g, p))
-  protocol.handle('hob-file', async (req) => {
+  protocol.handle('mabel-file', async (req) => {
     const p = decodeURIComponent(new URL(req.url).pathname.slice(1))
     if (!allowed(p)) return new Response('Not allowed', { status: 403 })
     // whole-file read: streaming through net.fetch ran at ~9 MB/s, which made the first dictation take 25 s
     try {
       const body = await readFile(p)
-      // the dictation worker fetches model files from here; only Hob's own pages can reach this scheme
+      // the dictation worker fetches model files from here; only Mabel's own pages can reach this scheme
       return new Response(body, { headers: { 'content-type': mimeOf(p), 'content-length': String(body.length), 'access-control-allow-origin': '*' } })
     } catch {
       return new Response('Not found', { status: 404 })
@@ -172,7 +174,7 @@ app.whenReady().then(() => {
     onChange: () => win?.webContents.send('plugins:changed'),
   })
   app.on('before-quit', () => plugins.close())
-  // Hob's eyes: downloaded after the main model (when Hob "gets smarter"), started when a chat has an image
+  // Mabel's eyes: downloaded after the main model (when Mabel "gets smarter"), started when a chat has an image
   // what the vision model has to share the computer with: the main model, and the memory the graphics chip can use
   const room = async () => {
     const s = setup.state
@@ -204,7 +206,7 @@ app.whenReady().then(() => {
     if (!python) return
     void python.ensure().catch((err) => console.warn('code tools install failed; will retry on first use', err))
   })
-  // dev runs use the plain Electron bundle; show Hob's icon in the Dock anyway
+  // dev runs use the plain Electron bundle; show Mabel's icon in the Dock anyway
   if (process.platform === 'darwin' && !app.isPackaged && !BACKGROUND) app.dock?.setIcon(join(__dirname, '../../build/icon.png'))
   // no Dock icon and no activation: the window can't steal focus
   if (process.platform === 'darwin' && BACKGROUND) app.setActivationPolicy('accessory')

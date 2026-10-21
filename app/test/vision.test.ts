@@ -26,7 +26,7 @@ it('picks the 4B vision model when it fits on the graphics chip next to the main
 
 describe('VisionInstaller', () => {
   function world(over: Partial<ConstructorParameters<typeof VisionInstaller>[1]> = {}) {
-    const root = mkdtempSync(join(tmpdir(), 'hob-vision-'))
+    const root = mkdtempSync(join(tmpdir(), 'mabel-vision-'))
     const fetched: string[] = []; const states: unknown[] = []
     const inst = new VisionInstaller(root, {
       platformKey: 'darwin-arm64', choose: async () => VISION_MODELS['4b'],
@@ -113,7 +113,7 @@ describe('look_at_image', () => {
   const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d605bb0000000049454e44ae426082', 'hex')
   async function ctx(state: import('../src/shared/types').VisionState = { phase: 'ready', name: 'Qwen3-VL 4B', sizeGB: 3 }) {
     const { lookAtImage } = await import('../src/main/tools/vision')
-    const chatDir = mkdtempSync(join(tmpdir(), 'hob-look-'))
+    const chatDir = mkdtempSync(join(tmpdir(), 'mabel-look-'))
     writeFileSync(join(chatDir, 'receipt.png'), png)
     const asked: [string, string][] = []
     const c = { chatDir, runTmp: join(chatDir, '.tmp'), signal: new AbortController().signal, vision: { state: () => state, ask: async (img: string, q: string) => { asked.push([img, q]); return 'A receipt from Joe’s Cafe. Total: $23.40.' } } } as never
@@ -150,7 +150,7 @@ it.runIf(process.platform === 'darwin')('a big photo is shrunk to 768 px before 
   const { lookAtImage, MAX_SIDE } = await import('../src/main/tools/vision')
   const { copyFileSync, readFileSync } = await import('node:fs')
   const { imageSize } = await import('../src/main/tools/vision')
-  const chatDir = mkdtempSync(join(tmpdir(), 'hob-look-'))
+  const chatDir = mkdtempSync(join(tmpdir(), 'mabel-look-'))
   copyFileSync(join(import.meta.dirname, '../../docs/assets/screenshot.png'), join(chatDir, 'big.png'))
   let sent = ''
   const c = { chatDir, runTmp: join(chatDir, '.tmp'), signal: new AbortController().signal, vision: { state: () => ({ phase: 'ready', name: 'x', sizeGB: 1 }), ask: async (img: string) => { sent = img; return 'ok' } } } as never

@@ -3,7 +3,7 @@
   "name": "Code & charts",
   "version": "1.0.0",
   "description": "Analyzes spreadsheets, makes charts and converts files by writing Python, in a safe space that can only save in the chat's folder.",
-  "author": "Hob",
+  "author": "Mabel",
   "icon": "chart-column",
   "tools": [{ "native": "run_python" }, { "native": "install_packages" }, { "native": "photo_info" }]
 }

@@ -13,7 +13,7 @@ async function send(page: Page, text: string) {
 }
 
 test('search chats from the top bar or ⌘K, run quick actions, go back and forward', async () => {
-  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: mkdtempSync(join(tmpdir(), 'mabel-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
@@ -67,7 +67,7 @@ test('search chats from the top bar or ⌘K, run quick actions, go back and forw
 })
 
 test('Settings → Danger zone deletes every chat', async () => {
-  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: mkdtempSync(join(tmpdir(), 'mabel-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
@@ -103,8 +103,8 @@ test('Settings → Danger zone deletes every chat', async () => {
 })
 
 test('the sidebar can be dragged wider or narrower, is remembered, and double-click resets it', async () => {
-  const userData = mkdtempSync(join(tmpdir(), 'hob-e2e-'))
-  const launch = () => electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: userData } })
+  const userData = mkdtempSync(join(tmpdir(), 'mabel-e2e-'))
+  const launch = () => electron.launch({ args: [main], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: userData } })
   let app = await launch()
   let page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
@@ -137,9 +137,9 @@ test('the sidebar can be dragged wider or narrower, is remembered, and double-cl
 })
 
 test('home ideas: two work on a file — they ask for one, then send it with the request', async () => {
-  const src = mkdtempSync(join(tmpdir(), 'hob-src-'))
+  const src = mkdtempSync(join(tmpdir(), 'mabel-src-'))
   writeFileSync(join(src, 'letter.txt'), 'Dear Sam, thank you for you’re help.')
-  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: mkdtempSync(join(tmpdir(), 'mabel-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
@@ -161,7 +161,7 @@ test('home ideas: two work on a file — they ask for one, then send it with the
 })
 
 test('hiding the sidebar slides it away, and it comes back', async () => {
-  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, MABEL_FAKE: '1', MABEL_USER_DATA: mkdtempSync(join(tmpdir(), 'mabel-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })

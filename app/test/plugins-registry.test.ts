@@ -12,7 +12,7 @@ const nativeTool = (name: string): Tool => ({ spec: { name, description: `${name
 function plugin(root: string, id: string, manifest: Record<string, unknown>, skills: Record<string, string> = {}) {
   const dir = join(root, id)
   mkdirSync(dir, { recursive: true })
-  writeFileSync(join(dir, 'hob-plugin.json'), JSON.stringify({ id, name: id, ...manifest }))
+  writeFileSync(join(dir, 'mabel-plugin.json'), JSON.stringify({ id, name: id, ...manifest }))
   for (const [n, body] of Object.entries(skills)) { mkdirSync(join(dir, 'skills', n), { recursive: true }); writeFileSync(join(dir, 'skills', n, 'SKILL.md'), body) }
   return dir
 }
@@ -21,7 +21,7 @@ let reg: PluginRegistry | undefined
 afterEach(() => reg?.close())
 
 function world(o: { web?: { on: boolean } } = {}) {
-  const root = mkdtempSync(join(tmpdir(), 'hob-plugins-'))
+  const root = mkdtempSync(join(tmpdir(), 'mabel-plugins-'))
   const builtinDir = join(root, 'builtin'); const installDir = join(root, 'installed')
   mkdirSync(builtinDir); mkdirSync(installDir)
   const store = new Store(':memory:')
@@ -54,12 +54,12 @@ describe('PluginRegistry', () => {
   it('a broken plugin is listed with its error and stays off', async () => {
     const w = world()
     mkdirSync(join(w.installDir, 'broken'))
-    writeFileSync(join(w.installDir, 'broken', 'hob-plugin.json'), '{ not json')
+    writeFileSync(join(w.installDir, 'broken', 'mabel-plugin.json'), '{ not json')
     plugin(w.installDir, 'sneaky', { tools: [{ native: 'web_search' }] })
     const r = w.make()
     const broken = r.list().find((p) => p.id === 'broken')!
-    expect(broken).toMatchObject({ enabled: false, error: expect.stringContaining('hob-plugin.json') })
-    // only plugins that ship with Hob may use Hob's own code
+    expect(broken).toMatchObject({ enabled: false, error: expect.stringContaining('mabel-plugin.json') })
+    // only plugins that ship with Mabel may use Mabel's own code
     expect(r.list().find((p) => p.id === 'sneaky')).toMatchObject({ enabled: false, error: expect.stringContaining('native') })
     expect(await r.tools()).toEqual([])
   })
@@ -106,7 +106,7 @@ describe('PluginRegistry', () => {
     const src = plugin(join(w.root, 'downloads'), 'notes', { settings: [{ key: 'TOKEN', label: 'Token', secret: true }, { key: 'REGION', label: 'Region' }] })
     const r = w.make()
     expect(r.install(src)).toEqual({ ok: true, id: 'notes' })
-    expect(existsSync(join(w.installDir, 'notes', 'hob-plugin.json'))).toBe(true)
+    expect(existsSync(join(w.installDir, 'notes', 'mabel-plugin.json'))).toBe(true)
     r.setSetting('notes', 'TOKEN', 's3cret')
     r.setSetting('notes', 'REGION', 'eu')
     expect(w.store.pluginSettings('notes').TOKEN).toBe('enc:s3cret')
@@ -126,7 +126,7 @@ describe('PluginRegistry', () => {
     const r = w.make()
     expect(r.link(dev)).toEqual({ ok: true, id: 'dev-thing' })
     expect(r.list()[0]).toMatchObject({ source: 'linked', dir: dev })
-    writeFileSync(join(dev, 'hob-plugin.json'), JSON.stringify({ id: 'dev-thing', name: 'dev-thing', description: 'v2' }))
+    writeFileSync(join(dev, 'mabel-plugin.json'), JSON.stringify({ id: 'dev-thing', name: 'dev-thing', description: 'v2' }))
     r.reload()
     expect(r.list()[0].description).toBe('v2')
   })
@@ -199,7 +199,7 @@ describe('review fixes', () => {
     expect(ask('get_and_reset', { readOnlyHint: false })).toEqual({ kind: 'app', ask: true })
   })
 
-  it('install refuses my-skills and folders already inside Hob; connectApp refuses my-skills', () => {
+  it('install refuses my-skills and folders already inside Mabel; connectApp refuses my-skills', () => {
     const w = world()
     const r = w.make()
     r.saveSkill({ name: 'keep', description: 'd', instructions: 'i' })
@@ -232,7 +232,7 @@ describe('review fixes', () => {
     const w = world()
     const r = w.make()
     expect(r.connectApp({ name: 'Svc', command: 'npx svc', env: 'API_KEY=abc\nBROKEN' })).toEqual({ ok: true, id: 'svc' })
-    const raw = readFileSync(join(w.installDir, 'svc', 'hob-plugin.json'), 'utf8')
+    const raw = readFileSync(join(w.installDir, 'svc', 'mabel-plugin.json'), 'utf8')
     expect(raw).not.toContain('abc')
     expect(w.store.pluginSettings('svc').API_KEY).toBe('enc:abc')
     expect(r.envFor('svc')).toEqual({ API_KEY: 'abc' })

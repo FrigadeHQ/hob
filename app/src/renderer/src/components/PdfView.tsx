@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as pdfjs from 'pdfjs-dist'
 import worker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
-import { hob } from '../api'
+import { mabel } from '../api'
 
 pdfjs.GlobalWorkerOptions.workerSrc = worker
 /** past this, "Open" shows the rest: a preview, not a full reader */
@@ -17,7 +17,7 @@ export function PdfView({ path }: { path: string }) {
     let doc: pdfjs.PDFDocumentProxy | undefined
     void (async () => {
       try {
-        const data = new Uint8Array(await (await fetch(hob.fileUrl(path))).arrayBuffer())
+        const data = new Uint8Array(await (await fetch(mabel.fileUrl(path))).arrayBuffer())
         doc = await pdfjs.getDocument({ data }).promise
         const shown = Math.min(doc.numPages, MAX_PAGES)
         setPages({ shown, total: doc.numPages })

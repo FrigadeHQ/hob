@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-// the serif for Hob's replies (SIL Open Font License; bundled, never fetched)
+// the serif for Mabel's replies (SIL Open Font License; bundled, never fetched)
 import '@fontsource-variable/source-serif-4/opsz.css'
 import '@fontsource-variable/source-serif-4/opsz-italic.css'
 import './styles.css'

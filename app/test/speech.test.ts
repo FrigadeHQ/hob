@@ -5,7 +5,7 @@ import { expect, it } from 'vitest'
 import { SpeechModel, WHISPER } from '../src/main/speech'
 
 it('downloads every pinned Whisper file once, verified, into its own folder', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'hob-speech-'))
+  const root = mkdtempSync(join(tmpdir(), 'mabel-speech-'))
   const got: string[] = []
   const m = new SpeechModel(root, {
     async fetchFile(url, sha, _gb, dir, onProgress, name) {

@@ -27,7 +27,7 @@ export function readMcpb(dir: string): Raw | undefined {
 const PLATFORM: Record<string, string> = { darwin: 'Mac', win32: 'Windows', linux: 'Linux' }
 const KIND: Record<string, SettingKind> = { string: 'text', number: 'number', boolean: 'boolean', directory: 'directory', file: 'file' }
 
-/** the bundle as a Hob plugin; its icon file comes back separately */
+/** the bundle as a Mabel plugin; its icon file comes back separately */
 export function fromMcpb(raw: Raw, dir: string, platform: string = process.platform): { manifest: Manifest; image?: string } | { error: string } {
   const name = text(raw.name)
   const id = slug(name)

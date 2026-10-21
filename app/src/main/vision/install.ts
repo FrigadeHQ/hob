@@ -23,7 +23,7 @@ export type VisionDeps = {
 const MARKER = 'ready.json'
 const tarCmd = (platformKey: string) => (platformKey.startsWith('win32') ? join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe') : 'tar')
 
-/** Downloads Hob's eyes once, into app data: the vision model, its image file and llama.cpp's server. */
+/** Downloads Mabel's eyes once, into app data: the vision model, its image file and llama.cpp's server. */
 export class VisionInstaller {
   private installing: Promise<void> | undefined
   private _state: VisionState
@@ -36,7 +36,7 @@ export class VisionInstaller {
   }
 
   get model(): VisionModel {
-    if (!this.chosen) throw new Error("Hob's image support isn't set up yet.")
+    if (!this.chosen) throw new Error("Mabel's image support isn't set up yet.")
     return this.chosen
   }
 
@@ -115,7 +115,7 @@ export class VisionInstaller {
 
   async serverBinary(): Promise<string> {
     const b = this.findBinary(this.serverDir(false))
-    if (!b) throw new Error('The image server is missing. Hob will download it again.')
+    if (!b) throw new Error('The image server is missing. Mabel will download it again.')
     return b
   }
 

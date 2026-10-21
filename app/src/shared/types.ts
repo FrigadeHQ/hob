@@ -15,10 +15,10 @@ export type ModelOption = ModelSummary & {
   needsDiskGB: number
 }
 
-/** may Hob use Calendar and Mail: granted, denied, notDetermined (not asked yet), notRunning (Mail isn't open), unavailable */
+/** may Mabel use Calendar and Mail: granted, denied, notDetermined (not asked yet), notRunning (Mail isn't open), unavailable */
 export type MacAccess = { calendar: string; mail: string }
 
-/** Hob's eyes: the small model that looks at images. off: not downloaded yet (it comes after the main model) */
+/** Mabel's eyes: the small model that looks at images. off: not downloaded yet (it comes after the main model) */
 export type VisionState =
   | { phase: 'off' }
   | { phase: 'downloading'; progress: number }
@@ -35,7 +35,7 @@ export type SetupState =
   | { phase: 'ready'; model: ModelSummary; liteMode: boolean; note?: string; canRetry?: boolean }
   | { phase: 'error'; message: string }
 
-export interface HobApi {
+export interface MabelApi {
   platform: string
   /** test mode: canned model, search and dictation */
   fake: boolean
@@ -59,7 +59,7 @@ export interface HobApi {
     /** projectId: start it in that project */
     create(projectId?: string | null): Promise<ChatSummary>
     remove(id: string): Promise<void>
-    /** every chat, gone from Hob; their files stay */
+    /** every chat, gone from Mabel; their files stay */
     removeAll(): Promise<void>
     onChanged(cb: () => void): () => void
   }
@@ -80,7 +80,7 @@ export interface HobApi {
     update(id: string, p: ProjectInput): Promise<Project | { error: string }>
     /** its chats stay, outside any project; files aren't touched */
     remove(id: string): Promise<void>
-    /** the folder picker; each folder says why Hob can't use it, if it can't */
+    /** the folder picker; each folder says why Mabel can't use it, if it can't */
     pickFolders(): Promise<FolderCheck[]>
     checkFolders(paths: string[]): Promise<FolderCheck[]>
     /** the main folder, in the file manager */
@@ -105,7 +105,7 @@ export interface HobApi {
   approval: { answer(id: string, answer: ApprovalAnswer): Promise<void> }
   /** Calendar & Mail through the Mac's own apps; null on other systems */
   mac: { access(): Promise<MacAccess | null>; ask(): Promise<MacAccess | null>; openAccounts(): Promise<void> }
-  /** Hob's eyes (the image model) */
+  /** Mabel's eyes (the image model) */
   vision: { getState(): Promise<VisionState>; onState(cb: (s: VisionState) => void): () => void; retry(): Promise<void> }
   /** failed: changes that couldn't be reversed (changed since, or too big to back up) */
   task: { undo(messageId: number): Promise<{ done: boolean; failed: number }> }
@@ -125,7 +125,7 @@ export interface HobApi {
   plugins: {
     list(): Promise<PluginInfo[]>
     setEnabled(id: string, on: boolean): Promise<void>
-    /** choose a plugin folder or .zip and copy it into Hob */
+    /** choose a plugin folder or .zip and copy it into Mabel */
     add(): Promise<PluginResult | null>
     /** developers: use a folder in place, reloaded on change */
     link(): Promise<PluginResult | null>

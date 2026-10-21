@@ -1,5 +1,5 @@
 // Makes the test PDFs in test/fixtures: a scanned-looking form (one image per page, no text) and a fillable form.
-//   swiftc native/hob-pdf/make-fixtures.swift -o /tmp/mk && /tmp/mk test/fixtures
+//   swiftc native/mabel-pdf/make-fixtures.swift -o /tmp/mk && /tmp/mk test/fixtures
 import AppKit
 import PDFKit
 

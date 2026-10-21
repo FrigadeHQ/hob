@@ -1,11 +1,11 @@
-// Hob's Mac helper for Calendar: the calendars this Mac already has (iCloud, Google, Exchange… added in
+// Mabel's Mac helper for Calendar: the calendars this Mac already has (iCloud, Google, Exchange… added in
 // System Settings → Internet Accounts), through EventKit. Prints JSON; errors go to stderr with exit 1.
-//   hob-mac calendar-status                → {"status":"granted"|"denied"|"notDetermined"}
-//   hob-mac calendar-auth                  → asks once (the system's own prompt), then the status
-//   hob-mac calendars                      → [{"name","account","writable","color"}]
-//   hob-mac events FROM TO [QUERY]         → events between two ISO dates, optionally matching words
-//   hob-mac add-event JSON                 → {"title","start","end","calendar"?,"location"?,"notes"?,"allDay"?}
-//   hob-mac mail-status | mail-auth        → may Hob talk to the Mail app? (mail-auth opens Mail and asks once)
+//   mabel-mac calendar-status                → {"status":"granted"|"denied"|"notDetermined"}
+//   mabel-mac calendar-auth                  → asks once (the system's own prompt), then the status
+//   mabel-mac calendars                      → [{"name","account","writable","color"}]
+//   mabel-mac events FROM TO [QUERY]         → events between two ISO dates, optionally matching words
+//   mabel-mac add-event JSON                 → {"title","start","end","calendar"?,"location"?,"notes"?,"allDay"?}
+//   mabel-mac mail-status | mail-auth        → may Mabel talk to the Mail app? (mail-auth opens Mail and asks once)
 import AppKit
 import EventKit
 import Foundation
@@ -37,7 +37,7 @@ func status() -> String {
   }
 }
 
-func needAccess() { if status() != "granted" { fail("Hob doesn't have access to Calendar yet. Allow it in System Settings → Privacy & Security → Calendars.") } }
+func needAccess() { if status() != "granted" { fail("Mabel doesn't have access to Calendar yet. Allow it in System Settings → Privacy & Security → Calendars.") } }
 
 let args = Array(CommandLine.arguments.dropFirst())
 switch args.first {
@@ -84,7 +84,7 @@ case "add-event":
   let name = j["calendar"] as? String
   let writable = store.calendars(for: .event).filter { $0.allowsContentModifications }
   guard let cal = (name.flatMap { n in writable.first { $0.title.lowercased() == n.lowercased() } }) ?? store.defaultCalendarForNewEvents ?? writable.first else {
-    fail("There's no calendar Hob can add events to.")
+    fail("There's no calendar Mabel can add events to.")
   }
   e.calendar = cal
   do { try store.save(e, span: .thisEvent, commit: true) } catch { fail("Couldn't add the event: \(error.localizedDescription)") }
@@ -106,5 +106,5 @@ case "mail-status", "mail-auth":
   AEDisposeDesc(&target)
   out(["status": r == noErr ? "granted" : r == OSStatus(errAEEventNotPermitted) ? "denied" : r == OSStatus(procNotFound) ? "notRunning" : "notDetermined"])
 default:
-  fail("usage: hob-mac calendar-status | calendar-auth | calendars | events FROM TO [QUERY] | add-event JSON | mail-status | mail-auth")
+  fail("usage: mabel-mac calendar-status | calendar-auth | calendars | events FROM TO [QUERY] | add-event JSON | mail-status | mail-auth")
 }

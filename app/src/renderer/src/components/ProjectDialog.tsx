@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Folder, FolderPlus, X } from 'lucide-react'
 import type { FolderCheck, Project } from '../../../shared/agent'
-import { hob } from '../api'
+import { mabel } from '../api'
 import { confirmAction } from './Confirm'
 import { button, Dialog, Field, field } from './ui'
 
@@ -18,7 +18,7 @@ type Props = {
   onDone(id: string | null): void
 }
 
-/** Create or edit a project: a name, the folders Hob may use (the first gets new files), and instructions. */
+/** Create or edit a project: a name, the folders Mabel may use (the first gets new files), and instructions. */
 export function ProjectDialog({ project, folders: start, onClose, onDone }: Props) {
   const [name, setName] = useState(project?.name ?? '')
   const [instructions, setInstructions] = useState(project?.instructions ?? '')
@@ -36,7 +36,7 @@ export function ProjectDialog({ project, folders: start, onClose, onDone }: Prop
     setFolders((cur) => [...cur, ...ok.filter((p) => !cur.includes(p))])
     setName((n) => n || folderName(ok[0]))
   }
-  useEffect(() => { if (start?.length) void hob.projects.checkFolders(start).then(add) }, [])
+  useEffect(() => { if (start?.length) void mabel.projects.checkFolders(start).then(add) }, [])
 
   async function save() {
     // Enter pressed twice must not make two projects
@@ -44,7 +44,7 @@ export function ProjectDialog({ project, folders: start, onClose, onDone }: Prop
     setSaving(true)
     const input = { name, instructions, folders }
     try {
-      const r = project ? await hob.projects.update(project.id, input) : await hob.projects.create(input)
+      const r = project ? await mabel.projects.update(project.id, input) : await mabel.projects.create(input)
       if ('error' in r) { setError(r.error); return }
       onDone(r.id)
     } finally {
@@ -53,7 +53,7 @@ export function ProjectDialog({ project, folders: start, onClose, onDone }: Prop
   }
   async function remove() {
     if (!project || !await confirmAction({ title: `Remove “${project.name}”?`, body: 'Its chats move to your chat list. Your folders and files stay as they are.', ok: 'Remove project', danger: true })) return
-    await hob.projects.remove(project.id)
+    await mabel.projects.remove(project.id)
     onDone(null)
   }
 
@@ -77,18 +77,18 @@ export function ProjectDialog({ project, folders: start, onClose, onDone }: Prop
                 <button aria-label={`Remove ${folderName(f)}`} title="Remove" onClick={() => setFolders((cur) => cur.filter((x) => x !== f))} className="text-muted hover:text-ink"><X size={14} /></button>
               </div>
             ))}
-            <button data-testid="project-add-folder" onClick={() => void hob.projects.pickFolders().then(add)}
+            <button data-testid="project-add-folder" onClick={() => void mabel.projects.pickFolders().then(add)}
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-ui text-ink-soft transition-colors hover:bg-line/40 hover:text-ink">
               <FolderPlus size={16} strokeWidth={1.75} />Add folder
             </button>
           </div>
           {problem
             ? <p data-testid="project-folder-problem" className="mt-1.5 text-ui text-ink-soft">{problem}</p>
-            : !folders.length && <p className="mt-1.5 text-meta text-muted">Optional. Add folders Hob should work with, like a work folder or your photos. It can see the files in them and asks before changing any.</p>}
+            : !folders.length && <p className="mt-1.5 text-meta text-muted">Optional. Add folders Mabel should work with, like a work folder or your photos. It can see the files in them and asks before changing any.</p>}
         </div>
         <Field label="Instructions (optional)">
           <textarea data-testid="project-instructions" rows={3} className={`${field} resize-none`} value={instructions}
-            onChange={(e) => setInstructions(e.target.value)} placeholder="Anything Hob should know for every chat in this project" />
+            onChange={(e) => setInstructions(e.target.value)} placeholder="Anything Mabel should know for every chat in this project" />
         </Field>
         {error && <p className="text-ui text-danger">{error}</p>}
         <div className="flex items-center gap-2">

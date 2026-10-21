@@ -1,0 +1,15 @@
+#!/bin/sh
+# Mabel's app icon and README logo from the pixel art: SVG → 1024 PNG (Electron) → .icns (iconutil, Mac).
+set -e
+cd "$(dirname "$0")/.."
+node scripts/make-brand.mjs
+npx electron build/render.cjs build/icon.svg build/icon.png
+npx electron build/render.cjs ../docs/assets/mabel-logo.svg ../docs/assets/mabel-logo.png
+set_dir=$(mktemp -d)/icon.iconset
+mkdir -p "$set_dir"
+for s in 16 32 128 256 512; do
+  sips -z $s $s build/icon.png --out "$set_dir/icon_${s}x${s}.png" >/dev/null
+  sips -z $((s * 2)) $((s * 2)) build/icon.png --out "$set_dir/icon_${s}x${s}@2x.png" >/dev/null
+done
+iconutil -c icns "$set_dir" -o build/icon.icns
+echo "built build/icon.png, build/icon.icns, docs/assets/mabel-logo.png"

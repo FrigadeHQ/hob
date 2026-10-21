@@ -16,7 +16,7 @@ const landlock = (() => {
   if (process.platform !== 'linux' || !python) return 0
   try { return Number(execFileSync(python, ['-c', 'import ctypes; print(ctypes.CDLL(None, use_errno=True).syscall(444, None, 0, 1))']).toString().trim()) } catch { return 0 }
 })()
-const dirs = () => ({ cwd: mkdtempSync(join(tmpdir(), 'hob-run-')), tmpDir: mkdtempSync(join(tmpdir(), 'hob-tmp-')) })
+const dirs = () => ({ cwd: mkdtempSync(join(tmpdir(), 'mabel-run-')), tmpDir: mkdtempSync(join(tmpdir(), 'mabel-tmp-')) })
 
 describe.skipIf(!python)('runPython', () => {
   // the interpreter's own install is the runtime, as in the app
@@ -44,7 +44,7 @@ describe.skipIf(!python)('runPython', () => {
   // Mac: sandbox-exec. Linux: Landlock. Windows: low integrity (writes only; reads and network stay open)
   it.runIf(process.platform === 'darwin' || landlock > 0 || process.platform === 'win32')('sandbox: writes only in the chat folder, no network', async () => {
     const b = base()
-    const outside = join(tmpdir(), `hob-escape-${Date.now()}.txt`)
+    const outside = join(tmpdir(), `mabel-escape-${Date.now()}.txt`)
     const code = [
       "open('inside.txt','w').write('ok')",
       `try:\n  open(${JSON.stringify(outside)},'w').write('x'); print('WROTE')\nexcept Exception as e: print('blocked-write')`,
@@ -58,7 +58,7 @@ describe.skipIf(!python)('runPython', () => {
   })
   it.runIf(process.platform === 'darwin' || landlock > 0 || process.platform === 'win32')('sandbox: SQLite works in the chat folder and temp (it looks up each parent folder); files beside them stay unreadable', async () => {
     const b = base()
-    const secret = join(dirname(b.cwd), `hob-secret-${Date.now()}.txt`)
+    const secret = join(dirname(b.cwd), `mabel-secret-${Date.now()}.txt`)
     writeFileSync(secret, 'secret')
     const code = [
       "import os, sqlite3, tempfile",
@@ -73,7 +73,7 @@ describe.skipIf(!python)('runPython', () => {
   })
   it.runIf(process.platform === 'darwin')('sandbox: cannot launch apps or scripts outside it (open, osascript)', async () => {
     const b = base()
-    const marker = join(tmpdir(), `hob-launched-${Date.now()}`)
+    const marker = join(tmpdir(), `mabel-launched-${Date.now()}`)
     const code = [
       'import subprocess',
       `open('x.command','w').write('#!/bin/sh\\ntouch ${marker}\\n')`,
@@ -90,7 +90,7 @@ describe.skipIf(!python)('runPython', () => {
     expect(r.output).toMatch(/osascript blocked|osascript rc [^0]/)
   })
   it.runIf(process.platform === 'linux' && landlock > 0)('sandbox: cannot start other programs (Linux)', async () => {
-    const marker = join(tmpdir(), `hob-launched-${Date.now()}`)
+    const marker = join(tmpdir(), `mabel-launched-${Date.now()}`)
     const code = `import subprocess\ntry:\n  subprocess.run(['/bin/sh', '-c', 'touch ${marker}'], timeout=10); print('ran')\nexcept Exception as e: print('blocked', type(e).__name__)`
     const r = await runPython({ ...base(), code })
     expect(r.output).toContain('blocked')
@@ -103,7 +103,7 @@ describe.skipIf(!python)('runPython', () => {
   })
   it.runIf(process.platform === 'darwin' || landlock > 0)('sandbox: cannot read other temp folders or shared user folders', async () => {
     const b = base()
-    const other = mkdtempSync(join(tmpdir(), 'hob-other-'))
+    const other = mkdtempSync(join(tmpdir(), 'mabel-other-'))
     writeFileSync(join(other, 'secret.txt'), 'secret')
     const code = `try:\n  print(open(${JSON.stringify(join(other, 'secret.txt'))}).read())\nexcept Exception as e: print('blocked-read')`
     const r = await runPython({ ...b, code })

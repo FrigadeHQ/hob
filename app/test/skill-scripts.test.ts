@@ -15,7 +15,7 @@ let reg: PluginRegistry | undefined
 afterEach(() => reg?.close())
 
 function world() {
-  const root = mkdtempSync(join(tmpdir(), 'hob-skillscripts-'))
+  const root = mkdtempSync(join(tmpdir(), 'mabel-skillscripts-'))
   const builtinDir = join(root, 'builtin'); const installDir = join(root, 'installed')
   mkdirSync(builtinDir); mkdirSync(installDir)
   const store = new Store(':memory:')
@@ -69,7 +69,7 @@ describe('saving skills with scripts', () => {
     for (const [id, net] of [['quiet', false], ['online', true]] as const) {
       const dir = join(w.installDir, id)
       mkdirSync(join(dir, 'skills', `${id}-skill`), { recursive: true })
-      writeFileSync(join(dir, 'hob-plugin.json'), JSON.stringify({ id, name: id, permissions: { network: net } }))
+      writeFileSync(join(dir, 'mabel-plugin.json'), JSON.stringify({ id, name: id, permissions: { network: net } }))
       writeFileSync(join(dir, 'skills', `${id}-skill`, 'SKILL.md'), `---\nname: ${id}-skill\ndescription: d\nnetwork: true\n---\nGo.`)
     }
     const r = w.make()
@@ -115,7 +115,7 @@ describe.skipIf(!python)('run_python with a skill script', () => {
       'make_report.py': "import sys, os\nrate = open(os.path.join(os.path.dirname(__file__), 'rate.txt')).read()\nopen('report.txt', 'w').write(rate + ' ' + ' '.join(sys.argv[1:]))\nprint('done', sys.argv[1:])\n",
       'rate.txt': '1.5',
     } })
-    const root = mkdtempSync(join(tmpdir(), 'hob-skillrun-'))
+    const root = mkdtempSync(join(tmpdir(), 'mabel-skillrun-'))
     const chatDir = join(root, 'chat'); mkdirSync(chatDir)
     const ctx: TurnCtx = {
       chatDir, grants: [], signal: new AbortController().signal, untrusted: false, webAccess, journal: undefined as never,
@@ -198,7 +198,7 @@ describe('skills that need packages', () => {
   })
 
   it("running a skill's script installs its missing packages first; with Web access off it says so", async () => {
-    const root = mkdtempSync(join(tmpdir(), 'hob-skillpk-'))
+    const root = mkdtempSync(join(tmpdir(), 'mabel-skillpk-'))
     const dir = join(root, 'stocks'); mkdirSync(dir); writeFileSync(join(dir, 'fetch.py'), "print('hi')\n")
     const installs: string[][] = []
     const python = { isReady: () => true, ensure: async () => 'python3', dir: root, sitePackages: () => join(root, 'none'),

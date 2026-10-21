@@ -5,7 +5,7 @@ import { expect, it } from 'vitest'
 import type { ProjectInput } from '../src/shared/agent'
 import { checkFolders, cleanProject, withMissing } from '../src/main/projects'
 
-const home = mkdtempSync(join(tmpdir(), 'hob-proj-'))
+const home = mkdtempSync(join(tmpdir(), 'mabel-proj-'))
 const trip = join(home, 'Trip'); const notes = join(home, 'Notes')
 mkdirSync(trip); mkdirSync(notes); writeFileSync(join(trip, 'big.mov'), 'x')
 
@@ -16,7 +16,7 @@ it('a picked file stands for its folder; duplicates go; problems say why', () =>
   ])
 })
 
-it('cleans what the dialog sends: needs a name, drops folders Hob cannot use, keeps ones that are only missing', () => {
+it('cleans what the dialog sends: needs a name, drops folders Mabel cannot use, keeps ones that are only missing', () => {
   expect(cleanProject({ name: '  ', folders: [] }, home)).toEqual({ error: 'Give the project a name.' })
   expect(cleanProject({ name: ' Trip ', instructions: 'Be brief', folders: [trip, home, notes] }, home)).toEqual({ name: 'Trip', instructions: 'Be brief', folders: [trip, notes] })
   // an unplugged drive stays in the project it was already in

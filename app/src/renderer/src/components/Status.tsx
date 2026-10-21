@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { SetupState, VisionState } from '../../../shared/types'
-import { hob } from '../api'
+import { mabel } from '../api'
 
 const gbOf = (n: number) => (n < 10 ? n.toFixed(1) : Math.round(n).toString())
 const timeLeft = (s: number) => (s <= 0 ? '' : s < 90 ? 'about a minute left' : s < 5400 ? `about ${Math.round(s / 60)} min left` : `about ${Math.round(s / 3600)} h left`)
@@ -28,10 +28,10 @@ function Tooltip({ content, children }: { content: React.ReactNode; children: Re
   )
 }
 
-/** Hob's eyes download after the main model; shown here until they're ready */
+/** Mabel's eyes download after the main model; shown here until they're ready */
 function useVision() {
   const [v, setV] = useState<VisionState>({ phase: 'off' })
-  useEffect(() => { void hob.vision.getState().then(setV); return hob.vision.onState(setV) }, [])
+  useEffect(() => { void mabel.vision.getState().then(setV); return mabel.vision.onState(setV) }, [])
   return v
 }
 
@@ -42,7 +42,7 @@ export function Status({ state }: { state: SetupState }) {
     const pct = Math.min(99, Math.floor(vision.progress * 100))
     return (
       <span className="flex min-w-0 items-center gap-2 text-meta text-ink-soft">
-        <Tooltip content={<><span className="block font-medium">Hob is ready to use</span><span className="block text-ink-soft">It's adding photo support, so it can look at images and screenshots: {pct}%.</span></>}>
+        <Tooltip content={<><span className="block font-medium">Mabel is ready to use</span><span className="block text-ink-soft">It's adding photo support, so it can look at images and screenshots: {pct}%.</span></>}>
           <span data-testid="status" tabIndex={0} className="flex items-center gap-2 cursor-default outline-none">
             <span className="size-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
             <span>Adding photo support… {pct}%</span>
@@ -55,11 +55,11 @@ export function Status({ state }: { state: SetupState }) {
   const label = state.phase === 'downloading' ? (state.note ?? `Getting smarter… ${pct}%`) : (state.note ?? 'Ready')
   const tip = state.phase === 'downloading' ? (
     <>
-      <span className="block font-medium">{state.chatReady ? 'Hob is ready to use' : 'Setting up Hob'}</span>
+      <span className="block font-medium">{state.chatReady ? 'Mabel is ready to use' : 'Setting up Mabel'}</span>
       <span className="block text-ink-soft">
         {state.chatReady ? 'A smarter model is downloading' : `Downloading ${state.target.name}`}: {gbOf(state.target.sizeGB * Math.min(1, state.progress))} of {gbOf(state.target.sizeGB)} GB{timeLeft(state.etaSec) && `, ${timeLeft(state.etaSec)}`}.
       </span>
-      {state.chatReady && <span className="mt-1 block text-ink-soft">Hob switches to it by itself when it's done.</span>}
+      {state.chatReady && <span className="mt-1 block text-ink-soft">Mabel switches to it by itself when it's done.</span>}
     </>
   ) : (
     <>
@@ -76,7 +76,7 @@ export function Status({ state }: { state: SetupState }) {
         </span>
       </Tooltip>
       {state.phase === 'ready' && state.canRetry && (
-        <button data-testid="status-retry" onClick={() => hob.setup.retry()} className="underline underline-offset-2 hover:text-ink">Try again</button>
+        <button data-testid="status-retry" onClick={() => mabel.setup.retry()} className="underline underline-offset-2 hover:text-ink">Try again</button>
       )}
     </span>
   )

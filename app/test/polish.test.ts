@@ -6,7 +6,7 @@ import { copyIn, isInside, validFilesDir } from '../src/main/workspace'
 import { RunningTurns } from '../src/main/agent/running'
 import { moveAcross } from '../src/main/tools/files'
 
-const tmp = () => mkdtempSync(join(tmpdir(), 'hob-polish-'))
+const tmp = () => mkdtempSync(join(tmpdir(), 'mabel-polish-'))
 
 it('names that merely start with ".." are inside', () => {
   const r = tmp()
@@ -18,7 +18,7 @@ it('files location must be an absolute, specific folder', () => {
   expect(validFilesDir('relative/dir')).toBe(false)
   expect(validFilesDir('/')).toBe(false)
   expect(validFilesDir(homedir())).toBe(false)
-  expect(validFilesDir(join(homedir(), 'Documents', 'Hob'))).toBe(true)
+  expect(validFilesDir(join(homedir(), 'Documents', 'Mabel'))).toBe(true)
 })
 
 it("a chat's own folder (or a folder containing it) can't be added to itself", () => {
