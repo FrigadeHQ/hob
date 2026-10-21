@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
 import type { ApprovalRequest, LiveSummary, Step, StoredMessage } from '../shared/agent'
-import type { SetupState, GarthApi, VisionState } from '../shared/types'
+import type { AccountsState, SetupState, GarthApi, VisionState } from '../shared/types'
 import type { PluginResult } from '../shared/plugins'
 
 const invoke = (channel: string) => (...args: unknown[]) => ipcRenderer.invoke(channel, ...args)
@@ -39,6 +39,7 @@ const api: GarthApi = {
   },
   approval: { answer: invoke('approval:answer') },
   mac: { access: invoke('mac:access'), ask: invoke('mac:ask'), openAccounts: invoke('mac:openAccounts') },
+  accounts: { get: invoke('accounts:get'), signIn: invoke('accounts:signIn'), cancel: invoke('accounts:cancel'), signOut: invoke('accounts:signOut'), onChanged: (cb) => listen<[AccountsState]>('accounts:changed', cb) },
   vision: { getState: invoke('vision:getState'), onState: (cb) => listen<[VisionState]>('vision:state', cb), retry: invoke('vision:retry') },
   task: { undo: invoke('task:undo') },
   settings: { get: invoke('settings:get'), set: invoke('settings:set'), pickFilesDir: invoke('settings:pickFilesDir') },

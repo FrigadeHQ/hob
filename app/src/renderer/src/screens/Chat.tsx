@@ -3,7 +3,7 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ArrowDown, Clock, FolderOpen, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
 import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../../shared/agent'
-import type { MacAccess } from '../../../shared/types'
+import type { AccountsState, MacAccess } from '../../../shared/types'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
 import { garth } from '../api'
@@ -279,7 +279,13 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     void garth.mac.access().then(setMacAccess)
     void garth.plugins.list().then((l) => setHasConnector(l.some((p) => p.kind === 'connector')))
   }, [])
-  const showConnect = macAccess === undefined ? false : macAccess ? !connected(macAccess) : !hasConnector
+  const [accounts, setAccounts] = useState<AccountsState | null>(null)
+  useEffect(() => { void garth.accounts.get().then(setAccounts); return garth.accounts.onChanged(setAccounts) }, [])
+  // until email and calendar are connected: a signed-in account, or the Mac's apps
+  const showConnect = macAccess === undefined || !accounts ? false
+    : accounts.current ? false
+    : macAccess ? !connected(macAccess)
+    : accounts.available.length > 0 || !hasConnector
   // other systems: through a connector (Plugins → Connectors)
   const openConnect = () => (macAccess ? setConnectOpen(true) : onConnectors())
 

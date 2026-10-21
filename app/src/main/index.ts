@@ -6,7 +6,7 @@ import bundledCatalog from '../../../catalog/catalog.json'
 import licenses from '../../../catalog/licenses.json'
 import { makePaths } from './paths'
 import { UtilityEngine } from './engine'
-import { FakeEngine, fakeDownloadDeps } from './fake'
+import { fakeAccounts, FakeEngine, fakeDownloadDeps } from './fake'
 import { realDeps } from './downloader'
 import { CATALOG_URL, loadCatalog } from './catalog'
 import { readSysInfo, toHardware } from './hardware'
@@ -18,7 +18,8 @@ import { migrateFilesDir, migrateProfile } from './migrate'
 import { pruneUndo } from './agent/journal'
 import { PythonRuntime, realRuntimeDeps } from './python/runtime'
 import { VisionInstaller } from './vision/install'
-import { setMacDeps } from './tools/mac'
+import { macCalMail, setCalMailSource, setMacDeps } from './tools/mac'
+import { Accounts } from './accounts'
 import { VisionServer } from './vision/server'
 import { pickVision, visionFitsGpu, visionGB } from './vision/catalog'
 import type { VisionState } from '../shared/types'
@@ -203,7 +204,15 @@ app.whenReady().then(() => {
   })
   setup.onState((s) => { if ((s.phase === 'downloading' && s.chatReady) || s.phase === 'ready') vision.start() })
   app.on('before-quit', () => vision.stop())
-  const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, fake: FAKE })
+  // a Google or Microsoft account for calendar and email; on a Mac, the Calendar and Mail apps otherwise
+  const accounts = FAKE ? fakeAccounts() : new Accounts({
+    file: join(paths.root, 'accounts.bin'),
+    encrypt: (v) => (safeStorage.isEncryptionAvailable() ? Buffer.concat([Buffer.from('enc:'), safeStorage.encryptString(v)]) : Buffer.from(`plain:${v}`)),
+    decrypt: (b) => (b.subarray(0, 4).toString() === 'enc:' ? safeStorage.decryptString(b.subarray(4)) : b.toString().replace(/^plain:/, '')),
+    open: (url) => shell.openExternal(url),
+  })
+  setCalMailSource(() => accounts.calMail() ?? (process.platform === 'darwin' ? macCalMail : undefined))
+  const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, accounts, fake: FAKE })
   // install code tools quietly once a model is ready, so they're there before the first file task
   let codeToolsStarted = false
   setup.onState((s) => {

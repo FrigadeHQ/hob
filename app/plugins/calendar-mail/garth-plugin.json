@@ -1,0 +1,26 @@
+{
+  "id": "calendar-mail",
+  "name": "Calendar & Mail",
+  "version": "1.0.0",
+  "description": "Your calendar and email. On a Mac, through its own Calendar and Mail apps with every account added there; anywhere, by signing in with Google or Microsoft. Garth writes email drafts; you send them.",
+  "author": "Garth",
+  "icon": "calendar",
+  "tools": [
+    {
+      "native": "calendar_events"
+    },
+    {
+      "native": "calendar_add_event"
+    },
+    {
+      "native": "mail_search"
+    },
+    {
+      "native": "mail_read"
+    },
+    {
+      "native": "mail_draft"
+    }
+  ],
+  "prompt": "For the user's calendar use calendar_events and calendar_add_event; for email use mail_search, mail_read and mail_draft (drafts only: the user sends). They use the calendar and email the user connected (a Google or Microsoft account, or the Mac's Calendar and Mail apps): don't ask the user to set up a connector for Google Calendar, Gmail or Outlook. If a tool says nothing is connected, tell the user how to connect."
+}

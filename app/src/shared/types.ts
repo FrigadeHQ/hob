@@ -17,6 +17,8 @@ export type ModelOption = ModelSummary & {
 
 /** may Garth use Calendar and Mail: granted, denied, notDetermined (not asked yet), notRunning (Mail isn't open), unavailable */
 export type MacAccess = { calendar: string; mail: string }
+/** Google or Microsoft sign-in for calendar and email: what can be signed in to, and who is */
+export type AccountsState = { available: ('google' | 'microsoft')[]; current: { provider: 'google' | 'microsoft'; email: string } | null }
 
 /** Garth's eyes: the small model that looks at images. off: not downloaded yet (it comes after the main model) */
 export type VisionState =
@@ -107,6 +109,14 @@ export interface GarthApi {
   approval: { answer(id: string, answer: ApprovalAnswer): Promise<void> }
   /** Calendar & Mail through the Mac's own apps; null on other systems */
   mac: { access(): Promise<MacAccess | null>; ask(): Promise<MacAccess | null>; openAccounts(): Promise<void> }
+  accounts: {
+    get(): Promise<AccountsState>
+    /** opens the provider's page in the browser; resolves once signed in */
+    signIn(provider: 'google' | 'microsoft'): Promise<AccountsState>
+    cancel(): Promise<void>
+    signOut(): Promise<AccountsState>
+    onChanged(cb: (s: AccountsState) => void): () => void
+  }
   /** Garth's eyes (the image model) */
   vision: { getState(): Promise<VisionState>; onState(cb: (s: VisionState) => void): () => void; retry(): Promise<void> }
   /** failed: changes that couldn't be reversed (changed since, or too big to back up) */

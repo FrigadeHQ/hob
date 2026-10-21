@@ -5,6 +5,8 @@ import { garth } from '../api'
 import { confirmAction } from '../components/Confirm'
 import { Dialog, Field, PluginIcon, Switch, button, field } from '../components/ui'
 import { fileManager } from '../../../shared/platform'
+import type { AccountsState } from '../../../shared/types'
+import { ConnectApps } from '../components/ConnectApps'
 
 const TRUST: Record<PluginTrust, { icon: typeof Box; text: string }> = {
   instructions: { icon: ShieldCheck, text: "Adds know-how. Doesn't run anything." },
@@ -14,6 +16,22 @@ const TRUST: Record<PluginTrust, { icon: typeof Box; text: string }> = {
   online: { icon: Globe, text: 'Connects to an online service' },
   full: { icon: TriangleAlert, text: 'Runs its own program with full access to your computer' },
 }
+/** Calendar & Mail: which account it uses, and the way to connect or change it */
+function CalendarMailStatus() {
+  const [accounts, setAccounts] = useState<AccountsState | null>(null)
+  const [open, setOpen] = useState(false)
+  useEffect(() => { void garth.accounts.get().then(setAccounts); return garth.accounts.onChanged(setAccounts) }, [])
+  if (!accounts) return null
+  const who = accounts.current && `${accounts.current.provider === 'google' ? 'Google' : 'Microsoft'} (${accounts.current.email})`
+  return (
+    <>
+      <span className="text-ui text-ink-soft">{who ? `Connected to ${who}. ` : ''}</span>
+      <button data-testid="calendar-mail-connect" className="text-ui underline underline-offset-2 hover:text-ink" onClick={() => setOpen(true)}>{who ? 'Change' : 'Connect'}</button>
+      {open && <ConnectApps onClose={() => setOpen(false)} onTry={() => setOpen(false)} />}
+    </>
+  )
+}
+
 const GUIDE = 'https://github.com/FrigadeHQ/garth/blob/main/docs/plugins/README.md'
 
 function SkillDialog({ initial, onClose, onSaved }: { initial?: NewSkill; onClose(): void; onSaved(name: string): void }) {
@@ -202,6 +220,7 @@ function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; on
         <Switch on={p.enabled} label={`${p.enabled ? 'Turn off' : 'Turn on'} ${p.name}`} testId="plugin-toggle" onChange={(on) => void garth.plugins.setEnabled(p.id, on)} />
       </div>
       {p.signIn && p.enabled && <div className="ml-12"><SignInButton p={p} /></div>}
+      {p.id === 'calendar-mail' && p.enabled && <div className="ml-12 mt-2"><CalendarMailStatus /></div>}
       {open && (
         <div className="fade-in mt-3 ml-12 space-y-4">
           {p.skills.length > 0 && (

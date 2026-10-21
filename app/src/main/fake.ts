@@ -125,3 +125,23 @@ export const fakeDownloadDeps = (opts: { freeDiskGB?: number; stepMs?: number } 
   async hashFile() { return 'FAKE' },
   async freeDiskGB() { return opts.freeDiskGB ?? 1000 },
 })
+
+/** fake mode: signing in to Google or Microsoft works at once, with a small calendar and inbox */
+export function fakeAccounts(): import('./accounts').AccountsLike {
+  let current: import('./accounts').Account | undefined
+  return {
+    available: () => ['google', 'microsoft'],
+    current: () => current,
+    signIn: async (provider) => (current = { provider, email: provider === 'google' ? 'me@gmail.com' : 'me@outlook.com' }),
+    cancelSignIn: () => {},
+    signOut: () => { current = undefined },
+    calMail: () => current && {
+      name: `the ${current.provider === 'google' ? 'Google' : 'Microsoft'} account ${current.email}`,
+      events: async () => [{ title: 'Team lunch', start: '2026-10-22T12:00:00Z', end: '2026-10-22T13:00:00Z', allDay: false, calendar: current!.email }],
+      addEvent: async (e) => ({ title: e.title, start: e.start, calendar: current!.email }),
+      searchMail: async () => [{ id: 'g1', subject: 'Your order shipped', from: 'Shop <hi@shop.com>', date: '2026-10-20T08:00:00Z', read: false }],
+      readMail: async (id) => (id === 'g1' ? { subject: 'Your order shipped', from: 'Shop', date: '2026-10-20T08:00:00Z', to: [current!.email], content: 'It arrives Friday.' } : undefined),
+      draft: async () => 'in Drafts',
+    },
+  }
+}

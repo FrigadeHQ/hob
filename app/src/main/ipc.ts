@@ -15,6 +15,8 @@ import { readAhead, runTurn } from './agent/turn'
 import { Approvals } from './agent/approvals'
 import { LiveTurns } from './agent/live'
 import { askMacAccess, macAccess } from './tools/mac'
+import type { AccountsLike } from './accounts'
+import type { ProviderId } from './accounts/providers'
 import { RunningTurns } from './agent/running'
 import { pruneUndo, undo, type UndoOp } from './agent/journal'
 import { coreTools } from './tools'
@@ -40,6 +42,8 @@ export type IpcDeps = {
   speech?: SpeechModel
   plugins: PluginRegistry
   /** Garth's eyes: state for the UI, and asking about an image */
+  /** the Google or Microsoft account for calendar and email */
+  accounts: AccountsLike
   vision?: { state(): VisionState; onState(cb: (s: VisionState) => void): void; ask(image: string, question: string, signal?: AbortSignal): Promise<string>; retry(): void }
   fake?: boolean
 }
@@ -300,6 +304,15 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     return r
   })
   // where Google, Exchange and other accounts are added to Calendar and Mail
+  const accountsState = () => ({ available: d.accounts.available(), current: d.accounts.current() ?? null })
+  ipcMain.handle('accounts:get', () => accountsState())
+  ipcMain.handle('accounts:signIn', async (_e, id: ProviderId) => {
+    if (id !== 'google' && id !== 'microsoft') throw new Error('Unknown account')
+    try { await d.accounts.signIn(id) } finally { send('accounts:changed', accountsState()) }
+    return accountsState()
+  })
+  ipcMain.handle('accounts:cancel', () => d.accounts.cancelSignIn())
+  ipcMain.handle('accounts:signOut', () => { d.accounts.signOut(); send('accounts:changed', accountsState()); return accountsState() })
   ipcMain.handle('mac:openAccounts', () => { if (process.platform === 'darwin') void shell.openExternal('x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension') })
   ipcMain.handle('speech:mic', () => (process.platform === 'darwin' && !d.fake
     ? micAccess(systemPreferences.getMediaAccessStatus('microphone'), () => systemPreferences.askForMediaAccess('microphone'))
