@@ -28,7 +28,7 @@ export type VisionState =
 export type SetupState =
   /** firstRun: no model set up yet, so this is onboarding (not a normal start); unknown until the app has asked */
   | { phase: 'probing'; firstRun?: boolean }
-  /** computer: what the pick is based on, e.g. "Apple M3 Pro with 36 GB of memory". starter: a small model fetched first so chat opens in minutes */
+  /** computer: what the pick is based on, e.g. "Apple M3 Pro · 36 GB memory". starter: a small model fetched first so chat opens in minutes */
   | { phase: 'choose'; recommended: ModelSummary; models: ModelOption[]; liteMode: boolean; needsDiskGB: number; computer: string; starter?: ModelSummary }
   /** starter: set while that small model downloads, before the full one */
   | { phase: 'downloading'; target: ModelSummary; progress: number; etaSec: number; chatReady: boolean; note?: string; starter?: ModelSummary }

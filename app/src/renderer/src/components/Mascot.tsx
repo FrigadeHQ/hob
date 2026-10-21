@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { bodyRects, faceRects, miniBodyRects, miniFaceRects, type Expression } from '../../../shared/mascot'
+import { faceRects, miniBodyRects, miniFaceRects, type Expression } from '../../../shared/mascot'
+import bodyUrl from '../assets/garth-body.png'
 
 /** how far the face moves toward where Mabel looks, in grid units (whole units keep it pixel-sharp) */
 const LOOK_X = 3
 const LOOK_Y = 2
-const BODY = bodyRects()
 const MINI_BODY = miniBodyRects()
 
 /** where to look, -1..1 each way: the cursor when it moves, otherwise a glance around now and then */
@@ -31,7 +31,7 @@ function useGaze(on: boolean) {
 }
 
 /** smiling (or `base`) most of the time; blinks, and now and then a skeptical raised eyebrow */
-function useExpression(on: boolean, base: Expression = 'smile'): Expression {
+function useExpression(on: boolean, base: Expression = 'neutral'): Expression {
   const [e, setE] = useState<Expression>(base)
   useEffect(() => {
     setE(base)
@@ -39,7 +39,7 @@ function useExpression(on: boolean, base: Expression = 'smile'): Expression {
     let t: ReturnType<typeof setTimeout>
     const next = () => {
       const r = Math.random()
-      const [face, hold] = r < 0.22 ? (['skeptical', 1600] as const) : r < 0.3 ? (['neutral', 1200] as const) : (['blink', 140] as const)
+      const [face, hold] = r < 0.08 ? (['skeptical', 1600] as const) : r < 0.3 ? (['smile', 1200] as const) : (['neutral-blink', 140] as const)
       setE(face)
       t = setTimeout(() => { setE(base); t = setTimeout(next, 1800 + Math.random() * 2600) }, hold)
     }
@@ -56,7 +56,7 @@ const rect = (r: { x: number; y: number; w: number; h: number; fill: string }, i
  * mini: her small drawing, for the status corner. busy: bobs while she works on something (getting smarter).
  * ticklish: click her and she laughs.
  */
-export function Mascot({ size = 96, alive = false, mini = false, busy = false, base, ticklish = false, label = 'Mabel' }: {
+export function Mascot({ size = 96, alive = false, mini = false, busy = false, base, ticklish = false, label = 'Garth' }: {
   size?: number; alive?: boolean; mini?: boolean; busy?: boolean; base?: Expression; ticklish?: boolean; label?: string
 }) {
   const [ref, gaze] = useGaze(alive)
@@ -77,7 +77,7 @@ export function Mascot({ size = 96, alive = false, mini = false, busy = false, b
       className={`overflow-visible ${mini ? 'mabel-mini' : ''} ${alive ? 'mabel-alive' : ''} ${busy && !laughing ? 'mabel-busy' : ''} ${laughing ? 'mabel-giggle' : ''}`}>
       {!mini && <ellipse className="mabel-shadow" cx="30" cy="62" rx="16" ry="2" fill="currentColor" opacity="0.08" />}
       <g className="mabel-body">
-        {(mini ? MINI_BODY : BODY).map(rect)}
+        {mini ? MINI_BODY.map(rect) : <svg width="60" height="60" viewBox="158 155.5 937 937"><image href={bodyUrl} width="1254" height="1254" /></svg>}
         <g data-testid="mascot-eyes">{face.map(rect)}</g>
       </g>
     </svg>

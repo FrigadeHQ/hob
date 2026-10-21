@@ -11,9 +11,9 @@ test('first run: recommend → download → chat', async () => {
   const app = await electron.launch({ args: [main], env })
   const page = await app.firstWindow()
 
-  // plain language: size rounded, no model name up front
-  await expect(page.getByTestId('setup-recommended')).toContainText('13 GB')
-  await expect(page.getByTestId('setup-recommended')).not.toContainText('gpt-oss')
+  // The recommendation stays personal, with one combined download size.
+  await expect(page.getByTestId('setup-download-size')).toHaveText('14 GB download')
+  await expect(page.getByTestId('setup-recommended')).toContainText('gpt-oss 20B')
   await page.getByTestId('setup-download').click()
 
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
@@ -113,14 +113,16 @@ test('choose a different model from the list', async () => {
   const rows = page.getByTestId('model-option')
   expect(await rows.count()).toBeLessThanOrEqual(10)
   // too big for this computer: shown, but can't be picked
-  await expect(rows.filter({ hasText: 'gpt-oss 120B' })).toBeDisabled()
+  await expect(rows.filter({ hasText: 'gpt-oss 120B' }).getByRole('radio')).toBeDisabled()
   await expect(rows.filter({ hasText: 'gpt-oss 120B' })).toContainText('Needs more memory')
   await expect(rows.filter({ hasText: 'gpt-oss 20B' })).toContainText('Recommended')
 
   await rows.filter({ hasText: 'Qwen3 30B' }).click()
-  await expect(page.getByTestId('model-option')).toHaveCount(0) // list closes
-  await expect(page.getByTestId('setup-other-options')).toContainText('Qwen3 30B')
-  await expect(page.getByTestId('setup-recommended')).toContainText('19 GB')
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Use this model' }).click()
+  await expect(page.getByTestId('model-option')).toHaveCount(0)
+  await expect(page.getByTestId('setup-recommended')).toContainText('Qwen3 30B')
+  await expect(page.getByTestId('setup-download-size')).toHaveText('20.4 GB download')
 
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })

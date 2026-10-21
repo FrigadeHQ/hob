@@ -28,13 +28,13 @@ export const summarize = (c: Choice): ModelSummary => ({
   id: c.model.id, name: c.model.name, sizeGB: c.build.sizeGB, estTokPerSec: c.estTokPerSec, blurb: blurb(c.estTokPerSec),
 })
 
-/** "Apple M3 Pro with 36 GB of memory", "NVIDIA GeForce RTX 4070 (12 GB) and 32 GB of memory" */
+/** "Apple M3 Pro · 36 GB memory", "NVIDIA GeForce RTX 4070 (12 GB) · 32 GB memory" */
 export function computerName(hw: Hardware): string {
-  const ram = `${Math.round(hw.totalRamGB)} GB of memory`
-  if (hw.gpu.kind === 'discrete' && hw.gpu.name) return `${hw.gpu.name}${hw.gpu.vramGB ? ` (${Math.round(hw.gpu.vramGB)} GB)` : ''} and ${ram}`
+  const ram = `${Math.round(hw.totalRamGB)} GB memory`
+  if (hw.gpu.kind === 'discrete' && hw.gpu.name) return `${hw.gpu.name}${hw.gpu.vramGB ? ` (${Math.round(hw.gpu.vramGB)} GB)` : ''} · ${ram}`
   const chip = (hw.gpu.kind === 'unified' && hw.gpu.name ? hw.gpu.name : hw.cpuModel)
     .replace(/\((R|TM)\)/g, '').replace(/\s+CPU\b.*$/, '').replace(/\s+@.*$/, '').replace(/\s+/g, ' ').trim()
-  return chip && chip !== 'unknown' ? `${chip} with ${ram}` : `${ram}`
+  return chip && chip !== 'unknown' ? `${chip} · ${ram}` : `${ram}`
 }
 
 /** Plain-English message for anything that can go wrong during setup. */

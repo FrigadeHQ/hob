@@ -3,7 +3,7 @@
  * circle with a darker rim and dithered shading at the bottom); the face uses the finer grid, so the eyes,
  * smile and eyebrow sit where the original art has them. Shared by the app (animated) and the icon script.
  */
-export type Expression = 'smile' | 'skeptical' | 'blink' | 'neutral' | 'laugh'
+export type Expression = 'smile' | 'skeptical' | 'blink' | 'neutral' | 'neutral-blink' | 'laugh'
 export type Rect = { x: number; y: number; w: number; h: number; fill: string }
 
 export const COLORS = { body: '#A9A5D9', rim: '#918CCB', light: '#B5B1E2', shade: '#9C97D1', ink: '#1C1B22', tongue: '#E8899C' }
@@ -41,7 +41,7 @@ export function faceRects(e: Expression, dx = 0, dy = 0): Rect[] {
       ink(24, 33, 12, 2), ink(24, 35, 2, 3), ink(34, 35, 2, 3), ink(26, 35, 8, 3), ink(26, 38, 8, 2),
       { x: 28 + dx, y: 37 + dy, w: 4, h: 2, fill: COLORS.tongue }]
   }
-  const eyes = e === 'blink' ? [ink(15, 29, 5, 2), ink(40, 29, 5, 2)] : [ink(15, 27, 5, 5), ink(40, 27, 5, 5)]
+  const eyes = e === 'blink' || e === 'neutral-blink' ? [ink(15, 29, 5, 2), ink(40, 29, 5, 2)] : [ink(15, 27, 5, 5), ink(40, 27, 5, 5)]
   // the mouth moves less than the eyes: it's lower on the face
   const mx = Math.round(dx / 2)
   const my = Math.round(dy / 2)
@@ -88,7 +88,7 @@ export function miniBodyRects(): Rect[] {
 export function miniFaceRects(e: Expression, dx = 0, dy = 0): Rect[] {
   const ink = (x: number, y: number, w = 1, h = 1): Rect => ({ x: x + dx, y: y + dy, w, h, fill: COLORS.ink })
   if (e === 'laugh') return [ink(2, 4), ink(3, 3), ink(4, 4), ink(7, 4), ink(8, 3), ink(9, 4), ink(4, 6, 4, 1), ink(4, 7), ink(7, 7), { x: 5 + dx, y: 7 + dy, w: 2, h: 1, fill: COLORS.tongue }]
-  const eyes = e === 'blink' ? [ink(3, 4), ink(8, 4)] : e === 'skeptical' ? [ink(3, 3, 1, 2), ink(8, 4), ink(8, 2, 2, 1)] : [ink(3, 3, 1, 2), ink(8, 3, 1, 2)]
-  const mouth = e === 'smile' || e === 'blink' ? [ink(4, 6), ink(5, 7, 2, 1), ink(7, 6)] : [ink(4, 7, 4, 1)]
+  const eyes = e === 'blink' || e === 'neutral-blink' ? [ink(3, 4), ink(8, 4)] : e === 'skeptical' ? [ink(3, 3, 1, 2), ink(8, 4), ink(8, 2, 2, 1)] : [ink(3, 3, 1, 2), ink(8, 3, 1, 2)]
+  const mouth = e === 'smile' || e === 'blink' || e === 'neutral-blink' ? [ink(4, 6), ink(5, 7, 2, 1), ink(7, 6)] : [ink(4, 7, 4, 1)]
   return [...eyes, ...mouth]
 }
