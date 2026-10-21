@@ -122,14 +122,16 @@ export function App() {
       <ConfirmHost />
       <PreviewHost />
       {sidebar && narrow && <div className="fade-in absolute inset-0 z-20 bg-black/20" onClick={() => setSidebar(false)} />}
-      {sidebar && (
-        <div className={narrow ? 'absolute inset-y-0 left-0 z-30 flex shadow-xl' : 'flex'}>
-          <Sidebar state={state} selected={selected} refreshKey={refreshKey} screen={screen} draftProject={draftProject}
-            onSelect={(id) => open(id)} onNew={() => open(null)} onNewInProject={(id) => open(null, id)}
-            onEditProject={(p) => setProjectDialog(p ? { project: p } : {})}
-            onSettings={() => go('settings')} onPlugins={() => go('plugins')} />
-        </div>
-      )}
+      {/* stays mounted so it can slide: in and out of the layout when docked, over the chat when the window is narrow */}
+      <div inert={!sidebar} aria-hidden={!sidebar} data-testid="sidebar-slot"
+        className={narrow
+          ? `absolute inset-y-0 left-0 z-30 flex shadow-xl transition-transform duration-200 ease-out ${sidebar ? 'translate-x-0' : '-translate-x-full shadow-none'}`
+          : `flex shrink-0 overflow-hidden transition-[max-width] duration-200 ease-out ${sidebar ? 'max-w-[480px]' : 'max-w-0'}`}>
+        <Sidebar state={state} selected={selected} refreshKey={refreshKey} screen={screen} draftProject={draftProject}
+          onSelect={(id) => open(id)} onNew={() => open(null)} onNewInProject={(id) => open(null, id)}
+          onEditProject={(p) => setProjectDialog(p ? { project: p } : {})}
+          onSettings={() => go('settings')} onPlugins={() => go('plugins')} />
+      </div>
       {screen === 'settings' && <Settings onAllChatsDeleted={() => {
         // nothing to go back to
         history.current = { list: [{ screen: 'settings', chat: null }], i: 0 }

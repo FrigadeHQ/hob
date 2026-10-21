@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CornerDownLeft, FileText, Image as ImageIcon, Mic, Plus, Square, X } from 'lucide-react'
 import { canPreview, previewFile } from './Preview'
+import { MicMenu } from './MicMenu'
 import type { Attachment } from '../../../shared/agent'
 import type { SkillRef } from '../../../shared/plugins'
 import { IconButton, PluginIcon } from './ui'
@@ -159,6 +160,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
               <Mic size={16} strokeWidth={1.75} />
             </button>
           )}
+          {dictation && <MicMenu disabled={dictation.listening || dictation.busy} />}
           {running ? (
             <button data-testid="composer-stop" aria-label="Stop" title="Stop" onClick={onStop} className="inline-flex size-8 items-center justify-center rounded-full bg-ink text-paper hover:opacity-90">
               <Square size={12} fill="currentColor" />

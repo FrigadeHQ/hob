@@ -446,3 +446,13 @@ it('in a project, listing files with no folder named lists the project folder, n
   expect(reply.steps[0].title).toBe(`Looked in ${basename(w.grant)}`)
   expect(reply.content).toContain('budget.xlsx')
 })
+
+it('Hob knows its own features, so "how do I connect Google Calendar?" gets a real answer', () => {
+  const p = systemPrompt({ chatDir: '/c', files: [], grants: [] })
+  expect(p).toContain('About Hob')
+  expect(p).toMatch(/Plugins → Connectors → Add connector/)
+  expect(p).toMatch(/MCP/)
+  expect(p).toMatch(/Google Calendar/)
+  expect(p).toMatch(/Projects/)
+  expect(p).toMatch(/Settings/)
+})

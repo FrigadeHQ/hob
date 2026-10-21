@@ -1,6 +1,8 @@
 /** Record from the microphone until stop(); returns the encoded audio. level() is the live loudness, 0–1, for the waveform. */
-export async function startRecording(): Promise<{ stop(): Promise<ArrayBuffer>; cancel(): void; level(): number }> {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+export async function startRecording(deviceId?: string): Promise<{ stop(): Promise<ArrayBuffer>; cancel(): void; level(): number }> {
+  // a microphone that was unplugged falls back to the default one
+  const audio = { echoCancellation: true, noiseSuppression: true }
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: deviceId && deviceId !== 'default' ? { ...audio, deviceId: { ideal: deviceId } } : audio })
   const rec = new MediaRecorder(stream)
   const chunks: Blob[] = []
   rec.ondataavailable = (e) => chunks.push(e.data)

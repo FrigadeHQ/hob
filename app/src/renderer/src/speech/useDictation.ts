@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { hob } from '../api'
 import { startRecording } from './record'
+import { prefs } from './prefs'
 
 type Prepared = Awaited<ReturnType<typeof hob.speech.prepare>>
 
@@ -30,7 +31,7 @@ export function useDictation(onText: (text: string) => void) {
       void prepared.current.then(async (r) => { if ('modelBase' in r) (await import('./index')).warm(r.modelBase) }).catch(() => {})
     }
     try {
-      recording.current = hob.fake ? null : await startRecording()
+      recording.current = hob.fake ? null : await startRecording(prefs.mic())
       setState('listening')
     } catch (err) {
       console.error(err)
@@ -59,7 +60,7 @@ export function useDictation(onText: (text: string) => void) {
       const ready = await prepared.current!
       if ('fake' in ready) return onText('Hello from dictation')
       const { toPcm, transcribe } = await import('./index')
-      const text = audio ? await transcribe(await toPcm(audio), { modelBase: ready.modelBase }) : ''
+      const text = audio ? await transcribe(await toPcm(audio), { modelBase: ready.modelBase, language: prefs.language() || undefined }) : ''
       if (text) onText(text)
     } catch (err) {
       console.error(err)

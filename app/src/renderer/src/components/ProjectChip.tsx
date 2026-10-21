@@ -27,17 +27,19 @@ export function ProjectChip({ projects, value, locked, onChange, onNew }: Props)
   // a chat that started can't move: it shows its project, and nothing when it has none
   // (the row keeps its height, so the message box doesn't jump between chats)
   if (locked) return current ? <span data-testid="project-chip" className={`${chip} cursor-default`}><Folder size={14} strokeWidth={1.75} />{current.name}</span> : null
-  const Icon = current ? Folder : FolderPlus
+  // a new chat outside projects: nothing here (projects start from the sidebar)
+  if (!current) return null
+  const Icon = Folder
   const choose = (id: string | null) => { onChange(id); setOpen(false) }
   return (
     <div ref={box} className="relative">
       <button data-testid="project-chip" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={`${chip} transition-colors hover:bg-line/70 hover:text-ink`}>
-        <Icon size={14} strokeWidth={1.75} />{current?.name ?? 'Add to project'}<ChevronDown size={12} />
+        <Icon size={14} strokeWidth={1.75} />{current.name}<ChevronDown size={12} />
       </button>
       {open && (
         <div data-testid="project-menu" role="menu" className="fade-in absolute bottom-full left-0 z-30 mb-1 max-h-72 w-64 overflow-y-auto rounded-card border border-line bg-surface p-1 shadow-lg">
           {projects.map((p) => <Item key={p.id} icon={Folder} label={p.name} on={p.id === value} onClick={() => choose(p.id)} />)}
-          {current && <Item icon={MessageSquare} label="Not in a project" onClick={() => choose(null)} />}
+          <Item icon={MessageSquare} label="Not in a project" onClick={() => choose(null)} />
           <Item icon={FolderPlus} label="New project…" onClick={() => { setOpen(false); onNew() }} />
         </div>
       )}

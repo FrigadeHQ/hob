@@ -30,12 +30,12 @@ export async function toPcm(bytes: ArrayBuffer): Promise<Float32Array> {
   return (await off.startRendering()).getChannelData(0)
 }
 
-export function transcribe(audio: Float32Array, o: { modelBase?: string; onProgress?: (f: number) => void } = {}): Promise<string> {
+export function transcribe(audio: Float32Array, o: { modelBase?: string; language?: string; onProgress?: (f: number) => void } = {}): Promise<string> {
   onProgress = o.onProgress
   const id = nextId++
   return new Promise((resolve, reject) => {
     waiting.set(id, { resolve, reject })
-    getWorker().postMessage({ id, audio, modelBase: o.modelBase } satisfies WorkerIn, [audio.buffer])
+    getWorker().postMessage({ id, audio, modelBase: o.modelBase, ...(o.language ? { language: o.language } : {}) } satisfies WorkerIn, [audio.buffer])
   })
 }
 

@@ -5,7 +5,8 @@ import ortMjs from 'ort-dist/ort-wasm-simd-threaded.asyncify.mjs?url'
 import ortWasm from 'ort-dist/ort-wasm-simd-threaded.asyncify.wasm?url'
 
 /** audio absent = just load the model (warm up while the user is still talking) */
-export type WorkerIn = { id: number; audio?: Float32Array; modelBase?: string }
+/** language: Whisper's name for it ("english"); absent = it works it out */
+export type WorkerIn = { id: number; audio?: Float32Array; modelBase?: string; language?: string }
 export type WorkerOut = { id: number; text?: string; error?: string } | { progress: number }
 
 const MODEL = 'onnx-community/whisper-base'
@@ -34,11 +35,11 @@ function load(modelBase?: string) {
 }
 
 self.onmessage = async (e: MessageEvent<WorkerIn>) => {
-  const { id, audio, modelBase } = e.data
+  const { id, audio, modelBase, language } = e.data
   try {
     const asr = await load(modelBase)
     if (!audio) return self.postMessage({ id, text: '' } satisfies WorkerOut)
-    const out = await asr(audio, { chunk_length_s: 30, stride_length_s: 5 })
+    const out = await asr(audio, { chunk_length_s: 30, stride_length_s: 5, ...(language ? { language, task: 'transcribe' } : {}) })
     const text = (Array.isArray(out) ? out.map((o) => o.text).join(' ') : out.text).trim()
     self.postMessage({ id, text } satisfies WorkerOut)
   } catch (err) {

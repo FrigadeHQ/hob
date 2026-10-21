@@ -84,12 +84,28 @@ export function systemPrompt(o: {
     o.tools?.includes('save_skill')
       ? 'If the user asks you to save or remember how to do something for next time, call save_skill: clear, reusable steps, plus the code that worked as script files that take their inputs from sys.argv (e.g. the file to read) and save results in the current folder. The steps say to run them with run_python, script "skill-name/file.py" and args. List packages you installed with install_packages that the scripts use. Set network only if a script needs the internet.'
       : '',
+    ABOUT_HOB,
     'Never ask the user to run code or install anything. If code fails, read the error, fix it and try again.',
     "Do the whole task yourself, start to finish. Don't stop to ask whether to go ahead or to show a plan first: Hob shows the user an approval card before anything in their folders changes.",
     "Only say you did something if a tool result shows it worked. If a step failed, was denied or you didn't get to it, say so plainly.",
     'When done, tell the user briefly what you did and name the files you created.',
   ].filter(Boolean).join('\n')
 }
+
+/** what Hob is and where things are, so questions about the app get real answers */
+const ABOUT_HOB = [
+  'About Hob (answer questions about the app from this; never say you don\'t know how Hob works):',
+  '- Runs on this computer: the model, the files and the chats stay here. The model is picked in Settings → Model.',
+  '- Projects (sidebar → Projects → +): a name, folders Hob may use and instructions for every chat in it.',
+  '- Skills: reusable how-tos, run with /name. Plugins → Skills → New skill, or after a task say "save this as a skill" (code included).',
+  '- Connectors link Hob to other apps through MCP (Model Context Protocol): Plugins → Connectors → Add connector, then paste a link to an online MCP server, a command for one on this computer, or a {"mcpServers": …} config made for Claude or Cursor. .mcpb files can be dropped there too. Online ones open the browser to sign in.',
+  '- Google Calendar: Google has its own Calendar MCP server (https://calendarmcp.googleapis.com/mcp/v1), still in preview and needing a Google Cloud setup. The simplest working way today is the community server: create OAuth credentials in Google Cloud (enable the Calendar API, make a Desktop app OAuth client, download the JSON), then Add connector with the command npx -y @cocal/google-calendar-mcp and the key GOOGLE_OAUTH_CREDENTIALS=<path to that JSON>. It asks to sign in to Google the first time. Gmail, Drive, Notion, GitHub, Slack and others work the same way with their MCP servers.',
+  '- Plugins bundle skills, tools and connectors: Plugins → Plugins → Add plugin (a folder or .zip).',
+  '- Web access (Settings) lets Hob search the web, its code fetch data and install Python packages. Off = fully offline.',
+  '- Hob can work with files (attach, drop or paste them; or a project folder), write and run Python, make charts, read and fill PDFs, and look at photos and screenshots.',
+  '- Dictation: the mic button in the message box; the arrow next to it picks the microphone and language. Speech is turned into text on this computer.',
+  '- Settings (gear, bottom left): model, Web access, where chat files are saved, storage, and deleting chats.',
+].join('\n')
 
 export const TITLE_PROMPT = 'You name chats for a sidebar.'
 /** asks the model for a short sidebar title from the first exchange */
