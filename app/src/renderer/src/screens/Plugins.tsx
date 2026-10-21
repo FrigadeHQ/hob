@@ -288,9 +288,9 @@ function Empty({ icon: Icon, title, text, onClick, testId }: { icon: typeof Box;
   )
 }
 
-export function Plugins({ opened }: { opened?: PluginResult | null }) {
+export function Plugins({ opened, tab: startTab }: { opened?: PluginResult | null; tab?: Tab }) {
   const [plugins, setPlugins] = useState<PluginInfo[]>([])
-  const [tab, setTab] = useState<Tab>('skills')
+  const [tab, setTab] = useState<Tab>(startTab ?? 'skills')
   const [open, setOpen] = useState<string | null>(null)
   const [dialog, setDialog] = useState<{ kind: 'skill'; edit?: NewSkill } | { kind: 'connect' } | null>(null)
   const [menu, setMenu] = useState(false)

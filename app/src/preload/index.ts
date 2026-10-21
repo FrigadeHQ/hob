@@ -37,6 +37,7 @@ const api: HobApi = {
     onLive: (cb) => listen<[LiveSummary[]]>('chat:live', cb),
   },
   approval: { answer: invoke('approval:answer') },
+  mac: { access: invoke('mac:access'), ask: invoke('mac:ask'), openAccounts: invoke('mac:openAccounts') },
   vision: { getState: invoke('vision:getState'), onState: (cb) => listen<[VisionState]>('vision:state', cb), retry: invoke('vision:retry') },
   task: { undo: invoke('task:undo') },
   settings: { get: invoke('settings:get'), set: invoke('settings:set'), pickFilesDir: invoke('settings:pickFilesDir') },

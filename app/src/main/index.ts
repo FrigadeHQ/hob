@@ -18,6 +18,7 @@ import { migrateFilesDir, migrateProfile } from './migrate'
 import { pruneUndo } from './agent/journal'
 import { PythonRuntime, realRuntimeDeps } from './python/runtime'
 import { VisionInstaller } from './vision/install'
+import { setMacDeps } from './tools/mac'
 import { VisionServer } from './vision/server'
 import { pickVision, visionFitsGpu, visionGB } from './vision/catalog'
 import type { VisionState } from '../shared/types'
@@ -179,6 +180,16 @@ app.whenReady().then(() => {
     return { totalRamGB: os.totalmem() / 1e9, unified: hw ? hw.gpu.kind !== 'discrete' : process.platform === 'darwin', vramGB: hw?.gpu.vramGB, mainModelGB }
   }
   const vision = FAKE ? fakeVision() : realVision(paths.vision, room)
+  // fake mode: a calendar and an inbox to talk to
+  if (FAKE) setMacDeps({
+    helper: async (args) => (args[0] === 'events'
+      ? [{ title: 'Dentist', start: '2026-10-22T09:00:00Z', end: '2026-10-22T10:00:00Z', allDay: false, calendar: 'Home' }]
+      : args[0] === 'add-event' ? { ...JSON.parse(args[1]), calendar: 'Home' } : { status: 'granted' }),
+    mail: async (script, args) => (script.includes('readStatus')
+      ? JSON.stringify([{ id: 7, subject: 'Your flight to Lisbon', from: 'TAP Air <no-reply@tap.pt>', date: '2026-10-20T08:00:00Z', read: false }])
+      : script.includes('OutgoingMessage') ? 'ok'
+      : JSON.stringify({ subject: 'Your flight to Lisbon', from: 'TAP Air', date: '2026-10-20T08:00:00Z', to: ['me@example.com'], content: `Booking ${args[0]}: departs 24 Oct 07:15.` })),
+  })
   setup.onState((s) => { if ((s.phase === 'downloading' && s.chatReady) || s.phase === 'ready') vision.start() })
   app.on('before-quit', () => vision.stop())
   const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, fake: FAKE })

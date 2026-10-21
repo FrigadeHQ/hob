@@ -15,6 +15,9 @@ export type ModelOption = ModelSummary & {
   needsDiskGB: number
 }
 
+/** may Hob use Calendar and Mail: granted, denied, notDetermined (not asked yet), notRunning (Mail isn't open), unavailable */
+export type MacAccess = { calendar: string; mail: string }
+
 /** Hob's eyes: the small model that looks at images. off: not downloaded yet (it comes after the main model) */
 export type VisionState =
   | { phase: 'off' }
@@ -100,6 +103,8 @@ export interface HobApi {
     onLive(cb: (list: LiveSummary[]) => void): () => void
   }
   approval: { answer(id: string, answer: ApprovalAnswer): Promise<void> }
+  /** Calendar & Mail through the Mac's own apps; null on other systems */
+  mac: { access(): Promise<MacAccess | null>; ask(): Promise<MacAccess | null>; openAccounts(): Promise<void> }
   /** Hob's eyes (the image model) */
   vision: { getState(): Promise<VisionState>; onState(cb: (s: VisionState) => void): () => void; retry(): Promise<void> }
   /** failed: changes that couldn't be reversed (changed since, or too big to back up) */

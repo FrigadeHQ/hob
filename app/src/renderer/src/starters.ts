@@ -69,12 +69,16 @@ const EVERYDAY: StarterRef[] = [
 const rotate = <T,>(list: T[], seed: number, n: number) => list.map((_, i) => list[(i + seed) % list.length]).slice(0, n)
 /** always shown: charts are what people most want to see Hob do with a file */
 const CHART_IDEA: StarterRef = { title: 'Turn a spreadsheet into a chart', prompt: 'Make a clear chart from this spreadsheet and tell me the main takeaway.', icon: 'chart-column', pluginId: '', file: true }
-/** the chart idea, one more that works on a file, two others (plugins first); the rest rotate each new chat */
-export function pickStarters(fromPlugins: StarterRef[], seed: number): StarterRef[] {
+/** shown until email and calendar are connected: the thing that makes Hob most useful day to day */
+export const CONNECT_IDEA: StarterRef = { title: 'Connect my email and calendar', prompt: '', icon: 'calendar', pluginId: '', connect: true }
+
+/** the chart idea, one more that works on a file, two others (plugins first); the rest rotate each new chat.
+ * connect: email and calendar aren't connected yet, so that idea takes one of the four */
+export function pickStarters(fromPlugins: StarterRef[], seed: number, o: { connect?: boolean } = {}): StarterRef[] {
   const withFile = [...FILE_IDEAS, ...fromPlugins.filter((s) => s.file)]
   const others = [...fromPlugins.filter((s) => !s.file), ...EVERYDAY]
-  return [CHART_IDEA, ...rotate(withFile, seed, 1), ...rotate(others, seed, 2)]
+  return o.connect ? [CHART_IDEA, CONNECT_IDEA, ...rotate(withFile, seed, 1), ...rotate(others, seed, 1)] : [CHART_IDEA, ...rotate(withFile, seed, 1), ...rotate(others, seed, 2)]
 }
 
 /** for tests: every title that can show on the home screen */
-export const allStarterTitles = () => [CHART_IDEA, ...FILE_IDEAS, ...EVERYDAY].map((s) => s.title)
+export const allStarterTitles = () => [CHART_IDEA, CONNECT_IDEA, ...FILE_IDEAS, ...EVERYDAY].map((s) => s.title)

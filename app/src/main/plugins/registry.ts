@@ -31,6 +31,8 @@ type Loaded = {
 export type RegistryDeps = {
   /** plugins that ship with Hob (read-only) */
   builtinDir: string
+  /** process.platform, for plugins made for one system (tests set it) */
+  platform?: string
   /** plugins the user added, one folder each */
   installDir: string
   store: Store
@@ -149,6 +151,8 @@ export class PluginRegistry {
     const next: Loaded[] = []
     const add = (p: Loaded | undefined) => {
       if (!p || seen.has(p.manifest.id)) return
+      // a plugin made for other systems (Calendar & Mail is Mac only) isn't listed here at all
+      if (p.manifest.platforms && !p.manifest.platforms.includes(this.d.platform ?? process.platform)) return
       seen.add(p.manifest.id)
       next.push(p)
     }

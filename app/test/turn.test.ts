@@ -452,7 +452,7 @@ it('Hob knows its own features, so "how do I connect Google Calendar?" gets a re
   expect(p).toContain('About Hob')
   expect(p).toMatch(/Plugins → Connectors → Add connector/)
   expect(p).toMatch(/MCP/)
-  expect(p).toMatch(/Google Calendar/)
+  expect(p).toMatch(process.platform === 'darwin' ? /Connect my email and calendar/ : /Google Calendar/)
   expect(p).toMatch(/Projects/)
   expect(p).toMatch(/Settings/)
 })

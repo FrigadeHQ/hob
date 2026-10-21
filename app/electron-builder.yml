@@ -61,6 +61,9 @@ mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     NSMicrophoneUsageDescription: Hob uses the microphone for dictation. Speech is turned into text on this computer.
+    NSCalendarsFullAccessUsageDescription: Hob reads and adds events in your calendars when you ask it to. Everything stays on this Mac.
+    NSCalendarsUsageDescription: Hob reads and adds events in your calendars when you ask it to. Everything stays on this Mac.
+    NSAppleEventsUsageDescription: Hob uses the Mail app to find and read your email and write drafts when you ask it to. It never sends email itself.
   # signs with the Developer ID certificate in the keychain (or CSC_LINK on CI); notarized by scripts/release-mac.sh or CI
 dmg:
   title: Hob

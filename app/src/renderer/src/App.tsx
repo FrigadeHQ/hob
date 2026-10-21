@@ -53,9 +53,11 @@ export function App() {
   }, [])
   // a .mcpb or plugin zip opened from Finder: show it on the Plugins screen
   const [opened, setOpened] = useState<PluginResult | null>(null)
+  /** which Plugins tab to open on (Connectors, from "connect my email and calendar") */
+  const [pluginsTab, setPluginsTab] = useState<'skills' | 'connectors' | 'plugins' | undefined>(undefined)
   useEffect(() => hob.plugins.onOpened((r) => { setOpened(r); setScreen('plugins') }), [])
   // a plugin opened from Finder is announced once; leaving the page forgets it
-  useEffect(() => { if (screen !== 'plugins') setOpened(null) }, [screen])
+  useEffect(() => { if (screen !== 'plugins') { setOpened(null); setPluginsTab(undefined) } }, [screen])
   // a file dropped anywhere outside the chat must never navigate the window
   useEffect(() => {
     const stop = (e: DragEvent) => e.preventDefault()
@@ -137,11 +139,11 @@ export function App() {
         history.current = { list: [{ screen: 'settings', chat: null }], i: 0 }
         setSelected(null); setViewKey((k) => k + 1); setRefreshKey((k) => k + 1)
       }} />}
-      {screen === 'plugins' && <Plugins opened={opened} />}
+      {screen === 'plugins' && <Plugins opened={opened} tab={pluginsTab} />}
       {/* stays mounted under other screens: unmounting a chat stops its reply */}
       <div className={screen === 'chat' ? 'contents' : 'hidden'}>
         <ChatView key={viewKey} chatId={selected} projectId={draftProject} onProjectChange={(id) => { setDraftProject(id); const h = history.current; h.list[h.i] = { ...h.list[h.i], project: id } }}
-          onNewProject={(folders) => setProjectDialog({ folders })} onChatChanged={(id) => { setSelected(id); setRefreshKey((k) => k + 1); const h = history.current; h.list[h.i] = { ...h.list[h.i], chat: id } }} onRefresh={() => setRefreshKey((k) => k + 1)} />
+          onNewProject={(folders) => setProjectDialog({ folders })} onConnectors={() => { setPluginsTab('connectors'); go('plugins') }} onChatChanged={(id) => { setSelected(id); setRefreshKey((k) => k + 1); const h = history.current; h.list[h.i] = { ...h.list[h.i], chat: id } }} onRefresh={() => setRefreshKey((k) => k + 1)} />
       </div>
       {/* next to the window buttons, like Notes and Mail. Last in the page on purpose:
           Electron lets the later of overlapping drag/no-drag areas win, so before the

@@ -3,6 +3,7 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ArrowDown, Clock, FolderOpen, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
 import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../../shared/agent'
+import type { MacAccess } from '../../../shared/types'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
 import { hob } from '../api'
@@ -17,6 +18,7 @@ import { useDictation } from '../speech/useDictation'
 import { tidyMarkdown } from '../../../shared/markdown'
 import { pickStarters } from '../starters'
 import { rehypeFadeWords } from '../fadeWords'
+import { ConnectApps, connected } from '../components/ConnectApps'
 import { skillOffer } from '../../../shared/skillOffer'
 
 /** "/plan-trip Rome" shows the command as a label */
@@ -76,13 +78,15 @@ type Props = {
   onProjectChange(id: string | null): void
   /** open Create project; folders: start it with these */
   onNewProject(folders?: string[]): void
+  /** Plugins → Connectors (connecting apps on Windows and Linux) */
+  onConnectors(): void
   /** this view's chat now exists / changed: select it and refresh the sidebar */
   onChatChanged(id: string): void
   /** a chat changed after the user left it: refresh the sidebar only */
   onRefresh(): void
 }
 
-export function ChatView({ chatId: initialId, projectId: initialProject, onProjectChange, onNewProject, onChatChanged, onRefresh }: Props) {
+export function ChatView({ chatId: initialId, projectId: initialProject, onProjectChange, onNewProject, onConnectors, onChatChanged, onRefresh }: Props) {
   const [messages, setMessages] = useState<UiMessage[]>([])
   const [input, setInput] = useState('')
   const [pending, setPending] = useState<Attachment[]>([])
@@ -257,6 +261,18 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   }
   const offerAt = offerClosed || requestId ? -1 : skillOffer(messages, skills.map((s) => s.name))
 
+  // "Connect my email and calendar" stays on the home screen until that's done
+  const [macAccess, setMacAccess] = useState<MacAccess | null | undefined>(undefined)
+  const [hasConnector, setHasConnector] = useState(true)
+  const [connectOpen, setConnectOpen] = useState(false)
+  useEffect(() => {
+    void hob.mac.access().then(setMacAccess)
+    void hob.plugins.list().then((l) => setHasConnector(l.some((p) => p.kind === 'connector')))
+  }, [])
+  const showConnect = macAccess === undefined ? false : macAccess ? !connected(macAccess) : !hasConnector
+  // other systems: through a connector (Plugins → Connectors)
+  const openConnect = () => (macAccess ? setConnectOpen(true) : onConnectors())
+
   const [undoNotes, setUndoNotes] = useState<Record<number, string>>({})
   async function undoTask(id: number) {
     try {
@@ -311,6 +327,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       onDragLeave={() => { dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDragging(false) }}
       onDrop={(e) => { e.preventDefault(); dragDepth.current = 0; setDragging(false); void addFiles(hob.pathsForFiles(Array.from(e.dataTransfer.files))) }}
     >
+      {connectOpen && <ConnectApps onClose={() => { setConnectOpen(false); void hob.mac.access().then(setMacAccess) }} onTry={(p) => { setConnectOpen(false); void hob.mac.access().then(setMacAccess); void send(p) }} />}
       {dragging && (
         <div data-testid="drop-overlay" className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-composer border-2 border-dashed border-line-strong bg-paper/85 text-body font-medium">
           Drop files to add them
@@ -345,8 +362,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                     </p>
                   </>}
               <div className="mt-8 grid gap-2 text-left sm:grid-cols-2">
-                {pickStarters(starters, seed).map((s) => (
-                  <button key={s.title} data-testid="suggestion" data-file={!!s.file} onClick={() => void (s.file ? startWithFile(s.prompt) : send(s.prompt))} className="group flex items-center gap-3 rounded-card border border-line bg-surface px-3.5 py-3 text-ui text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
+                {pickStarters(starters, seed, { connect: showConnect }).map((s) => (
+                  <button key={s.title} data-testid="suggestion" data-file={!!s.file} onClick={() => void (s.connect ? openConnect() : s.file ? startWithFile(s.prompt) : send(s.prompt))} className="group flex items-center gap-3 rounded-card border border-line bg-surface px-3.5 py-3 text-ui text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
                     <PluginIcon name={s.icon} className="shrink-0 text-muted transition-colors group-hover:text-ink-soft" />
                     <span title={s.title} className="min-w-0 flex-1 truncate text-left">{s.title}</span>
                     {s.file && <Paperclip size={14} strokeWidth={1.75} aria-label="Asks for a file" className="shrink-0 text-muted" />}

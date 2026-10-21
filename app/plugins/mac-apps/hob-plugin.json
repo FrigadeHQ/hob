@@ -1,0 +1,11 @@
+{
+  "id": "mac-apps",
+  "name": "Calendar & Mail",
+  "version": "1.0.0",
+  "description": "Your calendars and email through the Mac's own Calendar and Mail apps, with every account you added there (iCloud, Google, Exchange). Nothing to sign in to. Hob writes email drafts; you send them.",
+  "author": "Hob",
+  "icon": "calendar",
+  "platforms": ["darwin"],
+  "tools": [{ "native": "calendar_events" }, { "native": "calendar_add_event" }, { "native": "mail_search" }, { "native": "mail_read" }, { "native": "mail_draft" }],
+  "prompt": "For the user's calendar use calendar_events and calendar_add_event; for email use mail_search, mail_read and mail_draft (drafts only: the user sends). These cover every account on this Mac, Google included: don't ask the user to set up a connector for Google Calendar or Gmail."
+}

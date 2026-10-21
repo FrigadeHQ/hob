@@ -40,7 +40,8 @@ export type PluginInfo = {
 /** a skill as the composer's / menu shows it */
 export type SkillRef = { name: string; description: string; pluginId: string; pluginName: string; icon: string }
 /** file: asks the user for a file first, then sends the prompt with it */
-export type StarterRef = { title: string; prompt: string; icon: string; pluginId: string; file?: boolean }
+/** connect: opens "connect your email and calendar" instead of sending a prompt */
+export type StarterRef = { title: string; prompt: string; icon: string; pluginId: string; file?: boolean; connect?: boolean }
 
 /** files: scripts and data saved next to SKILL.md. network: its scripts may use the internet. packages: from PyPI, pinned (yfinance==0.2.54) */
 export type NewSkill = { name: string; description: string; instructions: string; files?: Record<string, string>; network?: boolean; packages?: string[] }

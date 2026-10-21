@@ -14,6 +14,7 @@ import { renderPage } from './render'
 import { runTurn } from './agent/turn'
 import { Approvals } from './agent/approvals'
 import { LiveTurns } from './agent/live'
+import { askMacAccess, macAccess } from './tools/mac'
 import { RunningTurns } from './agent/running'
 import { pruneUndo, undo, type UndoOp } from './agent/journal'
 import { coreTools } from './tools'
@@ -243,6 +244,18 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     const r = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] })
     return r.canceled ? null : (r.filePaths[0] ?? null)
   })
+  // Calendar & Mail on a Mac: ask nothing until the user chooses to connect, then the system's own prompts
+  let fakeMac = { calendar: 'notDetermined', mail: 'notDetermined' }
+  ipcMain.handle('mac:access', async () => (process.platform !== 'darwin' ? null : d.fake ? fakeMac : macAccess()))
+  ipcMain.handle('mac:ask', async () => {
+    if (process.platform !== 'darwin') return null
+    if (d.fake) return (fakeMac = { calendar: 'granted', mail: 'granted' })
+    const r = await askMacAccess()
+    send('mac:access', r)
+    return r
+  })
+  // where Google, Exchange and other accounts are added to Calendar and Mail
+  ipcMain.handle('mac:openAccounts', () => { if (process.platform === 'darwin') void shell.openExternal('x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension') })
   ipcMain.handle('speech:mic', () => (process.platform === 'darwin' && !d.fake
     ? micAccess(systemPreferences.getMediaAccessStatus('microphone'), () => systemPreferences.askForMediaAccess('microphone'))
     : true))

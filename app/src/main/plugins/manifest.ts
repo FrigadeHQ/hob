@@ -35,6 +35,8 @@ export type Manifest = {
   settings: PluginSetting[]
   /** a line added to Hob's instructions while the plugin is on, e.g. "For PDFs, use read_pdf." */
   prompt?: string
+  /** only on these systems (process.platform names, e.g. ["darwin"]); everywhere when left out */
+  platforms?: string[]
 }
 
 export const PLUGIN_ID = /^[a-z0-9][a-z0-9-]{0,47}$/
@@ -131,6 +133,7 @@ export function parseManifest(raw: unknown, opts: { builtin?: boolean } = {}): {
         icon: str(r.icon, 'icon', false) || 'puzzle', permissions: { network: perms.network === true },
         starters, tools, mcpServers, settings,
         ...(r.prompt !== undefined ? { prompt: str(r.prompt, 'prompt').slice(0, 600) } : {}),
+        ...(Array.isArray(r.platforms) ? { platforms: r.platforms.map(String) } : {}),
       },
     }
   } catch (err) {
