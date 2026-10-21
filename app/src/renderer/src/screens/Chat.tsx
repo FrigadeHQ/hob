@@ -16,6 +16,7 @@ import { ProjectChip } from '../components/ProjectChip'
 import { folderName } from '../components/ProjectDialog'
 import { useDictation } from '../speech/useDictation'
 import { tidyMarkdown } from '../../../shared/markdown'
+import { rehypeLineBreaks } from '../lineBreaks'
 import { pickStarters } from '../starters'
 import { rehypeFadeWords } from '../fadeWords'
 import { ConnectApps, connected } from '../components/ConnectApps'
@@ -30,7 +31,14 @@ function UserText({ text, skills }: { text: string; skills: SkillRef[] }) {
 
 // Model text can be steered by documents or web pages: an <img> to an outside URL would send data out
 // without asking. Only local files the agent made may show; anything else stays as its alt text.
+/** short text in a cell ("Day 1", "$40") stays on one line */
+const cellText = (n: React.ReactNode): string => (typeof n === 'string' || typeof n === 'number' ? String(n) : Array.isArray(n) ? n.map(cellText).join('') : '')
+const short = (children: React.ReactNode) => cellText(children).trim().length <= 14
 const MARKDOWN_COMPONENTS = {
+  // wide tables scroll sideways instead of squeezing columns until words break
+  table: ({ children }: { children?: React.ReactNode }) => <div className="table-scroll"><table>{children}</table></div>,
+  th: ({ children, style }: { children?: React.ReactNode; style?: React.CSSProperties }) => <th style={style} className={short(children) ? 'whitespace-nowrap' : undefined}>{children}</th>,
+  td: ({ children, style }: { children?: React.ReactNode; style?: React.CSSProperties }) => <td style={style} className={short(children) ? 'whitespace-nowrap' : undefined}>{children}</td>,
   img: ({ src, alt }: { src?: unknown; alt?: string }) =>
     typeof src === 'string' && src.startsWith('mabel-file:') ? <img src={src} alt={alt ?? ''} /> : <span>{alt}</span>,
 }
@@ -65,7 +73,7 @@ function useSteadyText(target: string, live: boolean): string {
 function ReplyText({ content, live }: { content: string; live: boolean }) {
   const text = useSteadyText(content, live)
   // live: new words fade in; finished: plain text (no extra spans in long chats)
-  return text ? <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={live ? [rehypeFadeWords] : []} components={MARKDOWN_COMPONENTS}>{tidyMarkdown(text)}</Markdown> : null
+  return text ? <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={live ? [rehypeLineBreaks, rehypeFadeWords] : [rehypeLineBreaks]} components={MARKDOWN_COMPONENTS}>{tidyMarkdown(text)}</Markdown> : null
 }
 const userMsg = (rid: string, content: string, attachments: Attachment[]): UiMessage => ({ id: `u-${rid}`, role: 'user', content, attachments, steps: [], undoable: false, undone: false })
 const placeholder = (rid: string): UiMessage => ({ id: `a-${rid}`, role: 'assistant', content: '', attachments: [], steps: [], undoable: false, undone: false })

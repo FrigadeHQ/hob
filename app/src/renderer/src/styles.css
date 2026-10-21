@@ -122,6 +122,11 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .reply.prose :where(code):not(pre code)::before, .reply.prose :where(code):not(pre code)::after { content: none; }
 .reply.prose :where(pre) { background: var(--color-sidebar); color: var(--color-ink); border: 1px solid var(--color-line); border-radius: var(--radius-card); font-size: var(--text-ui); }
 .reply.prose :where(table) { font-size: var(--text-ui); }
+/* the reply may break long links anywhere; in a table that squeezed columns until words split ("Da / y") */
+.reply.prose .table-scroll { overflow-x: auto; margin-top: 0.6em; margin-bottom: 0.6em; }
+.reply.prose .table-scroll table { margin: 0; overflow-wrap: normal; }
+.reply.prose :where(td, th) { min-width: 6rem; }
+.reply.prose :where(td, th):first-child { min-width: 0; }
 .reply.prose :where(a) { text-decoration-color: var(--color-line-strong); text-underline-offset: 3px; }
 .reply.prose > :first-child { margin-top: 0; }
 
