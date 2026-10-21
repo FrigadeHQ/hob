@@ -66,7 +66,7 @@ export function CommandBar({ onClose, onOpenChat, onNew, onNewInProject, onNewPr
   }
 
   return (
-    <div data-scrim className="fade-in fixed inset-0 z-50 flex justify-center bg-black/10 px-4 pt-[14vh]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div data-scrim className="scrim fade-in fixed inset-0 z-50 flex justify-center px-4 pt-[14vh]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div data-testid="command-bar" role="dialog" aria-label="Search" className="no-drag flex max-h-[60vh] w-full max-w-xl flex-col overflow-hidden rounded-[14px] border border-line bg-surface shadow-2xl">
         <input
           autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={onKey}

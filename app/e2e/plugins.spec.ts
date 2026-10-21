@@ -142,6 +142,8 @@ test('a dialog opened from Settings sits in the middle of the window, with one d
   const { app, page } = await launch()
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-skills').click()
+  await page.waitForTimeout(400)
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('[data-scrim]')!).backgroundColor)).toBe('rgba(0, 0, 0, 0.3)')
   await page.getByTestId('new-skill').click()
   await page.waitForTimeout(400) // the dialog's pop-in
   const box = (await page.getByTestId('skill-dialog').boundingBox())!
@@ -150,8 +152,9 @@ test('a dialog opened from Settings sits in the middle of the window, with one d
   expect(Math.abs(box.y + box.height / 2 - win.height / 2)).toBeLessThan(2)
   // whole dialog visible, not cut off by the Settings panel
   expect(box.y).toBeGreaterThan(0)
-  const dimmed = await page.evaluate(() => Array.from(document.querySelectorAll('[data-scrim]')).filter((e) => getComputedStyle(e).backgroundColor !== 'rgba(0, 0, 0, 0)').length)
-  expect(dimmed).toBe(1)
+  const shade = () => page.evaluate(() => Array.from(document.querySelectorAll('[data-scrim]')).map((e) => getComputedStyle(e).backgroundColor).filter((c) => c !== 'rgba(0, 0, 0, 0)'))
+  // the same single shade as Settings alone: the background doesn't get lighter or darker
+  expect(await shade()).toEqual(['rgba(0, 0, 0, 0.3)'])
   await page.keyboard.press('Escape')
   await expect(page.getByTestId('skill-dialog')).toHaveCount(0)
   await expect(page.getByTestId('settings')).toBeVisible()

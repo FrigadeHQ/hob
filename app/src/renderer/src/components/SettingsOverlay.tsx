@@ -67,7 +67,7 @@ export function SettingsOverlay({ section, onSection, onClose, opened, onAllChat
   const match = (i: { label: string; words: string }) => !q.trim() || `${i.label} ${i.words}`.toLowerCase().includes(q.trim().toLowerCase())
   return (
     // starts below the title bar: the window's own buttons stay clear of it, and the strip still moves the window
-    <div data-scrim className="fade-in fixed inset-0 z-40 flex flex-col bg-black/30" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div data-scrim className="scrim fade-in fixed inset-0 z-40 flex flex-col" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="drag h-11 shrink-0" />
       <div className="flex min-h-0 flex-1 px-4 pb-4 sm:px-6 sm:pb-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div data-testid="settings" role="dialog" aria-label="Settings" className="pop mx-auto flex h-full w-full max-w-5xl overflow-hidden rounded-[16px] border border-line bg-paper shadow-2xl">

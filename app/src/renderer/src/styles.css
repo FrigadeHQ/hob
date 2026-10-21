@@ -146,6 +146,9 @@ html[data-text-size="large"] { --reply-step: 2px; }
 @keyframes mabel-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.08 } 50% { transform: scaleX(0.85); opacity: 0.05 } }
 @media (prefers-reduced-motion: reduce) { .mabel-alive * { animation: none !important } }
 
-/* one dimmed layer at a time: a dialog over Settings (or over another dialog) takes over the dimming */
-[data-scrim] { transition: background-color 150ms ease-out; }
+/* the dimmed layer behind Settings, dialogs and search: one shade everywhere */
+.scrim { background-color: rgb(0 0 0 / 0.3); }
+/* one dimmed layer at a time: a dialog over Settings (or over another dialog) takes over the dimming, at once,
+   so the background never changes shade; only the layer under the new dialog gets dimmer */
 body:has(> [data-scrim]) #root [data-scrim], body > [data-scrim]:has(~ [data-scrim]) { background-color: transparent; }
+body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] { animation: none; }

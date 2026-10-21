@@ -62,7 +62,7 @@ export function Dialog({ title, onClose, children, testId }: { title: string; on
   // on the page itself, not inside whatever opened it: a dialog opened from Settings would otherwise be
   // placed and clipped by the Settings panel instead of centred in the window
   return createPortal(
-    <div data-scrim className="fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div data-scrim className="scrim fade-in fixed inset-0 z-50 flex items-center justify-center p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div data-testid={testId} role="dialog" aria-label={title} className="pop w-full max-w-lg rounded-[16px] border border-line bg-surface p-5 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-body font-semibold">{title}</h2>
