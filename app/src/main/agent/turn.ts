@@ -128,6 +128,9 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   async function onTool(name: string, args: unknown): Promise<string> {
     // the worker may already have sent this call when the user pressed Stop
     if (a.signal.aborted || loop.signal.aborted) return 'Stopped by the user.'
+    // small models hand web addresses to read_file; read the page instead of looking for it on disk
+    const link = name === 'read_file' && String((args as { path?: unknown } | null)?.path ?? '').trim()
+    if (link && /^https?:\/\//i.test(link) && d.tools.some((t) => t.spec.name === 'fetch_url')) { name = 'fetch_url'; args = { url: link } }
     const tool = d.tools.find((t) => t.spec.name === name)
     if (!tool) return `There is no tool called ${name}.`
     const raw = (args ?? {}) as Record<string, unknown>

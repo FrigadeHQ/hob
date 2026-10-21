@@ -6,6 +6,7 @@ export type StepRow = Omit<Step, 'status'> & { status: Step['status'] | 'retryin
 /**
  * Trying code again until it works is normal: show the tries as one row with the last try's outcome.
  * A failed last try shows as "retrying" while the reply is still being worked on and it's the newest row.
+ * Steps that failed are left out once something else worked: the user sees what got done, not the stumbles.
  */
 export function stepRows(steps: Step[], running: boolean): StepRow[] {
   const groups: Step[][] = []
@@ -14,11 +15,13 @@ export function stepRows(steps: Step[], running: boolean): StepRow[] {
     if (last && last[0].title === s.title && last[0].tool === s.tool && last.at(-1)!.status === 'error') last.push(s)
     else groups.push([s])
   }
-  return groups.map((g, i) => {
+  const rows: StepRow[] = groups.map((g, i) => {
     const end = g.at(-1)!
     const status = end.status === 'error' && running && i === groups.length - 1 ? 'retrying' : end.status
     const details = g.filter((t) => t.detail)
     const detail = g.length === 1 ? end.detail : details.length ? details.map((t) => `--- Try ${g.indexOf(t) + 1} ---\n${t.detail}`).join('\n\n') : undefined
     return { ...end, status, tries: g.length, ...(detail ? { detail } : {}) }
   })
+  // hiccups on the way to a result aren't worth showing; when nothing worked, they explain why
+  return rows.some((r) => r.status === 'done') ? rows.filter((r) => r.status !== 'error') : rows
 }

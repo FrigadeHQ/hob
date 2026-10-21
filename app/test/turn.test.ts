@@ -479,3 +479,11 @@ it("doesn't try to look at photos when this computer has no image support", asyn
   const reply = await w.turn('what is this', [{ name: 'a.png', path: photo, sizeBytes: PNG.length }])
   expect(reply.steps).toEqual([])
 })
+
+it('a web address given to read_file is read as a web page, not looked for on disk', async () => {
+  const w = world('allow', { grant: false })
+  w.deps.webAccess = () => true
+  w.deps.fetch = (async () => new Response('<html><body><h1>Top stories</h1><p>' + 'Story one is about databases. '.repeat(20) + '</p></body></html>', { headers: { 'content-type': 'text/html' } })) as never
+  const reply = await w.turn('__tools__ [["read_file",{"path":"https://orangebot.ai/hacker-news-top-stories"}]]')
+  expect(reply.steps.map((s) => [s.title, s.status])).toEqual([['Read orangebot.ai', 'done']])
+})

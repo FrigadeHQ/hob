@@ -15,8 +15,16 @@ it("a failed try that's still being worked on isn't shown as an error; once the 
   const steps = [s('1', 'Ran code', 'error'), s('2', 'Ran code', 'error')]
   expect(stepRows(steps, true)[0].status).toBe('retrying')
   expect(stepRows(steps, false)[0].status).toBe('error')
-  // gave up and moved on: the failure stays visible
-  expect(stepRows([...steps, { id: '3', title: 'Searched the web', status: 'done' }], true)[0].status).toBe('error')
+})
+
+it('hides what went wrong along the way when the task still got done; shows it when nothing worked', () => {
+  const failed: Step = { id: '1', title: "Couldn't find top-stories", status: 'error', tool: 'read_file' }
+  const worked: Step = { id: '2', title: 'Read orangebot.ai', status: 'done', tool: 'fetch_url' }
+  expect(stepRows([failed, worked], false).map((r) => r.title)).toEqual(['Read orangebot.ai'])
+  expect(stepRows([failed, worked], true).map((r) => r.title)).toEqual(['Read orangebot.ai'])
+  expect(stepRows([failed], false).map((r) => r.status)).toEqual(['error'])
+  // a step the user said no to is their decision, not a hiccup: it stays
+  expect(stepRows([{ ...failed, status: 'denied' }, worked], false)).toHaveLength(2)
 })
 
 it('different steps stay apart', () => {
