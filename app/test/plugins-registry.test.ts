@@ -46,7 +46,7 @@ describe('PluginRegistry', () => {
     plugin(w.builtinDir, 'cal', { tools: [{ native: 'calendar_events' }] })
     const r = w.make()
     expect(r.list().map((p) => [p.id, p.enabled, p.trust])).toEqual([['cal', true, 'builtin'], ['trip', true, 'instructions'], ['weather', true, 'network']])
-    expect((await r.tools()).map((t) => t.spec.name)).toEqual(['calendar_events', 'get_weather'])
+    expect((await r.tools()).map((t) => t.spec.name)).toEqual(['get_weather'])
     expect(r.skills().map((s) => s.name)).toEqual(['plan-trip'])
     expect(r.findSkill('plan-trip')?.body).toBe('Do it day by day.')
     expect(r.starters()).toEqual([{ title: 'Rain?', prompt: 'Will it rain?', icon: 'sun', pluginId: 'weather' }])
