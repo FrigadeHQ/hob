@@ -147,7 +147,8 @@ export function App() {
       {/* next to the window buttons, like Notes and Mail. Last in the page on purpose:
           Electron lets the later of overlapping drag/no-drag areas win, so before the
           drag strips the button can't be clicked */}
-      <div className={`absolute top-2.5 z-40 flex items-center ${mac ? 'left-[86px]' : 'left-2'}`}>
+      {/* hidden under Settings, which covers the app */}
+      <div className={`absolute top-2.5 z-40 flex items-center ${mac ? 'left-[86px]' : 'left-2'} ${settingsAt ? 'hidden' : ''}`}>
         <IconButton icon={PanelLeft} label={sidebar ? 'Hide sidebar' : 'Show sidebar'} testId="toggle-sidebar" size={15} small onClick={() => setSidebar((s) => !s)} />
         <IconButton icon={Search} label={`Search (${MOD}K)`} testId="open-search" size={15} small onClick={() => setPalette(true)} />
         <IconButton icon={ArrowLeft} label={`Back (${MOD}[)`} testId="go-back" size={15} small disabled={history.current.i === 0} onClick={() => void step(-1)} />

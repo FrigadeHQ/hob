@@ -66,7 +66,10 @@ export function SettingsOverlay({ section, onSection, onClose, opened, onAllChat
   }, [onClose])
   const match = (i: { label: string; words: string }) => !q.trim() || `${i.label} ${i.words}`.toLowerCase().includes(q.trim().toLowerCase())
   return (
-    <div className="fade-in fixed inset-0 z-40 flex bg-black/30 p-4 sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    // starts below the title bar: the window's own buttons stay clear of it, and the strip still moves the window
+    <div className="fade-in fixed inset-0 z-40 flex flex-col bg-black/30" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="drag h-11 shrink-0" />
+      <div className="flex min-h-0 flex-1 px-4 pb-4 sm:px-6 sm:pb-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div data-testid="settings" role="dialog" aria-label="Settings" className="pop mx-auto flex h-full w-full max-w-5xl overflow-hidden rounded-[16px] border border-line bg-paper shadow-2xl">
         <nav className="flex w-56 shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-sidebar p-3">
           <label className="flex items-center gap-2 rounded-control border border-line bg-surface px-2.5 py-1.5 text-ui">
@@ -99,6 +102,7 @@ export function SettingsOverlay({ section, onSection, onClose, opened, onAllChat
             {(section === 'skills' || section === 'connectors' || section === 'plugins') && <Plugins section={section} onSection={onSection} opened={opened} />}
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
