@@ -7,6 +7,7 @@ import type { AccountsState, MacAccess } from '../../../shared/types'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
 import { garth } from '../api'
+import { Mascot } from '../components/Mascot'
 import { CopyButton } from '../components/CopyButton'
 import { ThinkingIndicator, WorkLog } from '../components/WorkLog'
 import { FileCards } from '../components/FileCards'
@@ -351,9 +352,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       )}
       <div className="drag h-12 shrink-0" />
       <div ref={scroller} onScroll={onScroll} className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[720px] space-y-8 px-6 pb-10">
+        <div className="mx-auto max-w-[768px] space-y-8 px-6 pb-10 sm:px-8">
           {messages.length === 0 && (
-            <div className="pt-24 text-center">
+            <div className="chat-greeting pt-12 text-center sm:pt-[63px]">
+              <div className="mb-[23px] flex justify-center"><Mascot size={48} alive /></div>
               {project
                 ? <>
                     <h1 className="text-title font-semibold tracking-tight">What should we do in {project.name}?</h1>
@@ -371,8 +373,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                       : <p className="mt-2 text-body text-ink-soft">Chats here follow this project's instructions.</p>}
                   </>
                 : <>
-                    <h1 className="text-title font-semibold tracking-tight">What can Garth do for you?</h1>
-                    <p className="mt-2 text-body text-ink-soft">
+                    <h1 className="text-[clamp(24px,4vw,32px)] font-semibold leading-[1.2] tracking-[-.95px]">What are we working on?</h1>
+                    <p className="mt-2 text-[14px] leading-[22px] text-ink-soft">
                       Private, on your computer. Drop in files, or{' '}
                       <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Garth a folder to work in</button>.
                     </p>
@@ -394,7 +396,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
               return (
                 <div key={m.id} className="flex flex-col items-end gap-1.5">
                   {m.attachments.length > 0 && <div className="flex flex-wrap items-end justify-end gap-2">{m.attachments.map((a) => <AttachmentChip key={a.path} a={a} />)}</div>}
-                  <div className="max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-line/70 px-4 py-2.5 text-body"><UserText text={m.content} skills={skills} /></div>
+                  <div className="max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-selection px-4 py-2.5 text-body"><UserText text={m.content} skills={skills} /></div>
                 </div>
               )
             }
@@ -430,7 +432,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         </div>
       </div>
 
-      <div className="relative mx-auto w-full max-w-[720px] px-6 pb-5">
+      <div className="relative mx-auto w-full max-w-[768px] px-6 pb-5 sm:px-8">
         {/* text scrolls under a soft fade instead of being cut by the composer */}
         <div className="pointer-events-none absolute inset-x-0 -top-10 h-10 bg-gradient-to-b from-transparent to-paper" />
         {/* always rendered so it can fade in and out */}

@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import {
   BookOpen, Briefcase, Calculator, Calendar, Camera, ChartColumn, ChefHat, Clock, CloudSun, Code, Coins, Dumbbell, FileText, Gamepad2, Globe,
   GraduationCap, Heart, Languages, Leaf, Lightbulb, ListChecks, Mail, Map, MessageCircle, Music, Newspaper, NotebookPen, Palette, PenLine, Plane, Plug,
@@ -52,25 +52,32 @@ export function PluginIcon({ name, size = 16, className = '' }: { name: string; 
   return <Icon size={size} strokeWidth={1.75} className={className} />
 }
 
-/** Centered dialog; Escape or a click outside closes it. */
-export function Dialog({ title, onClose, children, testId }: { title: string; onClose(): void; children: React.ReactNode; testId?: string }) {
+/** Native modal behavior keeps focus inside and restores it to the opener. */
+export function Dialog({ title, onClose, children, testId, className = '' }: { title: string; onClose(): void; children: React.ReactNode; testId?: string; className?: string }) {
+  const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', k)
-    return () => window.removeEventListener('keydown', k)
-  }, [onClose])
-  // on the page itself, not inside whatever opened it: a dialog opened from Settings would otherwise be
-  // placed and clipped by the Settings panel instead of centred in the window
+    const dialog = ref.current!
+    const opener = document.activeElement
+    dialog.showModal()
+    return () => {
+      dialog.close()
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true })
+    }
+  }, [])
+  // Keep the shared scrim at the document level so Settings and stacked dialogs dim only once.
   return createPortal(
-    <div data-scrim className="scrim fade-in fixed inset-0 z-50 flex items-center justify-center p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div data-testid={testId} role="dialog" aria-label={title} className="pop w-full max-w-lg rounded-[16px] border border-line bg-surface p-5 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
+    <dialog ref={ref} role="presentation" data-scrim className="dialog-layer scrim fade-in fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none items-center justify-center border-0 p-6 text-ink"
+      onCancel={(e) => { e.preventDefault(); onClose() }}
+      onKeyDown={(e) => { if (e.key === 'Escape') e.stopPropagation() }}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div data-testid={testId} role="dialog" aria-modal="true" aria-label={title} className={`app-dialog pop w-full max-w-lg rounded-[16px] border border-line bg-surface p-5 shadow-xl ${className}`}>
+        <div className="dialog-header mb-4 flex items-center justify-between">
           <h2 className="text-body font-semibold">{title}</h2>
           <IconButton icon={X} label="Close" onClick={onClose} />
         </div>
         {children}
       </div>
-    </div>,
+    </dialog>,
     document.body,
   )
 }

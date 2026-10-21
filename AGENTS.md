@@ -6,7 +6,7 @@ Guide for anyone (person or coding agent) working on this repository: what Garth
 
 A desktop AI assistant that runs entirely on the user's computer (Mac, Windows, Linux). It picks the best open model the machine can run, downloads it once, and then works offline. Like a cloud coworker app, it can work with the user's files and folders, run Python, make charts, read and fill PDFs, look at images, search the web (optional), and connect to other apps through MCP. Chats, files and models never leave the machine.
 
-Mascot and brand: Garth, a round lavender pixel-art face (`app/src/shared/mascot.ts`). The UI is a warm, light/dark theme. MIT licensed.
+Mascot and brand: Garth, a neutral pixel-art face on an illustrated body (`app/src/renderer/src/components/Mascot.tsx`, face in `app/src/shared/mascot.ts`). The UI is a warm, light/dark theme; text is Hanken Grotesk (bundled, OFL). MIT licensed.
 
 ## Repository layout
 
@@ -95,7 +95,7 @@ docs/                user and plugin-author docs, README assets
   - `Settings.tsx`: its sections;
   - `Plugins.tsx`: the Skills, Connectors and Plugins pages.
 - `components/SettingsOverlay.tsx` holds General, Model, Privacy, Files & storage, and Customize.
-- Styling is Tailwind v4 with tokens in `styles.css` (light and dark). Replies use Source Serif 4 (bundled, OFL).
+- Styling is Tailwind v4 with tokens in `styles.css` (light and dark). The interface and replies use Hanken Grotesk (bundled, OFL).
 - Dictation runs Whisper in a web worker (`speech/`), fully local.
 
 ### Data on disk

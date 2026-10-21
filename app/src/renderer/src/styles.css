@@ -1,17 +1,24 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* The same variable font as the marketing site, bundled for offline use. */
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("./assets/hanken-grotesk.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 /*
  * Garth design system
- * Type: four sizes only. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
+ * Type: core sizes. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
  * Color: paper (app) · sidebar · surface (composer, cards) · ink · ink-soft (secondary text) · muted (hints, placeholders) · line · line-strong · accent
  * Radius: 8 controls · 12 cards · 18 composer. Icons: lucide, 16px in UI, 14px in steps.
  */
 @theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
+  --font-sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  /* Garth's replies read like a page: Source Serif 4 (Adobe, SIL Open Font License) */
-  --font-serif: "Source Serif 4 Variable", "Iowan Old Style", Georgia, serif;
 
   --text-meta: 12px;
   --text-meta--line-height: 16px;
@@ -27,9 +34,13 @@
   --color-surface: #ffffff;
   --color-ink: #1c1917;
   --color-ink-soft: #57534e;
-  --color-muted: #a29d98;
+  --color-muted: #817b75;
   --color-line: #e9e6e3;
   --color-line-strong: #d6d2cd;
+  --color-action: #242424;
+  --color-on-action: #ffffff;
+  --color-selection: #e8e5e1;
+  --color-focus: #8a847f;
   --color-accent: #c2410c;
   /* the mic while it's recording */
   --color-rec: #dbe7fb;
@@ -61,9 +72,13 @@
     --color-surface: #22201e;
     --color-ink: #f2f1ef;
     --color-ink-soft: #c4beb8;
-    --color-muted: #8a847e;
+    --color-muted: #938c85;
     --color-line: #2f2c29;
     --color-line-strong: #423e3a;
+    --color-action: #e6e2de;
+    --color-on-action: #211f1d;
+    --color-selection: #302d2a;
+    --color-focus: #77716b;
     --color-rec: #24344f;
     --color-rec-ink: #9cc0ff;
     --color-danger: #f97066;
@@ -92,12 +107,12 @@ body {
 .drag { -webkit-app-region: drag; }
 .no-drag { -webkit-app-region: no-drag; }
 
-/* Assistant replies: a book-like serif, a touch larger than the UI text (serifs read small), calm rhythm */
+/* Replies use the same face, with more room to read. */
 .reply.prose {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-optical-sizing: auto;
-  font-size: calc(var(--text-body) + 1.5px + var(--reply-step, 0px));
-  line-height: 1.6;
+  font-size: calc(var(--text-body) + 1px + var(--reply-step, 0px));
+  line-height: 1.65;
   color: var(--color-ink);
   --tw-prose-body: var(--color-ink);
   --tw-prose-headings: var(--color-ink);
@@ -133,31 +148,106 @@ html[data-text-size="large"] { --reply-step: 2px; }
 /* new text fades in instead of popping */
 @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 .fade-in { animation: fade-in 400ms ease-out both; }
+/* First loading screen: Garth, then the status, then the reassurance. */
+@keyframes setup-appear { from { opacity: 0; } to { opacity: 1; } }
+.setup-avatar { animation: setup-appear 250ms ease-out both; }
+.setup-status { animation: setup-appear 400ms ease-out 150ms both; }
+.setup-assurance { animation: setup-appear 400ms ease-out 450ms both; }
 /* the app appearing after setup, and dialogs opening */
-@keyframes reveal { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes reveal { from { opacity: 0; } to { opacity: 1; } }
 .reveal { animation: reveal 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes pop { from { opacity: 0; transform: translateY(4px) scale(0.98); } to { opacity: 1; transform: none; } }
 .pop { animation: pop 180ms ease-out both; }
 /* a reply's words as they stream in: fade up from nothing, softly, so the end of the text has a gentle edge */
 @keyframes fw { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: none; } }
 .fw { animation: fw 650ms cubic-bezier(0.2, 0.6, 0.2, 1) both; }
-@media (prefers-reduced-motion: reduce) { .reveal, .pop, .fade-in, .fw { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .reveal, .pop, .fade-in, .fw, .setup-avatar, .setup-status, .setup-assurance { animation: none; } }
 
-/* the garth on the start-up screen: floats, breathes, its tip flickers, it blinks now and then */
-/* Garth on the start-up screen: a gentle bob in whole pixels (steps keep the pixel-art look) */
-.garth-alive .garth-body { animation: garth-bob 2.4s steps(4, jump-none) infinite; }
-.garth-alive .garth-shadow { animation: garth-shadow 2.4s steps(4, jump-none) infinite; transform-box: fill-box; transform-origin: 50% 50%; }
-@keyframes garth-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
-@keyframes garth-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.08 } 50% { transform: scaleX(0.85); opacity: 0.05 } }
-/* the mini one in the status corner stays put unless busy */
-.garth-mini.garth-alive .garth-body { animation: none; }
-/* getting smarter: a small hop, one art pixel at a time */
-.garth-busy .garth-body, .garth-mini.garth-busy .garth-body { animation: garth-hop 1.2s steps(2, jump-none) infinite; }
-@keyframes garth-hop { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-1px) } }
-/* tickled: a quick pixel wiggle while laughing */
-.garth-giggle .garth-body { animation: garth-giggle 0.16s steps(1, end) 8; transform-box: fill-box; transform-origin: 50% 100%; }
-@keyframes garth-giggle { 0% { transform: translateX(-0.5px) rotate(-6deg) } 50% { transform: translateX(0.5px) rotate(6deg) } }
-@media (prefers-reduced-motion: reduce) { .garth-alive *, .garth-busy *, .garth-giggle * { animation: none !important } }
+/* Onboarding: the same quiet frame for recommendation, download, and preparation. */
+.onboarding, .setup-dialog { --color-muted: #78716c; --setup-selection: #eeeae5; --setup-hover: #f5f3f0; color-scheme: light; }
+.onboarding-screen { flex: 1; min-height: 0; display: flex; align-items: safe center; justify-content: center; padding: 28px 38px 42px; overflow: auto; }
+.onboarding-content { position: relative; width: 430px; max-width: 100%; text-align: center; }
+.onboarding-mascot { width: 72px; height: 72px; margin: 0 auto 25px; transition: transform 350ms cubic-bezier(.22,1,.36,1) 120ms; }
+.onboarding-mascot svg[data-testid=mascot] { width: 100%; height: 100%; }
+.onboarding-mascot .setup-avatar { height: 100%; }
+.onboarding[data-phase=probing] .onboarding-mascot { transform: translateY(133px) scale(1.555556); }
+.onboarding-probing { position: absolute; top: 247px; left: 0; right: 0; opacity: 0; transition: opacity 120ms ease-out; pointer-events: none; }
+.onboarding[data-phase=probing] .onboarding-probing { opacity: 1; }
+.onboarding-panel { min-height: 285.4px; }
+.onboarding[data-phase=probing] .onboarding-panel { visibility: hidden; }
+.setup-heading, .setup-stage { animation: setup-appear 240ms ease-out both; }
+.onboarding[data-phase=choose] .setup-heading { animation-delay: 280ms; }
+.onboarding[data-phase=choose] .setup-stage { animation-delay: 360ms; }
+.setup-heading h1 { font-size: 28px; font-weight: 550; letter-spacing: -.8px; line-height: 1.2; white-space: nowrap; }
+.setup-subtitle { font-size: 14px; color: var(--color-ink-soft); margin-top: 10px; line-height: 1.7; white-space: nowrap; }
+.setup-stage { width: 380px; max-width: 100%; min-height: 192px; margin: 26px auto 0; }
+.setup-card { height: 96px; padding: 16px 17px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-surface); text-align: left; }
+.setup-hardware { font-size: 11px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setup-model-line { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 10px; }
+.setup-model-name { font-size: 17px; font-weight: 550; letter-spacing: -.35px; white-space: nowrap; }
+.setup-primary { height: 43px; border-radius: 9px; background: var(--color-ink); color: var(--color-paper); font-size: 13px; font-weight: 550; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+.setup-primary:disabled { opacity: .35; cursor: not-allowed; }
+.setup-stage > .setup-primary { width: 240px; max-width: 100%; margin-top: 24px; }
+.setup-small-print { font-size: 11px; color: var(--color-muted); line-height: 1.7; margin-top: 10px; }
+.setup-text-button { font-size: 12px; color: var(--color-muted); display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 3px 0; white-space: nowrap; }
+.setup-stage > .setup-text-button { margin-top: 24px; }
+.setup-progress-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; gap: 12px; color: var(--color-ink-soft); }
+.setup-track { height: 4px; background: var(--color-line); border-radius: 8px; overflow: hidden; margin: 12px 0 10px; }
+.setup-track > span { display: block; height: 100%; background: var(--color-ink-soft); border-radius: 8px; transform-origin: left; transition: transform 300ms ease-out; }
+.setup-eta { font-size: 11px; color: var(--color-muted); }
+.setup-notice { margin-top: 14px; font-size: 12px; color: var(--color-accent); }
+.onboarding:not([data-phase=probing]) .setup-assurance { animation: none; opacity: 0; pointer-events: none; transition: opacity 120ms ease-out; }
+.app-dialog { margin: auto; max-width: min(512px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; }
+.dialog-layer[open] { display: flex; }
+.dialog-layer::backdrop { background: transparent; }
+.setup-dialog { width: 568px; max-width: calc(100vw - 48px); max-height: min(600px, calc(100dvh - 48px)); padding: 0; overflow: hidden; text-align: left; border-color: var(--color-line-strong); }
+.setup-dialog { display: flex; flex-direction: column; }
+.dialog-layer:has(.setup-dialog)::backdrop { backdrop-filter: blur(3px); }
+.setup-dialog .dialog-header { padding: 20px 24px 0; margin: 0; flex-shrink: 0; }
+.setup-dialog .dialog-header h2 { font-size: 18px; font-weight: 550; letter-spacing: -.4px; }
+.setup-dialog-description { padding: 3px 24px 19px; font-size: 12px; color: var(--color-muted); border-bottom: 1px solid var(--color-line); }
+.setup-model-scroll { overflow: auto; overscroll-behavior: contain; min-height: 0; padding: 9px 10px; }
+.setup-model-option { display: flex; gap: 13px; align-items: flex-start; padding: 13px 14px; border-radius: 9px; cursor: pointer; }
+.setup-model-option:has(input:checked) { background: var(--setup-selection); }
+.setup-model-option input { margin: 4px 0 0; accent-color: var(--color-ink); flex: none; }
+.setup-option-copy { flex: 1; min-width: 0; }
+.setup-option-title { display: flex; align-items: center; gap: 9px; font-size: 13px; white-space: nowrap; }
+.setup-option-description { font-size: 11px; color: var(--color-muted); display: block; margin-top: 4px; }
+.setup-option-size { white-space: nowrap; font-size: 12px; color: var(--color-ink-soft); padding-top: 1px; }
+.setup-tag { font-size: 10px; line-height: 20px; padding: 0 7px; border-radius: 4px; background: var(--color-line); color: var(--color-ink-soft); }
+.setup-model-option.unavailable { cursor: default; opacity: .5; }
+.setup-model-section { font-size: 10px; color: var(--color-muted); padding: 16px 14px 6px; border-top: 1px solid var(--color-line); margin-top: 8px; }
+.setup-dialog-footer { padding: 17px 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-top: 1px solid var(--color-line); flex-shrink: 0; }
+.setup-dialog-footer > span { font-size: 11px; color: var(--color-muted); }
+.setup-dialog-footer .setup-primary { height: 37px; padding: 0 18px; font-size: 12px; }
+.setup-details-dialog { width: 480px; }
+.setup-download-details { padding: 8px 24px 22px; overflow: auto; }
+.setup-detail-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 19px 0; }
+.setup-detail-row + .setup-detail-row { border-top: 1px solid var(--color-line); }
+.setup-detail-row p { font-size: 13px; font-weight: 500; }
+.setup-detail-row small { display: block; margin-top: 5px; font-size: 11px; color: var(--color-muted); }
+.setup-detail-row > span { font-size: 11px; color: var(--color-muted); white-space: nowrap; padding-top: 2px; }
+.setup-detail-explanation { font-size: 12px; color: var(--color-ink-soft); margin-top: 2px; }
+.onboarding button:focus-visible, .onboarding input:focus-visible, .setup-dialog button:focus-visible, .setup-dialog input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
+@media (prefers-color-scheme: dark) {
+  .onboarding, .setup-dialog { --color-muted: #9b948d; --setup-selection: #37312c; --setup-hover: #2b2723; color-scheme: dark; }
+}
+@media (max-width: 800px) {
+  .onboarding-screen { padding: 20px 30px 36px; }
+  .onboarding-mascot { width: 60px; height: 60px; margin-bottom: 17px; }
+  .onboarding[data-phase=probing] .onboarding-mascot { transform: translateY(124px) scale(1.866667); }
+  .onboarding-probing { top: 232px; }
+  .setup-heading h1 { font-size: 26px; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .setup-primary:not(:disabled):hover { opacity: .9; }
+  .setup-text-button:hover { color: var(--color-ink); }
+  .setup-model-option:not(.unavailable):hover { background: var(--setup-hover); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-mascot, .onboarding-probing, .setup-track > span { transition: none; }
+  .setup-heading, .setup-stage { animation: none; }
+}
 
 /* the dimmed layer behind Settings, dialogs and search: one shade everywhere */
 .scrim { background-color: rgb(0 0 0 / 0.3); }
@@ -165,3 +255,22 @@ html[data-text-size="large"] { --reply-step: 2px; }
    so the background never changes shade; only the layer under the new dialog gets dimmer */
 body:has(> [data-scrim]) #root [data-scrim], body > [data-scrim]:has(~ [data-scrim]) { background-color: transparent; }
 body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] { animation: none; }
+
+/* One Garth at a time: the greeting owns him until a conversation starts. */
+.status-presence { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; }
+.status-presence:has(.garth-mascot) > .status-dot { display: none; }
+#root:has(.chat-greeting) .status-presence .garth-mascot { display: none; }
+#root:has(.chat-greeting) .status-presence > .status-dot { display: block; }
+.garth-smile { opacity: 0; }
+.garth-eyes { transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .garth-alive .garth-eyes { animation: garth-blink 37s steps(1, end) infinite; }
+  .garth-alive:not(.garth-working) .garth-neutral { animation: garth-neutral 43s steps(1, end) infinite; }
+  .garth-alive:not(.garth-working) .garth-smile { animation: garth-smile 43s steps(1, end) infinite; }
+  .garth-working .garth-face { transform: translateY(1px); }
+}
+@keyframes garth-blink { 0%, 21.4%, 50.4%, 84.4%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
+@keyframes garth-neutral { 0%, 46%, 100% { opacity: 1; } 42% { opacity: 0; } }
+@keyframes garth-smile { 0%, 46%, 100% { opacity: 0; } 42% { opacity: 1; } }
+
+@media (max-height: 620px) { .chat-greeting { padding-top: 16px; } }

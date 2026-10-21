@@ -104,9 +104,9 @@ describe('SetupController', () => {
   it('choose says what computer it picked for and that a small model comes first', async () => {
     const { c } = setup()
     await c.start()
-    expect(c.state).toMatchObject({ phase: 'choose', computer: 'Apple M1 Max with 32 GB of memory', starter: { id: 'qwen3-1.7b' } })
-    expect(computerName({ ...m1max, os: 'win32', cpuModel: 'Intel i7', totalRamGB: 31.9, gpu: { kind: 'discrete', name: 'NVIDIA GeForce RTX 4070', vramGB: 12 } })).toBe('NVIDIA GeForce RTX 4070 (12 GB) and 32 GB of memory')
-    expect(computerName({ ...m1max, cpuModel: 'Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz', gpu: { kind: 'none', name: '', vramGB: 0 }, totalRamGB: 16 })).toBe('Intel Core i5-8250U with 16 GB of memory')
+    expect(c.state).toMatchObject({ phase: 'choose', computer: 'Apple M1 Max · 32 GB memory', starter: { id: 'qwen3-1.7b' } })
+    expect(computerName({ ...m1max, os: 'win32', cpuModel: 'Intel i7', totalRamGB: 31.9, gpu: { kind: 'discrete', name: 'NVIDIA GeForce RTX 4070', vramGB: 12 } })).toBe('NVIDIA GeForce RTX 4070 (12 GB) · 32 GB memory')
+    expect(computerName({ ...m1max, cpuModel: 'Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz', gpu: { kind: 'none', name: '', vramGB: 0 }, totalRamGB: 16 })).toBe('Intel Core i5-8250U · 16 GB memory')
   })
   it('the first download says it is the small starter model', async () => {
     const { c, states } = setup()

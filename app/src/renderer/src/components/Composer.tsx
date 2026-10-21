@@ -172,7 +172,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
   return (
     <div className="relative">
       {items && <SkillMenu items={items} active={Math.min(active, items.length - 1)} onPick={pick} onHover={setActive} />}
-      <div className="rounded-composer border border-line-strong bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] transition-colors focus-within:border-muted">
+      <div className="rounded-composer border border-line-strong bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] transition-colors focus-within:border-focus focus-within:ring-2 focus-within:ring-focus/10">
         {pending.length > 0 && (
           <div className="flex flex-wrap items-end gap-2.5 px-3 pt-3">{pending.map((a) => <AttachmentChip key={a.path} a={a} onRemove={() => onRemovePending(a)} />)}</div>
         )}
@@ -214,7 +214,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
           ) : (
             <button
               data-testid="composer-send" aria-label="Send (Enter)" title="Send (Enter)" onClick={onSend} disabled={!canSend}
-              className="inline-flex size-8 items-center justify-center rounded-control text-muted transition-colors enabled:text-ink enabled:hover:bg-line/70 disabled:opacity-60"
+              className="inline-flex size-8 items-center justify-center rounded-control text-muted transition-colors enabled:bg-action enabled:text-on-action enabled:hover:opacity-90 disabled:opacity-60"
             >
               <CornerDownLeft size={16} strokeWidth={1.75} />
             </button>

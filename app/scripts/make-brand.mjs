@@ -1,13 +1,16 @@
-// Garth's icon and logo, from the same pixels as the app (src/shared/mascot.ts):
+// Garth's icon and logo reuse the app's body artwork and shared pixel face:
 //   build/icon.svg  (the app icon: Garth on a warm rounded square), docs/assets/garth-logo.svg (Garth alone)
 // Then: build/render.cjs turns each into a PNG, and iconutil makes build/icon.icns (see scripts/make-icons.sh).
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { bodyRects, faceRects } from '../src/shared/mascot.ts'
+import { faceRects } from '../src/shared/mascot.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const rects = [...bodyRects(), ...faceRects('smile')].map((r) => `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${r.fill}"/>`).join('')
+const body = readFileSync(join(root, 'src/renderer/src/assets/garth-body.png')).toString('base64')
+const face = faceRects('smile').map((r) => `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${r.fill}"/>`).join('')
+// Use the same crop as Mascot.tsx so the face lines up in both places.
+const mascot = `<svg width="60" height="60" viewBox="158 155.5 937 937"><image href="data:image/png;base64,${body}" width="1254" height="1254"/></svg><g shape-rendering="crispEdges">${face}</g>`
 
 // macOS icon grid: an 824×824 rounded square inside 1024, a soft shadow under it
 const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
@@ -17,9 +20,9 @@ const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"
   </defs>
   <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#bg)" filter="url(#shadow)"/>
   <ellipse cx="512" cy="812" rx="210" ry="22" fill="#5b4a3a" opacity="0.10"/>
-  <g transform="translate(212 196) scale(10)" shape-rendering="crispEdges">${rects}</g>
+  <g transform="translate(212 196) scale(10)" shape-rendering="crispEdges">${mascot}</g>
 </svg>
 `
 writeFileSync(join(root, 'build/icon.svg'), icon)
-writeFileSync(join(root, '../docs/assets/garth-logo.svg'), `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 60 60" shape-rendering="crispEdges">${rects}</svg>\n`)
+writeFileSync(join(root, '../docs/assets/garth-logo.svg'), `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 60 60" shape-rendering="crispEdges">${mascot}</svg>\n`)
 console.log('wrote build/icon.svg and docs/assets/garth-logo.svg')
