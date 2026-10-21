@@ -5,7 +5,7 @@ const neutral = faceRects('neutral')
 const smile = faceRects('smile').slice(2)
 const rect = (r: Rect, i: number) => <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill} />
 
-/** Garth stays still; only his face blinks and occasionally smiles. */
+/** Garth stays still; only the face blinks and occasionally smiles. */
 export function Mascot({ size = 96, alive = false, working = false }: { size?: number; alive?: boolean; working?: boolean }) {
   return (
     <svg data-testid="mascot" data-expression={working ? 'working' : 'neutral'} width={size} height={size} viewBox="0 0 60 60" shapeRendering="crispEdges" role="img" aria-label="Garth"

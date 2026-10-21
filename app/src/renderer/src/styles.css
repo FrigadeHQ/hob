@@ -256,7 +256,7 @@ html[data-text-size="large"] { --reply-step: 2px; }
 body:has(> [data-scrim]) #root [data-scrim], body > [data-scrim]:has(~ [data-scrim]) { background-color: transparent; }
 body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] { animation: none; }
 
-/* One Garth at a time: the greeting owns him until a conversation starts. */
+/* One Garth at a time: the greeting shows Garth until a conversation starts. */
 .status-presence { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; }
 .status-presence:has(.garth-mascot) > .status-dot { display: none; }
 #root:has(.chat-greeting) .status-presence .garth-mascot { display: none; }
