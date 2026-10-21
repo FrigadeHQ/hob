@@ -26,7 +26,7 @@ export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () =
     return (
       <span data-testid="attachment-chip" className="group relative inline-block">
         <button data-testid="attachment-open" title={`Preview ${a.name}`} onClick={() => previewFile(a.path)}
-          className="flex h-[104px] w-32 flex-col overflow-hidden rounded-card border border-line bg-surface text-left transition-colors hover:border-line-strong">
+          className={`relative flex h-[104px] w-32 flex-col rounded-card bg-surface text-left ${pdf ? 'overflow-hidden border border-line transition-colors hover:border-line-strong' : ''}`}>
           {pdf ? (
             <>
               <span className="block min-h-0 flex-1 overflow-hidden border-b border-line"><PdfThumb path={a.path} width={128} /></span>
@@ -36,7 +36,12 @@ export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () =
               </span>
             </>
           ) : (
-            <><img data-testid="attachment-thumb-image" src={mabel.fileUrl(a.path)} alt="" className="block h-full w-full object-cover" /><span className="sr-only">{a.name}</span></>
+            <>
+              {/* the photo is rounded itself, with the border drawn over it: clipping it inside a bordered box leaves jagged corners */}
+              <img data-testid="attachment-thumb-image" src={mabel.fileUrl(a.path)} alt="" className="block h-full w-full rounded-card object-cover" />
+              <span className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-black/10 dark:ring-white/10" />
+              <span className="sr-only">{a.name}</span>
+            </>
           )}
         </button>
         {remove}
