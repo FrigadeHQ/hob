@@ -43,6 +43,12 @@ export class FakeEngine implements Engine {
     if (req.messages[0]?.content.startsWith(TITLE_PROMPT)) return `Title for: ${said.replace(/^User: /, '').split('\n\nAssistant:')[0].split(/\s+/).slice(0, 4).join(' ')}`
     if (said === '__empty__') return ''
     if (said === '__error__') throw new Error('boom')
+    // streams Markdown in small pieces, so a bold word arrives as "**", "Impor", "tant", "**"
+    if (said === '__markdown__') {
+      const parts = ['This is ', '**', 'Impor', 'tant', '**', ' and ', '*', 'quite', '*', ' ', '`cod', 'e`', ' done.']
+      for (const p of parts) { if (signal?.aborted) break; onToken(p); await new Promise((r) => setTimeout(r, 250)) }
+      return parts.join('')
+    }
     if (said === '__slow__' || said === '__slower__') {
       let out = ''
       const words = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']

@@ -306,3 +306,22 @@ test('Mac: "Connect my email and calendar" asks for access once, then Mabel read
   await expect(page.getByTestId('message-assistant').last()).toContainText('Added “Lunch with Sam” to the Home calendar')
   await app.close()
 })
+
+test('Markdown streaming in never shows its ** or ` marks', async () => {
+  const { app, page } = await launch()
+  await ready(page)
+  await page.getByTestId('composer-input').fill('__markdown__')
+  await page.getByTestId('composer-send').click()
+  const reply = page.getByTestId('message-assistant')
+  const seen: string[] = []
+  while (await page.getByTestId('composer-stop').isVisible().catch(() => false)) {
+    seen.push(await reply.innerText().catch(() => ''))
+    await page.waitForTimeout(60)
+  }
+  expect(seen.length).toBeGreaterThan(5)
+  expect(seen.filter((t) => /[*`]/.test(t))).toEqual([])
+  await expect(reply.locator('strong')).toHaveText('Important')
+  await expect(reply.locator('em')).toHaveText('quite')
+  await expect(reply.locator('code')).toHaveText('code')
+  await app.close()
+})

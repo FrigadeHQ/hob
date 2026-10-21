@@ -15,7 +15,7 @@ import { AttachmentChip, Composer } from '../components/Composer'
 import { ProjectChip } from '../components/ProjectChip'
 import { folderName } from '../components/ProjectDialog'
 import { useDictation } from '../speech/useDictation'
-import { tidyMarkdown } from '../../../shared/markdown'
+import { healMarkdown, tidyMarkdown } from '../../../shared/markdown'
 import { rehypeLineBreaks } from '../lineBreaks'
 import { pickStarters } from '../starters'
 import { rehypeFadeWords } from '../fadeWords'
@@ -73,7 +73,7 @@ function useSteadyText(target: string, live: boolean): string {
 function ReplyText({ content, live }: { content: string; live: boolean }) {
   const text = useSteadyText(content, live)
   // live: new words fade in; finished: plain text (no extra spans in long chats)
-  return text ? <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={live ? [rehypeLineBreaks, rehypeFadeWords] : [rehypeLineBreaks]} components={MARKDOWN_COMPONENTS}>{tidyMarkdown(text)}</Markdown> : null
+  return text ? <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={live ? [rehypeLineBreaks, rehypeFadeWords] : [rehypeLineBreaks]} components={MARKDOWN_COMPONENTS}>{tidyMarkdown(live ? healMarkdown(text) : text)}</Markdown> : null
 }
 const userMsg = (rid: string, content: string, attachments: Attachment[]): UiMessage => ({ id: `u-${rid}`, role: 'user', content, attachments, steps: [], undoable: false, undone: false })
 const placeholder = (rid: string): UiMessage => ({ id: `a-${rid}`, role: 'assistant', content: '', attachments: [], steps: [], undoable: false, undone: false })
