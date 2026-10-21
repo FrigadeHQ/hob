@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { SetupState, VisionState } from '../../../shared/types'
 import { mabel } from '../api'
+import { Mascot } from './Mascot'
 
 const gbOf = (n: number) => (n < 10 ? n.toFixed(1) : Math.round(n).toString())
 const timeLeft = (s: number) => (s <= 0 ? '' : s < 90 ? 'about a minute left' : s < 5400 ? `about ${Math.round(s / 60)} min left` : `about ${Math.round(s / 3600)} h left`)
@@ -42,9 +43,9 @@ export function Status({ state }: { state: SetupState }) {
     const pct = Math.min(99, Math.floor(vision.progress * 100))
     return (
       <span className="flex min-w-0 items-center gap-2 text-meta text-ink-soft">
+        <Mascot mini size={24} alive busy ticklish />
         <Tooltip content={<><span className="block font-medium">Mabel is ready to use</span><span className="block text-ink-soft">It's adding photo support, so it can look at images and screenshots: {pct}%.</span></>}>
           <span data-testid="status" tabIndex={0} className="flex items-center gap-2 cursor-default outline-none">
-            <span className="size-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
             <span>Adding photo support… {pct}%</span>
           </span>
         </Tooltip>
@@ -69,9 +70,10 @@ export function Status({ state }: { state: SetupState }) {
   )
   return (
     <span className="flex min-w-0 items-center gap-2 text-meta text-ink-soft">
+      {/* Mabel herself shows how she's doing: smiling when ready, hopping while she gets smarter, unsure when something went wrong */}
+      <Mascot mini size={24} alive busy={state.phase === 'downloading'} base={state.phase === 'ready' && state.canRetry ? 'skeptical' : 'smile'} ticklish />
       <Tooltip content={tip}>
         <span data-testid="status" tabIndex={0} className="flex items-center gap-2 cursor-default outline-none">
-          <span className={`size-2 shrink-0 rounded-full ${state.phase === 'ready' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
           <span>{label}</span>
         </span>
       </Tooltip>

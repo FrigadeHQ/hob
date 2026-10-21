@@ -149,7 +149,15 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .mabel-alive .mabel-shadow { animation: mabel-shadow 2.4s steps(4, jump-none) infinite; transform-box: fill-box; transform-origin: 50% 50%; }
 @keyframes mabel-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
 @keyframes mabel-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.08 } 50% { transform: scaleX(0.85); opacity: 0.05 } }
-@media (prefers-reduced-motion: reduce) { .mabel-alive * { animation: none !important } }
+/* the mini one in the status corner stays put unless she's busy */
+.mabel-mini.mabel-alive .mabel-body { animation: none; }
+/* getting smarter: a small hop, one art pixel at a time */
+.mabel-busy .mabel-body, .mabel-mini.mabel-busy .mabel-body { animation: mabel-hop 1.2s steps(2, jump-none) infinite; }
+@keyframes mabel-hop { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-1px) } }
+/* tickled: a quick pixel wiggle while she laughs */
+.mabel-giggle .mabel-body { animation: mabel-giggle 0.16s steps(1, end) 8; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes mabel-giggle { 0% { transform: translateX(-0.5px) rotate(-6deg) } 50% { transform: translateX(0.5px) rotate(6deg) } }
+@media (prefers-reduced-motion: reduce) { .mabel-alive *, .mabel-busy *, .mabel-giggle * { animation: none !important } }
 
 /* the dimmed layer behind Settings, dialogs and search: one shade everywhere */
 .scrim { background-color: rgb(0 0 0 / 0.3); }
