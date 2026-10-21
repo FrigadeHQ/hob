@@ -10,6 +10,7 @@ import { FakeEngine, fakeDownloadDeps } from './fake'
 import { realDeps } from './downloader'
 import { CATALOG_URL, loadCatalog } from './catalog'
 import { readSysInfo, toHardware } from './hardware'
+import type { Hardware } from '@hob/picker'
 import { SetupController } from './setup'
 import { registerIpc } from './ipc'
 import { Store } from './store'
@@ -18,7 +19,7 @@ import { pruneUndo } from './agent/journal'
 import { PythonRuntime, realRuntimeDeps } from './python/runtime'
 import { VisionInstaller } from './vision/install'
 import { VisionServer } from './vision/server'
-import { visionFitsGpu } from './vision/catalog'
+import { pickVision, visionFitsGpu, visionGB } from './vision/catalog'
 import type { VisionState } from '../shared/types'
 import os from 'node:os'
 import { loadSettings, updateSettings, webAccessOn } from './settings'
@@ -97,6 +98,8 @@ app.on('open-file', (e, path) => {
 app.whenReady().then(() => {
   const paths = makePaths(app.getPath('userData'))
   const engine = FAKE ? new FakeEngine() : new UtilityEngine(join(__dirname, 'engine.js'))
+  /** the computer, as setup found it (the vision model's room is worked out from it) */
+  let hardware: Hardware | undefined
   const setup = new SetupController({
     engine,
     modelsDir: paths.models,
@@ -105,7 +108,7 @@ app.whenReady().then(() => {
     sha256Override: FAKE ? 'FAKE' : undefined,
     getHardware: FAKE
       ? async () => ({ os: 'darwin' as const, arch: 'arm64', cpuModel: 'Apple M1 Max', totalRamGB: 32, freeDiskGB: Number(process.env.HOB_FAKE_FREE_GB) || 500, gpu: { kind: 'unified' as const, name: 'Apple M1 Max', vramGB: 24 } })
-      : async () => toHardware(await engine.probe(), await readSysInfo(paths.models)),
+      : async () => (hardware = toHardware(await engine.probe(), await readSysInfo(paths.models))),
     getCatalog: () => loadCatalog({ url: CATALOG_URL, cachePath: paths.catalogCache, bundled: bundledCatalog, licenses, fetchFn: FAKE ? (async () => { throw new Error('offline') }) as unknown as typeof fetch : undefined }),
   })
   const store = new Store(paths.db)
@@ -167,13 +170,15 @@ app.whenReady().then(() => {
   })
   app.on('before-quit', () => plugins.close())
   // Hob's eyes: downloaded after the main model (when Hob "gets smarter"), started when a chat has an image
-  const vision = FAKE ? fakeVision() : realVision(paths.vision, async () => {
-    // fully on the graphics chip only if it fits next to the main model; otherwise the main model would run out
+  // what the vision model has to share the computer with: the main model, and the memory the graphics chip can use
+  const room = async () => {
     const s = setup.state
     const mainModelGB = s.phase === 'ready' ? s.model.sizeGB : s.phase === 'downloading' ? s.target.sizeGB : 0
-    const p = await engine.probe()
-    return visionFitsGpu({ totalRamGB: os.totalmem() / 1e9, unified: p.gpuType === 'metal' || p.unifiedGB > 0, vramGB: p.vramTotalGB, mainModelGB, visionGB: 3.5 })
-  })
+    // what start-up found; never ask the engine here: mid-reply it's busy waiting for this very image, and would never answer
+    const hw = hardware
+    return { totalRamGB: os.totalmem() / 1e9, unified: hw ? hw.gpu.kind !== 'discrete' : process.platform === 'darwin', vramGB: hw?.gpu.vramGB, mainModelGB }
+  }
+  const vision = FAKE ? fakeVision() : realVision(paths.vision, room)
   setup.onState((s) => { if ((s.phase === 'downloading' && s.chatReady) || s.phase === 'ready') vision.start() })
   app.on('before-quit', () => vision.stop())
   const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, fake: FAKE })
@@ -207,16 +212,18 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
 
 /** the real vision model and server; downloads once, in the background */
-function realVision(root: string, useGpu: () => Promise<boolean>) {
+function realVision(root: string, room: () => Promise<{ totalRamGB: number; unified: boolean; vramGB?: number; mainModelGB: number }>) {
   const listeners = new Set<(s: VisionState) => void>()
   const installer = new VisionInstaller(root, {
-    platformKey: `${process.platform}-${process.arch}`, totalRamGB: os.totalmem() / 1e9,
+    platformKey: `${process.platform}-${process.arch}`, choose: async () => pickVision(await room()),
     download: realDeps, fetchFile: realRuntimeDeps.fetchFile, exec: realRuntimeDeps.exec,
   }, (s) => { for (const l of listeners) l(s) })
   const server = new VisionServer({
     command: async () => ({ cmd: await installer.serverBinary() }),
     cpuCommand: async () => { const b = await installer.cpuServerBinary(); return b ? { cmd: b } : undefined },
-    model: installer.modelPath, mmproj: installer.mmprojPath, useGpu,
+    model: () => installer.modelPath, mmproj: () => installer.mmprojPath,
+    // fully on the graphics chip only if it fits next to the main model; otherwise the main model would run out
+    useGpu: async () => visionFitsGpu({ ...await room(), visionGB: visionGB(installer.model) }),
   })
   const start = () => { if (installer.supported) void installer.ensure().catch((err) => console.warn('image support download failed; will retry', err)) }
   return {

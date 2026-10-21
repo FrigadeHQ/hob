@@ -23,8 +23,13 @@ export const VISION_MODELS: Record<'4b' | '2b', VisionModel> = {
   },
 }
 
-/** the better one when there's room next to the main model; the small one below 24 GB of memory */
-export const pickVision = (totalRamGB: number): VisionModel => VISION_MODELS[totalRamGB >= 24 ? '4b' : '2b']
+/**
+ * The 4B one when it fits on the graphics chip next to the main model (about 5 s an image); otherwise the 2B one,
+ * which runs half on the CPU in 10–20 s where the 4B one takes 25–40 s.
+ */
+export function pickVision(o: { totalRamGB: number; unified: boolean; vramGB?: number; mainModelGB: number }): VisionModel {
+  return visionFitsGpu({ ...o, visionGB: VISION_GB['4b'] }) ? VISION_MODELS['4b'] : VISION_MODELS['2b']
+}
 
 export const SERVER_BUILD = 'b11433'
 const GH = (file: string) => `https://github.com/ggml-org/llama.cpp/releases/download/${SERVER_BUILD}/${file}`
@@ -43,6 +48,9 @@ export const SERVER_FILES: Record<string, { gpu: VisionFile; cpu?: VisionFile }>
 }
 
 export const visionBytes = (m: VisionModel, server?: VisionFile) => m.model.bytes + m.mmproj.bytes + (server?.bytes ?? 0)
+/** memory each needs while running: files plus working room */
+export const VISION_GB = { '4b': 3.5, '2b': 2 } as const
+export const visionGB = (m: VisionModel) => (m.id === VISION_MODELS['4b'].id ? VISION_GB['4b'] : VISION_GB['2b'])
 
 /**
  * Can the vision model sit fully on the graphics chip next to the main model? Macs share memory, and the

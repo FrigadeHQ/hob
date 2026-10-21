@@ -17,9 +17,11 @@ it('runs fully on the graphics chip only when it fits next to the main model', (
   expect(visionFitsGpu({ totalRamGB: 64, unified: false, vramGB: 24, mainModelGB: 9, visionGB: 2.9 })).toBe(true)
 })
 
-it('picks the 4B vision model with 24 GB of memory or more, the 2B one below', () => {
-  expect(pickVision(36).id).toBe('qwen3-vl-4b')
-  expect(pickVision(16).id).toBe('qwen3-vl-2b')
+it('picks the 4B vision model when it fits on the graphics chip next to the main model, else the faster-on-CPU 2B', () => {
+  expect(pickVision({ totalRamGB: 34.4, unified: true, mainModelGB: 13 }).id).toBe('qwen3-vl-4b')
+  expect(pickVision({ totalRamGB: 34.4, unified: true, mainModelGB: 22 }).id).toBe('qwen3-vl-2b')
+  expect(pickVision({ totalRamGB: 16, unified: true, mainModelGB: 5 }).id).toBe('qwen3-vl-4b')
+  expect(pickVision({ totalRamGB: 16, unified: true, mainModelGB: 8 }).id).toBe('qwen3-vl-2b')
 })
 
 describe('VisionInstaller', () => {
@@ -27,7 +29,7 @@ describe('VisionInstaller', () => {
     const root = mkdtempSync(join(tmpdir(), 'hob-vision-'))
     const fetched: string[] = []; const states: unknown[] = []
     const inst = new VisionInstaller(root, {
-      platformKey: 'darwin-arm64', totalRamGB: 36,
+      platformKey: 'darwin-arm64', choose: async () => VISION_MODELS['4b'],
       download: { download: async (_u, dir, name) => { mkdirSync(dir, { recursive: true }); writeFileSync(join(dir, name), 'x') }, hashFile: async () => 'h', freeDiskGB: async () => 500 },
       sha256Override: 'h',
       fetchFile: async (url, _sha, _gb, dir, _p, name) => { fetched.push(url); mkdirSync(dir, { recursive: true }); const p = join(dir, name ?? 'f'); writeFileSync(p, 'tgz'); return p },
@@ -67,7 +69,7 @@ describe('VisionServer', () => {
   afterEach(() => srv?.stop())
 
   it('starts on the first question, answers about the image, and stops when idle', async () => {
-    srv = new VisionServer({ command: async () => ({ cmd: process.execPath, args: [fixture] }), model: 'm.gguf', mmproj: 'p.gguf', idleMs: 300 })
+    srv = new VisionServer({ command: async () => ({ cmd: process.execPath, args: [fixture] }), model: () => 'm.gguf', mmproj: () => 'p.gguf', idleMs: 300 })
     expect(srv.running).toBe(false)
     const a = await srv.ask('data:image/png;base64,AAAA', 'What is this?')
     expect(a).toContain('saw data:image/png;base64')
@@ -79,14 +81,22 @@ describe('VisionServer', () => {
   })
 
   it('keeps the model off the graphics chip when the main model leaves too little room', async () => {
-    srv = new VisionServer({ command: async () => ({ cmd: process.execPath, args: [fixture] }), model: 'm', mmproj: 'p', useGpu: async () => false })
+    srv = new VisionServer({ command: async () => ({ cmd: process.execPath, args: [fixture] }), model: () => 'm', mmproj: () => 'p', useGpu: async () => false })
     expect(await srv.ask('data:image/png;base64,AAAA', 'q')).toContain('gpu=0')
+  })
+
+  it('gives up with a plain message when an answer takes too long', async () => {
+    process.env.FAKE_LLAMA_SLOW = '1500'
+    try {
+      srv = new VisionServer({ command: async () => ({ cmd: process.execPath, args: [fixture] }), model: () => 'm', mmproj: () => 'p', answerMs: 300 })
+      await expect(srv.ask('data:image/png;base64,AAAA', 'q')).rejects.toThrow(/took too long/)
+    } finally { delete process.env.FAKE_LLAMA_SLOW }
   })
 
   it('falls back to the CPU build when the graphics build will not start', async () => {
     process.env.FAKE_LLAMA_FAIL_GPU = '1'
     try {
-      srv = new VisionServer({ command: async () => ({ cmd: process.execPath, args: [fixture] }), cpuCommand: async () => ({ cmd: process.execPath, args: [fixture] }), model: 'm', mmproj: 'p' })
+      srv = new VisionServer({ command: async () => ({ cmd: process.execPath, args: [fixture] }), cpuCommand: async () => ({ cmd: process.execPath, args: [fixture] }), model: () => 'm', mmproj: () => 'p' })
       expect(await srv.ask('data:image/png;base64,AAAA', 'q')).toContain('gpu=0')
     } finally { delete process.env.FAKE_LLAMA_FAIL_GPU }
   })
@@ -127,4 +137,26 @@ describe('look_at_image', () => {
     writeFileSync(join(r.chatDir, 'notes.txt'), 'hi')
     expect((await r.lookAtImage.run({ path: 'notes.txt' }, r.c)).failed).toBe(true)
   })
+})
+
+it('reads pixel sizes from image headers', async () => {
+  const { imageSize } = await import('../src/main/tools/vision')
+  const { readFileSync } = await import('node:fs')
+  expect(imageSize(readFileSync(join(import.meta.dirname, '../../docs/assets/screenshot.png')))?.w).toBeGreaterThan(768)
+  expect(imageSize(Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489', 'hex'))).toEqual({ w: 1, h: 1 })
+})
+
+it.runIf(process.platform === 'darwin')('a big photo is shrunk to 768 px before the vision model sees it', async () => {
+  const { lookAtImage, MAX_SIDE } = await import('../src/main/tools/vision')
+  const { copyFileSync, readFileSync } = await import('node:fs')
+  const { imageSize } = await import('../src/main/tools/vision')
+  const chatDir = mkdtempSync(join(tmpdir(), 'hob-look-'))
+  copyFileSync(join(import.meta.dirname, '../../docs/assets/screenshot.png'), join(chatDir, 'big.png'))
+  let sent = ''
+  const c = { chatDir, runTmp: join(chatDir, '.tmp'), signal: new AbortController().signal, vision: { state: () => ({ phase: 'ready', name: 'x', sizeGB: 1 }), ask: async (img: string) => { sent = img; return 'ok' } } } as never
+  await lookAtImage.run({ path: 'big.png' }, c)
+  expect(sent).toMatch(/^data:image\/jpeg;base64,/)
+  const size = imageSize(Buffer.from(sent.split(',')[1], 'base64'))!
+  expect(Math.max(size.w, size.h)).toBeLessThanOrEqual(MAX_SIDE)
+  expect(readFileSync(join(chatDir, 'big.png')).length).toBeGreaterThan(0)
 })

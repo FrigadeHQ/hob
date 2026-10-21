@@ -8,7 +8,8 @@ const server = createServer((req, res) => {
   if (req.url === '/health') { res.writeHead(200, { 'content-type': 'application/json' }).end('{"status":"ok"}'); return }
   let body = ''
   req.on('data', (c) => { body += c })
-  req.on('end', () => {
+  req.on('end', async () => {
+    if (process.env.FAKE_LLAMA_SLOW) await new Promise((r) => setTimeout(r, Number(process.env.FAKE_LLAMA_SLOW)))
     const msg = JSON.parse(body).messages[0].content
     const img = msg.find((p) => p.type === 'image_url').image_url.url
     const q = msg.find((p) => p.type === 'text').text

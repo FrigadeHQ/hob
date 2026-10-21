@@ -3,12 +3,13 @@ import { join } from 'node:path'
 import { ensureModelFile, fileNameFor, type DownloadDeps } from '../downloader'
 import type { RuntimeDeps } from '../python/runtime'
 import type { VisionState } from '../../shared/types'
-import { pickVision, SERVER_BUILD, SERVER_FILES, type VisionFile, type VisionModel } from './catalog'
+import { SERVER_BUILD, SERVER_FILES, VISION_MODELS, type VisionFile, type VisionModel } from './catalog'
 
 export type VisionDeps = {
   /** process.platform-process.arch */
   platformKey: string
-  totalRamGB: number
+  /** which vision model to get (it depends on the main model, so it's asked when the download starts) */
+  choose(): Promise<VisionModel>
   /** big model files: resumes and restarts stalled downloads */
   download: DownloadDeps
   /** the small server archive */
@@ -26,11 +27,28 @@ const tarCmd = (platformKey: string) => (platformKey.startsWith('win32') ? join(
 export class VisionInstaller {
   private installing: Promise<void> | undefined
   private _state: VisionState
-  readonly model: VisionModel
+  /** the one installed (or being installed) */
+  private chosen: VisionModel | undefined
 
   constructor(private root: string, private deps: VisionDeps, private onState: (s: VisionState) => void = () => {}) {
-    this.model = pickVision(deps.totalRamGB)
-    this._state = this.isReady() ? this.ready() : { phase: 'off' }
+    this.chosen = this.installed()
+    this._state = this.chosen ? this.ready() : { phase: 'off' }
+  }
+
+  get model(): VisionModel {
+    if (!this.chosen) throw new Error("Hob's image support isn't set up yet.")
+    return this.chosen
+  }
+
+  /** the model a finished install recorded, if its files are still there */
+  private installed(): VisionModel | undefined {
+    try {
+      const m = JSON.parse(readFileSync(join(this.root, MARKER), 'utf8'))
+      const model = Object.values(VISION_MODELS).find((v) => v.id === m.model)
+      if (!model || m.build !== SERVER_BUILD) return undefined
+      const ok = [model.model, model.mmproj].every((f) => existsSync(join(this.modelsDir, fileNameFor(f.url))))
+      return ok ? model : undefined
+    } catch { return undefined }
   }
 
   get state() { return this._state }
@@ -43,21 +61,17 @@ export class VisionInstaller {
   get mmprojPath() { return join(this.modelsDir, fileNameFor(this.model.mmproj.url)) }
   private serverDir(cpu: boolean) { return join(this.root, `server-${SERVER_BUILD}${cpu ? '-cpu' : ''}`) }
 
-  isReady(): boolean {
-    try {
-      const m = JSON.parse(readFileSync(join(this.root, MARKER), 'utf8'))
-      return m.model === this.model.id && m.build === SERVER_BUILD && existsSync(this.modelPath) && existsSync(this.mmprojPath)
-    } catch { return false }
-  }
+  isReady(): boolean { return !!this.installed() }
 
   /** Download what's missing; concurrent callers share one download. */
   ensure(): Promise<void> {
-    if (this.isReady()) { if (this._state.phase !== 'ready') this.set(this.ready()); return Promise.resolve() }
+    if (this.isReady()) { this.chosen = this.installed(); if (this._state.phase !== 'ready') this.set(this.ready()); return Promise.resolve() }
     if (!this.supported) return Promise.reject(new Error(`Seeing images isn't available on this computer (${this.deps.platformKey}).`))
     return (this.installing ??= this.install().finally(() => { this.installing = undefined }))
   }
 
   private async install() {
+    this.chosen = await this.deps.choose()
     const files = [this.model.model, this.model.mmproj]
     const server = SERVER_FILES[this.deps.platformKey].gpu
     const total = files.reduce((s, f) => s + f.bytes, 0) + server.bytes

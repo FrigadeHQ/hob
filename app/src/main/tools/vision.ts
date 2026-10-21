@@ -10,19 +10,44 @@ const DIRECT: Record<string, string> = { '.jpg': 'image/jpeg', '.jpeg': 'image/j
 const CONVERT = new Set(['.webp', '.heic', '.heif', '.tif', '.tiff', '.avif'])
 const MAX_BYTES = 30 * 1024 * 1024
 
-/** iPhone photos (HEIC), WebP and TIFF → PNG: macOS's sips where there is one, else Pillow in Hob's sandbox */
-async function toPng(path: string, ctx: TurnCtx): Promise<string> {
+/** longest side sent to the vision model: a phone photo at full size is thousands of tokens and takes minutes */
+export const MAX_SIDE = 768
+
+/** pixel size from the file header (JPEG, PNG, GIF); undefined when it can't tell */
+export function imageSize(buf: Buffer): { w: number; h: number } | undefined {
+  if (buf.length > 24 && buf.readUInt32BE(0) === 0x89504e47) return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) }
+  if (buf.length > 10 && buf.toString('latin1', 0, 3) === 'GIF') return { w: buf.readUInt16LE(6), h: buf.readUInt16LE(8) }
+  if (buf[0] === 0xff && buf[1] === 0xd8) {
+    for (let i = 2; i + 9 < buf.length;) {
+      if (buf[i] !== 0xff) { i++; continue }
+      const m = buf[i + 1]
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { w: buf.readUInt16BE(i + 7), h: buf.readUInt16BE(i + 5) }
+      i += 2 + buf.readUInt16BE(i + 2)
+    }
+  }
+  return undefined
+}
+
+/**
+ * A copy the vision model can read quickly: at most MAX_SIDE pixels on its longest side, as JPEG or PNG.
+ * Converts iPhone photos (HEIC), WebP and TIFF too. macOS's sips where there is one, else Pillow in Hob's sandbox.
+ * Small JPEGs and PNGs go as they are.
+ */
+async function readable(path: string, ctx: TurnCtx): Promise<string> {
+  const ext = extname(path).toLowerCase()
+  const size = DIRECT[ext] ? imageSize(readFileSync(path)) : undefined
+  if (size && Math.max(size.w, size.h) <= MAX_SIDE) return path
   const dir = join(ctx.runTmp, 'images')
   mkdirSync(dir, { recursive: true })
-  const out = join(dir, `${Date.now()}-${basename(path, extname(path))}.png`)
+  const out = join(dir, `${Date.now()}-${basename(path, extname(path))}.jpg`)
   if (process.platform === 'darwin') {
-    await promisify(execFile)('/usr/bin/sips', ['-s', 'format', 'png', path, '--out', out])
+    await promisify(execFile)('/usr/bin/sips', ['-Z', String(MAX_SIDE), '-s', 'format', 'jpeg', path, '--out', out])
     return out
   }
   if (!ctx.python) throw new Error('Hob needs its code tools to open this kind of image.')
   const python = await ctx.python.ensure()
   const r = await runPython({ python, runtimeRoot: ctx.python.dir, cwd: dir, tmpDir: ctx.runTmp, readPaths: [path], timeoutMs: 60_000, signal: ctx.signal,
-    code: `from PIL import Image\nImage.open(${JSON.stringify(path)}).convert('RGB').save(${JSON.stringify(out)})` })
+    code: `from PIL import Image, ImageOps\nim = ImageOps.exif_transpose(Image.open(${JSON.stringify(path)})).convert('RGB')\nim.thumbnail((${MAX_SIDE}, ${MAX_SIDE}))\nim.save(${JSON.stringify(out)}, quality=90)` })
   if (r.exitCode !== 0) throw new Error(`Couldn't open this image: ${r.output.split('\n').filter(Boolean).at(-1) ?? ''}`)
   return out
 }
@@ -50,8 +75,8 @@ export const lookAtImage: Tool<{ path: string; question?: string }> = {
     if (!DIRECT[ext] && !CONVERT.has(ext)) return { text: `${basename(path)} isn't an image Hob can look at (JPG, PNG, HEIC, WebP, GIF or TIFF).`, failed: true }
     if (statSync(path).size > MAX_BYTES) return { text: `${basename(path)} is too big to look at (over 30 MB).`, failed: true }
     ctx.progress?.(`Looking at ${basename(path)}…`)
-    const file = DIRECT[ext] ? path : await toPng(path, ctx)
-    const mime = DIRECT[extname(file).toLowerCase()] ?? 'image/png'
+    const file = await readable(path, ctx)
+    const mime = DIRECT[extname(file).toLowerCase()] ?? 'image/jpeg'
     const question = String(a.question ?? '').trim() || 'Describe this image in detail. Read out any text in it exactly.'
     const answer = await v.ask(`data:${mime};base64,${readFileSync(file).toString('base64')}`, question, ctx.signal)
     return { text: answer || 'The image model had nothing to say about it.' }

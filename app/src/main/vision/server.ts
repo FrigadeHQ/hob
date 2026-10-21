@@ -9,10 +9,13 @@ export type VisionServerOpts = {
   command(): Promise<Command>
   /** the plain CPU build, when the graphics one won't start (Windows, Linux) */
   cpuCommand?(): Promise<Command | undefined>
-  model: string
-  mmproj: string
+  /** paths, asked when it starts (the model is chosen when it downloads) */
+  model(): string
+  mmproj(): string
   /** stop after this long without questions, to give the memory back */
   idleMs?: number
+  /** how long one answer may take before giving up (default 4 minutes) */
+  answerMs?: number
   /** false: keep the model's text half off the graphics chip (the main model needs the room) */
   useGpu?(): Promise<boolean>
 }
@@ -41,7 +44,7 @@ export class VisionServer {
     const port = await freePort()
     this.key = randomBytes(24).toString('hex')
     this.base = `http://127.0.0.1:${port}`
-    const args = [...(c.args ?? []), '-m', this.o.model, '--mmproj', this.o.mmproj, '--host', '127.0.0.1', '--port', String(port),
+    const args = [...(c.args ?? []), '-m', this.o.model(), '--mmproj', this.o.mmproj(), '--host', '127.0.0.1', '--port', String(port),
       '-c', '8192', '-ngl', gpu ? '99' : '0', '--api-key', this.key, '--no-webui']
     // Linux builds ship their libraries next to the binary
     const env = { ...process.env, LD_LIBRARY_PATH: [dirname(c.cmd), process.env.LD_LIBRARY_PATH].filter(Boolean).join(':') }
@@ -87,14 +90,22 @@ export class VisionServer {
   async ask(image: string, question: string, signal?: AbortSignal): Promise<string> {
     if (!this.child) await (this.starting ??= this.start().finally(() => { this.starting = undefined }))
     this.touch()
-    const r = await fetch(`${this.base}/v1/chat/completions`, {
-      method: 'POST', signal,
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${this.key}` },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: [{ type: 'image_url', image_url: { url: image } }, { type: 'text', text: question }] }],
-        max_tokens: 1024, temperature: 0.2,
-      }),
-    })
+    // never hang a chat: a slow computer gets a few minutes, then a plain error
+    const limit = AbortSignal.timeout(this.o.answerMs ?? 4 * 60_000)
+    let r: Response
+    try {
+      r = await fetch(`${this.base}/v1/chat/completions`, {
+        method: 'POST', signal: signal ? AbortSignal.any([signal, limit]) : limit,
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${this.key}` },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: [{ type: 'image_url', image_url: { url: image } }, { type: 'text', text: question }] }],
+          max_tokens: 600, temperature: 0.2,
+        }),
+      })
+    } catch (err) {
+      if (limit.aborted && !signal?.aborted) throw new Error('Looking at the image took too long on this computer. Try a smaller image, or ask again.')
+      throw err
+    }
     this.touch()
     if (!r.ok) throw new Error(`The image server couldn't read that image (${r.status}).`)
     const j = await r.json() as { choices?: { message?: { content?: string } }[] }
