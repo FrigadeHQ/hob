@@ -17,19 +17,20 @@ export function madeFiles(steps: Step[]): string[] {
 }
 export const isChart = (f: string) => CHART.test(f)
 
-/**
- * Files the agent created or changed, or (charts) only its charts. Charts go above the reply text, where they
- * appear while it's written, so nothing moves when the text arrives; other files go below it.
- */
-export function FileCards({ steps, charts = false }: { steps: Step[]; charts?: boolean }) {
-  const files = madeFiles(steps).filter((f) => isChart(f) === charts)
+/** Garth's own charts: drawn live, not a file to open */
+export function Charts({ paths, className = 'my-3' }: { paths: string[]; className?: string }) {
+  if (!paths.length) return null
+  return <div className={`${className} space-y-2`}>{paths.map((f) => <div key={f} className="overflow-hidden rounded-card border border-line bg-surface"><ChartCard path={f} /></div>)}</div>
+}
+
+/** Files the agent created or changed, other than charts: below the reply text. */
+export function FileCards({ steps }: { steps: Step[] }) {
+  const files = madeFiles(steps).filter((f) => !isChart(f))
   if (!files.length) return null
   const reveal = `Show in ${fileManager(garth.platform)}`
   return (
-    <div className={charts ? 'mb-3 space-y-2' : 'mt-3 space-y-2'}>
+    <div className="mt-3 space-y-2">
       {files.map((f) => {
-        // Garth's own charts: drawn live, not a file to open
-        if (CHART.test(f)) return <div key={f} className="overflow-hidden rounded-card border border-line bg-surface"><ChartCard path={f} /></div>
         const image = IMAGE.test(f)
         const Icon = image ? ImageIcon : FileText
         return (

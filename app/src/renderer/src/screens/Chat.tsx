@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
-import Markdown from 'react-markdown'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import Markdown, { type Options } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import { ArrowDown, Clock, FolderOpen, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
 import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../../shared/agent'
 import type { AccountsState, MacAccess } from '../../../shared/types'
@@ -10,13 +13,13 @@ import { garth } from '../api'
 import { Mascot } from '../components/Mascot'
 import { CopyButton } from '../components/CopyButton'
 import { ThinkingIndicator, WorkLog } from '../components/WorkLog'
-import { FileCards, isChart, madeFiles } from '../components/FileCards'
+import { Charts, FileCards, isChart, madeFiles } from '../components/FileCards'
 import { ApprovalCard } from '../components/ApprovalCard'
 import { AttachmentChip, Composer } from '../components/Composer'
 import { ProjectChip } from '../components/ProjectChip'
 import { folderName } from '../components/ProjectDialog'
 import { useDictation } from '../speech/useDictation'
-import { healMarkdown, tidyMarkdown, withoutChartPlaceholders } from '../../../shared/markdown'
+import { healMarkdown, splitAtCharts, tidyMarkdown, withMath } from '../../../shared/markdown'
 import { rehypeLineBreaks } from '../lineBreaks'
 import { pickStarters } from '../starters'
 import { rehypeFadeWords } from '../fadeWords'
@@ -71,10 +74,38 @@ function useSteadyText(target: string, live: boolean): string {
   return live ? shown : target
 }
 
+// math: $$…$$ only (withMath turns the model's LaTeX into that), since single $ is usually a price.
+// KaTeX goes last, after the word fade, which leaves math alone; half-written math shows as its source.
+const REMARK: Options['remarkPlugins'] = [remarkGfm, [remarkMath, { singleDollarTextMath: false }]]
+const KATEX: NonNullable<Options['rehypePlugins']>[number] = [rehypeKatex, { throwOnError: false, errorColor: 'currentColor' }]
 function ReplyText({ content, live }: { content: string; live: boolean }) {
   const text = useSteadyText(content, live)
   // live: new words fade in; finished: plain text (no extra spans in long chats)
-  return text ? <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={live ? [rehypeLineBreaks, rehypeFadeWords] : [rehypeLineBreaks]} components={MARKDOWN_COMPONENTS}>{tidyMarkdown(live ? healMarkdown(text) : text)}</Markdown> : null
+  return text ? <Markdown remarkPlugins={REMARK} rehypePlugins={live ? [rehypeLineBreaks, rehypeFadeWords, KATEX] : [rehypeLineBreaks, KATEX]} components={MARKDOWN_COMPONENTS}>{withMath(tidyMarkdown(live ? healMarkdown(text) : text))}</Markdown> : null
+}
+/**
+ * A reply with its charts: where the model wrote a placeholder for one ("{chart}", "[Chart: …]"), the chart goes
+ * there; otherwise above the text, where it appears while the text is written.
+ */
+function Reply({ content, charts, live, thinking }: { content: string; charts: string[]; live: boolean; thinking?: React.MutableRefObject<string> }) {
+  const pieces = charts.length ? splitAtCharts(content) : [content]
+  const inline = charts.slice(0, pieces.length - 1)
+  const above = charts.slice(inline.length)
+  return (
+    <>
+      <Charts paths={above} className="mb-3" />
+      <div data-testid="message-assistant" className="reply prose max-w-none [overflow-wrap:anywhere]">
+        {thinking && <ThinkingIndicator thinking={thinking} />}
+        {pieces.map((p, i) => (
+          <Fragment key={i}>
+            {/* only the last piece is still being written */}
+            <ReplyText content={p} live={live && i === pieces.length - 1} />
+            {i < pieces.length - 1 && <div className="not-prose">{inline[i] && <Charts paths={[inline[i]]} />}</div>}
+          </Fragment>
+        ))}
+      </div>
+    </>
+  )
 }
 const userMsg = (rid: string, content: string, attachments: Attachment[]): UiMessage => ({ id: `u-${rid}`, role: 'user', content, attachments, steps: [], undoable: false, undone: false })
 const placeholder = (rid: string): UiMessage => ({ id: `a-${rid}`, role: 'assistant', content: '', attachments: [], steps: [], undoable: false, undone: false })
@@ -159,7 +190,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     })
   }, [])
   // leaving this chat (New chat, another chat) doesn't stop its reply: it keeps going and is saved
-  useEffect(() => () => { alive.current = false }, [])
+  // set on mount too: in development React mounts twice, and the first unmount would leave it false
+  useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
   useEffect(() => garth.chat.onDone((rid, reply) => {
     if (rid !== currentId.current) return
     currentId.current = null
@@ -442,11 +474,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                 {approval && i === messages.length - 1 && (
                   <ApprovalCard req={approval} onAnswer={(a) => { void garth.approval.answer(approval.id, a); setApproval(null) }} />
                 )}
-                <FileCards steps={m.steps} charts />
-                <div data-testid="message-assistant" className="reply prose max-w-none [overflow-wrap:anywhere]">
-                  {live && !m.content && !m.steps.length && <ThinkingIndicator thinking={thoughtBuf} />}
-                  <ReplyText content={madeFiles(m.steps).some(isChart) ? withoutChartPlaceholders(m.content) : m.content} live={live} />
-                </div>
+                <Reply content={m.content} charts={madeFiles(m.steps).filter(isChart)} live={live} thinking={live && !m.content && !m.steps.length ? thoughtBuf : undefined} />
                 <FileCards steps={m.steps} />
                 {!live && (
                   <div className="mt-1.5 -ml-1.5 flex items-center gap-1">

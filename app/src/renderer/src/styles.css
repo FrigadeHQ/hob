@@ -277,3 +277,4 @@ body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] 
 @keyframes garth-brow { 0%, 75%, 100% { opacity: 0; } 71% { opacity: 1; } }
 
 @media (max-height: 620px) { .chat-greeting { padding-top: 16px; } }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }

@@ -16,9 +16,12 @@
   "dependencies": {
     "@garth/picker": "workspace:^",
     "@mozilla/readability": "0.6.0",
+    "katex": "0.16.47",
     "linkedom": "0.18.13",
     "node-llama-cpp": "3.22.1",
-    "recharts": "3.10.1"
+    "recharts": "3.10.1",
+    "rehype-katex": "7.0.1",
+    "remark-math": "6.0.0"
   },
   "devDependencies": {
     "@huggingface/transformers": "4.3.0",

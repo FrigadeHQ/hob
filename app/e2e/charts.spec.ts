@@ -56,7 +56,7 @@ test('charts: Garth draws them in the chat, and they download as PNG', async () 
   await app.close()
 })
 
-test('a chart sits above the reply, and the line the model wrote in its place is gone', async () => {
+test('a chart goes where the model wrote its placeholder ({chart}, [Chart: …]); without one, above the reply', async () => {
   const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
@@ -68,8 +68,25 @@ test('a chart sits above the reply, and the line the model wrote in its place is
   const reply = page.getByTestId('message-assistant').last()
   await expect(reply).toContainText('North leads with $73,000.')
   await expect(reply).not.toContainText('[Chart')
-  const card = (await page.getByTestId('chart-card').boundingBox())!
-  const text = (await reply.boundingBox())!
-  expect(card.y + card.height).toBeLessThanOrEqual(text.y)
+  const box = async (text: string) => (await reply.getByText(text).boundingBox())!
+  let card = (await reply.getByTestId('chart-card').boundingBox())!
+  expect((await box('Here is the comparison:')).y).toBeLessThan(card.y)
+  expect(card.y + card.height).toBeLessThanOrEqual((await box('North leads with $73,000.')).y)
+
+  // Gemma's "{chart}"
+  await page.getByTestId('composer-input').fill(`__tools__ [["make_chart",${JSON.stringify({ ...chart, title: 'Revenue' })}]]\n---\n**Revenue**\n\n{chart}\n\nWest is smallest.`)
+  await page.getByTestId('composer-send').click()
+  const second = page.getByTestId('message-assistant').last()
+  await expect(second).toContainText('West is smallest.')
+  await expect(second).not.toContainText('{chart}')
+  card = (await second.getByTestId('chart-card').boundingBox())!
+  expect(card.y + card.height).toBeLessThanOrEqual((await second.getByText('West is smallest.').boundingBox())!.y)
+
+  // no placeholder: the chart sits above the text
+  await page.getByTestId('composer-input').fill(`__tools__ [["make_chart",${JSON.stringify({ ...chart, title: 'Leaders' })}]]\n---\nNorth leads.`)
+  await page.getByTestId('composer-send').click()
+  await expect(page.getByTestId('message-assistant').last()).toContainText('North leads.')
+  card = (await page.getByTestId('chart-card').last().boundingBox())!
+  expect(card.y + card.height).toBeLessThanOrEqual((await page.getByTestId('message-assistant').last().boundingBox())!.y)
   await app.close()
 })

@@ -62,8 +62,27 @@ export function healMarkdown(text: string): string {
   return `${head}${block.slice(0, block.length - trail.length)}${close}${trail}`
 }
 
-// "[Chart: Total revenue by region]" or "![chart](sales.chart.json)" on a line of its own
-const CHART_PLACEHOLDER = /^[ \t]*(\[[^\]\n]*\b(chart|graph|plot)\b[^\]\n]*\](?!\()|!\[[^\]\n]*\]\([^)\n]*\.chart\.json\))[ \t]*$/gim
+// on a line of its own: "[Chart: Total revenue by region]", "{chart}" (Gemma) or "![chart](sales.chart.json)"
+const CHART_PLACEHOLDER = /^[ \t]*(\[[^\]\n]*\b(chart|graph|plot)\b[^\]\n]*\](?!\()|\{\{?[^}\n]*\b(chart|graph|plot)\b[^}\n]*\}\}?|!\[[^\]\n]*\]\([^)\n]*\.chart\.json\))[ \t]*$/gim
 
-/** The line a model writes where its chart should go. Garth shows the chart itself, so the line goes. */
-export const withoutChartPlaceholders = (text: string) => text.replace(CHART_PLACEHOLDER, '').replace(/\n{3,}/g, '\n\n').trim()
+/** The reply cut at the lines where a model wrote its chart's placeholder: the charts go between the pieces. */
+export const splitAtCharts = (text: string) => text.split(CHART_PLACEHOLDER).filter((_, i) => i % 4 === 0).map((p) => p.trim())
+
+// "$x^2$", "$\alpha$", "$n$": looks like math. "$76,000 in July to $" doesn't (starts with a digit, has spaces at an end).
+const LOOKS_LIKE_MATH = /^(?![\d\s])[^$\n]*[^\s$]$/
+const MATHY = /[\\^_=]|^[a-zA-Z]$/
+
+/**
+ * LaTeX the way models write it, in the form Markdown's math support reads: \(…\) and \[…\] (which it doesn't
+ * know) and $…$ that is really math. Single $ stays plain text otherwise, since replies are full of prices.
+ */
+export function withMath(text: string): string {
+  // code (fenced or inline) is never math
+  return text.split(/(```[\s\S]*?(?:```|$)|`[^`\n]*`)/).map((part, i) => {
+    if (i % 2) return part
+    return part
+      .replace(/\s*\\\[\s*([\s\S]+?)\s*\\\]\s*/g, (_, m: string) => `\n\n$$\n${m}\n$$\n\n`)
+      .replace(/\\\((.+?)\\\)/g, (_, m: string) => `$$${m.trim()}$$`)
+      .replace(/(?<![$\\])\$([^$\n]+?)\$(?!\$)/g, (all, m: string) => (LOOKS_LIKE_MATH.test(m) && MATHY.test(m) ? `$$${m}$$` : all))
+  }).join('')
+}
