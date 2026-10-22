@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { ArrowLeft, ArrowRight, PanelLeft, Search } from 'lucide-react'
 import type { SetupState } from '../../shared/types'
 import { hob } from './api'
@@ -19,6 +20,7 @@ export type Screen = 'chat' | 'settings' | 'plugins'
 type Place = { screen: Screen; chat: string | null; project?: string | null }
 /** below this the sidebar folds away and opens over the chat */
 const NARROW = '(max-width: 819px)'
+const canChat = (state: SetupState) => state.phase === 'ready' || (state.phase === 'downloading' && state.chatReady)
 
 function useNarrow() {
   const [narrow, setNarrow] = useState(() => window.matchMedia(NARROW).matches)
@@ -47,8 +49,33 @@ export function App() {
   const [sidebar, setSidebar] = useState(!narrow)
   useEffect(() => setSidebar(!narrow), [narrow])
   useEffect(() => {
-    void hob.setup.getState().then(setState)
-    return hob.setup.onState(setState)
+    let scene = 'probing'
+    let latest: SetupState
+    let capturing = false
+    let disposed = false
+    let transition: ViewTransition | undefined
+    const update = (next: SetupState) => {
+      if (disposed) return
+      latest = next
+      const nextScene = canChat(next) ? 'chat' : next.phase
+      const changed = scene !== nextScene
+      scene = nextScene
+      // A progress update can arrive while the browser captures the old screen.
+      if (capturing) return
+      if (!changed || !document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setState(next)
+        return
+      }
+      transition?.skipTransition()
+      capturing = true
+      transition = document.startViewTransition(() => {
+        capturing = false
+        if (!disposed) flushSync(() => setState(latest))
+      })
+    }
+    void hob.setup.getState().then(update)
+    const unsubscribe = hob.setup.onState(update)
+    return () => { disposed = true; unsubscribe(); transition?.skipTransition() }
   }, [])
   // a .mcpb or plugin zip opened from Finder: show it on the Plugins screen
   const [opened, setOpened] = useState<PluginResult | null>(null)
@@ -115,11 +142,11 @@ export function App() {
     return () => window.removeEventListener('keydown', k)
   }, [])
 
-  const chatReady = state.phase === 'ready' || (state.phase === 'downloading' && state.chatReady)
+  const chatReady = canChat(state)
   if (!chatReady) return <Onboarding state={state} />
   const mac = hob.platform === 'darwin'
   return (
-    <div className="reveal relative h-full flex">
+    <div className="relative h-full flex">
       <ConfirmHost />
       {settingsAt && <SettingsOverlay section={settingsAt} onSection={setSettingsAt} onClose={() => setSettingsAt(null)} opened={opened}
         onAllChatsDeleted={() => {

@@ -3,11 +3,11 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-test('Hob moves from the greeting to the sidebar without watching the cursor', async () => {
+test('Hob follows the cursor in the greeting and settles in the sidebar', async () => {
   const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
   try {
     const page = await app.firstWindow()
-    await page.emulateMedia({ colorScheme: 'light' })
+    await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' })
     await page.getByTestId('setup-download').click()
     await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
     await expect(page.getByRole('heading', { name: 'What are we working on?' })).toBeVisible()
@@ -23,16 +23,23 @@ test('Hob moves from the greeting to the sidebar without watching the cursor', a
     if (process.env.HOB_SHOTS) await page.screenshot({ path: join(process.env.HOB_SHOTS, 'chat-new-light.png') })
 
     const eye = mascot.getByTestId('mascot-eyes').locator('rect').first()
-    const x = await eye.getAttribute('x'), y = await eye.getAttribute('y')
-    await page.mouse.move(0, 0)
-    await page.mouse.move(900, 600, { steps: 5 })
-    await expect(eye).toHaveAttribute('x', x!)
-    await expect(eye).toHaveAttribute('y', y!)
+    const box = (await mascot.boundingBox())!
+    const right = await page.evaluate(() => innerWidth - 4)
+    await page.mouse.move(right, box.y + box.height / 2)
+    await expect(eye).toHaveAttribute('x', '18')
+    await page.mouse.move(4, box.y + box.height / 2)
+    await expect(eye).toHaveAttribute('x', '12')
     // Changing the OS preference also stops motion on an already mounted mascot.
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await expect(mascot.getByTestId('mascot-eyes')).toHaveCSS('animation-name', 'none')
+    await expect(eye).toHaveAttribute('x', '15')
+    await page.mouse.move(right, box.y + box.height / 2)
+    await expect(eye).toHaveAttribute('x', '15')
     await page.emulateMedia({ reducedMotion: 'no-preference' })
-    await expect(mascot.getByTestId('mascot-eyes')).not.toHaveCSS('animation-name', 'none')
+    await expect.poll(async () => {
+      await page.mouse.move(right, box.y + box.height / 2)
+      await page.mouse.move(4, box.y + box.height / 2)
+      return eye.getAttribute('x')
+    }).toBe('12')
 
     await page.getByTestId('composer-input').fill('__slow__')
     await page.getByTestId('composer-send').click()
@@ -41,6 +48,8 @@ test('Hob moves from the greeting to the sidebar without watching the cursor', a
     await expect(mascot).toHaveCount(1)
     await expect(page.getByTestId('composer-stop')).toBeHidden({ timeout: 20_000 })
     await expect(sidebarMascot).toHaveAttribute('data-expression', 'neutral')
+    await page.mouse.move(right, box.y)
+    await expect(sidebarMascot.getByTestId('mascot-eyes').locator('rect').first()).toHaveAttribute('x', '15')
     await expect(page.getByTestId('message-assistant').last()).toHaveCSS('font-family', /Hanken Grotesk/)
     if (process.env.HOB_SHOTS) await page.screenshot({ path: join(process.env.HOB_SHOTS, 'chat-conversation-light.png') })
     await page.emulateMedia({ colorScheme: 'dark' })

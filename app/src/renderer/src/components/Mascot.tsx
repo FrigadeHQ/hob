@@ -8,8 +8,8 @@ const tint = tintMatrix()
 const rect = (r: Rect, i: number) => <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill} />
 const glances = [{ x: -3, y: 0 }, { x: 3, y: 0 }, { x: 0, y: 0 }, { x: -2, y: 1 }, { x: 2, y: 1 }, { x: 0, y: -2 }]
 
-/** Only setup listens to the cursor; normal chat never installs these listeners or timers. */
-function useSetupFace(on: boolean) {
+/** Setup and the empty chat are playful; the sidebar keeps a quiet face. */
+function usePlayfulFace(on: boolean) {
   const ref = useRef<SVGSVGElement>(null)
   const [gaze, setGaze] = useState({ x: 0, y: 0 })
   const [expression, setExpression] = useState<Expression>('neutral')
@@ -61,9 +61,9 @@ function useSetupFace(on: boolean) {
   return { ref, gaze, expression }
 }
 
-/** Setup is playful; in the app, the face only blinks and occasionally smiles. */
+/** The small sidebar face only blinks and occasionally smiles. */
 export function Mascot({ size = 96, alive = false, working = false, playful = false }: { size?: number; alive?: boolean; working?: boolean; playful?: boolean }) {
-  const setup = useSetupFace(alive && playful)
+  const setup = usePlayfulFace(alive && playful)
   const filter = `hob-tint-${useId().replace(/:/g, '')}`
   return (
     <svg ref={setup.ref} data-testid="mascot" data-expression={playful ? setup.expression : working ? 'working' : 'neutral'} width={size} height={size} viewBox="0 0 60 60" shapeRendering="crispEdges" role="img" aria-label="Hob"

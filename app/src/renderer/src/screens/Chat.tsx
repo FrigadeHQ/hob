@@ -423,7 +423,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         <div className={`mx-auto max-w-[768px] px-6 sm:px-8 ${empty ? 'flex min-h-full flex-col justify-center pb-16' : 'space-y-8 pb-10'}`}>
           {empty && (
             <div className="chat-greeting pt-6 text-center">
-              <div className="mb-[23px] flex justify-center"><Mascot size={48} alive /></div>
+              <div className="mb-[23px] flex justify-center"><Mascot size={48} alive playful /></div>
               {project
                 ? <>
                     <h1 className="text-title font-semibold tracking-tight">What should we do in {project.name}?</h1>

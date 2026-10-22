@@ -12,7 +12,7 @@ Open http://127.0.0.1:8902/design/hob-expressions/.
 
 Choose any of the 14 faces to compare it at setup, welcome, and sidebar sizes. “Setup personality” previews cursor following, idle glances, blinks, smiles, and a raised eyebrow. “Cycle all faces” is for comparing the exploration; it is not app behavior. Appearance can be System, Light, or Dark. Automatic motion respects reduced motion.
 
-The production change enables playful behavior only in `Onboarding.tsx`. Chat's welcome and status mascots keep their existing restrained behavior. No new dependencies or model downloads are needed to view this study.
+The production app enables playful behavior during onboarding and on the empty chat welcome screen. The small sidebar mascot keeps its restrained behavior. No new dependencies or model downloads are needed to view this study.
 
 Big grin and Surprised were removed after review: their exaggerated mouth shapes departed from Hob’s simple expression language. The remaining faces preserve the small square eyes and compact mouth; differences come from the gaze, eyelids, eyebrow, or a small change in the mouth.
 
