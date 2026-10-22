@@ -1,0 +1,29 @@
+# The real tools, nothing faked: Hob's Python (sandboxed), web search (SearXNG) and the image model (llama-server)
+# on Mac, Windows and Linux. Downloads about 2 GB per system, so it has its own workflow next to ci.yml.
+name: Smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  tools:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Real tools
+        env:
+          HOB_SMOKE: '1'
+        run: pnpm -C app exec vitest run test/smoke.test.ts
