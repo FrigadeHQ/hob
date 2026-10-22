@@ -1,5 +1,6 @@
 # The real tools, nothing faked: Hob's Python (sandboxed), web search (SearXNG) and the image model (llama-server)
-# on Mac, Windows and Linux. Downloads about 2 GB per system, so it has its own workflow next to ci.yml.
+# on Mac, Windows and Linux: on their own, then called from inside the app. Downloads a few GB per system, so it
+# has its own workflow next to ci.yml.
 name: Smoke
 
 on:
@@ -22,8 +23,40 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      # the image model and Python need a few GB; Linux runners start nearly full
+      - name: Make room (Linux)
+        if: runner.os == 'Linux'
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       - run: pnpm install --frozen-lockfile
       - name: Real tools
         env:
           HOB_SMOKE: '1'
         run: pnpm -C app exec vitest run test/smoke.test.ts
+      - name: Build
+        shell: bash
+        run: |
+          mkdir -p app/resources/bin
+          pnpm -C app run native
+          pnpm -C app exec electron-vite build
+      - name: Install Playwright
+        run: pnpm -C app exec playwright install-deps
+        if: runner.os == 'Linux'
+      - name: Let Electron start (Linux)
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      # the same tools, called from inside the app as on a user's computer
+      - name: Real tools in the app
+        shell: bash
+        env:
+          HOB_SMOKE: '1'
+          HOB_BACKGROUND: '0'
+        run: |
+          cd app
+          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a pnpm exec playwright test e2e/smoke-app.spec.ts; else pnpm exec playwright test e2e/smoke-app.spec.ts; fi
+      - name: Keep the test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report-${{ runner.os }}
+          path: app/test-results
+          if-no-files-found: ignore

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { tarCmd } from '../tar'
 import { ensureModelFile, fileNameFor, type DownloadDeps } from '../downloader'
 import type { RuntimeDeps } from '../python/runtime'
 import type { VisionState } from '../../shared/types'
@@ -21,7 +22,6 @@ export type VisionDeps = {
 }
 
 const MARKER = 'ready.json'
-const tarCmd = (platformKey: string) => (platformKey.startsWith('win32') ? join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe') : 'tar')
 
 /** Downloads Hob's eyes once, into app data: the vision model, its image file and llama.cpp's server. */
 export class VisionInstaller {

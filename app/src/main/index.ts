@@ -16,13 +16,14 @@ import { registerIpc } from './ipc'
 import { Store } from './store'
 import { migrateFilesDir, migrateProfile } from './migrate'
 import { TITLE_BAR_HEIGHT, titleBarColors } from './titleBar'
+import { logToFile } from './log'
 import { pruneUndo } from './agent/journal'
 import { PythonRuntime, realRuntimeDeps } from './python/runtime'
 import { VisionInstaller } from './vision/install'
 import { macCalMail, setCalMailSource, setMacDeps } from './tools/mac'
 import { Accounts } from './accounts'
 import { VisionServer } from './vision/server'
-import { pickVision, visionFitsGpu, visionGB } from './vision/catalog'
+import { pickVision, VISION_MODELS, visionFitsGpu, visionGB } from './vision/catalog'
 import type { VisionState } from '../shared/types'
 import os from 'node:os'
 import { loadSettings, updateSettings, webAccessOn } from './settings'
@@ -34,11 +35,15 @@ import { SearxngServer, type SearchResult } from './search/searxng'
 import { SpeechModel } from './speech'
 
 const FAKE = process.env.HOB_FAKE === '1'
+/** with HOB_FAKE: the stand-in model, but the real tools (Python, web search, the image model), for the smoke test */
+const REAL_TOOLS = FAKE && process.env.HOB_REAL_TOOLS === '1'
 // One profile folder however Hob is started (dev, packaged, tests): ~/Library/Application Support/Hob etc.
 app.setName('Hob')
 // renamed from Garth (and Mabel, Thrum): carry an existing profile (models, chats, settings) over once
 if (!process.env.HOB_USER_DATA) migrateProfile(app.getPath('appData'))
 app.setPath('userData', process.env.HOB_USER_DATA ?? join(app.getPath('appData'), 'Hob'))
+logToFile(join(app.getPath('userData'), 'logs', 'main.log'))
+process.on('unhandledRejection', (err) => console.error('unhandled rejection', err))
 
 // One Hob at a time: a second launch focuses the existing window instead of
 // starting a second engine and a second download.
@@ -128,7 +133,7 @@ app.whenReady().then(() => {
   })
   const store = new Store(paths.db)
   pruneUndo(paths.undo, { olderThanDays: 30 })
-  const python = FAKE ? undefined : new PythonRuntime(paths.python, realRuntimeDeps)
+  const python = FAKE && !REAL_TOOLS ? undefined : new PythonRuntime(paths.python, realRuntimeDeps)
   // E2E / custom profiles keep chat files inside the profile, never in the real Documents
   if (!process.env.HOB_USER_DATA && !loadSettings(paths.settings).filesDir) {
     // chat files from the app's earlier names. macOS may refuse the move (no access to Documents yet):
@@ -159,7 +164,7 @@ app.whenReady().then(() => {
   })
   // web search: SearXNG on this computer (needs the code tools); canned results in fake mode
   const searx = python ? new SearxngServer({ python: python.python, runtimeRoot: python.dir, settingsDir: paths.runTmp }) : undefined
-  const search = FAKE
+  const search = FAKE && !REAL_TOOLS
     ? async (q: string): Promise<SearchResult[]> => [{ title: `Lisbon: results for ${q}`, url: 'https://example.com/lisbon', snippet: 'Sunny, 24°C.' }]
     : async (q: string, signal: AbortSignal) => { await python!.ensure(); return searx!.search(q, signal) }
   app.on('before-quit', () => searx?.stop())
@@ -202,7 +207,7 @@ app.whenReady().then(() => {
     const hw = hardware
     return { totalRamGB: os.totalmem() / 1e9, unified: hw ? hw.gpu.kind !== 'discrete' : process.platform === 'darwin', vramGB: hw?.gpu.vramGB, mainModelGB }
   }
-  const vision = FAKE ? fakeVision() : realVision(paths.vision, room)
+  const vision = FAKE && !REAL_TOOLS ? fakeVision() : realVision(paths.vision, room)
   // fake mode: a calendar and an inbox to talk to
   if (FAKE) setMacDeps({
     helper: async (args) => (args[0] === 'events'
@@ -257,7 +262,8 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 function realVision(root: string, room: () => Promise<{ totalRamGB: number; unified: boolean; vramGB?: number; mainModelGB: number }>) {
   const listeners = new Set<(s: VisionState) => void>()
   const installer = new VisionInstaller(root, {
-    platformKey: `${process.platform}-${process.arch}`, choose: async () => pickVision(await room()),
+    // the smoke test runs on CI machines without a graphics card: the small model, on the CPU
+    platformKey: `${process.platform}-${process.arch}`, choose: async () => (REAL_TOOLS ? VISION_MODELS['2b'] : pickVision(await room())),
     download: realDeps, fetchFile: realRuntimeDeps.fetchFile, exec: realRuntimeDeps.exec,
   }, (s) => { for (const l of listeners) l(s) })
   const server = new VisionServer({
@@ -265,7 +271,7 @@ function realVision(root: string, room: () => Promise<{ totalRamGB: number; unif
     cpuCommand: async () => { const b = await installer.cpuServerBinary(); return b ? { cmd: b } : undefined },
     model: () => installer.modelPath, mmproj: () => installer.mmprojPath,
     // fully on the graphics chip only if it fits next to the main model; otherwise the main model would run out
-    useGpu: async () => visionFitsGpu({ ...await room(), visionGB: visionGB(installer.model) }),
+    useGpu: async () => !REAL_TOOLS && visionFitsGpu({ ...await room(), visionGB: visionGB(installer.model) }),
   })
   const start = () => { if (installer.supported) void installer.ensure().catch((err) => console.warn('image support download failed; will retry', err)) }
   return {

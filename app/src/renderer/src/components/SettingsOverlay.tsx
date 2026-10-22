@@ -97,7 +97,7 @@ export function SettingsOverlay({ section, onSection, onClose, opened, onAllChat
           })}
         </nav>
         <div className="relative min-w-0 flex-1 overflow-y-auto">
-          <button data-testid="settings-close" aria-label="Close settings" title="Close (Esc)" onClick={onClose} className="no-drag absolute right-clear-controls top-4 rounded-control p-1.5 text-muted hover:bg-line/70 hover:text-ink"><X size={16} /></button>
+          <button data-testid="settings-close" aria-label="Close settings" title="Close (Esc)" onClick={onClose} className="no-drag absolute right-clear-controls top-4 z-10 rounded-control p-1.5 text-muted hover:bg-line/70 hover:text-ink"><X size={16} /></button>
           <div key={section} className="fade-in mx-auto max-w-2xl px-8 pt-8 pb-12">
             {section === 'general' && <GeneralSettings />}
             {section === 'model' && <ModelSettings />}

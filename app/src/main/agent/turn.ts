@@ -186,6 +186,8 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
       }
       ctx.progress = (title) => show({ ...step, title, status: 'running' })
       const out = await tool.run(input, ctx)
+      // kept on this computer (logs/main.log), to look into a tool that fails on someone's system
+      if (out.failed) console.warn(`${name} failed:`, out.text.slice(0, 1000))
       if (!out.failed && CHANGES.has(name)) changesDone.add(key)
       if (!out.failed && MOVES.has(name)) moved = true
       show({ ...step, ...(out.title ? { title: out.title } : {}), status: out.failed ? 'error' : 'done', ...(out.failed ? { reason: short(out.text) } : {}), ...(out.detail ? { detail: out.detail } : {}), ...(out.files?.length ? { files: out.files } : {}), ...(out.uses?.length ? { uses: out.uses } : {}) })
@@ -194,6 +196,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
       // the system prompt was written before this folder was allowed
       return granted ? `${grantedNote(granted)}\n\n${text}` : text
     } catch (err) {
+      console.warn(`${name} failed:`, err)
       show({ ...step, status: 'error', reason: short(err instanceof Error ? err.message : String(err)) })
       return `Error: ${err instanceof Error ? err.message : String(err)}`
     } finally {
