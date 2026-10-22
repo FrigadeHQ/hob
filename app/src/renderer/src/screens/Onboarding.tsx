@@ -70,16 +70,16 @@ export function Onboarding({ state }: { state: SetupState }) {
       <div className="onboarding-screen">
         <div className="onboarding-content">
           {/* One mounted Hob carries the transition from checking to setup. */}
-          <div className="onboarding-mascot"><div className="setup-avatar"><Mascot size={72} alive playful /></div></div>
+          <div className="onboarding-mascot"><Mascot size={72} alive playful /></div>
           <div className="onboarding-probing" aria-hidden={!probing}>
             {firstRun !== undefined && <ProbingLine firstRun={firstRun} />}
           </div>
           <div className="onboarding-panel" inert={probing} aria-hidden={probing}>
-            <div key={`heading-${state.phase}`} className="setup-heading">
+            <div className="setup-heading">
               <h1>{state.phase === 'error' ? 'Something went wrong' : downloading ? 'Getting Hob ready' : 'Welcome to Hob'}</h1>
               <p className="setup-subtitle">{state.phase === 'error' ? 'Let’s try that again.' : downloading ? 'Chat will open automatically.' : `Your private AI, right on your ${hob.platform === 'darwin' ? 'Mac' : 'computer'}.`}</p>
             </div>
-            <div key={`stage-${state.phase}`} className="setup-stage">
+            <div className="setup-stage">
               {state.phase === 'choose' && selected && <>
                 <div className="setup-card" data-testid="setup-recommended">
                   <p className="setup-hardware" title={state.computer}>{selected.recommended ? 'Picked for your' : 'Your'} {state.computer}</p>

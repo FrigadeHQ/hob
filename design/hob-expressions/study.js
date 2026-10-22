@@ -1,4 +1,4 @@
-/* Experimental faces stay here; app behavior uses only its existing neutral, smile, blink, and eyebrow. */
+/* The app uses smile, neutral, blink, eyebrow, content, wink, and laugh; the other faces remain exploratory. */
 const body = '../../app/src/renderer/src/assets/hob-body.png';
 const openEyes = [[15,27,5,5],[40,27,5,5]];
 const closedEyes = [[15,29,5,2],[40,29,5,2]];
@@ -57,8 +57,8 @@ function select(face, announce = false) {
 }
 function setupFace() {
   const r = Math.random();
-  select(faces[r < .16 ? 2 : r < .48 ? 1 : 3]);
-  faceTimer = setTimeout(() => { select(faces[0]); faceTimer = setTimeout(setupFace, 2800 + Math.random() * 3000); }, r < .16 ? 1400 : r < .48 ? 1600 : 150);
+  select(faces[r < .12 ? 2 : r < .32 ? 0 : 6]);
+  faceTimer = setTimeout(() => { select(faces[1]); faceTimer = setTimeout(setupFace, 4500 + Math.random() * 3000); }, r < .12 ? 1100 : r < .32 ? 1700 : 150);
 }
 function cycle() {
   select(faces[(faces.indexOf(selected) + 1) % faces.length]);
@@ -74,11 +74,11 @@ function sync() {
   clearTimeout(faceTimer); clearInterval(glanceTimer); look(0,0);
   document.removeEventListener('pointermove',move);
   document.getElementById('preview-hint').textContent = reduced.matches && mode.value !== 'still' ? 'Motion is paused by your reduced-motion setting.' : mode.value === 'setup' ? 'Move your cursor. Pause to let Hob look around.' : mode.value === 'cycle' ? 'A new expression every few seconds.' : 'Choose a face below.';
-  if (reduced.matches) { if (mode.value === 'setup') select(faces[0]); return; }
+  if (reduced.matches) { if (mode.value === 'setup') select(faces[1]); return; }
   if (mode.value === 'setup') {
-    select(faces[0]); lastMove = 0;
+    select(faces[1]); lastMove = 0;
     document.addEventListener('pointermove',move);
-    faceTimer = setTimeout(setupFace,1500);
+    faceTimer = setTimeout(setupFace,3200);
     const spots = [[-3,0],[3,0],[0,0],[-2,1],[2,1],[0,-2]];
     glanceTimer = setInterval(() => { if (Date.now() - lastMove > 2500) look(...spots[Math.floor(Math.random() * spots.length)]); },3500);
   } else if (mode.value === 'cycle') faceTimer = setTimeout(cycle,2800);
