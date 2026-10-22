@@ -31,11 +31,14 @@ export class FakeEngine implements Engine {
     const first = said.split('\n')[0]
     if (first.startsWith('__tools__ ')) {
       const results: string[] = []
-      for (const [name, args] of JSON.parse(first.slice('__tools__ '.length)) as [string, unknown][]) {
+      // "__tools__ [...]\n---\nreply": the reply to give after the tools, when a test needs a particular one
+      const body = said.slice(said.indexOf('__tools__ ') + '__tools__ '.length)
+      const [calls, given] = body.includes('\n---\n') ? body.split('\n---\n') : [first.slice('__tools__ '.length), undefined]
+      for (const [name, args] of JSON.parse(calls) as [string, unknown][]) {
         if (signal?.aborted) break
         results.push(h.onTool ? await h.onTool(name, args) : 'no tools')
       }
-      const reply = `Done. ${results.at(-1) ?? ''}`.trim()
+      const reply = given ?? `Done. ${results.at(-1) ?? ''}`.trim()
       onToken(reply)
       return reply
     }

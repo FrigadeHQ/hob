@@ -22,6 +22,7 @@ export function stepRows(steps: Step[], running: boolean): StepRow[] {
     const detail = g.length === 1 ? end.detail : details.length ? details.map((t) => `--- Try ${g.indexOf(t) + 1} ---\n${t.detail}`).join('\n\n') : undefined
     return { ...end, status, tries: g.length, ...(detail ? { detail } : {}) }
   })
-  // hiccups on the way to a result aren't worth showing; when nothing worked, they explain why
-  return rows.some((r) => r.status === 'done') ? rows.filter((r) => r.status !== 'error') : rows
+  // hiccups on the way to a result aren't worth showing; when nothing worked, they explain why. While the reply
+  // runs it isn't known yet whether anything will work, so they stay out until it's done
+  return running || rows.some((r) => r.status === 'done') ? rows.filter((r) => r.status !== 'error') : rows
 }

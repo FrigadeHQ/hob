@@ -9,15 +9,24 @@ const IMAGE = /\.(png|jpe?g|gif|webp|svg)$/i
 const CHART = /\.chart\.json$/i
 const name = (p: string) => p.split(/[\\/]/).pop() ?? p
 
-/** Files the agent created or changed, with charts shown inline. */
-export function FileCards({ steps }: { steps: Step[] }) {
+/** what a reply made: files it created or changed, and Garth's charts */
+export function madeFiles(steps: Step[]): string[] {
   // a chart's data or a list of moves is a means, not a result: no card for it
   const used = new Set(steps.flatMap((s) => s.uses ?? []))
-  const files = [...new Set(steps.filter((s) => s.status === 'done').flatMap((s) => s.files ?? []))].filter((f) => !used.has(f))
+  return [...new Set(steps.filter((s) => s.status === 'done').flatMap((s) => s.files ?? []))].filter((f) => !used.has(f))
+}
+export const isChart = (f: string) => CHART.test(f)
+
+/**
+ * Files the agent created or changed, or (charts) only its charts. Charts go above the reply text, where they
+ * appear while it's written, so nothing moves when the text arrives; other files go below it.
+ */
+export function FileCards({ steps, charts = false }: { steps: Step[]; charts?: boolean }) {
+  const files = madeFiles(steps).filter((f) => isChart(f) === charts)
   if (!files.length) return null
   const reveal = `Show in ${fileManager(garth.platform)}`
   return (
-    <div className="mt-3 space-y-2">
+    <div className={charts ? 'mb-3 space-y-2' : 'mt-3 space-y-2'}>
       {files.map((f) => {
         // Garth's own charts: drawn live, not a file to open
         if (CHART.test(f)) return <div key={f} className="overflow-hidden rounded-card border border-line bg-surface"><ChartCard path={f} /></div>

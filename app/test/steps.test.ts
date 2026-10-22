@@ -31,3 +31,9 @@ it('different steps stay apart', () => {
   expect(stepRows([s('1', 'Ran code', 'done'), { id: '2', title: 'Read a.csv', status: 'done' }, s('3', 'Ran code', 'done')], false)).toHaveLength(3)
   expect(stepRows([s('1', 'Ran make.py', 'done'), s('2', 'Ran code', 'done')], false)).toHaveLength(2)
 })
+
+it('while the reply is still running, steps that failed are left out: whether it fails overall is not known yet', () => {
+  const failed: Step = { id: '1', title: "Couldn't read data.csv", status: 'error', tool: 'read_file' }
+  const next: Step = { id: '2', title: 'Ran code', status: 'running', tool: 'run_python' }
+  expect(stepRows([failed, next], true).map((r) => r.title)).toEqual(['Ran code'])
+})

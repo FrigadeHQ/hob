@@ -32,8 +32,10 @@ function StepRow({ s }: { s: Row }) {
         {s.tries > 1 && <span data-testid="step-tries" className="text-meta text-muted">{s.tries} tries</span>}
         {s.detail && <ChevronRight size={14} className={`text-muted transition-transform ${open ? 'rotate-90' : ''}`} />}
       </button>
-      {s.reason && (s.status === 'error' || s.status === 'denied' || s.status === 'retrying') && (
-        <p data-testid="step-reason" className="ml-6 text-meta text-muted">{s.reason}{s.status === 'retrying' ? ' Trying another way…' : ''}</p>
+      {/* while retrying, the error itself isn't news: it only shows if nothing ends up working */}
+      {s.status === 'retrying' ? <p data-testid="step-reason" className="ml-6 text-meta text-muted">Trying another way…</p>
+        : s.reason && (s.status === 'error' || s.status === 'denied') && (
+        <p data-testid="step-reason" className="ml-6 text-meta text-muted">{s.reason}</p>
       )}
       {open && s.detail && (
         <pre data-testid="step-detail" className="mt-1.5 ml-6 max-h-72 overflow-auto rounded-card border border-line bg-sidebar p-3 font-mono text-meta whitespace-pre-wrap text-ink-soft">{s.detail}</pre>

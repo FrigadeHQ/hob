@@ -55,3 +55,21 @@ test('charts: Garth draws them in the chat, and they download as PNG', async () 
   await expect(page.getByTestId('file-card')).toHaveCount(0)
   await app.close()
 })
+
+test('a chart sits above the reply, and the line the model wrote in its place is gone', async () => {
+  const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
+  const page = await app.firstWindow()
+  await page.getByTestId('setup-download').click()
+  await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
+  const chart = { type: 'bar', title: 'Total Revenue by Region', x: 'region', series: ['revenue'], data: [{ region: 'North', revenue: 73000 }, { region: 'West', revenue: 52000 }] }
+  // a newline in the box is typed with Shift+Enter; fill() puts it in directly
+  await page.getByTestId('composer-input').fill(`__tools__ [["make_chart",${JSON.stringify(chart)}]]\n---\nHere is the comparison:\n\n[Chart: Total Revenue by Region]\n\nNorth leads with $73,000.`)
+  await page.getByTestId('composer-send').click()
+  const reply = page.getByTestId('message-assistant').last()
+  await expect(reply).toContainText('North leads with $73,000.')
+  await expect(reply).not.toContainText('[Chart')
+  const card = (await page.getByTestId('chart-card').boundingBox())!
+  const text = (await reply.boundingBox())!
+  expect(card.y + card.height).toBeLessThanOrEqual(text.y)
+  await app.close()
+})

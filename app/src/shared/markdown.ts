@@ -61,3 +61,9 @@ export function healMarkdown(text: string): string {
   const trail = /\s*$/.exec(block)![0]
   return `${head}${block.slice(0, block.length - trail.length)}${close}${trail}`
 }
+
+// "[Chart: Total revenue by region]" or "![chart](sales.chart.json)" on a line of its own
+const CHART_PLACEHOLDER = /^[ \t]*(\[[^\]\n]*\b(chart|graph|plot)\b[^\]\n]*\](?!\()|!\[[^\]\n]*\]\([^)\n]*\.chart\.json\))[ \t]*$/gim
+
+/** The line a model writes where its chart should go. Garth shows the chart itself, so the line goes. */
+export const withoutChartPlaceholders = (text: string) => text.replace(CHART_PLACEHOLDER, '').replace(/\n{3,}/g, '\n\n').trim()

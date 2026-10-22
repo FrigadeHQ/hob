@@ -10,13 +10,13 @@ import { garth } from '../api'
 import { Mascot } from '../components/Mascot'
 import { CopyButton } from '../components/CopyButton'
 import { ThinkingIndicator, WorkLog } from '../components/WorkLog'
-import { FileCards } from '../components/FileCards'
+import { FileCards, isChart, madeFiles } from '../components/FileCards'
 import { ApprovalCard } from '../components/ApprovalCard'
 import { AttachmentChip, Composer } from '../components/Composer'
 import { ProjectChip } from '../components/ProjectChip'
 import { folderName } from '../components/ProjectDialog'
 import { useDictation } from '../speech/useDictation'
-import { healMarkdown, tidyMarkdown } from '../../../shared/markdown'
+import { healMarkdown, tidyMarkdown, withoutChartPlaceholders } from '../../../shared/markdown'
 import { rehypeLineBreaks } from '../lineBreaks'
 import { pickStarters } from '../starters'
 import { rehypeFadeWords } from '../fadeWords'
@@ -406,9 +406,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                 {approval && i === messages.length - 1 && (
                   <ApprovalCard req={approval} onAnswer={(a) => { void garth.approval.answer(approval.id, a); setApproval(null) }} />
                 )}
+                <FileCards steps={m.steps} charts />
                 <div data-testid="message-assistant" className="reply prose max-w-none [overflow-wrap:anywhere]">
                   {live && !m.content && !m.steps.length && <ThinkingIndicator thinking={thoughtBuf} />}
-                  <ReplyText content={m.content} live={live} />
+                  <ReplyText content={madeFiles(m.steps).some(isChart) ? withoutChartPlaceholders(m.content) : m.content} live={live} />
                 </div>
                 <FileCards steps={m.steps} />
                 {!live && (
