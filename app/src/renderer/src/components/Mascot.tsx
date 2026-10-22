@@ -16,21 +16,18 @@ function useGaze(on: boolean) {
   const [gaze, setGaze] = useState({ x: 0, y: 0 })
   useEffect(() => {
     if (!on || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    let frame = 0
+    // straight from the event (no animation frame): those pause in hidden windows, and moves are cheap
     const move = (e: PointerEvent) => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => {
-        const box = ref.current?.getBoundingClientRect()
-        if (!box) return
-        const ease = (d: number) => Math.tanh(d / 220)
-        setGaze({ x: ease(e.clientX - (box.left + box.width / 2)), y: ease(e.clientY - (box.top + box.height / 2)) })
-      })
+      const box = ref.current?.getBoundingClientRect()
+      if (!box) return
+      const ease = (d: number) => Math.tanh(d / 220)
+      setGaze({ x: ease(e.clientX - (box.left + box.width / 2)), y: ease(e.clientY - (box.top + box.height / 2)) })
     }
     // the cursor left the window: look back ahead
     const away = () => setGaze({ x: 0, y: 0 })
     window.addEventListener('pointermove', move)
     document.documentElement.addEventListener('pointerleave', away)
-    return () => { cancelAnimationFrame(frame); window.removeEventListener('pointermove', move); document.documentElement.removeEventListener('pointerleave', away) }
+    return () => { window.removeEventListener('pointermove', move); document.documentElement.removeEventListener('pointerleave', away) }
   }, [on])
   return [ref, gaze] as const
 }

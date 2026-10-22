@@ -261,10 +261,8 @@ body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] 
 .status-presence:has(.garth-mascot) > .status-dot { display: none; }
 #root:has(.chat-greeting) .status-presence .garth-mascot { display: none; }
 #root:has(.chat-greeting) .status-presence > .status-dot { display: block; }
-/* Garth smiles; now and then the mouth goes flat for a moment, or an eyebrow goes up */
+/* Garth smiles, also while working; now and then the mouth goes flat for a moment, or an eyebrow goes up */
 .garth-flat, .garth-brow { opacity: 0; }
-.garth-working .garth-flat { opacity: 1; }
-.garth-working .garth-smile { opacity: 0; }
 .garth-eyes { transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: no-preference) {
   .garth-alive .garth-eyes { animation: garth-blink 17s steps(1, end) infinite; }

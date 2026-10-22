@@ -34,10 +34,13 @@ test('Garth moves from the greeting to the sidebar without watching the cursor',
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     await expect(mascot.getByTestId('mascot-eyes')).not.toHaveCSS('animation-name', 'none')
 
-    await page.getByTestId('composer-input').fill('__slow__')
+    await page.getByTestId('composer-input').fill('__slower__')
     await page.getByTestId('composer-send').click()
     await expect(sidebarMascot).toHaveAttribute('width', '24')
     await expect(sidebarMascot).toHaveAttribute('data-expression', 'working')
+    // still smiling while it works
+    await expect(sidebarMascot.locator('.garth-smile')).toHaveCSS('opacity', '1', { timeout: 1000 })
+    await expect(sidebarMascot.locator('.garth-flat')).toHaveCSS('opacity', '0')
     await expect(mascot).toHaveCount(1)
     await expect(page.getByTestId('composer-stop')).toBeHidden({ timeout: 20_000 })
     await expect(sidebarMascot).toHaveAttribute('data-expression', 'smile')
