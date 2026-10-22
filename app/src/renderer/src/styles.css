@@ -167,12 +167,16 @@ html[data-text-size="large"] { --reply-step: 2px; }
 @media (prefers-reduced-motion: reduce) { .reveal, .pop, .fade-in, .fw, .setup-status, .setup-assurance { animation: none; } }
 
 /* Carry Hob between screens at full opacity; only the surrounding content fades. */
+/* Keep the chat live while Hob arrives, instead of capturing the whole document. */
+:root { view-transition-name: none; }
+.onboarding { view-transition-name: setup-screen; background: var(--color-paper); }
 .onboarding-mascot .hob-mascot, .chat-greeting .hob-mascot { view-transition-name: hob-setup; }
+::view-transition { pointer-events: none; }
 ::view-transition-group(hob-setup) { animation-duration: 440ms; animation-timing-function: cubic-bezier(.22,1,.36,1); }
 ::view-transition-old(hob-setup) { animation: none; opacity: 0; }
 ::view-transition-new(hob-setup) { animation: none; height: 100%; }
-::view-transition-old(root) { animation: reveal 140ms ease-out reverse both; }
-::view-transition-new(root) { animation: reveal 240ms ease-out 80ms both; }
+::view-transition-old(setup-screen) { animation: reveal 140ms ease-out reverse both; }
+::view-transition-new(setup-screen) { animation: reveal 240ms ease-out 80ms both; }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
 }
