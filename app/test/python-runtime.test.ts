@@ -73,3 +73,18 @@ it('also installs the pinned SearXNG source and its packages', async () => {
   expect(PY_PACKAGES).toContain('fpdf2==2.8.9')
   expect(PY_PACKAGES).toContain('curl_cffi==0.16.3')
 })
+
+it("Windows: unpacks with Windows' own tar.exe, not whichever tar is first on PATH (Git's reads C: as a network host)", async () => {
+  const root = mkdtempSync(join(tmpdir(), 'hob-py-'))
+  const tars: string[] = []
+  const deps: RuntimeDeps = {
+    async fetchFile(_url, _sha, _gb, dir, onProgress, name = 'py.tgz') { onProgress(1); const p = join(dir, name); writeFileSync(p, 'x'); return p },
+    async exec(cmd, args) {
+      if (/tar(\.exe)?$/i.test(cmd)) { tars.push(cmd); const bin = pythonBin(root, 'win32'); mkdirSync(dirname(bin), { recursive: true }); writeFileSync(bin, '') }
+      void args
+    },
+  }
+  await new PythonRuntime(root, deps, 'win32-x64').ensure().catch(() => {})
+  expect(tars.length).toBeGreaterThan(0)
+  for (const t of tars) expect(t).toMatch(/System32[\\/]tar\.exe$/i)
+})

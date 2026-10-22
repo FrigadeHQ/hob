@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process'
 import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { tarCmd } from '../tar'
 import { ChecksumError, realDeps } from '../downloader'
 import { installedVersions, installPackages, nameOf, sitePackagesOf } from './packages'
 import { SEARXNG_SHA256, SEARXNG_URL } from '../search/searxng'
@@ -117,11 +118,11 @@ export class PythonRuntime {
     rmSync(join(this.root, 'python'), { recursive: true, force: true })
     rmSync(join(this.root, MARKER), { force: true })
     const tgz = await this.deps.fetchFile(pyUrl(this.key), build.sha256, build.sizeGB, this.root, (f) => onProgress(f * 0.3))
-    await this.deps.exec('tar', ['-xzf', tgz, '-C', this.root])
+    await this.deps.exec(tarCmd(this.key), ['-xzf', tgz, '-C', this.root])
     const searx = await this.deps.fetchFile(SEARXNG_URL, SEARXNG_SHA256, 0.01, this.root, () => {}, 'searxng.tar.gz')
     rmSync(join(this.root, 'searxng'), { recursive: true, force: true })
     mkdirSync(join(this.root, 'searxng'))
-    await this.deps.exec('tar', ['-xzf', searx, '-C', join(this.root, 'searxng'), '--strip-components=1'])
+    await this.deps.exec(tarCmd(this.key), ['-xzf', searx, '-C', join(this.root, 'searxng'), '--strip-components=1'])
     rmSync(searx, { force: true })
     onProgress(0.35)
     await this.deps.exec(this.python, ['-m', 'pip', 'install', '--disable-pip-version-check', '--no-input', '--only-binary=:all:', ...PY_PACKAGES])
