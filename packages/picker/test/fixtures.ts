@@ -7,14 +7,11 @@ const m = (id: string, agentScore: number, chatScore: number, sizeGB: number, pa
 })
 
 export const models: CatalogModel[] = [
-  m('qwen3-1.7b', 2, 3, 1.83, 1.7, 1.7, true),
-  m('qwen3-4b', 4, 5, 2.5, 4, 4),
-  m('qwen3-8b', 5, 6, 5.03, 8.2, 8.2),
-  m('qwen3-14b', 6, 7, 9.0, 14.8, 14.8),
-  m('gpt-oss-20b', 7, 7, 12.11, 21, 3.6),
-  m('qwen3-30b-a3b', 7, 7, 18.56, 30.5, 3.3),
-  m('qwen3-32b', 7, 8, 19.76, 32.8, 32.8),
-  m('qwen3.6-35b-a3b', 8, 8, 22.13, 35, 3),
+  m('qwen3-1.7b', 2, 3, 1.83, 1.7, 1.7),
+  m('gemma-4-e2b', 5, 5, 3.35, 5.1, 2.3),
+  m('gemma-4-e4b', 7, 7, 5.15, 8, 4, true),
+  m('gpt-oss-20b', 6, 7, 12.11, 21, 3.6),
+  m('gemma-4-26b-a4b', 8, 8, 14.44, 26, 4),
   m('gpt-oss-120b', 9, 9, 63.39, 117, 5.1),
 ]
 

@@ -56,7 +56,7 @@ function ThinkingLine({ source }: { source: React.MutableRefObject<string> }) {
     return () => clearInterval(t)
   }, [source])
   if (!line) return null
-  return <p key={line} data-testid="thinking-preview" className="fade-in mt-1 ml-6 truncate text-ui text-muted">{line}</p>
+  return <p key={line} data-testid="thinking-preview" className="fade-in mt-1 ml-6 line-clamp-2 text-ui text-muted">{line}</p>
 }
 
 /** a plain reply that hasn't started yet: shown where its text will appear, so nothing jumps when it does */

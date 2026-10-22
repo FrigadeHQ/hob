@@ -69,5 +69,7 @@ it('also installs the pinned SearXNG source and its packages', async () => {
   expect(calls.some((c) => c.startsWith('fetch') && c.includes('4e2c1ea7f468c9d1b16206e9d4079999a2eb0627.tar.gz'))).toBe(true)
   expect(calls.filter((c) => c.startsWith('tar'))).toHaveLength(2)
   expect(PY_PACKAGES).toContain('flask==3.1.3')
+  // "put it in a nice PDF" works without installing anything
+  expect(PY_PACKAGES).toContain('fpdf2==2.8.9')
   expect(PY_PACKAGES).toContain('curl_cffi==0.16.3')
 })

@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { asksToProceed, claimsFileChanges } from '../src/main/agent/claims'
+import { asksToProceed, claimsFileChanges, missingFiles } from '../src/main/agent/claims'
 import { pythonHint } from '../src/main/tools/python'
 
 it('spots replies that say files were changed', () => {
@@ -50,4 +50,14 @@ it('code that reads the date taken from the wrong place gets told where it is', 
   expect(pythonHint('IMG_1.jpg has no DateTimeOriginal', code)).toContain('get_ifd(0x8769)')
   // done right: no note
   expect(pythonHint('ok', 'img.getexif().get_ifd(0x8769).get(36867)')).toBe('')
+})
+
+it('finds files a reply names that do not exist, in any language', () => {
+  const none = () => false
+  expect(missingFiles('Jeg har gemt filen indkob.txt med din indkøbsliste.', none)).toEqual(['indkob.txt'])
+  expect(missingFiles('I saved the report as "Key results 2025.pdf" for you.', none)).toEqual(['Key results 2025.pdf'])
+  // files that are there, links, code and file types alone don't count
+  expect(missingFiles('Saved notes.txt.', (n) => n === 'notes.txt')).toEqual([])
+  expect(missingFiles('See example.com and www.dr.dk, or a PDF file.', none)).toEqual([])
+  expect(missingFiles('```python\npd.read_csv("data.csv")\n```\nDone.', none)).toEqual([])
 })

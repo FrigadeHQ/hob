@@ -28,15 +28,24 @@ function setup(over: Partial<SetupDeps> = {}) {
 }
 
 describe('SetupController', () => {
-  it('keeps the small starter model loaded next to the big one for side jobs, when there is memory for both', async () => {
-    const big = setup()
+  it('keeps the small starter model loaded next to the big one for side jobs, only with memory to spare', async () => {
+    const big = setup({ getHardware: async () => ({ ...m1max, totalRamGB: 64, gpu: { kind: 'unified' as const, name: 'Apple M1 Max', vramGB: 48 } }) })
     await big.c.start(); await big.c.confirm()
     const { vi } = await import('vitest')
-    await vi.waitFor(() => expect(big.engine.side).toMatch(/1\.7B/i))
-    const small = setup({ getHardware: async () => ({ ...m1max, totalRamGB: 12, gpu: { kind: 'unified' as const, name: 'Apple M1', vramGB: 8 } }) })
-    await small.c.start(); await small.c.confirm()
+    await vi.waitFor(() => expect(big.engine.side).toMatch(/E4B/i))
+    // 32 GB: a second model next to the big one slowed the first reply (~1 s → ~5 s on gpt-oss-20b, M1 Max)
+    const mid = setup()
+    await mid.c.start(); await mid.c.confirm()
     await new Promise((r) => setTimeout(r, 50))
-    expect(small.engine.side).toBeUndefined()
+    expect(mid.engine.side).toBeUndefined()
+  })
+
+  it('a pick smaller than the starter is downloaded on its own, without the starter first', async () => {
+    const { c, engine, states } = setup()
+    await c.start(); await c.confirm('gemma-4-e2b')
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-e2b' } })
+    expect(states.some((s) => s.phase === 'downloading' && !!s.starter)).toBe(false)
+    expect(engine.loaded).toContain('gemma-4-E2B')
   })
 
   it('lists models with downloaded/active flags and switches without dropping chat', async () => {
@@ -99,12 +108,12 @@ describe('SetupController', () => {
   it('start → choose with recommendation', async () => {
     const { c } = setup()
     await c.start()
-    expect(c.state).toMatchObject({ phase: 'choose', recommended: { id: 'gpt-oss-20b' }, liteMode: false, needsDiskGB: 0 })
+    expect(c.state).toMatchObject({ phase: 'choose', recommended: { id: 'gemma-4-26b-a4b' }, liteMode: false, needsDiskGB: 0 })
   })
   it('choose says what computer it picked for and that a small model comes first', async () => {
     const { c } = setup()
     await c.start()
-    expect(c.state).toMatchObject({ phase: 'choose', computer: 'Apple M1 Max · 32 GB memory', starter: { id: 'qwen3-1.7b' } })
+    expect(c.state).toMatchObject({ phase: 'choose', computer: 'Apple M1 Max · 32 GB memory', starter: { id: 'gemma-4-e4b' } })
     expect(computerName({ ...m1max, os: 'win32', cpuModel: 'Intel i7', totalRamGB: 31.9, gpu: { kind: 'discrete', name: 'NVIDIA GeForce RTX 4070', vramGB: 12 } })).toBe('NVIDIA GeForce RTX 4070 (12 GB) · 32 GB memory')
     expect(computerName({ ...m1max, cpuModel: 'Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz', gpu: { kind: 'none', name: '', vramGB: 0 }, totalRamGB: 16 })).toBe('Intel Core i5-8250U · 16 GB memory')
   })
@@ -112,7 +121,7 @@ describe('SetupController', () => {
     const { c, states } = setup()
     await c.start(); await c.confirm()
     const first = states.find((s) => s.phase === 'downloading') as Extract<SetupState, { phase: 'downloading' }>
-    expect(first.starter).toMatchObject({ id: 'qwen3-1.7b' })
+    expect(first.starter).toMatchObject({ id: 'gemma-4-e4b' })
     expect(states.some((s) => s.phase === 'downloading' && s.chatReady && !s.starter)).toBe(true)
   })
   it('choose lists every catalog model: runnable ones selectable, others greyed with a reason', async () => {
@@ -120,21 +129,21 @@ describe('SetupController', () => {
     await c.start()
     const s = c.state as Extract<SetupState, { phase: 'choose' }>
     expect(s.models).toHaveLength(catalog.models.length)
-    expect(s.models.find((m) => m.id === 'gpt-oss-20b')).toMatchObject({ available: true, recommended: true })
+    expect(s.models.find((m) => m.id === 'gemma-4-26b-a4b')).toMatchObject({ available: true, recommended: true })
     expect(s.models.find((m) => m.id === 'gpt-oss-120b')).toMatchObject({ available: false, reason: 'memory' })
     expect(s.models.every((m) => m.description.length > 0)).toBe(true)
   })
   it('confirm with an unavailable model is ignored', async () => {
     const { c } = setup()
     await c.start(); await c.confirm('gpt-oss-120b')
-    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gpt-oss-20b' } })
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-26b-a4b' } })
   })
   it('confirm → starter first (chat ready), then main model → ready', async () => {
     const { c, engine, states } = setup()
     await c.start(); await c.confirm()
     expect(states.some((s) => s.phase === 'downloading' && s.chatReady)).toBe(true)
-    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gpt-oss-20b' } })
-    expect(engine.loaded).toContain('gpt-oss-20b-MXFP4')
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-26b-a4b' } })
+    expect(engine.loaded).toContain('gemma-4-26B_q4_0')
   })
   it('first-run starter download reports progress (bar must not sit at 0%)', async () => {
     const { c, states } = setup()
@@ -144,29 +153,29 @@ describe('SetupController', () => {
   })
   it('starter fails to load → skip it and still install the main model', async () => {
     const { c, engine } = setup()
-    engine.failLoadFor.add('Qwen3-1.7B')
+    engine.failLoadFor.add('gemma-4-E4B')
     await c.start(); await c.confirm()
-    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gpt-oss-20b' } })
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-26b-a4b' } })
   })
   it('quit mid-download → relaunch resumes it (no welcome screen), chatting on the starter meanwhile', async () => {
     const { deps, root } = setup()
-    const starterUrl = catalog.models.find((m) => m.id === 'qwen3-1.7b')!.builds[0].url
+    const starterUrl = catalog.models.find((m) => m.id === 'gemma-4-e4b')!.builds[0].url
     writeFileSync(join(root, fileNameFor(starterUrl)), 'x'); writeFileSync(join(root, fileNameFor(starterUrl) + '.ok'), 'FAKE')
-    saveSettings(deps.settingsPath, { activeModelId: 'qwen3-1.7b', pendingModelId: 'gpt-oss-20b' })
+    saveSettings(deps.settingsPath, { activeModelId: 'gemma-4-e4b', pendingModelId: 'gemma-4-26b-a4b' })
     const c = new SetupController(deps)
     const states: SetupState[] = []
     c.onState((s) => states.push(s))
     await c.start()
     expect(states.some((s) => s.phase === 'choose')).toBe(false)
     expect(states.some((s) => s.phase === 'downloading' && s.chatReady)).toBe(true)
-    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gpt-oss-20b' } })
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-26b-a4b' } })
   })
   it('first run saves the pending download so a relaunch can resume it', async () => {
     const { c, deps } = setup()
     let seen: unknown
     c.onState((s) => { if (s.phase === 'downloading' && s.chatReady && !seen) seen = JSON.parse(readFileSync(deps.settingsPath, 'utf8')) })
     await c.start(); await c.confirm()
-    expect(seen).toMatchObject({ pendingModelId: 'gpt-oss-20b' })
+    expect(seen).toMatchObject({ pendingModelId: 'gemma-4-26b-a4b' })
     expect(JSON.parse(readFileSync(deps.settingsPath, 'utf8')).pendingModelId).toBeUndefined()
   })
   it('relaunch with saved, verified model → straight to ready, no download', async () => {
@@ -183,17 +192,17 @@ describe('SetupController', () => {
   it('not enough disk → choose shows needsDiskGB, confirm → error', async () => {
     const { c } = setup({ getHardware: async () => ({ ...m1max, freeDiskGB: 20 }), download: fakeDownloadDeps({ freeDiskGB: 20 }) })
     await c.start()
-    expect(c.state).toMatchObject({ phase: 'choose', needsDiskGB: 2.11 })
+    expect(c.state).toMatchObject({ phase: 'choose', needsDiskGB: 4.44 })
     await c.confirm()
     expect(c.state.phase).toBe('error')
     expect((c.state as { message: string }).message).toMatch(/Free up \d+ GB/)
   })
   it('OOM on load → falls back to next smaller model with a note', async () => {
     const { c, engine } = setup()
-    engine.failLoadFor.add('gpt-oss-20b-MXFP4')
+    engine.failLoadFor.add('gemma-4-26B_q4_0')
     await c.start(); await c.confirm()
     expect(c.state).toMatchObject({ phase: 'ready', note: 'Ready · lighter model' })
-    expect((c.state as { model: { id: string } }).model.id).not.toBe('gpt-oss-20b')
+    expect((c.state as { model: { id: string } }).model.id).not.toBe('gemma-4-26b-a4b')
   })
   it('nothing fits → friendly error', async () => {
     const { c } = setup({ getHardware: async () => ({ ...m1max, totalRamGB: 2, gpu: { kind: 'none', name: '', vramGB: 0 } }) })
@@ -217,9 +226,9 @@ describe('SetupController review fixes', () => {
     expect(downloads).toBe(0)
   })
   it('I1: counts starter + main model against free disk', async () => {
-    // 12.11 + 1.83 + 10 = 23.94 needed; 23 free → must refuse up front
+    // 14.44 + 5.15 + 10 = 29.59 needed; 28 free → must refuse up front
     let downloads = 0
-    const dl = fakeDownloadDeps({ freeDiskGB: 23 })
+    const dl = fakeDownloadDeps({ freeDiskGB: 28 })
     const { c } = setup({ download: { ...dl, download: async (...a) => { downloads++; return dl.download(...a) } } })
     await c.start(); await c.confirm()
     expect(c.state.phase).toBe('error')
@@ -237,7 +246,7 @@ describe('SetupController review fixes', () => {
   })
   it('I4: lighter-model fallback that needs a download shows progress and keeps chat alive on the starter', async () => {
     const { c, engine, states } = setup()
-    engine.failLoadFor.add('gpt-oss-20b-MXFP4')
+    engine.failLoadFor.add('gemma-4-26B_q4_0')
     const loadedDuringFallbackDownload: (string | undefined)[] = []
     const off = c.onState((s) => { if (s.phase === 'downloading' && s.note === 'Switching to a lighter model…') loadedDuringFallbackDownload.push(engine.loaded) })
     await c.start(); await c.confirm()
@@ -245,21 +254,21 @@ describe('SetupController review fixes', () => {
     const fallback = states.filter((s) => s.phase === 'downloading' && s.note === 'Switching to a lighter model…')
     expect(fallback.some((s) => s.phase === 'downloading' && s.progress > 0)).toBe(true)
     expect(fallback.every((s) => s.phase === 'downloading' && s.chatReady)).toBe(true)
-    expect(loadedDuringFallbackDownload.every((p) => p?.includes('Qwen3-1.7B'))).toBe(true)
+    expect(loadedDuringFallbackDownload.every((p) => p?.includes('gemma-4-E4B'))).toBe(true)
     expect(c.state).toMatchObject({ phase: 'ready', note: 'Ready · lighter model' })
   })
-  it('I5: a saved "smarter" choice is reused on relaunch', async () => {
+  it('I5: a saved choice other than the recommended one is reused on relaunch', async () => {
     const m1 = { ...m1max, cpuModel: 'Apple M1', totalRamGB: 16, gpu: { kind: 'unified' as const, name: 'Apple M1', vramGB: 12 } }
     const { c, deps } = setup({ getHardware: async () => m1 })
     await c.start()
-    // qwen3-14b is the slower "smarter" pick on a base M1, and it must be selectable
+    // a pick other than the recommended one, selectable on a base M1
     const models = (c.state as Extract<SetupState, { phase: 'choose' }>).models
-    expect(models.find((m) => m.id === 'qwen3-14b')).toMatchObject({ available: true })
-    await c.confirm('qwen3-14b')
-    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'qwen3-14b' } })
+    expect(models.find((m) => m.id === 'gemma-4-e2b')).toMatchObject({ available: true })
+    await c.confirm('gemma-4-e2b')
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-e2b' } })
     const c2 = new SetupController(deps)
     await c2.start()
-    expect(c2.state).toMatchObject({ phase: 'ready', model: { id: 'qwen3-14b' } })
+    expect(c2.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-e2b' } })
   })
   it('I6: confirm twice → second call ignored (one download per file)', async () => {
     const counts = new Map<string, number>()
@@ -275,23 +284,23 @@ describe('SetupController review fixes', () => {
     let fail = true
     const { c } = setup({
       retryDelaysMs: [1, 1],
-      download: { ...dl, download: async (u, d, f, p) => { if (f.includes('gpt-oss-20b') && fail) throw new Error('fetch failed'); return dl.download(u, d, f, p) } },
+      download: { ...dl, download: async (u, d, f, p) => { if (f.includes('gemma-4-26B') && fail) throw new Error('fetch failed'); return dl.download(u, d, f, p) } },
     })
     await c.start(); await c.confirm()
-    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'qwen3-1.7b' }, canRetry: true, note: expect.stringMatching(/connection/i) })
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-e4b' }, canRetry: true, note: expect.stringMatching(/connection/i) })
     fail = false
     await c.retry()
-    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gpt-oss-20b' } })
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-26b-a4b' } })
   })
   it('I9: transient download failures are retried with backoff', async () => {
     const dl = fakeDownloadDeps()
     let failures = 2
     const { c } = setup({
       retryDelaysMs: [1, 1],
-      download: { ...dl, download: async (u, d, f, p) => { if (f.includes('gpt-oss-20b') && failures-- > 0) throw new Error('fetch failed'); return dl.download(u, d, f, p) } },
+      download: { ...dl, download: async (u, d, f, p) => { if (f.includes('gemma-4-26B') && failures-- > 0) throw new Error('fetch failed'); return dl.download(u, d, f, p) } },
     })
     await c.start(); await c.confirm()
-    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gpt-oss-20b' } })
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-26b-a4b' } })
   })
 })
 
@@ -300,7 +309,7 @@ describe('SetupController disk re-check', () => {
     let free = 20
     const { c } = setup({ getHardware: async () => ({ ...m1max, freeDiskGB: free }) })
     await c.start()
-    expect(c.state).toMatchObject({ phase: 'choose', needsDiskGB: 2.11 })
+    expect(c.state).toMatchObject({ phase: 'choose', needsDiskGB: 4.44 })
     free = 200
     await c.retry()
     expect(c.state).toMatchObject({ phase: 'choose', needsDiskGB: 0 })

@@ -21,8 +21,8 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
     await change.click()
     const dialog = page.getByRole('dialog', { name: 'Choose a model' })
     await expect(dialog).toBeVisible()
-    await page.getByTestId('model-option').filter({ hasText: 'Qwen3 1.7B' }).click()
-    await expect(page.getByTestId('setup-recommended')).toContainText('gpt-oss 20B')
+    await page.getByTestId('model-option').filter({ hasText: 'Gemma 4 E2B' }).click()
+    await expect(page.getByTestId('setup-recommended')).toContainText('Gemma 4 26B')
     const bounds = await dialog.boundingBox()
     expect(bounds!.y).toBeGreaterThanOrEqual(24)
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(496)
@@ -35,14 +35,14 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
     await expect(change).toBeFocused()
     expect(await page.getByTestId('setup-recommended').boundingBox()).toEqual(original)
     await change.click()
-    await expect(dialog.getByRole('radio', { name: /gpt-oss 20B/ })).toBeChecked()
-    await page.getByTestId('model-option').filter({ hasText: 'Qwen3 1.7B' }).click()
+    await expect(dialog.getByRole('radio', { name: /Gemma 4 26B/ })).toBeChecked()
+    await page.getByTestId('model-option').filter({ hasText: 'Gemma 4 E2B' }).click()
     await page.getByRole('button', { name: 'Use this model' }).click()
-    await expect(page.getByTestId('setup-download-size')).toHaveText('1.9 GB download')
+    await expect(page.getByTestId('setup-download-size')).toHaveText('3.4 GB download')
     await expect(change).toBeFocused()
 
-    const target = { id: 'gpt-oss-20b', name: 'gpt-oss 20B', sizeGB: 12.11, estTokPerSec: 40, blurb: 'fast' }
-    const starter = { ...target, id: 'qwen3-1.7b', name: 'Qwen3 1.7B', sizeGB: 1.83 }
+    const target = { id: 'gemma-4-26b-a4b', name: 'Gemma 4 26B', sizeGB: 14.44, estTokPerSec: 40, blurb: 'fast' }
+    const starter = { ...target, id: 'gemma-4-e4b', name: 'Gemma 4 E4B', sizeGB: 5.15 }
     const downloading: SetupState = { phase: 'downloading', target, starter, progress: .25, etaSec: 120, chatReady: false }
     await send(downloading)
     await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25')
@@ -51,7 +51,7 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
     expect(await mascot!.evaluate(el => el.isConnected)).toBe(true)
     await page.getByRole('button', { name: 'Download details' }).click()
     await expect(page.getByTestId('download-detail-row')).toHaveCount(2)
-    await expect(page.getByTestId('download-detail-row').first()).toContainText('Qwen3 1.7B')
+    await expect(page.getByTestId('download-detail-row').first()).toContainText('Gemma 4 E4B')
     await page.getByRole('button', { name: 'Done', exact: true }).click()
     await page.emulateMedia({ colorScheme: 'dark' })
     await send({ ...downloading, progress: 1 })

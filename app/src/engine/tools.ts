@@ -5,13 +5,22 @@ export const STEP_LIMIT_MESSAGE = 'Step limit reached. Stop using tools and give
 
 type Fn = { description: string; params: Record<string, unknown>; handler(args: unknown): Promise<string> }
 
+// the model's own control tags inside an argument: two calls ran together into one (seen on Gemma 4)
+const CONTROL = /<\|(tool_call|tool|channel|turn|"|)>|<(tool_call|tool|channel|turn|"|)\|>/
+const garbled = (v: unknown): boolean =>
+  typeof v === 'string' ? CONTROL.test(v) : !!v && typeof v === 'object' && Object.values(v).some(garbled)
+
 /** node-llama-cpp function definitions that forward every call to the main process. */
 export function toolFunctions(specs: ToolSpec[], call: (name: string, args: unknown) => Promise<string>, max = MAX_TOOL_CALLS): Record<string, Fn> {
   let n = 0
   return Object.fromEntries(specs.map((s) => [s.name, {
     description: s.description,
     params: engineSchema(s.params),
-    handler: async (args: unknown) => (++n > max ? STEP_LIMIT_MESSAGE : call(s.name, dropSkipped(args ?? {}, s.params))),
+    handler: async (args: unknown) => {
+      if (++n > max) return STEP_LIMIT_MESSAGE
+      if (garbled(args)) return `That call came out garbled (it has markup in its arguments). Call ${s.name} again with just the arguments it needs.`
+      return call(s.name, dropSkipped(args ?? {}, s.params))
+    },
   }]))
 }
 

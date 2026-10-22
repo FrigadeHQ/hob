@@ -21,6 +21,20 @@ function ctx(): TurnCtx & { ops: UndoOp[]; trashed: string[] } {
   }
 }
 
+it('read_file reads a tagged annual report (.xhtml) as tables of figures, and other web pages as text', async () => {
+  const c = ctx()
+  const report = '<html><body><xbrli:context id="c1"><xbrli:period><xbrli:instant>2025-09-30</xbrli:instant></xbrli:period></xbrli:context>'
+    + '<style>.x{}</style><td><ix:nonFraction name="fsa:Assets" contextRef="c1" unitRef="dkk" format="ixt:num-comma-decimal" scale="0">128.638.446</ix:nonFraction></td></body></html>'
+  writeFileSync(join(c.chatDir, 'report.xhtml'), report)
+  const out = await readFile.run({ path: 'report.xhtml' }, c)
+  expect(out.text).toContain('| Assets | 128,638,446 |')
+  expect(out.text).not.toContain('<style>')
+  writeFileSync(join(c.chatDir, 'page.html'), '<html><head><style>p{color:red}</style></head><body><p>Hello there</p></body></html>')
+  const page = await readFile.run({ path: 'page.html' }, c)
+  expect(page.text).toContain('Hello there')
+  expect(page.text).not.toContain('color:red')
+})
+
 it('read_file previews a CSV with its row count and path', async () => {
   const c = ctx()
   writeFileSync(join(c.chatDir, 'sales.csv'), 'name,sales\n' + Array.from({ length: 100 }, (_, i) => `r${i},${i}`).join('\n'))

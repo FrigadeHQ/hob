@@ -113,7 +113,8 @@ app.whenReady().then(() => {
     getHardware: FAKE
       ? async () => ({ os: 'darwin' as const, arch: 'arm64', cpuModel: 'Apple M1 Max', totalRamGB: 32, freeDiskGB: Number(process.env.GARTH_FAKE_FREE_GB) || 500, gpu: { kind: 'unified' as const, name: 'Apple M1 Max', vramGB: 24 } })
       : async () => (hardware = toHardware(await engine.probe(), await readSysInfo(paths.models))),
-    getCatalog: () => loadCatalog({ url: CATALOG_URL, cachePath: paths.catalogCache, bundled: bundledCatalog, licenses, fetchFn: FAKE ? (async () => { throw new Error('offline') }) as unknown as typeof fetch : undefined }),
+    // GARTH_LOCAL_CATALOG=1: only the catalog in this build (to try models before they're published)
+    getCatalog: () => loadCatalog({ url: CATALOG_URL, cachePath: paths.catalogCache, bundled: bundledCatalog, licenses, fetchFn: FAKE || process.env.GARTH_LOCAL_CATALOG ? (async () => { throw new Error('offline') }) as unknown as typeof fetch : undefined }),
   })
   const store = new Store(paths.db)
   pruneUndo(paths.undo, { olderThanDays: 30 })

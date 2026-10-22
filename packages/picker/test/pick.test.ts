@@ -14,71 +14,67 @@ describe('pick', () => {
     expect(selectable.size + r.unavailable.length).toBe(models.length)
   })
   it('a model that fits but would be painfully slow is unavailable for speed', () => {
-    const r = pick(machines.cpu32, models)
-    expect(r.unavailable.some((u) => u.reason === 'slow')).toBe(true)
+    const dense = { ...models[4], id: 'dense-32b', builds: [{ ...models[4].builds[0], sizeGB: 12, paramsB: 32, activeParamsB: 32 }] }
+    const r = pick(machines.cpu32, [...models, dense])
+    expect(r.unavailable.find((u) => u.model.id === 'dense-32b')?.reason).toBe('slow')
   })
-  it('M1 Max 32GB (no graphics card, ≤ 32 GB) → gpt-oss 20B, not lite', () => {
+  it('M1 Max 32GB → Gemma 4 26B, not lite', () => {
     const r = pick(machines.m1max32, models)
-    expect(id(r.recommended)).toBe('gpt-oss-20b')
+    expect(id(r.recommended)).toBe('gemma-4-26b-a4b')
     expect(r.liteMode).toBe(false)
     expect(r.recommended!.estTokPerSec).toBeGreaterThan(15)
   })
   it('M4 Max 128GB → biggest model', () => {
     expect(id(pick(machines.m4max128, models).recommended)).toBe('gpt-oss-120b')
   })
-  it('RTX 3060 12GB, 16GB RAM → gpt-oss 20B split between card and memory, full context', () => {
+  it('RTX 3060 12GB, 16GB RAM → Gemma 4 26B split between card and memory, full context', () => {
     const r = pick(machines.linux3060, models)
-    expect(id(r.recommended)).toBe('gpt-oss-20b')
+    expect(id(r.recommended)).toBe('gemma-4-26b-a4b')
     expect(r.recommended!.contextSize).toBe(16384)
     expect(r.recommended!.device).toBe('split')
-    expect(r.recommended!.estTokPerSec).toBeGreaterThan(30)
+    expect(r.recommended!.estTokPerSec).toBeGreaterThan(15)
   })
-  it('8GB laptop, no GPU → starter-size model, lite mode', () => {
+  it('8GB laptop, no GPU → the last-resort tiny model, lite mode', () => {
     const r = pick(machines.winLaptop8, models)
     expect(id(r.recommended)).toBe('qwen3-1.7b')
     expect(r.liteMode).toBe(true)
   })
-  it('CPU-only 32GB → MoE wins on CPU', () => {
+  it('CPU-only 32GB → gpt-oss 20B: the fastest on a processor alone (the 26B does not fit, E4B is too slow there)', () => {
     const r = pick(machines.cpu32, models)
     expect(id(r.recommended)).toBe('gpt-oss-20b')
     expect(r.recommended!.device).toBe('cpu')
   })
   describe('graphics cards: the engine puts what fits on the card and the rest in memory', () => {
-    it('RTX 4060 8GB, 16GB RAM → gpt-oss 20B split, not an 8B squeezed onto the card', () => {
+    it('RTX 4060 8GB, 16GB RAM → Gemma 4 E4B with full context, split', () => {
       const r = pick(machines.rtx4060_16, models)
-      expect(id(r.recommended)).toBe('gpt-oss-20b')
-      expect(r.recommended!.device).toBe('split')
+      expect(id(r.recommended)).toBe('gemma-4-e4b')
+      expect(r.recommended!.contextSize).toBe(16384)
       expect(r.liteMode).toBe(false)
     })
-    it('RTX 3060 12GB, 32GB RAM → the best model, split; no gpt-oss rule with a graphics card', () => {
+    it('RTX 3060 12GB, 32GB RAM → the best model, split', () => {
       const r = pick(machines.rtx3060_32, models)
-      expect(id(r.recommended)).toBe('qwen3.6-35b-a3b')
+      expect(id(r.recommended)).toBe('gemma-4-26b-a4b')
       expect(r.recommended!.device).toBe('split')
       expect(r.recommended!.estTokPerSec).toBeGreaterThanOrEqual(15)
     })
     it('RTX 4090 24GB → best model mostly on the card, much faster than on the processor', () => {
       const r = pick(machines.rtx4090_64, models)
-      expect(id(r.recommended)).toBe('qwen3.6-35b-a3b')
+      expect(id(r.recommended)).toBe('gemma-4-26b-a4b')
       expect(r.recommended!.estTokPerSec).toBeGreaterThan(60)
     })
     it('RTX 5090 32GB → best model fully on the card', () => {
       const r = pick(machines.rtx5090_64, models)
-      expect(id(r.recommended)).toBe('qwen3.6-35b-a3b')
+      expect(id(r.recommended)).toBe('gemma-4-26b-a4b')
       expect(r.recommended!.device).toBe('gpu')
     })
   })
-  it('gpt-oss is preferred only without a graphics card and up to 32 GB, and only when it fits', () => {
-    // a graphics card or more memory: best score wins as usual
-    expect(id(pick(machines.rtx3060_32, models).recommended)).toBe('qwen3.6-35b-a3b')
-    expect(id(pick(machines.m4max128, models).recommended)).toBe('gpt-oss-120b')
-    // too little memory for it: the usual pick
-    expect(id(pick(machines.m1_16, models).recommended)).toBe('qwen3-4b')
-  })
-  it('base M1 16GB → small model, slower big ones offered as smarter', () => {
+  it('base M1 16GB → Gemma 4 E4B, not lite', () => {
     const r = pick(machines.m1_16, models)
-    expect(id(r.recommended)).toBe('qwen3-4b')
-    expect(r.liteMode).toBe(true)
-    expect(r.smarter && r.smarter.model.agentScore).toBeGreaterThan(4)
+    expect(id(r.recommended)).toBe('gemma-4-e4b')
+    expect(r.liteMode).toBe(false)
+  })
+  it('8GB Mac → Gemma 4 E2B, not the tiny last resort', () => {
+    expect(id(pick({ ...machines.m1_16, totalRamGB: 8 }, models).recommended)).toBe('gemma-4-e2b')
   })
   it('nothing fits → recommended null, no crash', () => {
     const r = pick(machines.tiny4, models)
@@ -87,10 +83,10 @@ describe('pick', () => {
   })
   it('flags missing disk space', () => {
     const r = pick({ ...machines.m1max32, freeDiskGB: 20 }, models)
-    expect(r.recommended!.needsDiskGB).toBeCloseTo(12.11 + 10 - 20, 1)
+    expect(r.recommended!.needsDiskGB).toBeCloseTo(14.44 + 10 - 20, 1)
   })
   it('starter is the smallest starter model that fits', () => {
-    expect(id(pick(machines.m1max32, models).starter)).toBe('qwen3-1.7b')
+    expect(id(pick(machines.m1max32, models).starter)).toBe('gemma-4-e4b')
   })
   it('faster alternative is meaningfully faster than recommended', () => {
     const r = pick(machines.m4max128, models)
@@ -101,9 +97,9 @@ describe('pick', () => {
 
 describe('pick ranking', () => {
   it('equal agent score: full-context model beats one squeezed to 8k', () => {
-    const r = pick(machines.m1max32, models)
-    const dense = r.all.find((c) => c.model.id === 'qwen3-32b')
-    expect(dense?.contextSize).toBe(8192)
-    expect(r.recommended!.contextSize).toBe(16384)
+    const squeezed = { ...models[4], id: 'squeezed', builds: [{ ...models[4].builds[0], sizeGB: 20.2 }] }
+    const r = pick(machines.m1max32, [...models, squeezed])
+    expect(r.all.find((c) => c.model.id === 'squeezed')?.contextSize).toBe(8192)
+    expect(id(r.recommended)).toBe('gemma-4-26b-a4b')
   })
 })

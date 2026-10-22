@@ -7,7 +7,8 @@ import bundled from '../../catalog/catalog.json'
 import licenses from '../../catalog/licenses.json'
 
 const cachePath = () => join(mkdtempSync(join(tmpdir(), 'garth-cat-')), 'catalog.json')
-const remote = { ...bundled, models: bundled.models.slice(0, 2) }
+// a smaller valid catalog: the starter plus one more
+const remote = { ...bundled, models: [bundled.models.find((m) => m.starter)!, bundled.models.find((m) => !m.starter)!] }
 const ok = (body: unknown) => (async () => new Response(JSON.stringify(body))) as unknown as typeof fetch
 const fail = (async () => { throw new Error('offline') }) as unknown as typeof fetch
 

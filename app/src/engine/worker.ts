@@ -1,5 +1,7 @@
 import { getLlama, InsufficientMemoryError, LlamaChatSession, type ChatSessionModelFunctions, type Llama, type LlamaContext, type LlamaContextSequence, type LlamaModel, type ChatHistoryItem } from 'node-llama-cpp'
 import { finalAnswer } from './answer'
+import { cleanAnswer, streamCleaner } from './control'
+import { samplingFor } from './sampling'
 import { serial } from './serial'
 import { toolFunctions } from './tools'
 import type { ToolSpec } from '../shared/agent'
@@ -12,14 +14,6 @@ const GB = 1e9
 export const CHAT_THOUGHT_BUDGET = 256
 // Agent turns carry tool output. The picker's size is a safe floor; grow to 32k when memory allows.
 export const AGENT_CONTEXT = 32768
-/**
- * Qwen's recommended sampling for thinking mode. Greedy decoding (the default) made long agent
- * turns fall into word-for-word loops; a little randomness plus a presence penalty avoids that.
- */
-export const SAMPLING = {
-  temperature: 0.6, topP: 0.95, topK: 20, minP: 0,
-  repeatPenalty: { lastTokens: 256, penalty: 1.05, presencePenalty: 0.5 },
-} as const
 let llama: Llama | undefined
 let model: LlamaModel | undefined
 let context: LlamaContext | undefined
@@ -116,17 +110,20 @@ async function chat(id: number, req: { messages: ChatMessage[]; tools: ToolSpec[
     if (req.thoughtBudgetWithTools) budgets.thoughtTokens = Math.max(budgets.thoughtTokens, req.thoughtBudgetWithTools)
     return callMain(id, name, args, ac.signal)
   }
+  const clean = streamCleaner()
   try {
     const response = await session.prompt(last.content, {
-      ...SAMPLING,
+      ...samplingFor((req.side && side ? side.model : model)?.fileInfo.metadata.general.architecture),
       signal: ac.signal, stopOnAbortSignal: true, budgets, ...(maxTokens ? { maxTokens } : {}),
       functions: tools.length ? (toolFunctions(tools, onTool) as unknown as ChatSessionModelFunctions) : undefined,
-      onTextChunk: (text) => send({ id, type: 'token', text }),
+      onTextChunk: (chunk) => { const text = clean.push(chunk); if (text) send({ id, type: 'token', text }) },
       onResponseChunk: (c) => {
         if (c.type === 'segment' && c.segmentType === 'thought') { thought += c.text; send({ id, type: 'token', text: c.text, thought: true }) }
       },
     })
-    return finalAnswer(response, thought)
+    const rest = clean.end()
+    if (rest) send({ id, type: 'token', text: rest })
+    return cleanAnswer(finalAnswer(response, thought))
   } finally {
     aborts.delete(id)
     // the sequence stays: it holds what was just read, for the next message

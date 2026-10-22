@@ -23,7 +23,7 @@ The model runs on your computer with [llama.cpp](https://github.com/ggml-org/lla
 
 ## Models
 
-Garth picks from a curated list of open models, from Qwen3 for 8 GB laptops up to gpt-oss 120B for workstations. Models are ranked on agent work (multi-step tasks and tool use), and split between graphics and system memory when that's faster. You can switch models any time.
+Garth picks from a curated list of open models: Google's Gemma 4 for most computers (E2B on 8 GB, E4B on 16 GB, 26B from 24 GB) and OpenAI's gpt-oss 120B for workstations. Models are ranked on agent work (multi-step tasks and tool use), and split between graphics and system memory when that's faster. You can switch models any time.
 
 ## What it can do
 

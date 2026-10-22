@@ -28,3 +28,23 @@ export const proceedCheck = () =>
 /** The reply ended empty after doing some of the work: small models run out of steam mid-task. */
 export const unfinishedCheck = (ran: string[]) =>
   `[Note from Garth, not from the user: you stopped before finishing, without a word to the user. What ran so far: ${ran.join('; ')}. Carry on from where you stopped and finish the task with the tools (if code saved a list of moves, call move_files with that file). Then tell the user briefly what you did, or plainly what isn't done and why.]`
+
+const EXT = 'txt|md|csv|tsv|json|pdf|docx?|xlsx?|pptx?|png|jpe?g|svg|html?|py|zip'
+// "Key results 2025.pdf" in quotes may have spaces; bare names and paths may not
+const QUOTED = new RegExp(`["“'«]([^"”'»\\n]{1,80}\\.(?:${EXT}))["”'»]`, 'gi')
+const BARE = new RegExp(`(?<![\\w./~-])((?:~|/)?[\\w./~-]*[\\w-]\\.(?:${EXT}))(?![\\w])`, 'gi')
+
+/**
+ * File names a reply mentions that aren't on disk: "Jeg har gemt filen indkob.txt" with nothing saved.
+ * Small models do this; checking the files instead of the words works in any language.
+ */
+export function missingFiles(reply: string, exists: (name: string) => boolean): string[] {
+  const prose = reply.replace(/```[\s\S]*?```/g, ' ').replace(/https?:\/\/\S+/g, ' ').replace(/`/g, '')
+  const names = [...prose.matchAll(QUOTED)].map((m) => m[1])
+  const rest = prose.replace(QUOTED, ' ')
+  names.push(...[...rest.matchAll(BARE)].map((m) => m[1]))
+  return [...new Set(names)].filter((n) => !exists(n))
+}
+
+export const missingCheck = (names: string[]) =>
+  `[Note from Garth, not from the user: your reply names ${names.join(', ')}, but that file doesn't exist. If you meant to make it, make it now with the tools (write_file for text, run_python for PDFs, spreadsheets and images), then say what you did. If you only mentioned the name, give your answer again without saying it was saved.]`

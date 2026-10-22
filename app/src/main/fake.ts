@@ -93,6 +93,7 @@ export class FakeEngine implements Engine {
       const asked = [...req.messages].reverse().find((m) => m.role === 'user' && !m.content.startsWith('[Note from Garth'))?.content ?? ''
       return asked.includes('stubborn') ? 'Done, the files have been renamed.' : "Sorry, I haven't renamed them yet. I only made a list of the new names."
     }
+    if (said === '__saved__') return 'Jeg har gemt filen indkob.txt med din indkøbsliste.'
     if (said === '__img__') return 'Here: ![leak](https://example.com/x.png?q=secret) done'
     if (said === '__plan__') return 'Here is a plan.\n\n| Day | Focus (Topic) | Activity | Suggested Resources |\n|---|---|---|---|\n| Day 1 | **Grammar basics** – noun gender, definite/indefinite forms | • Review notes on gender rules.<br>• Do 10 fill-in-the-blank exercises. | *Danish Grammar* PDF (downloaded from your course site). |\n| Day 2 | **Verb conjugations** – present, past, future | • Flashcards for irregular verbs.<br>• Write 5 sentences using each tense. | *Verb Drill* worksheet. |\n| Day 10 | **Speaking practice** – role-play | • Pair with a study buddy or use a language-exchange app.<br>• Practice ordering food. | *Duolingo Danish* conversation mode. |'
     if (said === '__table__') return '| Region | Sales |\n|---|---|\n| North | 10 |\n| South | 30 |'

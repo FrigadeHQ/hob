@@ -9,8 +9,6 @@ const OVERHEAD_GB = 1.5
 const DISK_HEADROOM_GB = 10
 const EFFICIENCY = 0.75
 const CONTEXTS = [16384, 8192]
-/** computers without a graphics card and up to this much memory get gpt-oss when it fits (product choice) */
-const PREFERRED = { family: 'gpt-oss', maxRamGB: 32 }
 
 interface Pool { device: Choice['device']; memGB: number; bw: number; gpuMemGB?: number; cpuBw?: number }
 
@@ -59,8 +57,7 @@ export function pick(hw: Hardware, models: CatalogModel[], opts: { minTokPerSec?
     .filter((c): c is Choice => !!c)
 
   const all = fitting.filter((c) => c.estTokPerSec >= minTok).sort(rank)
-  const preferFamily = hw.gpu.kind !== 'discrete' && hw.totalRamGB <= PREFERRED.maxRamGB
-  const recommended = (preferFamily && all.find((c) => c.model.family === PREFERRED.family)) || all[0] || null
+  const recommended = all[0] ?? null
 
   const smarter = recommended
     ? fitting

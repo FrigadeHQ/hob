@@ -11,6 +11,16 @@ it('forwards each call to the main process with the tool name and args', async (
   expect(seen).toEqual([['list_files', { a: 1 }]])
 })
 
+it("a call garbled with the model's own markup is sent back to the model, never run", async () => {
+  // Gemma 4 26B once wrote two calls into one: path = '"}<tool_call|><|tool_call>call:list_files{{'
+  let calls = 0
+  const fns = toolFunctions(specs, async () => { calls++; return 'ok' })
+  const r = await fns.list_files.handler({ path: '"}<tool_call|><|tool_call>call:list_files{{' })
+  expect(calls).toBe(0)
+  expect(r).toMatch(/garbled.*list_files again/i)
+  expect(await fns.list_files.handler({ path: 'notes <b>bold</b>.txt' })).toBe('ok')
+})
+
 it('stops forwarding after the step limit', async () => {
   let calls = 0
   const fns = toolFunctions(specs, async () => { calls++; return 'ok' }, 2)

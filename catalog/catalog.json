@@ -11,8 +11,8 @@
       "contextMax": 32768,
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
-      "starter": true,
-      "description": "Instant and tiny. Fine for quick questions, weak on harder tasks.",
+      "starter": false,
+      "description": "Tiny. For computers with little memory; simple questions only.",
       "builds": [
         {
           "quant": "Q8_0",
@@ -25,71 +25,48 @@
       ]
     },
     {
-      "id": "qwen3-4b",
-      "name": "Qwen3 4B",
-      "family": "qwen3",
-      "license": "Apache-2.0",
-      "agentScore": 4,
-      "chatScore": 5,
-      "contextMax": 32768,
-      "minAppVersion": "0.1.0",
-      "addedAt": "2026-10-14",
-      "starter": false,
-      "description": "Very fast and light. Good for everyday chat.",
-      "builds": [
-        {
-          "quant": "Q4_K_M",
-          "url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf",
-          "sha256": "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5",
-          "sizeGB": 2.5,
-          "paramsB": 4.0,
-          "activeParamsB": 4.0
-        }
-      ]
-    },
-    {
-      "id": "qwen3-8b",
-      "name": "Qwen3 8B",
-      "family": "qwen3",
+      "id": "gemma-4-e2b",
+      "name": "Gemma 4 E2B",
+      "family": "gemma4",
       "license": "Apache-2.0",
       "agentScore": 5,
-      "chatScore": 6,
-      "contextMax": 32768,
+      "chatScore": 5,
+      "contextMax": 131072,
       "minAppVersion": "0.1.0",
-      "addedAt": "2026-10-14",
+      "addedAt": "2026-10-21",
       "starter": false,
-      "description": "Fast, with solid everyday smarts.",
+      "description": "Google's smallest model. For computers with 8 GB of memory.",
       "builds": [
         {
-          "quant": "Q4_K_M",
-          "url": "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf",
-          "sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
-          "sizeGB": 5.03,
-          "paramsB": 8.2,
-          "activeParamsB": 8.2
+          "quant": "Q4_0",
+          "url": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/675cff42a74c774d6cb76f76d8eacb49b48c9b93/gemma-4-E2B_q4_0-it.gguf",
+          "sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+          "sizeGB": 3.35,
+          "paramsB": 5.1,
+          "activeParamsB": 2.3
         }
       ]
     },
     {
-      "id": "qwen3-14b",
-      "name": "Qwen3 14B",
-      "family": "qwen3",
+      "id": "gemma-4-e4b",
+      "name": "Gemma 4 E4B",
+      "family": "gemma4",
       "license": "Apache-2.0",
-      "agentScore": 6,
+      "agentScore": 7,
       "chatScore": 7,
-      "contextMax": 32768,
+      "contextMax": 131072,
       "minAppVersion": "0.1.0",
-      "addedAt": "2026-10-14",
-      "starter": false,
-      "description": "Balanced. Noticeably smarter, still quick.",
+      "addedAt": "2026-10-21",
+      "starter": true,
+      "description": "Google's small model. Quick and good at everyday tasks.",
       "builds": [
         {
-          "quant": "Q4_K_M",
-          "url": "https://huggingface.co/Qwen/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf",
-          "sha256": "500a8806e85ee9c83f3ae08420295592451379b4f8cf2d0f41c15dffeb6b81f0",
-          "sizeGB": 9.0,
-          "paramsB": 14.8,
-          "activeParamsB": 14.8
+          "quant": "Q4_0",
+          "url": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/4b4a2c1d584be7264f87aac328a1bc739ce81b6c/gemma-4-E4B_q4_0-it.gguf",
+          "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+          "sizeGB": 5.15,
+          "paramsB": 8,
+          "activeParamsB": 4
         }
       ]
     },
@@ -98,7 +75,7 @@
       "name": "gpt-oss 20B",
       "family": "gpt-oss",
       "license": "Apache-2.0",
-      "agentScore": 7,
+      "agentScore": 6,
       "chatScore": 7,
       "contextMax": 131072,
       "minAppVersion": "0.1.0",
@@ -117,71 +94,25 @@
       ]
     },
     {
-      "id": "qwen3-30b-a3b",
-      "name": "Qwen3 30B",
-      "family": "qwen3",
-      "license": "Apache-2.0",
-      "agentScore": 7,
-      "chatScore": 7,
-      "contextMax": 32768,
-      "minAppVersion": "0.1.0",
-      "addedAt": "2026-10-14",
-      "starter": false,
-      "description": "Smart and very fast. Great all-rounder.",
-      "builds": [
-        {
-          "quant": "Q4_K_M",
-          "url": "https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF/resolve/main/Qwen3-30B-A3B-Q4_K_M.gguf",
-          "sha256": "0d003f6662faee786ed5da3e31b29c978de5ae5d275c8794c606a7f3c01aa8f5",
-          "sizeGB": 18.56,
-          "paramsB": 30.5,
-          "activeParamsB": 3.3
-        }
-      ]
-    },
-    {
-      "id": "qwen3-32b",
-      "name": "Qwen3 32B",
-      "family": "qwen3",
-      "license": "Apache-2.0",
-      "agentScore": 7,
-      "chatScore": 8,
-      "contextMax": 32768,
-      "minAppVersion": "0.1.0",
-      "addedAt": "2026-10-14",
-      "starter": false,
-      "description": "Very smart, but slower.",
-      "builds": [
-        {
-          "quant": "Q4_K_M",
-          "url": "https://huggingface.co/Qwen/Qwen3-32B-GGUF/resolve/main/Qwen3-32B-Q4_K_M.gguf",
-          "sha256": "efd971561896866f0e910cce52761ca77b1b138090c7f15fe284676d57d1f689",
-          "sizeGB": 19.76,
-          "paramsB": 32.8,
-          "activeParamsB": 32.8
-        }
-      ]
-    },
-    {
-      "id": "qwen3.6-35b-a3b",
-      "name": "Qwen3.6 35B",
-      "family": "qwen3.6",
+      "id": "gemma-4-26b-a4b",
+      "name": "Gemma 4 26B",
+      "family": "gemma4",
       "license": "Apache-2.0",
       "agentScore": 8,
       "chatScore": 8,
-      "contextMax": 65536,
+      "contextMax": 262144,
       "minAppVersion": "0.1.0",
-      "addedAt": "2026-10-14",
+      "addedAt": "2026-10-21",
       "starter": false,
-      "description": "Smartest model that stays fast. Best for real tasks.",
+      "description": "Google's larger model. Fast for its size and strong at tasks.",
       "builds": [
         {
-          "quant": "MXFP4_MOE",
-          "url": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-MXFP4_MOE.gguf",
-          "sha256": "2fdd20997c4d88ee25f70f500c61f8b999378d92ab055f9d450fc70d617158d3",
-          "sizeGB": 21.71,
-          "paramsB": 35,
-          "activeParamsB": 3
+          "quant": "Q4_0",
+          "url": "https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/resolve/d1c082be9cf3c8a514acf63b8761f4b41935842e/gemma-4-26B_q4_0-it.gguf",
+          "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+          "sizeGB": 14.44,
+          "paramsB": 26,
+          "activeParamsB": 4
         }
       ]
     },

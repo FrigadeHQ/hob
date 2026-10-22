@@ -34,13 +34,14 @@ docs/                user and plugin-author docs, README assets
 
 ### Start-up and models
 - `main/setup.ts` (SetupController) probes the hardware (`hardware.ts`, via the engine), loads the catalog (`catalog.ts`, remote with a bundled fallback) and asks `@garth/picker` for a recommendation.
-- First run: a small **starter** model downloads first so chat opens in minutes, then the recommended model downloads in the background ("Getting smarter… N%") and replaces it.
+- First run: a small **starter** model (Gemma 4 E4B) downloads first so chat opens in minutes, then the recommended model downloads in the background ("Getting smarter… N%") and replaces it. A pick smaller than the starter downloads on its own.
+- **Models:** Gemma 4 (E2B, E4B, 26B A4B) and gpt-oss (20B, 120B), plus Qwen3 1.7B only for 8 GB computers without a graphics card. They were chosen with a local eval of everyday tasks on each model (`e2e/zz-models-real.spec.ts`, gitignored like all `zz-` files; `GARTH_LOCAL_CATALOG=1` tries models in `catalog.json` before it's published). Sampling follows each family's makers (`engine/sampling.ts`), and Gemma's control tags that leak into text are removed (`engine/control.ts`).
 - Downloads (`downloader.ts`) resume, restart stalled connections, and are checked against a pinned sha256. They can be cancelled from Settings.
 - `main/engine.ts` talks to `src/engine/worker.ts` (a separate process running node-llama-cpp). Loads, unloads and chats never overlap (`engine/serial.ts`).
 - **Speed:**
   - The worker keeps one sequence for the model's whole life, so a request that starts like the last one only reads what's new.
   - Garth reads ahead whatever the user is looking at (`chat:warm`, `readAhead` in `agent/turn.ts`): at start-up, when a chat opens, after each reply, and for a new chat before it exists, in the folder it will get. Anything that changes the system prompt or tool list early (a different chat folder, a different tool set) means reading ~3,000 tokens again (about 4 s on gpt-oss-20b), so keep what a reply sends and what is read ahead identical (`conversation()`).
-  - With memory for both, the starter model stays loaded next to the big one for naming chats (`loadSide`), so that doesn't push the conversation out.
+  - With plenty of memory to spare (about 48 GB and up), the starter model stays loaded next to the big one for naming chats (`loadSide`), so that doesn't push the conversation out. On 32 GB a second model slowed the first reply about fivefold.
   - Thinking starts short and grows once the model calls a tool (`thoughtBudgetWithTools`), so it works the same in any language.
 
 ### A chat turn (`main/agent/turn.ts`)
@@ -55,7 +56,7 @@ docs/                user and plugin-author docs, README assets
 5. Replies keep going when the user switches chats (`agent/live.ts`), and a message typed meanwhile is queued in the UI.
 
 ### Tools (`main/tools/`)
-- `files.ts`: list, read, write, move (batch moves from a JSON list), delete (to the Trash), open in the file manager.
+- `files.ts`: list, read (a tagged annual report, `.xhtml` iXBRL, as tables of figures via `report.ts`; other web pages as text), write, move (batch moves from a JSON list), delete (to the Trash), open in the file manager.
 - `python.ts`: run Python, run a skill's script, install PyPI packages.
 - `chart.ts` (Recharts charts drawn by the UI), `pdf.ts` (read and fill, via the native helper), `photos.ts` (EXIF), `web.ts` (search and fetch), `vision.ts` (look at images), `mac.ts` (calendar and email tools).
 - Calendar & email (`main/accounts/`): the tools use whichever source is connected.

@@ -12,7 +12,7 @@ import { specsFor } from '../tools'
 import { Journal } from './journal'
 import { fitHistory, ToolBudget } from './history'
 import { decide } from './permissions'
-import { asksToProceed, claimCheck, claimsFileChanges, NOTHING_CHANGED, proceedCheck, unfinishedCheck } from './claims'
+import { asksToProceed, claimCheck, claimsFileChanges, missingCheck, missingFiles, NOTHING_CHANGED, proceedCheck, unfinishedCheck } from './claims'
 import { chatTitle, cleanTitle, expandCommand, systemPrompt, titleRequest, type PromptSkill } from './prompt'
 import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
@@ -235,17 +235,25 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   }
   /** "The files have been renamed" when nothing was: small models do this; check before the user believes it */
   const unbacked = (reply: string) => !moved && claimsFileChanges(reply) && aboutTheirFiles(reply)
+  /** files the reply names that aren't anywhere: in the chat folder, the user's folders, or the request itself */
+  const onDisk = (n: string) => {
+    const home = d.home ?? homedir()
+    const p = n.startsWith('~') ? join(home, n.slice(1)) : isAbsolute(n) ? n : join(chat.dir, n)
+    return existsSync(p) || grants.some((g) => existsSync(join(g, n))) || a.text.includes(n)
+  }
   try {
     let final = await ask(messages)
     // one more go when the reply says it changed files but didn't, or stops to ask "shall I go ahead?" on a task about the user's files
+    const missing = missingFiles(final, onDisk)
     const check = unbacked(final) ? 'claim'
       : !final && steps.length > 0 ? 'unfinished'
+      : missing.length ? 'missing'
       : !moved && aboutTheirFiles(final) && !steps.some((s) => s.status === 'denied') && asksToProceed(final) ? 'proceed' : undefined
     if (!a.signal.aborted && cut === -1 && check) {
       d.emit.reset?.(a.requestId)
       streamed = ''
       const ran = steps.map((s) => `${s.title} (${s.status === 'done' ? 'worked' : s.status})`)
-      final = await ask([...messages, { role: 'assistant', content: final }, { role: 'user', content: check === 'claim' ? claimCheck(ran) : check === 'unfinished' ? unfinishedCheck(ran) : proceedCheck() }])
+      final = await ask([...messages, { role: 'assistant', content: final }, { role: 'user', content: check === 'claim' ? claimCheck(ran) : check === 'unfinished' ? unfinishedCheck(ran) : check === 'missing' ? missingCheck(missing) : proceedCheck() }])
       if (!a.signal.aborted && unbacked(final)) final = `${final}\n\n${NOTHING_CHANGED}`
     }
     content = a.signal.aborted ? (final ? `${final}\n\n*Stopped.*` : '*Stopped.*') : final || "I couldn't come up with an answer. Try rephrasing."

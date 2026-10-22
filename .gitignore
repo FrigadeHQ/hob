@@ -9,6 +9,7 @@ playwright-report
 
 # local QA scripts
 app/e2e/zz-*.spec.ts
+app/e2e/zz-fixtures/
 app/dist/
 app/resources/bin/
 app/release/

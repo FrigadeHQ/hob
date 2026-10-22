@@ -12,8 +12,8 @@ test('first run: recommend → download → chat', async () => {
   const page = await app.firstWindow()
 
   // The recommendation stays personal, with one combined download size.
-  await expect(page.getByTestId('setup-download-size')).toHaveText('14 GB download')
-  await expect(page.getByTestId('setup-recommended')).toContainText('gpt-oss 20B')
+  await expect(page.getByTestId('setup-download-size')).toHaveText('19.6 GB download')
+  await expect(page.getByTestId('setup-recommended')).toContainText('Gemma 4 26B')
   await page.getByTestId('setup-download').click()
 
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
@@ -115,17 +115,17 @@ test('choose a different model from the list', async () => {
   // too big for this computer: shown, but can't be picked
   await expect(rows.filter({ hasText: 'gpt-oss 120B' }).getByRole('radio')).toBeDisabled()
   await expect(rows.filter({ hasText: 'gpt-oss 120B' })).toContainText('Needs more memory')
-  await expect(rows.filter({ hasText: 'gpt-oss 20B' })).toContainText('Recommended')
+  await expect(rows.filter({ hasText: 'Gemma 4 26B' })).toContainText('Recommended')
 
-  await rows.filter({ hasText: 'Qwen3 30B' }).click()
+  await rows.filter({ hasText: 'gpt-oss 20B' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.getByRole('button', { name: 'Use this model' }).click()
   await expect(page.getByTestId('model-option')).toHaveCount(0)
-  await expect(page.getByTestId('setup-recommended')).toContainText('Qwen3 30B')
-  await expect(page.getByTestId('setup-download-size')).toHaveText('20.4 GB download')
+  await expect(page.getByTestId('setup-recommended')).toContainText('gpt-oss 20B')
+  await expect(page.getByTestId('setup-download-size')).toHaveText('17.3 GB download')
 
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
-  await expect(page.getByTestId('status-tooltip')).toContainText('Qwen3 30B')
+  await expect(page.getByTestId('status-tooltip')).toContainText('gpt-oss 20B')
   await app.close()
 })

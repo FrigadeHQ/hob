@@ -48,8 +48,11 @@ export function friendly(err: unknown): string {
   return "Setup didn't finish. Try again."
 }
 
-/** memory to leave for the image model (~3 GB), the system and other apps, besides both language models */
-const SIDE_HEADROOM_GB = 11
+/**
+ * memory to leave for the image model (~3 GB), the system and other apps, besides both language models. On 32 GB
+ * a second model next to the big one slowed the first reply ~1 s → ~5 s (gpt-oss-20b + Gemma 4 E4B, M1 Max).
+ */
+const SIDE_HEADROOM_GB = 16
 
 export class SetupController {
   private _state: SetupState
@@ -214,7 +217,8 @@ export class SetupController {
     try {
       const starter = this.starter
       // first run only: while switching models later, the current one keeps chat working
-      const useStarter = !this.active && !!starter && starter.model.id !== target.model.id && !this.verified(target)
+      // and only when it's the quicker download: a smaller pick is fetched on its own
+      const useStarter = !this.active && !!starter && starter.build.sizeGB < target.build.sizeGB && !this.verified(target)
 
       // Check space for everything we're about to fetch before fetching anything.
       const toFetch = [useStarter ? starter : null, target].filter((c): c is Choice => !!c && !this.verified(c))

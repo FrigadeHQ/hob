@@ -2,11 +2,16 @@ import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, re
 import { basename, dirname, extname, isAbsolute, join } from 'node:path'
 import { isInside, lexists } from '../workspace'
 import { PREVIEW_CHARS, resolvePath, type Tool, type TurnCtx } from '../agent/tool'
+import { readReport } from './report'
+import { htmlToText } from './web'
 import { fileManager } from '../../shared/platform'
 import { pythonPreview } from './python'
 import { readPdf } from './pdf'
 
-const TEXT = new Set(['.txt', '.md', '.csv', '.tsv', '.json', '.log', '.xml', '.html', '.htm', '.yaml', '.yml', '.py', '.js', '.ts', '.ini', '.cfg'])
+/** a report's figures are dense and must not be cut mid-table */
+const REPORT_CHARS = 16000
+const WEB_PAGE = new Set(['.html', '.htm', '.xhtml'])
+const TEXT = new Set(['.txt', '.md', '.csv', '.tsv', '.json', '.log', '.xml', '.yaml', '.yml', '.py', '.js', '.ts', '.ini', '.cfg'])
 const RICH = new Set(['.xlsx', '.xlsm', '.pdf', '.docx'])
 const bytes = (n: number) => (n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`)
 /** granted-folder changes are journaled; the chat folder holds copies, so it isn't */
@@ -61,6 +66,14 @@ export const readFile: Tool<{ path: string }> = {
     const p = resolvePath(ctx, a.path)
     const ext = extname(p).toLowerCase()
     const head = `Path: ${p}\nSize: ${bytes(statSync(p).size)}\n`
+    if (WEB_PAGE.has(ext)) {
+      const html = readFileSync(p, 'utf8')
+      // a tagged annual report: its figures as tables, not megabytes of markup
+      const report = readReport(html)
+      if (report) return { text: `${head}---\n${report.slice(0, REPORT_CHARS)}` }
+      const text = htmlToText(html)
+      return { text: `${head}---\n${text.slice(0, PREVIEW_CHARS)}${text.length > PREVIEW_CHARS ? `\n… (preview; ${text.length} characters of text in total)` : ''}` }
+    }
     if (TEXT.has(ext)) {
       const all = readFileSync(p, 'utf8')
       const lines = all.split('\n').length

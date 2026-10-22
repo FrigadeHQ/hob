@@ -91,7 +91,8 @@ export function Onboarding({ state }: { state: SetupState }) {
   useEffect(() => setDialog(null), [state.phase])
   const probing = state.phase === 'probing'
   const selected = state.phase === 'choose' ? state.models.find((m) => m.id === selectedId && m.available) ?? state.models.find((m) => m.recommended)! : undefined
-  const starter = state.phase === 'choose' && state.starter?.id !== selected?.id ? state.starter : undefined
+  // the starter comes first only when it's the quicker download (see install in setup.ts)
+  const starter = state.phase === 'choose' && selected && state.starter && state.starter.sizeGB < selected.sizeGB ? state.starter : undefined
   const downloading = state.phase === 'downloading'
   const finishing = downloading && state.progress >= 1
   const pct = downloading ? Math.max(0, Math.min(100, Math.floor(state.progress * 100))) : 0

@@ -273,6 +273,14 @@ it('says files were renamed when nothing was: Garth catches it and the model own
   expect(w.engine.lastRequest?.messages.at(-2)).toMatchObject({ role: 'assistant', content: expect.stringContaining('have been renamed') })
 })
 
+it('says it saved a file that does not exist: Garth sends it back once to make the file', async () => {
+  const w = withHome()
+  await w.turn('__saved__')
+  const note = w.engine.lastRequest?.messages.at(-1)?.content ?? ''
+  expect(note).toContain('indkob.txt')
+  expect(note).toMatch(/doesn't exist/)
+})
+
 it('if the model says it again, the reply carries a plain note that nothing changed', async () => {
   const w = withHome()
   w.store.addChatGrant('c', w.photos)
