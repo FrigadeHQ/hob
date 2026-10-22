@@ -57,6 +57,29 @@ describe.runIf(mac)('read_pdf and fill_pdf with the PDF helper', () => {
     return { chatDir, grants: [], signal: new AbortController().signal, untrusted: false, webAccess: true, runTmp: chatDir } as never as Parameters<typeof readPdf.run>[1]
   }
 
+  it('a page that is a picture (a scan, a photo saved as PDF) is read by the image model, which keeps tables and math', async () => {
+    const ctx = ctxFor()
+    copyFileSync(join(fixtures, 'table-scanned.pdf'), join(ctx.chatDir, 'homework.pdf'))
+    const asked: { url: string; question: string }[] = []
+    const vision = { state: () => ({ phase: 'ready' }), ask: async (url: string, question: string) => { asked.push({ url, question }); return '| | X | Y | Z |\n|---|---|---|---|\n| U | 2,1 | 0,0 | 3,2 |\n| D | 1,3 | 4,4 | 0,1 |' } }
+    const out = await readPdf.run({ path: 'homework.pdf' }, { ...ctx, vision } as never)
+    expect(asked).toHaveLength(1)
+    expect(asked[0].url).toMatch(/^data:image\/(png|jpeg);base64,/)
+    expect(asked[0].question).toMatch(/table/i)
+    expect(out.text).toContain('| U | 2,1 | 0,0 | 3,2 |')
+    expect(out.text).toMatch(/image model/i)
+    // the recognized words come along: the image model can drop a sentence, recognition doesn't
+    expect(out.text).toContain('Find every pure-strategy Nash equilibrium')
+  })
+
+  it("without the image model, a picture page falls back to recognized text and says tables may be out of order", async () => {
+    const ctx = ctxFor()
+    copyFileSync(join(fixtures, 'table-scanned.pdf'), join(ctx.chatDir, 'homework.pdf'))
+    const out = await readPdf.run({ path: 'homework.pdf' }, { ...ctx, vision: { state: () => ({ phase: 'off' }), ask: async () => '' } } as never)
+    expect(out.text).toContain('Find every pure-strategy Nash equilibrium')
+    expect(out.text).toMatch(/tables .*out of order/i)
+  })
+
   it('reads a scanned form: recognized text and a numbered list of blanks', async () => {
     const ctx = ctxFor()
     copyFileSync(join(fixtures, 'form-scanned.pdf'), join(ctx.chatDir, 'form.pdf'))

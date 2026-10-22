@@ -130,6 +130,16 @@ it("a cut-off project folder name is corrected, not turned into a request for it
   const d = decide({ kind: 'read', paths: [join(parent, 'untitled')] }, { ...ctx(), grants: [real], project: [real], home: root })
   expect(d.verdict).toBe('deny')
   expect((d as { reason: string }).reason).toContain(`Did you mean “${real}”?`)
-  // a real new folder there still gets offered
-  expect(decide({ kind: 'read', paths: [join(parent, 'other')] }, { ...ctx(), grants: [real], home: root })).toEqual({ verdict: 'grant', folder: parent })
+  // making something new there still gets the folder offered
+  expect(decide({ kind: 'create', paths: [join(parent, 'other')] }, { ...ctx(), grants: [real], home: root })).toEqual({ verdict: 'grant', folder: parent })
+})
+
+it("reading something that doesn't exist says so, instead of asking for the folder around it", () => {
+  // e.g. a model writing the chat folder's path a little wrong: a prompt for the folder above can't help
+  const other = join(root, 'Elsewhere'); mkdirSync(other, { recursive: true })
+  const d = decide({ kind: 'read', paths: [join(other, 'nope', 'summary.pdf')] }, ctx({ home: root }))
+  expect(d.verdict).toBe('deny')
+  expect(d.verdict === 'deny' && d.reason).toMatch(/doesn't exist/)
+  // something that exists still asks
+  expect(decide({ kind: 'read', paths: [other] }, ctx({ home: root })).verdict).toBe('grant')
 })

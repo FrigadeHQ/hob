@@ -46,5 +46,15 @@ export function missingFiles(reply: string, exists: (name: string) => boolean): 
   return [...new Set(names)].filter((n) => !exists(n))
 }
 
+/**
+ * Names a reply mentions that it didn't back with a file. Only a reply that made no files at all is held to
+ * them: one that made something and got a name slightly wrong isn't worth minutes of redoing. A name counts as
+ * there when its file name is (paths are written in many ways: "~/…", with spaces, half of one).
+ */
+export function unbackedFiles(reply: string, o: { made: string[]; exists: (fileName: string) => boolean }): string[] {
+  if (o.made.length) return []
+  return missingFiles(reply, (n) => o.exists(n.split(/[\\/]/).pop() ?? n))
+}
+
 export const missingCheck = (names: string[]) =>
   `[Note from Garth, not from the user: your reply names ${names.join(', ')}, but that file doesn't exist. If you meant to make it, make it now with the tools (write_file for text, run_python for PDFs, spreadsheets and images), then say what you did. If you only mentioned the name, give your answer again without saying it was saved.]`

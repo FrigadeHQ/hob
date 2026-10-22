@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { expect, it } from 'vitest'
@@ -495,6 +495,16 @@ it('looks at attached photos before answering, so the reply is about what is in 
   expect(w.store.messages('c')[0].attachments[0].seen).toBe('Two men smiling next to a Y Combinator sign.')
   await w.turn('and the one on the right?')
   expect(w.engine.lastRequest?.messages.at(-3)?.content).toContain('Y Combinator')
+})
+
+it.runIf(process.platform === 'darwin')('reads attached PDFs before answering, like photos: a model can not skip opening them', async () => {
+  const w = world('allow', { grant: false })
+  const pdf = join(w.chatDir, 'homework.pdf'); copyFileSync(join(import.meta.dirname, 'fixtures', 'table-scanned.pdf'), pdf)
+  w.deps.vision = { state: () => ({ phase: 'ready' }), ask: async () => '| | X | Y | Z |\n| U | 2,1 | 0,0 | 3,2 |' } as never
+  const reply = await w.turn('Solve this', [{ name: 'homework.pdf', path: pdf, sizeBytes: 1 }])
+  expect(reply.steps.map((s) => [s.title, s.status])).toEqual([['Read homework.pdf', 'done']])
+  expect(w.engine.lastRequest?.messages.at(-1)?.content).toContain('| U | 2,1 | 0,0 | 3,2 |')
+  expect(w.store.messages('c')[0].attachments[0].seen).toContain('| U | 2,1')
 })
 
 it("doesn't try to look at photos when this computer has no image support", async () => {

@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { asksToProceed, claimsFileChanges, missingFiles } from '../src/main/agent/claims'
+import { asksToProceed, claimsFileChanges, missingFiles, unbackedFiles } from '../src/main/agent/claims'
 import { pythonHint } from '../src/main/tools/python'
 
 it('spots replies that say files were changed', () => {
@@ -60,4 +60,15 @@ it('finds files a reply names that do not exist, in any language', () => {
   expect(missingFiles('Saved notes.txt.', (n) => n === 'notes.txt')).toEqual([])
   expect(missingFiles('See example.com and www.dr.dk, or a PDF file.', none)).toEqual([])
   expect(missingFiles('```python\npd.read_csv("data.csv")\n```\nDone.', none)).toEqual([])
+})
+
+it('only a reply that made no files is held to the names it mentions, and names match by file name, not path', () => {
+  const inChat = (n: string) => n === 'Annual_Report_Summary.pdf'
+  // made a file: a name slip or a path written differently isn't worth sending it back
+  expect(unbackedFiles('Saved to ~/Documents/Garth/2026-10-21 22.52/Annual_Report_Summary.pdf', { made: ['/x/Annual_Report_Summary.pdf'], exists: inChat })).toEqual([])
+  expect(unbackedFiles('Your summary is in report-summary.pdf.', { made: ['/x/summary.pdf'], exists: () => false })).toEqual([])
+  // made nothing: a path with spaces still finds the file that is there
+  expect(unbackedFiles('Saved to ~/Documents/Garth/2026-10-21 22.52/Annual_Report_Summary.pdf', { made: [], exists: inChat })).toEqual([])
+  // made nothing, and the file isn't anywhere: that's the claim to check
+  expect(unbackedFiles('Jeg har gemt filen indkob.txt.', { made: [], exists: () => false })).toEqual(['indkob.txt'])
 })

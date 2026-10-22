@@ -33,21 +33,21 @@ export function imageSize(buf: Buffer): { w: number; h: number } | undefined {
  * Converts iPhone photos (HEIC), WebP and TIFF too. macOS's sips where there is one, else Pillow in Garth's sandbox.
  * Small JPEGs and PNGs go as they are.
  */
-async function readable(path: string, ctx: TurnCtx): Promise<string> {
+async function readable(path: string, ctx: TurnCtx, maxSide = MAX_SIDE): Promise<string> {
   const ext = extname(path).toLowerCase()
   const size = DIRECT[ext] ? imageSize(readFileSync(path)) : undefined
-  if (size && Math.max(size.w, size.h) <= MAX_SIDE) return path
+  if (size && Math.max(size.w, size.h) <= maxSide) return path
   const dir = join(ctx.runTmp, 'images')
   mkdirSync(dir, { recursive: true })
   const out = join(dir, `${Date.now()}-${basename(path, extname(path))}.jpg`)
   if (process.platform === 'darwin') {
-    await promisify(execFile)('/usr/bin/sips', ['-Z', String(MAX_SIDE), '-s', 'format', 'jpeg', path, '--out', out])
+    await promisify(execFile)('/usr/bin/sips', ['-Z', String(maxSide), '-s', 'format', 'jpeg', path, '--out', out])
     return out
   }
   if (!ctx.python) throw new Error('Garth needs its code tools to open this kind of image.')
   const python = await ctx.python.ensure()
   const r = await runPython({ python, runtimeRoot: ctx.python.dir, cwd: dir, tmpDir: ctx.runTmp, readPaths: [path], timeoutMs: 60_000, signal: ctx.signal,
-    code: `from PIL import Image, ImageOps\nim = ImageOps.exif_transpose(Image.open(${JSON.stringify(path)})).convert('RGB')\nim.thumbnail((${MAX_SIDE}, ${MAX_SIDE}))\nim.save(${JSON.stringify(out)}, quality=90)` })
+    code: `from PIL import Image, ImageOps\nim = ImageOps.exif_transpose(Image.open(${JSON.stringify(path)})).convert('RGB')\nim.thumbnail((${maxSide}, ${maxSide}))\nim.save(${JSON.stringify(out)}, quality=90)` })
   if (r.exitCode !== 0) throw new Error(`Couldn't open this image: ${r.output.split('\n').filter(Boolean).at(-1) ?? ''}`)
   return out
 }
@@ -65,20 +65,27 @@ export const lookAtImage: Tool<{ path: string; question?: string }> = {
   title: (a) => `Looked at ${basename(String(a.path ?? 'the image'))}`,
   action: (a, ctx) => ({ kind: 'read', paths: [resolvePath(ctx, String(a.path ?? ''))] }),
   async run(a, ctx) {
-    const v = ctx.vision
-    const s = v?.state()
-    if (!v || !s || s.phase === 'off') return { text: "Garth can't see images yet: its image support downloads after the main model. Tell the user, and work from the file name or details only if they're enough.", failed: true }
-    if (s.phase === 'downloading') return { text: `Garth's image support is still downloading (${Math.round(s.progress * 100)}%). Tell the user it'll be ready soon; you can't see the image yet.`, failed: true }
-    if (s.phase === 'error') return { text: `Garth's image support couldn't be set up: ${s.message}`, failed: true }
-    const path = resolvePath(ctx, String(a.path ?? ''))
-    const ext = extname(path).toLowerCase()
-    if (!DIRECT[ext] && !CONVERT.has(ext)) return { text: `${basename(path)} isn't an image Garth can look at (JPG, PNG, HEIC, WebP, GIF or TIFF).`, failed: true }
-    if (statSync(path).size > MAX_BYTES) return { text: `${basename(path)} is too big to look at (over 30 MB).`, failed: true }
-    ctx.progress?.(`Looking at ${basename(path)}…`)
-    const file = await readable(path, ctx)
-    const mime = DIRECT[extname(file).toLowerCase()] ?? 'image/jpeg'
     const question = String(a.question ?? '').trim() || 'Describe this image in detail. Read out any text in it exactly.'
-    const answer = await v.ask(`data:${mime};base64,${readFileSync(file).toString('base64')}`, question, ctx.signal)
-    return { text: answer || 'The image model had nothing to say about it.' }
+    return seeImage(resolvePath(ctx, String(a.path ?? '')), question, ctx)
   },
+}
+
+/**
+ * Ask Garth's image model about an image file: photos, screenshots, and pages of PDFs that are pictures.
+ * maxSide: a page of a document needs more pixels than a photo for its small print to stay readable.
+ */
+export async function seeImage(path: string, question: string, ctx: TurnCtx, maxSide = MAX_SIDE): Promise<{ text: string; failed?: boolean }> {
+  const v = ctx.vision
+  const s = v?.state()
+  if (!v || !s || s.phase === 'off') return { text: "Garth can't see images yet: its image support downloads after the main model. Tell the user, and work from the file name or details only if they're enough.", failed: true }
+  if (s.phase === 'downloading') return { text: `Garth's image support is still downloading (${Math.round(s.progress * 100)}%). Tell the user it'll be ready soon; you can't see the image yet.`, failed: true }
+  if (s.phase === 'error') return { text: `Garth's image support couldn't be set up: ${s.message}`, failed: true }
+  const ext = extname(path).toLowerCase()
+  if (!DIRECT[ext] && !CONVERT.has(ext)) return { text: `${basename(path)} isn't an image Garth can look at (JPG, PNG, HEIC, WebP, GIF or TIFF).`, failed: true }
+  if (statSync(path).size > MAX_BYTES) return { text: `${basename(path)} is too big to look at (over 30 MB).`, failed: true }
+  ctx.progress?.(`Looking at ${basename(path)}…`)
+  const file = await readable(path, ctx, maxSide)
+  const mime = DIRECT[extname(file).toLowerCase()] ?? 'image/jpeg'
+  const answer = await v.ask(`data:${mime};base64,${readFileSync(file).toString('base64')}`, question, ctx.signal)
+  return { text: answer || 'The image model had nothing to say about it.' }
 }

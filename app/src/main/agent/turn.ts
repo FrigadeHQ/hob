@@ -12,7 +12,7 @@ import { specsFor } from '../tools'
 import { Journal } from './journal'
 import { fitHistory, ToolBudget } from './history'
 import { decide } from './permissions'
-import { asksToProceed, claimCheck, claimsFileChanges, missingCheck, missingFiles, NOTHING_CHANGED, proceedCheck, unfinishedCheck } from './claims'
+import { asksToProceed, claimCheck, claimsFileChanges, missingCheck, NOTHING_CHANGED, unbackedFiles, proceedCheck, unfinishedCheck } from './claims'
 import { chatTitle, cleanTitle, expandCommand, systemPrompt, titleRequest, type PromptSkill } from './prompt'
 import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
@@ -65,11 +65,14 @@ export type TurnArgs = { chatId: string; requestId: string; text: string; attach
 
 const withFiles = (content: string, attachments: Attachment[]) => {
   if (!attachments.length) return content
-  const seen = attachments.filter((f) => f.seen).map((f) => `[What's in ${f.name}, seen by Garth's image model: ${f.seen}]`)
+  const seen = attachments.filter((f) => f.seen).map((f) => PDF.test(f.name) ? `[What's in ${f.name}, read by Garth:\n${f.seen}]` : `[What's in ${f.name}, seen by Garth's image model: ${f.seen}]`)
   return [`${content}\n\n[Attached: ${attachments.map((f) => f.name).join(', ')}]`, ...seen].join('\n')
 }
 /** photos the image model can look at */
 const PHOTO = /\.(jpe?g|png|gif|bmp|webp|heic|heif|tiff?|avif)$/i
+const PDF = /\.pdf$/i
+/** what's kept of an attached PDF for the reply and follow-ups; read_pdf with pages reads more */
+const PDF_SEEN_CHARS = 12_000
 
 /** One user message → model + tools → stored assistant reply. */
 export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> {
@@ -210,6 +213,17 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     }
     d.store.setAttachments(userMessage, a.attachments)
   }
+  // attached PDFs: read first too, pictures of pages included (read_pdf hands those to the image model)
+  const readsPdfs = process.platform === 'darwin' && d.tools.some((t) => t.spec.name === 'read_pdf')
+  if (readsPdfs && a.attachments.some((f) => PDF.test(f.name))) {
+    for (const f of a.attachments) {
+      if (!PDF.test(f.name) || f.seen || a.signal.aborted) continue
+      const said = await onTool('read_pdf', { path: f.path })
+      if (steps.at(-1)?.status === 'done') f.seen = said.length > PDF_SEEN_CHARS ? `${said.slice(0, PDF_SEEN_CHARS)}… (more: read_pdf with pages)` : said
+      else lookNotes.push(`[Couldn't read ${f.name}: ${said}]`)
+    }
+    d.store.setAttachments(userMessage, a.attachments)
+  }
 
   const listing = listDir(chat.dir)
   const specs = specsFor(d.tools, ctx.webAccess)
@@ -235,16 +249,12 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   }
   /** "The files have been renamed" when nothing was: small models do this; check before the user believes it */
   const unbacked = (reply: string) => !moved && claimsFileChanges(reply) && aboutTheirFiles(reply)
-  /** files the reply names that aren't anywhere: in the chat folder, the user's folders, or the request itself */
-  const onDisk = (n: string) => {
-    const home = d.home ?? homedir()
-    const p = n.startsWith('~') ? join(home, n.slice(1)) : isAbsolute(n) ? n : join(chat.dir, n)
-    return existsSync(p) || grants.some((g) => existsSync(join(g, n))) || a.text.includes(n)
-  }
+  /** a file name that's in the chat folder (or one below it), the user's folders, or the request itself */
+  const onDisk = (name: string) => a.text.includes(name) || [chat.dir, ...grants].some((dir) => existsSync(join(dir, name)) || listDir(dir).some((sub) => existsSync(join(dir, sub, name))))
   try {
     let final = await ask(messages)
     // one more go when the reply says it changed files but didn't, or stops to ask "shall I go ahead?" on a task about the user's files
-    const missing = missingFiles(final, onDisk)
+    const missing = unbackedFiles(final, { made: steps.filter((s) => s.status === 'done').flatMap((s) => s.files ?? []), exists: onDisk })
     const check = unbacked(final) ? 'claim'
       : !final && steps.length > 0 ? 'unfinished'
       : missing.length ? 'missing'

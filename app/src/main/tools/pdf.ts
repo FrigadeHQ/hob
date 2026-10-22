@@ -1,8 +1,9 @@
 import { execFile } from 'node:child_process'
-import { existsSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import { resolvePath, type Tool, type TurnCtx } from '../agent/tool'
+import { seeImage } from './vision'
 
 /**
  * PDFs, including scanned ones: Garth's PDF helper (native/garth-pdf, Apple PDFKit + Vision) reads the text,
@@ -16,6 +17,48 @@ export type PdfRead = { pageCount: number; pages: PdfPage[]; fields: PdfField[] 
 export type Labeled = PdfBlank & { id: string; page: number; label: string }
 
 const MAX_PAGES = 40
+/** picture pages read by the image model in one go: each takes several seconds */
+const MAX_SEEN = 3
+/** a page of a document at this size keeps its small print readable for the image model */
+const PAGE_SIDE = 1280
+const PAGE_QUESTION = "This is a page of a document. Copy out everything on it exactly, in reading order. Write tables as Markdown tables, keeping every row and column label. Write math in plain text (e.g. x^2 + 3x = 4, (4, 4)). Briefly describe any picture or chart. Don't solve, answer or summarize anything."
+
+/** a page as a PNG, drawn by the PDF helper */
+function renderPage(path: string, page: number, out: string, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    execFile(pdfHelper(), ['render', path, String(page), out], { timeout: 60_000, signal }, (err, _stdout, stderr) => (err ? reject(new Error(stderr.trim() || err.message)) : resolve()))
+  })
+}
+
+/**
+ * Pages that are pictures (a scan, a photo saved as PDF): recognized text loses their tables and math, so the
+ * image model reads them instead. Pages it couldn't read keep the recognized text.
+ */
+async function seePictures(path: string, pages: PdfPage[], ctx: TurnCtx): Promise<Map<number, string>> {
+  const seen = new Map<number, string>()
+  const state = ctx.vision?.state()
+  if (!state || state.phase !== 'ready') return seen
+  let dir: string
+  try {
+    const base = ctx.runTmp ?? tmpdir()
+    mkdirSync(base, { recursive: true })
+    dir = mkdtempSync(join(base, 'pdf-pages-'))
+  } catch { return seen }
+  try {
+    for (const p of pages.filter((x) => x.ocr).slice(0, MAX_SEEN)) {
+      if (ctx.signal.aborted) break
+      try {
+        const png = join(dir, `page-${p.n}.png`)
+        await renderPage(path, p.n, png, ctx.signal)
+        const r = await seeImage(png, PAGE_QUESTION, ctx, PAGE_SIDE)
+        if (!r.failed && r.text.trim()) seen.set(p.n, r.text.trim())
+      } catch { /* keep the recognized text for this page */ }
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+  return seen
+}
 
 /** the helper next to the app (packaged), or built into resources/bin (development and tests) */
 export function pdfHelper(): string {
@@ -179,12 +222,14 @@ export const readPdf: Tool<{ path: string; pages?: string }> = {
     const d = await analyze(path, ctx.signal)
     const want = pagesWanted(a.pages, d.pageCount)
     const pages = d.pages.filter((p) => !want || want.has(p.n))
-    const scanned = d.pages.some((p) => p.ocr)
-    const head = `File: ${path}\n${d.pageCount} page${d.pageCount === 1 ? '' : 's'}${scanned ? ', scanned (text was recognized from the page images; check names and numbers)' : ''}${d.pageCount > MAX_PAGES ? `. Only the first ${MAX_PAGES} pages were read.` : ''}`
     const fields = d.fields.filter((f) => !want || want.has(f.page))
     const labeled = new Map(pages.map((p) => [p.n, fields.length ? [] : labelBlanks(p)]))
     const blanks = [...labeled.values()].flat()
     const isForm = fields.length > 0 || blanks.length > 0
+    // a form keeps the recognized text: filling it needs where each word is on the page
+    const seen = isForm ? new Map<number, string>() : await seePictures(path, pages, ctx)
+    const recognized = pages.some((p) => p.ocr && !seen.has(p.n))
+    const head = `File: ${path}\n${d.pageCount} page${d.pageCount === 1 ? '' : 's'}${seen.size ? `, ${seen.size === 1 ? 'a page that is a picture, read' : 'pages that are pictures, read'} by Garth's image model (tables, math and layout kept)` : ''}${recognized ? `${seen.size ? '; other' : ','} scanned pages: text was recognized from the page images; check names and numbers, and tables or math may be out of order` : ''}${d.pageCount > MAX_PAGES ? `. Only the first ${MAX_PAGES} pages were read.` : ''}`
     const parts = [head]
     // the form first: it's what the task is about, and it must never be cut off by long pages of text
     if (fields.length) {
@@ -197,7 +242,11 @@ export const readPdf: Tool<{ path: string; pages?: string }> = {
     const formPages = new Set([...blanks.map((b) => b.page), ...fields.map((f) => f.page)])
     let budget = 30_000
     for (const p of pages) {
-      let t = pageText(p) || '(no text on this page)'
+      const words = pageText(p)
+      // both readings of a picture page: the image model keeps tables and math; recognition gets every word
+      let t = seen.has(p.n)
+        ? `The page as Garth's image model reads it (tables, math and layout kept):\n${seen.get(p.n)}${words ? `\n\nWords recognized on the page (exact, but tables and math may be out of order):\n${words}` : ''}`
+        : words || '(no text on this page)'
       // (no "read the rest" hint here: the blanks above are what matter, and the hint made models read every page)
       if (isForm && !want && !formPages.has(p.n) && t.length > 500) t = `${t.slice(0, 500)}… (excerpt)`
       if (t.length > budget) t = `${t.slice(0, Math.max(0, budget))}… (cut; read_pdf with pages="${p.n}" for the rest)`

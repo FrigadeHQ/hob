@@ -89,6 +89,8 @@ export function decide(a: Action, c: GateCtx): Decision {
       // correct it instead of asking for the whole folder around it
       const near = existsSync(p) ? undefined : nearMiss(p, c.grants)
       if (near) return { verdict: 'deny', reason: `Garth can't use “${p}”: there's a typo in the path. Did you mean “${near}”? Copy paths exactly, including spaces, or save the list from code.` }
+      // asking for the folder around something that isn't there can't help the read; say so instead
+      if (a.kind === 'read' && !existsSync(p)) return { verdict: 'deny', reason: `“${p}” doesn't exist. Check the path; the chat's own folder is ${c.chatDir}.` }
       const ask = accessFolder(p, c.home, c.appData)
       if (ask) return { verdict: 'grant', folder: ask }
       return { verdict: 'deny', reason: `Garth can't use ${p}. Tell the user they can add the folder to a project (the + next to Projects in the sidebar), then ask again.` }
