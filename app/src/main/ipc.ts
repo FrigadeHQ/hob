@@ -330,7 +330,12 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   ipcMain.handle('models:use', (_e, id: string) => { void d.setup.useModel(id) })
   ipcMain.handle('models:remove', (_e, id: string) => d.setup.deleteModel(id))
   ipcMain.handle('models:cancel', () => d.setup.cancel())
-  ipcMain.handle('storage:get', () => ({ modelsGB: (sizeOf(d.paths.models) + sizeOf(d.paths.speech)) / 1e9, filesGB: sizeOf(d.filesDir()) / 1e9, codeToolsGB: sizeOf(d.paths.python) / 1e9 }))
+  ipcMain.handle('storage:get', () => {
+    const chatModelsGB = sizeOf(d.paths.models) / 1e9
+    const imageSupportGB = sizeOf(d.paths.vision) / 1e9
+    const voiceModelsGB = sizeOf(d.paths.speech) / 1e9
+    return { modelsGB: chatModelsGB + imageSupportGB + voiceModelsGB, chatModelsGB, imageSupportGB, voiceModelsGB, filesGB: sizeOf(d.filesDir()) / 1e9, codeToolsGB: sizeOf(d.paths.python) / 1e9 }
+  })
 
   ipcMain.handle('plugins:list', () => d.plugins.list())
   ipcMain.handle('plugins:setEnabled', (_e, id: string, on: boolean) => { d.plugins.setEnabled(String(id), !!on); pluginsChanged() })

@@ -27,13 +27,15 @@ export type VisionState =
   | { phase: 'ready'; name: string; sizeGB: number }
   | { phase: 'error'; message: string }
 
+export type StorageUsage = { modelsGB: number; chatModelsGB: number; imageSupportGB: number; voiceModelsGB: number; filesGB: number; codeToolsGB: number }
+
 export type SetupState =
   /** firstRun: no model set up yet, so this is onboarding (not a normal start); unknown until the app has asked */
   | { phase: 'probing'; firstRun?: boolean }
   /** computer: what the pick is based on, e.g. "Apple M3 Pro · 36 GB memory". starter: a small model fetched first so chat opens in minutes */
   | { phase: 'choose'; recommended: ModelSummary; models: ModelOption[]; liteMode: boolean; needsDiskGB: number; computer: string; starter?: ModelSummary }
-  /** starter: set while that small model downloads, before the full one */
-  | { phase: 'downloading'; target: ModelSummary; progress: number; etaSec: number; chatReady: boolean; note?: string; starter?: ModelSummary }
+  /** starter: set while the small model downloads. initialUpgrade: the first full model is downloading while chat runs on the starter */
+  | { phase: 'downloading'; target: ModelSummary; progress: number; etaSec: number; chatReady: boolean; note?: string; starter?: ModelSummary; initialUpgrade?: boolean }
   | { phase: 'ready'; model: ModelSummary; liteMode: boolean; note?: string; canRetry?: boolean }
   | { phase: 'error'; message: string }
 
@@ -133,7 +135,7 @@ export interface HobApi {
     /** stop the model download in progress; false when there's none */
     cancel(): Promise<boolean>
   }
-  storage: { get(): Promise<{ modelsGB: number; filesGB: number; codeToolsGB: number }> }
+  storage: { get(): Promise<StorageUsage> }
   plugins: {
     list(): Promise<PluginInfo[]>
     setEnabled(id: string, on: boolean): Promise<void>

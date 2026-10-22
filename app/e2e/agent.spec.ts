@@ -84,7 +84,7 @@ test('settings: web access is on by default, turning it off persists, current mo
   await ready(page)
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-model').click()
-  await expect(page.getByTestId('settings-current-model')).toContainText('Gemma 4')
+  await expect(page.getByTestId('settings-model').filter({ hasText: 'In use' })).toContainText('Gemma 4')
   await page.getByTestId('settings-nav-privacy').click()
   await expect(page.getByTestId('web-toggle')).toHaveAttribute('aria-checked', 'true') // on by default
   await page.getByTestId('web-toggle').click()
@@ -224,7 +224,7 @@ test('Hob looks at an attached photo and answers from what it sees', async () =>
   // Settings says image support is ready
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-model').click()
-  await expect(page.getByTestId('settings-vision')).toContainText('Ready')
+  await expect(page.getByTestId('settings-vision')).toContainText('Downloaded')
   await app.close()
 })
 

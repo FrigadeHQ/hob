@@ -15,7 +15,7 @@ function Tooltip({ content, children }: { content: React.ReactNode; children: Re
   const [at, setAt] = useState<{ left: number; bottom: number } | null>(null)
   const show = () => { const r = ref.current?.getBoundingClientRect(); if (r) setAt({ left: Math.max(8, r.left), bottom: window.innerHeight - r.top + 8 }) }
   return (
-    <span ref={ref} className="relative inline-flex" onMouseEnter={show} onMouseLeave={() => setAt(null)} onFocus={show} onBlur={() => setAt(null)}>
+    <span ref={ref} className="relative inline-flex min-w-0" onMouseEnter={show} onMouseLeave={() => setAt(null)} onFocus={show} onBlur={() => setAt(null)}>
       {children}
       <span
         role="tooltip"
@@ -53,12 +53,12 @@ export function Status({ state, working = false }: { state: SetupState; working?
     )
   }
   const pct = state.phase === 'downloading' ? Math.min(99, Math.floor(state.progress * 100)) : 100
-  const label = state.phase === 'downloading' ? (state.note ?? `Getting smarter… ${pct}%`) : (state.note ?? (working ? 'Working…' : 'Ready'))
+  const label = state.phase === 'downloading' ? (state.note ?? `${state.initialUpgrade ? 'Getting smarter' : `Downloading ${state.target.name}`}…`) : (state.note ?? (working ? 'Working…' : 'Ready'))
   const tip = state.phase === 'downloading' ? (
     <>
       <span className="block font-medium">{state.chatReady ? 'Hob is ready to use' : 'Setting up Hob'}</span>
       <span className="block text-ink-soft">
-        {state.chatReady ? 'A smarter model is downloading' : `Downloading ${state.target.name}`}: {gbOf(state.target.sizeGB * Math.min(1, state.progress))} of {gbOf(state.target.sizeGB)} GB{timeLeft(state.etaSec) && `, ${timeLeft(state.etaSec)}`}.
+        Downloading {state.target.name}: {gbOf(state.target.sizeGB * Math.min(1, state.progress))} of {gbOf(state.target.sizeGB)} GB{timeLeft(state.etaSec) && `, ${timeLeft(state.etaSec)}`}.
       </span>
       {state.chatReady && <span className="mt-1 block text-ink-soft">Hob switches to it by itself when it's done.</span>}
     </>
@@ -75,8 +75,9 @@ export function Status({ state, working = false }: { state: SetupState; working?
         <span className={`status-dot size-1.5 rounded-full ${state.phase === 'ready' && !state.note && !state.canRetry ? 'bg-emerald-600' : 'bg-amber-500 motion-safe:animate-pulse'}`} />
       </span>
       <Tooltip content={tip}>
-        <span data-testid="status" tabIndex={0} className="flex items-center gap-2 cursor-default outline-none">
-          <span>{label}</span>
+        <span data-testid="status" tabIndex={0} className="flex min-w-0 items-center gap-1 cursor-default outline-none">
+          <span className="truncate">{label}</span>
+          {state.phase === 'downloading' && !state.note && <span className="shrink-0">{' '}{pct}%</span>}
         </span>
       </Tooltip>
       {state.phase === 'ready' && state.canRetry && (

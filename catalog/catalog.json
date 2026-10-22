@@ -12,7 +12,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Tiny. For computers with little memory; simple questions only.",
+      "description": "For basic questions and short rewrites on computers with little memory.",
       "builds": [
         {
           "quant": "Q8_0",
@@ -35,7 +35,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-21",
       "starter": false,
-      "description": "Google's smallest model. For computers with 8 GB of memory.",
+      "description": "Light on storage. For emails, ideas, and short summaries.",
       "builds": [
         {
           "quant": "Q4_0",
@@ -58,7 +58,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-21",
       "starter": true,
-      "description": "Google's small model. Quick and good at everyday tasks.",
+      "description": "Quick first download. For writing, summaries, and simple file tasks.",
       "builds": [
         {
           "quant": "Q4_0",
@@ -81,7 +81,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "OpenAI's open model. Fast, strong at reasoning.",
+      "description": "OpenAI's reasoning model for analysis, math, and coding.",
       "builds": [
         {
           "quant": "MXFP4",
@@ -104,7 +104,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-21",
       "starter": false,
-      "description": "Google's larger model. Fast for its size and strong at tasks.",
+      "description": "For multi-step work with files, charts, and planning.",
       "builds": [
         {
           "quant": "Q4_0",
@@ -127,7 +127,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Top-tier smarts. Needs a high-end machine (64 GB+).",
+      "description": "For complex reasoning and coding. Largest download in this list.",
       "builds": [
         {
           "quant": "MXFP4",
