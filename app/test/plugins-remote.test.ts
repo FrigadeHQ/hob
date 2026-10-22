@@ -108,7 +108,7 @@ describe('MCP bundles (.mcpb)', () => {
     const echo = (await w.r.tools()).find((t) => t.spec.name === 'echo')!
     const r = await echo.run({ text: 'hi' }, { signal: new AbortController().signal, chatDir: w.root } as never)
     expect(r.text).toMatch(/^echo: hi k-42\n/)
-  })
+  }, 30_000) // starts a real server process: ~10 s on Windows CI
 
   it('tells what a file is before adding it', () => {
     const w = world()
