@@ -94,8 +94,16 @@ test('setup Hob follows the cursor, looks around, and respects reduced motion', 
     // Deterministic choices, while the real timers still drive the expressions and idle glances.
     await page.evaluate(() => { Math.random = () => .05 })
     await expect.poll(async () => { await page.clock.runFor(100); return mascot.getAttribute('data-expression') }, { intervals: [10] }).toBe('skeptical')
-    await page.evaluate(() => { Math.random = () => .3 })
+    // rare looks are brief: back to the smile within a second
+    await page.clock.runFor(800)
+    await expect(mascot).toHaveAttribute('data-expression', 'smile')
+    await page.evaluate(() => { Math.random = () => .1 })
     await expect.poll(async () => { await page.clock.runFor(100); return mascot.getAttribute('data-expression') }, { intervals: [10], timeout: 10_000 }).toBe('neutral')
+    await page.clock.runFor(900)
+    await expect(mascot).toHaveAttribute('data-expression', 'smile')
+    // most of the time it's only a blink
+    await page.evaluate(() => { Math.random = () => .2 })
+    await expect.poll(async () => { await page.clock.runFor(100); return mascot.getAttribute('data-expression') }, { intervals: [10], timeout: 10_000 }).toBe('blink')
     await page.evaluate(() => { Math.random = () => .9 })
     await expect.poll(async () => { await page.clock.runFor(100); return mascot.getAttribute('data-expression') }, { intervals: [10], timeout: 10_000 }).toBe('blink')
     await page.clock.runFor(4000)

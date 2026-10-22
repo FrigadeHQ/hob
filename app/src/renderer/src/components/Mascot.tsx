@@ -43,7 +43,8 @@ function usePlayfulFace(on: boolean) {
     }
     const nextFace = () => {
       const r = Math.random()
-      const [face, hold] = r < .12 ? (['skeptical', 1100] as const) : r < .32 ? (['neutral', 1700] as const) : (['blink', 150] as const)
+      // mostly a blink; now and then, briefly, a raised eyebrow or a straight face
+      const [face, hold] = r < .06 ? (['skeptical', 700] as const) : r < .14 ? (['neutral', 800] as const) : (['blink', 150] as const)
       setExpression(face)
       faceTimer = setTimeout(() => {
         setExpression('smile')

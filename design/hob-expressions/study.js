@@ -57,8 +57,8 @@ function select(face, announce = false) {
 }
 function setupFace() {
   const r = Math.random();
-  select(faces[r < .12 ? 2 : r < .32 ? 0 : 6]);
-  faceTimer = setTimeout(() => { select(faces[1]); faceTimer = setTimeout(setupFace, 4500 + Math.random() * 3000); }, r < .12 ? 1100 : r < .32 ? 1700 : 150);
+  select(faces[r < .06 ? 2 : r < .14 ? 0 : 6]);
+  faceTimer = setTimeout(() => { select(faces[1]); faceTimer = setTimeout(setupFace, 4500 + Math.random() * 3000); }, r < .06 ? 700 : r < .14 ? 800 : 150);
 }
 function cycle() {
   select(faces[(faces.indexOf(selected) + 1) % faces.length]);
