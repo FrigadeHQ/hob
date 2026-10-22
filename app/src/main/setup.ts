@@ -236,8 +236,9 @@ export class SetupController {
       }
       // remembered so quitting mid-download resumes on the next launch
       updateSettings(this.deps.settingsPath, { pendingModelId: target.model.id })
+      const initialUpgrade = !loadSettings(this.deps.settingsPath).activeModelId && this.starterActive
       const progress = ({ fraction, etaSec }: Progress) =>
-        this.set({ phase: 'downloading', target: summary, progress: fraction, etaSec, chatReady: !!this.active })
+        this.set({ phase: 'downloading', target: summary, progress: fraction, etaSec, chatReady: !!this.active, initialUpgrade })
       progress({ fraction: 0, etaSec: 0 })
       await this.fetch(target, progress)
       await this.loadWithFallback(target)

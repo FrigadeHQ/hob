@@ -51,6 +51,7 @@ describe('SetupController', () => {
     const downloading = states.filter((s) => s.phase === 'downloading')
     expect(downloading.length).toBeGreaterThan(0)
     expect(downloading.every((s) => s.phase === 'downloading' && s.chatReady)).toBe(true)
+    expect(downloading).not.toEqual(expect.arrayContaining([expect.objectContaining({ initialUpgrade: true })]))
     expect(c.listModels().find((r) => r.active)?.id).toBe(other.id)
     const url = catalog.models.find((m) => m.id === other.id)!.builds[0].url
     expect(engine.loaded).toContain(fileNameFor(url))
@@ -113,7 +114,25 @@ describe('SetupController', () => {
     await c.start(); await c.confirm()
     const first = states.find((s) => s.phase === 'downloading') as Extract<SetupState, { phase: 'downloading' }>
     expect(first.starter).toMatchObject({ id: 'qwen3-1.7b' })
-    expect(states.some((s) => s.phase === 'downloading' && s.chatReady && !s.starter)).toBe(true)
+    expect(states).toContainEqual(expect.objectContaining({ phase: 'downloading', chatReady: true, initialUpgrade: true }))
+  })
+  it('choosing a model manually after choosing the starter is not the initial upgrade', async () => {
+    const { c, states } = setup()
+    await c.start(); await c.confirm('qwen3-1.7b')
+    states.length = 0
+    await c.useModel('gpt-oss-20b')
+    const downloading = states.filter((s) => s.phase === 'downloading')
+    expect(downloading.length).toBeGreaterThan(0)
+    expect(downloading).not.toEqual(expect.arrayContaining([expect.objectContaining({ initialUpgrade: true })]))
+  })
+  it.each([undefined, 'qwen3-1.7b'])('resumed downloads retain whether a model was already chosen (%s)', async (activeModelId) => {
+    const { deps } = setup()
+    saveSettings(deps.settingsPath, { activeModelId, pendingModelId: 'gpt-oss-20b' })
+    const c = new SetupController(deps)
+    const states: SetupState[] = []
+    c.onState((s) => states.push(s))
+    await c.start()
+    expect(states).toContainEqual(expect.objectContaining({ phase: 'downloading', chatReady: true, initialUpgrade: !activeModelId }))
   })
   it('choose lists every catalog model: runnable ones selectable, others greyed with a reason', async () => {
     const { c } = setup()
@@ -273,14 +292,16 @@ describe('SetupController review fixes', () => {
   it('I9: background download failure while chatting keeps the user in chat with a retry', async () => {
     const dl = fakeDownloadDeps()
     let fail = true
-    const { c } = setup({
+    const { c, states } = setup({
       retryDelaysMs: [1, 1],
       download: { ...dl, download: async (u, d, f, p) => { if (f.includes('gpt-oss-20b') && fail) throw new Error('fetch failed'); return dl.download(u, d, f, p) } },
     })
     await c.start(); await c.confirm()
     expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'qwen3-1.7b' }, canRetry: true, note: expect.stringMatching(/connection/i) })
     fail = false
+    states.length = 0
     await c.retry()
+    expect(states).toContainEqual(expect.objectContaining({ phase: 'downloading', chatReady: true, initialUpgrade: true }))
     expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gpt-oss-20b' } })
   })
   it('I9: transient download failures are retried with backoff', async () => {

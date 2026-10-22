@@ -10,6 +10,7 @@ Settings now explains what reply sizing changes, what each model is for, which m
 | Image support says Ready in a separate card. | The same table shows Downloaded and explains automatic installation and use. |
 | Use, Download, and Delete leave the effect implicit. | Use model, Download & use, and Remove download state the action. |
 | Models storage excludes image support. | A total and breakdown include chat, image, and voice assets. |
+| Any model download while chat is available says Getting smarter. | Only the initial starter-to-full-model upgrade says Getting smarter. Later downloads name the model. |
 
 ## Preview
 
@@ -55,6 +56,10 @@ Descriptions give intended uses, not measured performance rankings. They were ch
 
 Image support still downloads automatically after chat is ready. It is only used for attached images; this change does not add an independent install/remove setting. The unavailable-model disclosure preserves the existing picker restrictions.
 
+The download tooltip always names the model, including during initial setup. Later downloads use “Downloading [model]… [percent]%” in the sidebar; long names truncate while the percentage stays visible. Retry and resume preserve whether this is initial setup or a later model selection, without changing download behavior.
+
 The app fetches its catalog from `main`, with a bundled fallback. Until this catalog change merges, an online build can still show the old model descriptions. The test preview uses the branch's bundled catalog.
 
 Validated on macOS with typecheck, build, 419 unit tests (3 skipped), and 43 end-to-end tests (1 skipped), including new checks for reply sizing, unavailable models, image states, removal, and storage accounting. Light and dark screenshots were inspected. No real-model speed or quality benchmarks, Windows/Linux run, or signed installer build were performed.
+
+The download-copy follow-up passed typecheck, build, all 33 setup unit tests, and all 5 Settings/onboarding end-to-end tests. Initial and manual download states were visually inspected, including a long model name; tests also cover retries, resumed downloads, and a manual switch away from the starter.
