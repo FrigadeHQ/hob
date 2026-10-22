@@ -29,18 +29,18 @@
   --text-title: 22px;
   --text-title--line-height: 28px;
 
-  --color-paper: #fbfaf9;
-  --color-sidebar: #f4f3f1;
-  --color-surface: #ffffff;
-  --color-ink: #1c1917;
-  --color-ink-soft: #57534e;
-  --color-muted: #817b75;
-  --color-line: #e9e6e3;
-  --color-line-strong: #d6d2cd;
+  --color-paper: #FAFAFA;
+  --color-sidebar: #FAFAFA;
+  --color-surface: #FFFFFF;
+  --color-ink: #1C1C1C;
+  --color-ink-soft: #575757;
+  --color-muted: #818181;
+  --color-line: #E7E7E7;
+  --color-line-strong: #D6D6D6;
   --color-action: #242424;
   --color-on-action: #ffffff;
-  --color-selection: #e8e5e1;
-  --color-focus: #8a847f;
+  --color-selection: #E8E8E8;
+  --color-focus: #888888;
   --color-accent: #c2410c;
   /* the mic while it's recording */
   --color-rec: #dbe7fb;
@@ -164,7 +164,7 @@ html[data-text-size="large"] { --reply-step: 2px; }
 @media (prefers-reduced-motion: reduce) { .reveal, .pop, .fade-in, .fw, .setup-avatar, .setup-status, .setup-assurance { animation: none; } }
 
 /* Onboarding: the same quiet frame for recommendation, download, and preparation. */
-.onboarding, .setup-dialog { --color-muted: #78716c; --setup-selection: #eeeae5; --setup-hover: #f5f3f0; color-scheme: light; }
+.onboarding, .setup-dialog { --setup-selection: var(--color-selection); --setup-hover: color-mix(in srgb, var(--color-line) 40%, var(--color-surface)); color-scheme: light; }
 .onboarding-screen { flex: 1; min-height: 0; display: flex; align-items: safe center; justify-content: center; padding: 28px 38px 42px; overflow: auto; }
 .onboarding-content { position: relative; width: 430px; max-width: 100%; text-align: center; }
 .onboarding-mascot { width: 72px; height: 72px; margin: 0 auto 25px; transition: transform 350ms cubic-bezier(.22,1,.36,1) 120ms; }
