@@ -6,7 +6,7 @@ import type { Provider } from './providers'
 export type Tokens = { access_token: string; refresh_token?: string; expires_at?: number; id_token?: string }
 const SIGN_IN_MS = 5 * 60_000
 
-const PAGE = (title: string, text: string) => `<!doctype html><meta charset="utf-8"><title>${title}</title><body style="font:16px -apple-system,Segoe UI,sans-serif;display:grid;place-items:center;height:90vh;color:#2a2420;background:#faf8f4"><div style="text-align:center"><h1 style="font-size:22px">${title}</h1><p>${text}</p></div>`
+const PAGE = (title: string, text: string) => `<!doctype html><meta charset="utf-8"><title>${title}</title><body style="font:16px -apple-system,Segoe UI,sans-serif;display:grid;place-items:center;height:90vh;color:#1C1C1C;background:#FAFAFA"><div style="text-align:center"><h1 style="font-size:22px">${title}</h1><p>${text}</p></div>`
 
 /** a token endpoint's answer, with when the access token runs out */
 export async function tokenRequest(fetchFn: typeof fetch, p: Provider, form: Record<string, string>): Promise<Tokens> {

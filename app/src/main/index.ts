@@ -70,7 +70,7 @@ function createWindow() {
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     // window buttons centred on the sidebar toggle (top-2, 32px tall: centre at 24px)
     trafficLightPosition: { x: 16, y: 17 },
-    backgroundColor: '#fafaf9',
+    backgroundColor: '#FAFAFA',
     show: !BACKGROUND,
     // hidden pages would otherwise pause timers and animations
     webPreferences: { preload: join(__dirname, '../preload/index.cjs'), sandbox: false, ...(BACKGROUND ? { backgroundThrottling: false } : {}) },
