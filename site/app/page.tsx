@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { Mascot } from './Mascot'
 
 const RELEASES = 'https://github.com/FrigadeHQ/hob/releases/latest/download'
 const DOWNLOADS = [
@@ -25,7 +26,7 @@ export default function Home() {
     <>
       <main>
         <section className="hero">
-          <Image src="/hob.png" alt="Hob, a round lavender face, smiling" width={88} height={88} className="mascot" priority />
+          <Mascot />
           <h1>Your private AI,<br />right on your computer.</h1>
           <p className="lede">Hob is a free, open-source assistant. Ask it anything, hand it your files, and it does the work without anything leaving your machine.</p>
           <div className="downloads">
