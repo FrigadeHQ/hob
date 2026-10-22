@@ -5,7 +5,7 @@ import { join } from 'node:path'
 
 const main = join(import.meta.dirname, '../out/main/index.js')
 
-test('downloading another model in Settings shows its progress and blocks repeat clicks', async () => {
+test('Settings → Model: Change model opens the same picker as setup; the download shows its progress there', async () => {
   // a slow stand-in download: about 6 seconds
   const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_FAKE_STEP_MS: '1500', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
   const page = await app.firstWindow()
@@ -14,19 +14,23 @@ test('downloading another model in Settings shows its progress and blocks repeat
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-model').click()
 
-  const row = page.getByTestId('settings-model').filter({ has: page.getByTestId('model-use').filter({ hasText: 'Download' }) }).first()
-  const name = (await row.locator('p').first().innerText()).trim()
-  await row.getByTestId('model-use').click()
-  // right away: the row says it's downloading, with a percentage, and nothing else can start
-  const mine = page.getByTestId('settings-model').filter({ hasText: name })
-  await expect(mine.getByTestId('model-progress')).toBeVisible()
-  await expect(mine.getByTestId('model-progress')).toContainText(/Downloading|Starting/)
-  await expect(mine.getByTestId('model-use')).toHaveCount(0)
-  for (const b of await page.getByTestId('model-use').all()) await expect(b).toBeDisabled()
-  await expect(mine.getByTestId('model-progress')).toContainText(/\d+%/, { timeout: 10_000 })
+  const current = page.getByTestId('settings-current-model')
+  await expect(current).toContainText('Gemma 4 26B')
+  await current.getByRole('button', { name: 'Change model' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Choose a model' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('radio', { name: /Gemma 4 26B/ })).toBeChecked()
+  await expect(dialog.getByTestId('model-option').filter({ hasText: 'Gemma 4 26B' })).toContainText('In use')
+  await dialog.getByTestId('model-option').filter({ hasText: 'gpt-oss 20B' }).click()
+  await dialog.getByRole('button', { name: 'Use this model' }).click()
+  await expect(dialog).toHaveCount(0)
+  // right away: Settings says it's downloading, with a percentage, and nothing else can start
+  await expect(current.getByTestId('model-progress')).toContainText(/Downloading|Starting/)
+  await expect(current.getByRole('button', { name: 'Change model' })).toBeDisabled()
+  await expect(current.getByTestId('model-progress')).toContainText(/\d+%/, { timeout: 10_000 })
   // done: it's the model in use
-  await expect(mine).toContainText('In use', { timeout: 20_000 })
-  await expect(mine.getByTestId('model-progress')).toHaveCount(0)
+  await expect(current.locator('p').first()).toHaveText('gpt-oss 20B', { timeout: 20_000 })
+  await expect(current.getByTestId('model-progress')).toHaveCount(0)
   await app.close()
 })
 
@@ -62,14 +66,14 @@ test('a model download in Settings can be cancelled, and chat stays on the curre
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 30_000 })
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-model').click()
-  await expect(page.getByTestId('settings')).toContainText('runs well on this computer')
-  const row = page.getByTestId('settings-model').filter({ has: page.getByTestId('model-use').filter({ hasText: 'Download' }) }).first()
-  const name = (await row.locator('p').first().innerText()).trim()
-  await row.getByTestId('model-use').click()
-  const mine = page.getByTestId('settings-model').filter({ hasText: name })
-  await mine.getByTestId('model-cancel').click()
-  await expect(mine.getByTestId('model-progress')).toHaveCount(0)
-  await expect(mine.getByTestId('model-use')).toHaveText('Download')
+  const current = page.getByTestId('settings-current-model')
+  await current.getByRole('button', { name: 'Change model' }).click()
+  await page.getByTestId('model-option').filter({ hasText: 'gpt-oss 20B' }).click()
+  await page.getByRole('button', { name: 'Use this model' }).click()
+  await current.getByTestId('model-cancel').click()
+  await expect(current.getByTestId('model-progress')).toHaveCount(0)
+  await expect(current).toContainText('Gemma 4 26B')
+  await expect(current.getByRole('button', { name: 'Change model' })).toBeEnabled()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/)
   await app.close()
 })

@@ -134,7 +134,8 @@ export const fakeDownloadDeps = (opts: { freeDiskGB?: number; stepMs?: number } 
 export function fakeAccounts(): import('./accounts').AccountsLike {
   let current: import('./accounts').Account | undefined
   return {
-    available: () => ['google', 'microsoft'],
+    // like the real app: Google and Microsoft sign-in stays off until it has client IDs (Mac apps only for now)
+    available: () => [],
     current: () => current,
     signIn: async (provider) => (current = { provider, email: provider === 'google' ? 'me@gmail.com' : 'me@outlook.com' }),
     cancelSignIn: () => {},

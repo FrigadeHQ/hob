@@ -2,9 +2,12 @@
   "id": "calendar-mail",
   "name": "Calendar & Mail",
   "version": "1.0.0",
-  "description": "Your calendar and email. On a Mac, through its own Calendar and Mail apps with every account added there; anywhere, by signing in with Google or Microsoft. Garth writes email drafts; you send them.",
+  "description": "Your calendar and email, through the Mac's own Calendar and Mail apps, with every account added there. Garth writes email drafts; you send them.",
   "author": "Garth",
   "icon": "calendar",
+  "platforms": [
+    "darwin"
+  ],
   "tools": [
     {
       "native": "calendar_events"

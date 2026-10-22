@@ -59,10 +59,8 @@ docs/                user and plugin-author docs, README assets
 - `files.ts`: list, read (a tagged annual report, `.xhtml` iXBRL, as tables of figures via `report.ts`; other web pages as text), write, move (batch moves from a JSON list), delete (to the Trash), open in the file manager.
 - `python.ts`: run Python, run a skill's script, install PyPI packages.
 - `chart.ts` (Recharts charts drawn by the UI), `pdf.ts` (read and fill, via the native helper), `photos.ts` (EXIF), `web.ts` (search and fetch), `vision.ts` (look at images), `mac.ts` (calendar and email tools).
-- Calendar & email (`main/accounts/`): the tools use whichever source is connected.
-  - A Google or Microsoft account, via the desktop OAuth flow (PKCE, loopback redirect). Tokens are encrypted with the OS keychain (`accounts.bin`).
-  - Otherwise, on a Mac, the Calendar and Mail apps.
-  - Client IDs live in `accounts/providers.ts`; a provider without one isn't offered.
+- Calendar & email: Mac only, through the Calendar and Mail apps (`mac.ts`, the `calendar-mail` plugin). On Windows and Linux, people connect theirs through a connector (MCP).
+  - Signing in with Google or Microsoft (`main/accounts/`, desktop OAuth with PKCE, tokens encrypted with the OS keychain) is built but off: a provider is offered only once it has a client ID in `accounts/providers.ts`.
 
 ### Python (`main/python/`)
 - A pinned python-build-standalone runtime is installed into app data on first use (`runtime.ts`), with a fixed package set.

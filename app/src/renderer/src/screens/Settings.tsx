@@ -3,6 +3,7 @@ import type { ModelRow, UserSettings } from '../../../shared/agent'
 import type { SetupState, VisionState } from '../../../shared/types'
 import { garth } from '../api'
 import { Dialog, Switch, button } from '../components/ui'
+import { ModelPicker } from '../components/ModelPicker'
 
 const gb = (n: number) => (n < 10 ? `${n.toFixed(1)} GB` : `${Math.round(n)} GB`)
 const left = (s: number) => (s <= 0 ? '' : s < 90 ? ' · about a minute left' : s < 5400 ? ` · about ${Math.round(s / 60)} minutes left` : ` · about ${Math.round(s / 3600)} hours left`)
@@ -52,52 +53,58 @@ export function ModelSettings() {
     setStarting(id)
     void garth.models.use(id).then(reload).finally(() => setStarting((cur) => (cur === id ? null : cur)))
   }
+  const [picking, setPicking] = useState(false)
+  const active = models.find((m) => m.active)
+  const pending = busyId ? models.find((m) => m.id === busyId) : undefined
+  const spare = models.filter((m) => m.downloaded && !m.active && m.id !== busyId)
   return (
     <>
       <Heading>Model</Heading>
-      <p className="mb-3 text-meta text-muted">Every model here runs well on this computer. Ones that need more memory than it has aren't listed. Bigger ones are smarter but slower.</p>
+      <p className="mb-3 text-meta text-muted">The AI model Garth runs on this computer. Bigger ones are smarter but slower.</p>
+      <div data-testid="settings-current-model" className="rounded-card border border-line bg-surface px-4 py-3">
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">{active?.name ?? '…'}</p>
+            {active && <p className="text-ui text-muted">{active.description}</p>}
+            {active && <p className="mt-0.5 text-meta text-muted">{active.blurb} · {gb(active.sizeGB)}</p>}
+          </div>
+          <button disabled={!!busyId || !active} title={busyId ? 'Wait for the current download to finish' : undefined} onClick={() => setPicking(true)} className={button.secondary}>Change model</button>
+        </div>
+        {busyId && (
+          <div data-testid="model-progress" className="mt-3 border-t border-line pt-3">
+            <p className="text-meta text-ink-soft">
+              {downloading
+                ? `Downloading ${downloading.target.name}… ${Math.min(99, Math.floor(downloading.progress * 100))}%${left(downloading.etaSec)}`
+                : pending?.downloaded ? `Switching to ${pending.name}…` : `Starting ${pending?.name ?? 'the download'}…`}
+            </p>
+            <div className="mt-1.5 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
+                <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${downloading ? Math.max(3, downloading.progress * 100) : 3}%` }} />
+              </div>
+              {/* stop it: chat stays on the model in use; what came down so far is kept for later */}
+              {downloading && <button data-testid="model-cancel" onClick={() => void garth.models.cancel()} className="text-meta text-muted underline-offset-2 hover:text-ink hover:underline">Cancel</button>}
+            </div>
+            <p className="mt-1.5 text-meta text-muted">You can keep chatting; Garth switches when it's ready.</p>
+          </div>
+        )}
+      </div>
+      {spare.length > 0 && (
+        <div className="mt-3">
+          <p className="mb-1 text-meta text-muted">Also downloaded</p>
           <div className="rounded-card border border-line bg-surface divide-y divide-line">
-            {models.filter((m) => m.available).map((m) => (
-              <div key={m.id} data-testid="settings-model" className="flex items-start gap-3 px-4 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium">
-                    {m.name}
-                    {m.active && <span className="ml-2 rounded-full bg-line px-2 text-meta font-normal leading-5 text-ink-soft">In use</span>}
-                  </p>
-                  <p className="text-ui text-muted">{m.description}</p>
-                  <p className="text-meta text-muted mt-0.5">{m.blurb} · {gb(m.sizeGB)}{m.downloaded ? ' · downloaded' : ''}</p>
-                </div>
-                {busyId === m.id && !m.active ? (
-                  <div data-testid="model-progress" className="w-44 shrink-0 pt-1">
-                    <p className="text-meta text-ink-soft">
-                      {downloading && downloading.target.id === m.id
-                        ? `Downloading… ${Math.min(99, Math.floor(downloading.progress * 100))}%${left(downloading.etaSec)}`
-                        : m.downloaded ? 'Switching…' : 'Starting…'}
-                    </p>
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
-                        <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${downloading && downloading.target.id === m.id ? Math.max(3, downloading.progress * 100) : 3}%` }} />
-                      </div>
-                      {/* stop it: chat stays on the model in use; what came down so far is kept for later */}
-                      {downloading && downloading.target.id === m.id && (
-                        <button data-testid="model-cancel" onClick={() => void garth.models.cancel()} className="text-meta text-muted underline-offset-2 hover:text-ink hover:underline">Cancel</button>
-                      )}
-                    </div>
-                  </div>
-                ) : !m.active && (
-                  <button data-testid="model-use" disabled={!!busyId} title={busyId ? 'Wait for the current download to finish' : undefined} onClick={() => use(m.id)} className={button.secondary}>
-                    {m.downloaded ? 'Use' : 'Download'}
-                  </button>
-                )}
-                {m.downloaded && !m.active && busyId !== m.id && (
-                  <button data-testid="model-delete" onClick={() => void garth.models.remove(m.id).then(reload)} className="text-ui text-muted hover:text-ink py-1.5">Delete</button>
-                )}
+            {spare.map((m) => (
+              <div key={m.id} data-testid="settings-model" className="flex items-center gap-3 px-4 py-2.5 text-ui">
+                <span className="flex-1">{m.name} <span className="text-muted">· {gb(m.sizeGB)}</span></span>
+                <button data-testid="model-delete" onClick={() => void garth.models.remove(m.id).then(reload)} className="text-ui text-muted hover:text-ink">Delete</button>
               </div>
             ))}
           </div>
-          {models.some((m) => !m.available) && (
-            <p className="mt-2 text-meta text-muted">{models.filter((m) => !m.available).length} more models need a more powerful computer.</p>
-          )}
+        </div>
+      )}
+      {picking && active && (
+        <ModelPicker models={models} selected={active} note="Garth keeps chatting on the current model while a new one downloads."
+          onSelect={(id) => { if (id !== active.id) use(id) }} onClose={() => setPicking(false)} />
+      )}
           <Heading>Seeing images</Heading>
           <p className="text-ui text-muted mb-3">A small extra model that lets Garth look at photos and screenshots. It runs on this computer.</p>
           <div data-testid="settings-vision" className="flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3 text-ui">

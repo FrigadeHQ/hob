@@ -84,7 +84,7 @@ test('settings: web access is on by default, turning it off persists, current mo
   await ready(page)
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-model').click()
-  await expect(page.getByTestId('settings-model').filter({ hasText: 'In use' })).toHaveCount(1)
+  await expect(page.getByTestId('settings-current-model')).toContainText('Gemma 4')
   await page.getByTestId('settings-nav-privacy').click()
   await expect(page.getByTestId('web-toggle')).toHaveAttribute('aria-checked', 'true') // on by default
   await page.getByTestId('web-toggle').click()
@@ -304,33 +304,6 @@ test('Mac: "Connect my email and calendar" asks for access once, then Garth read
   await expect(page.getByTestId('approval')).toContainText('Add “Lunch with Sam” to your calendar')
   await page.getByTestId('approval-allow').click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('Added “Lunch with Sam” to the Home calendar')
-  await app.close()
-})
-
-test('signing in with Google connects email and calendar on any computer; signing out disconnects it', async () => {
-  const { app, page } = await launch()
-  await ready(page)
-  await page.getByTestId('suggestion').filter({ hasText: 'Connect my email and calendar' }).click()
-  await page.getByTestId('account-signin-google').click()
-  await expect(page.getByTestId('account-connected')).toContainText('me@gmail.com')
-  await page.getByTestId('connect-apps-try').click()
-  await expect(page.getByTestId('composer-send')).toBeVisible()
-  await page.getByTestId('new-chat').click()
-  await expect(page.getByTestId('suggestion').filter({ hasText: 'Connect my email' })).toHaveCount(0)
-  // the tools read the signed-in account, not the Mac's apps
-  await page.getByTestId('composer-input').fill('__tools__ [["calendar_events",{}],["mail_read",{"id":"g1"}]]')
-  await page.getByTestId('composer-send').click()
-  await expect(page.getByTestId('message-assistant').last()).toContainText('It arrives Friday')
-  await page.getByTestId('composer-input').fill('__tools__ [["calendar_events",{}]]')
-  await page.getByTestId('composer-send').click()
-  await expect(page.getByTestId('message-assistant').last()).toContainText('Team lunch')
-  // Settings shows who's connected, and signs out
-  await page.getByTestId('open-settings').click()
-  await page.getByTestId('settings-nav-plugins').click()
-  await expect(page.locator('[data-testid=plugin][data-id=calendar-mail]')).toContainText('Connected to Google (me@gmail.com)')
-  await page.getByTestId('calendar-mail-connect').click()
-  await page.getByTestId('account-signout').click()
-  await expect(page.getByTestId('account-signin-microsoft')).toBeVisible()
   await app.close()
 })
 
