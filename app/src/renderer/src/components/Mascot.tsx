@@ -1,67 +1,85 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { faceRects, gazeOffset, tintMatrix, type Rect } from '../../../shared/mascot'
+import { faceRects, tintMatrix, type Expression, type Rect } from '../../../shared/mascot'
 import bodyUrl from '../assets/hob-body.png'
 
 const neutral = faceRects('neutral')
-const eyes = neutral.slice(0, 2)
-const flat = neutral.slice(2)
 const smile = faceRects('smile').slice(2)
-const brow = faceRects('skeptical').slice(2, 5)
 const tint = tintMatrix()
 const rect = (r: Rect, i: number) => <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill} />
+const glances = [{ x: -3, y: 0 }, { x: 3, y: 0 }, { x: 0, y: 0 }, { x: -2, y: 1 }, { x: 2, y: 1 }, { x: 0, y: -2 }]
 
-/** where the cursor is from Hob, -1..1 each way, eased so far away still reads as "over there" */
-function useGaze(on: boolean) {
+/** Only setup listens to the cursor; normal chat never installs these listeners or timers. */
+function useSetupFace(on: boolean) {
   const ref = useRef<SVGSVGElement>(null)
   const [gaze, setGaze] = useState({ x: 0, y: 0 })
-  // follows the system setting while open, like the CSS motion does
-  const [still, setStill] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const [expression, setExpression] = useState<Expression>('neutral')
   useEffect(() => {
-    const q = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const change = () => { setStill(q.matches); if (q.matches) setGaze({ x: 0, y: 0 }) }
-    q.addEventListener('change', change)
-    return () => q.removeEventListener('change', change)
-  }, [])
-  useEffect(() => {
-    if (!on || still) return
-    // straight from the event (no animation frame): those pause in hidden windows, and moves are cheap
+    if (!on) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let glanceTimer: ReturnType<typeof setInterval>
+    let faceTimer: ReturnType<typeof setTimeout>
+    let lastMove = 0
+    const look = (x: number, y: number) => setGaze((cur) => cur.x === x && cur.y === y ? cur : { x, y })
     const move = (e: PointerEvent) => {
       const box = ref.current?.getBoundingClientRect()
-      if (!box) return
-      const ease = (d: number) => Math.tanh(d / 220)
-      setGaze({ x: ease(e.clientX - (box.left + box.width / 2)), y: ease(e.clientY - (box.top + box.height / 2)) })
+      if (!box || e.pointerType === 'touch') return
+      lastMove = Date.now()
+      look(Math.round(Math.tanh((e.clientX - box.left - box.width / 2) / 220) * 3), Math.round(Math.tanh((e.clientY - box.top - box.height / 2) / 220) * 2))
     }
-    // the cursor left the window: look back ahead
-    const away = () => setGaze({ x: 0, y: 0 })
-    window.addEventListener('pointermove', move)
-    document.documentElement.addEventListener('pointerleave', away)
-    return () => { window.removeEventListener('pointermove', move); document.documentElement.removeEventListener('pointerleave', away) }
-  }, [on, still])
-  return [ref, gaze] as const
+    const nextFace = () => {
+      const r = Math.random()
+      const [face, hold] = r < .16 ? (['skeptical', 1400] as const) : r < .48 ? (['smile', 1600] as const) : (['neutral-blink', 150] as const)
+      setExpression(face)
+      faceTimer = setTimeout(() => {
+        setExpression('neutral')
+        faceTimer = setTimeout(nextFace, 2800 + Math.random() * 3000)
+      }, hold)
+    }
+    const stop = () => {
+      clearInterval(glanceTimer)
+      clearTimeout(faceTimer)
+      window.removeEventListener('pointermove', move)
+      look(0, 0)
+      setExpression('neutral')
+    }
+    const sync = () => {
+      stop()
+      if (reduced.matches) return
+      lastMove = 0
+      window.addEventListener('pointermove', move)
+      glanceTimer = setInterval(() => {
+        if (Date.now() - lastMove <= 2500) return
+        const spot = glances[Math.floor(Math.random() * glances.length)]
+        look(spot.x, spot.y)
+      }, 3500)
+      faceTimer = setTimeout(nextFace, 1500)
+    }
+    sync()
+    reduced.addEventListener('change', sync)
+    return () => { stop(); reduced.removeEventListener('change', sync) }
+  }, [on])
+  return { ref, gaze, expression }
 }
 
-/** Hob smiles; now and then goes flat or raises an eyebrow, and blinks. watch: the eyes follow the cursor. */
-export function Mascot({ size = 96, alive = false, working = false, watch = false }: { size?: number; alive?: boolean; working?: boolean; watch?: boolean }) {
-  const [ref, gaze] = useGaze(watch)
-  const look = gazeOffset(gaze.x, gaze.y)
+/** Setup is playful; in the app, the face only blinks and occasionally smiles. */
+export function Mascot({ size = 96, alive = false, working = false, playful = false }: { size?: number; alive?: boolean; working?: boolean; playful?: boolean }) {
+  const setup = useSetupFace(alive && playful)
   const filter = `hob-tint-${useId().replace(/:/g, '')}`
   return (
-    <svg ref={ref} data-testid="mascot" data-expression={working ? 'working' : 'smile'} width={size} height={size} viewBox="0 0 60 60" shapeRendering="crispEdges" role="img" aria-label="Hob"
-      className={`hob-mascot overflow-visible shrink-0 ${alive ? 'hob-alive' : ''} ${working ? 'hob-working' : ''}`}>
+    <svg ref={setup.ref} data-testid="mascot" data-expression={playful ? setup.expression : working ? 'working' : 'neutral'} width={size} height={size} viewBox="0 0 60 60" shapeRendering="crispEdges" role="img" aria-label="Hob"
+      className={`hob-mascot overflow-visible shrink-0 ${alive && !playful ? 'hob-alive' : ''} ${working ? 'hob-working' : ''}`}>
+      {/* Hob's colour: the grey body art tinted */}
       <defs><filter id={filter} colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values={tint} /></filter></defs>
       <ellipse cx="30" cy="62" rx="16" ry="2" fill="currentColor" opacity="0.08" />
       <svg width="60" height="60" viewBox="158 155.5 937 937">
         <image href={bodyUrl} width="1254" height="1254" filter={`url(#${filter})`} />
       </svg>
       <g className="hob-face">
-        <g data-testid="mascot-look" transform={`translate(${look.eyes.x} ${look.eyes.y})`}>
-          <g data-testid="mascot-eyes" className="hob-eyes">{eyes.map(rect)}</g>
-          <g className="hob-brow">{brow.map(rect)}</g>
-        </g>
-        <g transform={`translate(${look.mouth.x} ${look.mouth.y})`}>
-          <g className="hob-flat">{flat.map(rect)}</g>
+        {playful ? <g data-testid="mascot-eyes">{faceRects(setup.expression, setup.gaze.x, setup.gaze.y).map(rect)}</g> : <>
+          <g data-testid="mascot-eyes" className="hob-eyes">{neutral.slice(0, 2).map(rect)}</g>
+          <g className="hob-neutral">{neutral.slice(2).map(rect)}</g>
           <g className="hob-smile">{smile.map(rect)}</g>
-        </g>
+        </>}
       </g>
     </svg>
   )

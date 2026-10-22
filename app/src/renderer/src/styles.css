@@ -261,20 +261,17 @@ body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] 
 .status-presence:has(.hob-mascot) > .status-dot { display: none; }
 #root:has(.chat-greeting) .status-presence .hob-mascot { display: none; }
 #root:has(.chat-greeting) .status-presence > .status-dot { display: block; }
-/* Hob smiles, also while working; now and then the mouth goes flat for a moment, or an eyebrow goes up */
-.hob-flat, .hob-brow { opacity: 0; }
+.hob-smile { opacity: 0; }
 .hob-eyes { transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: no-preference) {
   .hob-alive .hob-eyes { animation: hob-blink 17s steps(1, end) infinite; }
-  .hob-alive:not(.hob-working) .hob-flat { animation: hob-flat 53s steps(1, end) infinite; }
-  .hob-alive:not(.hob-working) .hob-smile { animation: hob-smile 53s steps(1, end) infinite; }
-  .hob-alive:not(.hob-working) .hob-brow { animation: hob-brow 53s steps(1, end) infinite; }
+  .hob-alive:not(.hob-working) .hob-neutral { animation: hob-neutral 43s steps(1, end) infinite; }
+  .hob-alive:not(.hob-working) .hob-smile { animation: hob-smile 43s steps(1, end) infinite; }
   .hob-working .hob-face { transform: translateY(1px); }
 }
 @keyframes hob-blink { 0%, 21.9%, 50.9%, 84.9%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
-@keyframes hob-smile { 0%, 32%, 75%, 100% { opacity: 1; } 28%, 71% { opacity: 0; } }
-@keyframes hob-flat { 0%, 32%, 75%, 100% { opacity: 0; } 28%, 71% { opacity: 1; } }
-@keyframes hob-brow { 0%, 75%, 100% { opacity: 0; } 71% { opacity: 1; } }
+@keyframes hob-neutral { 0%, 46%, 100% { opacity: 1; } 42% { opacity: 0; } }
+@keyframes hob-smile { 0%, 46%, 100% { opacity: 0; } 42% { opacity: 1; } }
 
 @media (max-height: 620px) { .chat-greeting { padding-top: 16px; } }
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }

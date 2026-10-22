@@ -34,11 +34,3 @@ export function faceRects(e: Expression, dx = 0, dy = 0): Rect[] {
   const brow = e === 'skeptical' ? [ink(41, 21, 3, 2), ink(39, 23, 2, 2), ink(44, 23, 2, 2)] : []
   return [...eyes, ...brow, ...mouth]
 }
-
-/** how far the face moves toward the cursor: x, y from -1 to 1 → whole grid units, the eyes more than the mouth */
-export function gazeOffset(x: number, y: number) {
-  const whole = (n: number) => Math.round(n) || 0
-  const half = (n: number) => Math.trunc(n / 2) || 0
-  const eyes = { x: whole(x * 3), y: whole(y * 2) }
-  return { eyes, mouth: { x: half(eyes.x), y: half(eyes.y) } }
-}

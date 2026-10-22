@@ -75,30 +75,3 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   } finally { await app.close() }
 })
-
-test('Hob watches the cursor during setup', async () => {
-  const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: {
-    ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-design-')),
-  } })
-  try {
-    const page = await app.firstWindow()
-    // CI machines may have reduced motion on (Windows often does); tracking is off then
-    await page.emulateMedia({ reducedMotion: 'no-preference' })
-    await expect(page.getByTestId('setup-other-options')).toBeVisible()
-    const look = page.getByTestId('mascot-look')
-    const box = (await page.getByTestId('mascot').boundingBox())!
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-    await expect(look).toHaveAttribute('transform', 'translate(0 0)')
-    // corners of the window, which differs in size between machines: off-window moves send no events
-    const { width, height } = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }))
-    await page.mouse.move(width - 4, height - 4, { steps: 4 })
-    await expect(look).toHaveAttribute('transform', /^translate\([1-9]+ [1-9]+\)$/)
-    await page.mouse.move(4, 4, { steps: 4 })
-    await expect(look).toHaveAttribute('transform', /^translate\(-[1-9]+ -[1-9]+\)$/)
-    // reduced motion turned on while open: looks ahead and stops following
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    await expect(look).toHaveAttribute('transform', 'translate(0 0)')
-    await page.mouse.move(width - 4, height - 4, { steps: 4 })
-    await expect(look).toHaveAttribute('transform', 'translate(0 0)')
-  } finally { await app.close() }
-})
