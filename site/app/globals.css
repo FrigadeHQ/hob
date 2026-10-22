@@ -1,0 +1,45 @@
+:root {
+  --paper: #fbfaf9; --surface: #ffffff; --ink: #1c1917; --ink-soft: #57534e; --muted: #817b75;
+  --line: #e9e6e3; --action: #242424; --on-action: #ffffff; --glow: #e7e5f7;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #191817; --surface: #22201e; --ink: #f2f1ef; --ink-soft: #c4beb8; --muted: #938c85;
+    --line: #2f2c29; --action: #e6e2de; --on-action: #211f1d; --glow: #26243a;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+
+main { padding: 0 16px; }
+.hero { max-width: 40rem; margin: 0 auto; padding: 96px 0 56px; text-align: center; }
+.mascot { image-rendering: pixelated; }
+h1 { margin: 24px 0 0; font-size: clamp(36px, 7vw, 56px); line-height: 1.05; font-weight: 600; letter-spacing: -0.035em; }
+.lede { margin: 18px auto 0; max-width: 32rem; color: var(--ink-soft); font-size: 18px; }
+.downloads { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.button { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-weight: 500; text-decoration: none; transition: opacity .15s; }
+.button.primary { border-color: var(--action); background: var(--action); color: var(--on-action); }
+.button:hover { opacity: .85; }
+.note { margin-top: 14px; color: var(--muted); font-size: 14px; }
+
+/* the app window on a soft lavender glow, Hob's colour */
+.shot { max-width: 1040px; margin: 0 auto; padding: 0 0 24px; background: radial-gradient(ellipse 60% 55% at 50% 45%, var(--glow), transparent 70%); }
+.shot img { display: block; width: 100%; height: auto; filter: drop-shadow(0 24px 48px rgba(28, 25, 23, .14)) drop-shadow(0 2px 6px rgba(28, 25, 23, .08)); }
+
+.features { max-width: 1040px; margin: 0 auto; padding: 64px 0 96px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+.features svg { color: var(--muted); }
+.features h2 { margin: 12px 0 0; font-size: 17px; font-weight: 600; }
+.features p { margin: 6px 0 0; color: var(--ink-soft); }
+@media (max-width: 760px) {
+  .hero { padding-top: 64px; }
+  /* phones: Mac on its own row, Windows and Linux side by side under it */
+  .downloads .button { flex: 1 1 0; justify-content: center; }
+  .downloads .button.primary { flex-basis: 100%; }
+  .features { grid-template-columns: 1fr; gap: 28px; padding: 48px 0 64px; }
+}
+
+footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 28px 16px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+footer a { color: var(--ink-soft); }

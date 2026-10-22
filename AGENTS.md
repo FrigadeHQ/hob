@@ -27,7 +27,7 @@ app/                 the Electron app (everything users run)
 packages/picker/     picks the best model for the hardware (pure, tested)
 catalog/             catalog.json: the models Hob can offer, pinned files and checksums
 docs/                user and plugin-author docs, README assets
-site/                the hob.chat landing page (static: index.html, images)
+site/                the hob.chat website (Next.js on Vercel; its own install: pnpm install --ignore-workspace)
 .github/workflows/   ci.yml (tests on Mac, Windows, Linux), release.yml (installers on v* tags)
 ```
 

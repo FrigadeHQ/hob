@@ -14,8 +14,16 @@ const rect = (r: Rect, i: number) => <rect key={i} x={r.x} y={r.y} width={r.w} h
 function useGaze(on: boolean) {
   const ref = useRef<SVGSVGElement>(null)
   const [gaze, setGaze] = useState({ x: 0, y: 0 })
+  // follows the system setting while open, like the CSS motion does
+  const [still, setStill] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   useEffect(() => {
-    if (!on || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const q = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const change = () => { setStill(q.matches); if (q.matches) setGaze({ x: 0, y: 0 }) }
+    q.addEventListener('change', change)
+    return () => q.removeEventListener('change', change)
+  }, [])
+  useEffect(() => {
+    if (!on || still) return
     // straight from the event (no animation frame): those pause in hidden windows, and moves are cheap
     const move = (e: PointerEvent) => {
       const box = ref.current?.getBoundingClientRect()
@@ -28,7 +36,7 @@ function useGaze(on: boolean) {
     window.addEventListener('pointermove', move)
     document.documentElement.addEventListener('pointerleave', away)
     return () => { window.removeEventListener('pointermove', move); document.documentElement.removeEventListener('pointerleave', away) }
-  }, [on])
+  }, [on, still])
   return [ref, gaze] as const
 }
 

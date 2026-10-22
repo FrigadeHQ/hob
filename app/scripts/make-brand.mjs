@@ -1,5 +1,5 @@
 // Hob's icon and logo reuse the app's body artwork and shared pixel face:
-//   build/icon.svg  (the app icon: Hob on a warm rounded square), docs/assets/hob-logo.svg (Hob alone)
+//   build/icon.svg  (the app icon: Hob on a warm rounded square), docs/assets/hob-logo.svg (Hob alone, with the soft shadow under it as in the app)
 // Then: build/render.cjs turns each into a PNG, and iconutil makes build/icon.icns (see scripts/make-icons.sh).
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -24,5 +24,5 @@ const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"
 </svg>
 `
 writeFileSync(join(root, 'build/icon.svg'), icon)
-writeFileSync(join(root, '../docs/assets/hob-logo.svg'), `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 60 60" shape-rendering="crispEdges">${mascot}</svg>\n`)
+writeFileSync(join(root, '../docs/assets/hob-logo.svg'), `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="-3 -1 66 66" shape-rendering="crispEdges"><ellipse cx="30" cy="62" rx="16" ry="2" fill="#1c1917" opacity="0.12"/>${mascot}</svg>\n`)
 console.log('wrote build/icon.svg and docs/assets/hob-logo.svg')

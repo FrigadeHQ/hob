@@ -82,6 +82,8 @@ test('Hob watches the cursor during setup', async () => {
   } })
   try {
     const page = await app.firstWindow()
+    // CI machines may have reduced motion on (Windows often does); tracking is off then
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
     await expect(page.getByTestId('setup-other-options')).toBeVisible()
     const look = page.getByTestId('mascot-look')
     const box = (await page.getByTestId('mascot').boundingBox())!
@@ -91,5 +93,10 @@ test('Hob watches the cursor during setup', async () => {
     await expect(look).toHaveAttribute('transform', /^translate\([1-9]+ [1-9]+\)$/)
     await page.mouse.move(Math.max(1, box.x - 500), 1, { steps: 4 })
     await expect(look).toHaveAttribute('transform', /^translate\(-[1-9]+ -[1-9]+\)$/)
+    // reduced motion turned on while open: looks ahead and stops following
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(look).toHaveAttribute('transform', 'translate(0 0)')
+    await page.mouse.move(box.x + 600, box.y + 400, { steps: 4 })
+    await expect(look).toHaveAttribute('transform', 'translate(0 0)')
   } finally { await app.close() }
 })
