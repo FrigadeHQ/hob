@@ -12,7 +12,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": true,
-      "description": "Instant and tiny. Fine for quick questions, weak on harder tasks.",
+      "description": "Small first download to get you started. For basic questions and short rewrites.",
       "builds": [
         {
           "quant": "Q8_0",
@@ -35,7 +35,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Very fast and light. Good for everyday chat.",
+      "description": "Light on storage. For emails, ideas, and short summaries.",
       "builds": [
         {
           "quant": "Q4_K_M",
@@ -58,7 +58,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Fast, with solid everyday smarts.",
+      "description": "A smaller option for writing, summaries, and simple file tasks.",
       "builds": [
         {
           "quant": "Q4_K_M",
@@ -81,7 +81,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Balanced. Noticeably smarter, still quick.",
+      "description": "A step up for detailed writing and coding, with a larger download.",
       "builds": [
         {
           "quant": "Q4_K_M",
@@ -104,7 +104,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "OpenAI's open model. Fast, strong at reasoning.",
+      "description": "OpenAI's reasoning model for analysis, math, and coding.",
       "builds": [
         {
           "quant": "MXFP4",
@@ -127,7 +127,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Smart and very fast. Great all-rounder.",
+      "description": "A larger general-purpose model for writing and file tasks.",
       "builds": [
         {
           "quant": "Q4_K_M",
@@ -150,7 +150,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Very smart, but slower.",
+      "description": "For detailed writing and complex questions. More demanding to run.",
       "builds": [
         {
           "quant": "Q4_K_M",
@@ -173,7 +173,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Smartest model that stays fast. Best for real tasks.",
+      "description": "For multi-step work with files, code, and planning.",
       "builds": [
         {
           "quant": "MXFP4_MOE",
@@ -196,7 +196,7 @@
       "minAppVersion": "0.1.0",
       "addedAt": "2026-10-14",
       "starter": false,
-      "description": "Top-tier smarts. Needs a high-end machine (64 GB+).",
+      "description": "For complex reasoning and coding. Largest download in this list.",
       "builds": [
         {
           "quant": "MXFP4",

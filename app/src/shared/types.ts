@@ -27,6 +27,8 @@ export type VisionState =
   | { phase: 'ready'; name: string; sizeGB: number }
   | { phase: 'error'; message: string }
 
+export type StorageUsage = { modelsGB: number; chatModelsGB: number; imageSupportGB: number; voiceModelsGB: number; filesGB: number; codeToolsGB: number }
+
 export type SetupState =
   /** firstRun: no model set up yet, so this is onboarding (not a normal start); unknown until the app has asked */
   | { phase: 'probing'; firstRun?: boolean }
@@ -133,7 +135,7 @@ export interface GarthApi {
     /** stop the model download in progress; false when there's none */
     cancel(): Promise<boolean>
   }
-  storage: { get(): Promise<{ modelsGB: number; filesGB: number; codeToolsGB: number }> }
+  storage: { get(): Promise<StorageUsage> }
   plugins: {
     list(): Promise<PluginInfo[]>
     setEnabled(id: string, on: boolean): Promise<void>

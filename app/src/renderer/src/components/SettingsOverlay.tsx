@@ -38,11 +38,15 @@ function GeneralSettings() {
           { id: 'system', label: <Monitor size={15} />, title: 'Match the system' }, { id: 'light', label: <Sun size={15} />, title: 'Light' }, { id: 'dark', label: <Moon size={15} />, title: 'Dark' },
         ]} />
       </Row>
-      <Row label="Text size" help="Size of Garth's replies.">
+      <Row label="Reply text size" help="Changes Garth's replies in chat.">
         <Segmented<TextSize> testId="text-size" value={size} onChange={(v) => { setSize(v); appearance.setTextSize(v) }} options={[
           { id: 'small', label: 'Small' }, { id: 'medium', label: 'Medium' }, { id: 'large', label: 'Large' },
         ]} />
       </Row>
+      <div className="mt-3 rounded-card border border-line bg-surface px-4 py-3">
+        <p className="mb-2 text-meta text-muted">Reply preview</p>
+        <div data-testid="reply-size-preview" className="reply prose max-w-none">Here’s a quick summary of what I found.</div>
+      </div>
       <Heading>Dictation</Heading>
       <Row label="Language" help="What you speak when you dictate. Auto works it out. Pick the microphone from the arrow next to the mic button.">
         <select data-testid="settings-dictation-language" value={language} onChange={(e) => { setLanguage(e.target.value); prefs.setLanguage(e.target.value) }}

@@ -224,7 +224,7 @@ test('Garth looks at an attached photo and answers from what it sees', async () 
   // Settings says image support is ready
   await page.getByTestId('open-settings').click()
   await page.getByTestId('settings-nav-model').click()
-  await expect(page.getByTestId('settings-vision')).toContainText('Ready')
+  await expect(page.getByTestId('settings-vision')).toContainText('Downloaded')
   await app.close()
 })
 
