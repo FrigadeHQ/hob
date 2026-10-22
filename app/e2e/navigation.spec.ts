@@ -136,15 +136,16 @@ test('the sidebar can be dragged wider or narrower, is remembered, and double-cl
   await app.close()
 })
 
-test('home ideas: two work on a file — they ask for one, then send it with the request', async () => {
+test('home ideas: three under the composer; the file ones ask for a file, then send it with the request', async () => {
   const src = mkdtempSync(join(tmpdir(), 'garth-src-'))
   writeFileSync(join(src, 'letter.txt'), 'Dear Sam, thank you for you’re help.')
   const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
-  await expect(page.locator('[data-testid="suggestion"][data-file="true"]')).toHaveCount(2)
-  // until email and calendar are connected, that idea takes one of the four
+  await expect(page.getByTestId('suggestion')).toHaveCount(3)
+  // until email and calendar are connected, that idea takes the second file idea's place
+  await expect(page.locator('[data-testid="suggestion"][data-file="true"]')).toHaveCount(1)
   await expect(page.locator('[data-testid="suggestion"][data-connect="true"]')).toHaveCount(1)
   await expect(page.locator('[data-testid="suggestion"][data-file="false"][data-connect="false"]')).toHaveCount(1)
 

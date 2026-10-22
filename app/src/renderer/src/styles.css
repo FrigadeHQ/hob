@@ -261,16 +261,21 @@ body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] 
 .status-presence:has(.garth-mascot) > .status-dot { display: none; }
 #root:has(.chat-greeting) .status-presence .garth-mascot { display: none; }
 #root:has(.chat-greeting) .status-presence > .status-dot { display: block; }
-.garth-smile { opacity: 0; }
+/* Garth smiles; now and then the mouth goes flat for a moment, or an eyebrow goes up */
+.garth-flat, .garth-brow { opacity: 0; }
+.garth-working .garth-flat { opacity: 1; }
+.garth-working .garth-smile { opacity: 0; }
 .garth-eyes { transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: no-preference) {
   .garth-alive .garth-eyes { animation: garth-blink 37s steps(1, end) infinite; }
-  .garth-alive:not(.garth-working) .garth-neutral { animation: garth-neutral 43s steps(1, end) infinite; }
-  .garth-alive:not(.garth-working) .garth-smile { animation: garth-smile 43s steps(1, end) infinite; }
+  .garth-alive:not(.garth-working) .garth-flat { animation: garth-flat 53s steps(1, end) infinite; }
+  .garth-alive:not(.garth-working) .garth-smile { animation: garth-smile 53s steps(1, end) infinite; }
+  .garth-alive:not(.garth-working) .garth-brow { animation: garth-brow 53s steps(1, end) infinite; }
   .garth-working .garth-face { transform: translateY(1px); }
 }
 @keyframes garth-blink { 0%, 21.4%, 50.4%, 84.4%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
-@keyframes garth-neutral { 0%, 46%, 100% { opacity: 1; } 42% { opacity: 0; } }
-@keyframes garth-smile { 0%, 46%, 100% { opacity: 0; } 42% { opacity: 1; } }
+@keyframes garth-smile { 0%, 32%, 75%, 100% { opacity: 1; } 28%, 71% { opacity: 0; } }
+@keyframes garth-flat { 0%, 32%, 75%, 100% { opacity: 0; } 28%, 71% { opacity: 1; } }
+@keyframes garth-brow { 0%, 75%, 100% { opacity: 0; } 71% { opacity: 1; } }
 
 @media (max-height: 620px) { .chat-greeting { padding-top: 16px; } }

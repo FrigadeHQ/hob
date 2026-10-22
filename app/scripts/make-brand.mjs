@@ -4,13 +4,13 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { faceRects } from '../src/shared/mascot.ts'
+import { faceRects, tintMatrix } from '../src/shared/mascot.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const body = readFileSync(join(root, 'src/renderer/src/assets/garth-body.png')).toString('base64')
 const face = faceRects('smile').map((r) => `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${r.fill}"/>`).join('')
 // Use the same crop as Mascot.tsx so the face lines up in both places.
-const mascot = `<svg width="60" height="60" viewBox="158 155.5 937 937"><image href="data:image/png;base64,${body}" width="1254" height="1254"/></svg><g shape-rendering="crispEdges">${face}</g>`
+const mascot = `<svg width="60" height="60" viewBox="158 155.5 937 937"><filter id="tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${tintMatrix()}"/></filter><image href="data:image/png;base64,${body}" width="1254" height="1254" filter="url(#tint)"/></svg><g shape-rendering="crispEdges">${face}</g>`
 
 // macOS icon grid: an 824×824 rounded square inside 1024, a soft shadow under it
 const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">

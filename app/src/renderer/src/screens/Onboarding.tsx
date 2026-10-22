@@ -70,7 +70,7 @@ export function Onboarding({ state }: { state: SetupState }) {
       <div className="onboarding-screen">
         <div className="onboarding-content">
           {/* One mounted Garth carries the transition from checking to setup. */}
-          <div className="onboarding-mascot"><div className="setup-avatar"><Mascot size={72} alive /></div></div>
+          <div className="onboarding-mascot"><div className="setup-avatar"><Mascot size={72} alive watch /></div></div>
           <div className="onboarding-probing" aria-hidden={!probing}>
             {firstRun !== undefined && <ProbingLine firstRun={firstRun} />}
           </div>

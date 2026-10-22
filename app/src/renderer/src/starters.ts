@@ -72,12 +72,12 @@ const CHART_IDEA: StarterRef = { title: 'Turn a spreadsheet into a chart', promp
 /** shown until email and calendar are connected: the thing that makes Garth most useful day to day */
 export const CONNECT_IDEA: StarterRef = { title: 'Connect my email and calendar', prompt: '', icon: 'calendar', pluginId: '', connect: true }
 
-/** the chart idea, one more that works on a file, two others (plugins first); the rest rotate each new chat.
- * connect: email and calendar aren't connected yet, so that idea takes one of the four */
+/** three ideas: the chart, one more that works on a file, one other (plugins first); the rest rotate each new chat.
+ * connect: email and calendar aren't connected yet, so that idea takes the file idea's place */
 export function pickStarters(fromPlugins: StarterRef[], seed: number, o: { connect?: boolean } = {}): StarterRef[] {
   const withFile = [...FILE_IDEAS, ...fromPlugins.filter((s) => s.file)]
   const others = [...fromPlugins.filter((s) => !s.file), ...EVERYDAY]
-  return o.connect ? [CHART_IDEA, CONNECT_IDEA, ...rotate(withFile, seed, 1), ...rotate(others, seed, 1)] : [CHART_IDEA, ...rotate(withFile, seed, 1), ...rotate(others, seed, 2)]
+  return [CHART_IDEA, ...(o.connect ? [CONNECT_IDEA] : rotate(withFile, seed, 1)), ...rotate(others, seed, 1)]
 }
 
 /** for tests: every title that can show on the home screen */

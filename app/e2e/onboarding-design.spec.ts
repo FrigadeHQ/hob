@@ -75,3 +75,21 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   } finally { await app.close() }
 })
+
+test('Garth watches the cursor during setup', async () => {
+  const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: {
+    ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-design-')),
+  } })
+  try {
+    const page = await app.firstWindow()
+    await expect(page.getByTestId('setup-other-options')).toBeVisible()
+    const look = page.getByTestId('mascot-look')
+    const box = (await page.getByTestId('mascot').boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await expect(look).toHaveAttribute('transform', 'translate(0 0)')
+    await page.mouse.move(box.x + 600, box.y + 400, { steps: 4 })
+    await expect(look).toHaveAttribute('transform', /^translate\([1-9]+ [1-9]+\)$/)
+    await page.mouse.move(Math.max(1, box.x - 500), 1, { steps: 4 })
+    await expect(look).toHaveAttribute('transform', /^translate\(-[1-9]+ -[1-9]+\)$/)
+  } finally { await app.close() }
+})

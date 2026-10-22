@@ -15,17 +15,19 @@ test('Garth moves from the greeting to the sidebar without watching the cursor',
     const sidebarMascot = page.getByTestId('sidebar').getByTestId('mascot')
     await expect(mascot).toHaveCount(1)
     await expect(mascot).toHaveAttribute('width', '48')
+    await expect(mascot).toHaveAttribute('data-expression', 'smile')
+    await expect(mascot.locator('.garth-smile')).toHaveCSS('opacity', '1')
+    // Garth has a colour now, not grey
+    await expect(mascot.locator('feColorMatrix')).toHaveCount(1)
     await expect(sidebarMascot).toBeHidden()
     await page.evaluate(() => document.fonts.ready)
     expect(await page.evaluate(() => document.fonts.check('16px "Hanken Grotesk"'))).toBe(true)
     if (process.env.GARTH_SHOTS) await page.screenshot({ path: join(process.env.GARTH_SHOTS, 'chat-new-light.png') })
 
-    const eye = mascot.getByTestId('mascot-eyes').locator('rect').first()
-    const x = await eye.getAttribute('x'), y = await eye.getAttribute('y')
+    // only setup watches the cursor
     await page.mouse.move(0, 0)
     await page.mouse.move(900, 600, { steps: 5 })
-    await expect(eye).toHaveAttribute('x', x!)
-    await expect(eye).toHaveAttribute('y', y!)
+    await expect(mascot.getByTestId('mascot-look')).toHaveAttribute('transform', 'translate(0 0)')
     // Changing the OS preference also stops motion on an already mounted mascot.
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await expect(mascot.getByTestId('mascot-eyes')).toHaveCSS('animation-name', 'none')
@@ -38,7 +40,7 @@ test('Garth moves from the greeting to the sidebar without watching the cursor',
     await expect(sidebarMascot).toHaveAttribute('data-expression', 'working')
     await expect(mascot).toHaveCount(1)
     await expect(page.getByTestId('composer-stop')).toBeHidden({ timeout: 20_000 })
-    await expect(sidebarMascot).toHaveAttribute('data-expression', 'neutral')
+    await expect(sidebarMascot).toHaveAttribute('data-expression', 'smile')
     await expect(page.getByTestId('message-assistant').last()).toHaveCSS('font-family', /Hanken Grotesk/)
     if (process.env.GARTH_SHOTS) await page.screenshot({ path: join(process.env.GARTH_SHOTS, 'chat-conversation-light.png') })
     await page.emulateMedia({ colorScheme: 'dark' })
@@ -50,9 +52,12 @@ test('Garth moves from the greeting to the sidebar without watching the cursor',
     await page.setViewportSize({ width: 720, height: 520 })
     await expect(page.getByTestId('sidebar-slot')).toHaveAttribute('aria-hidden', 'true')
     await expect.poll(async () => { const b = (await page.getByTestId('sidebar').boundingBox())!; return Math.round(b.x + b.width) }).toBe(0)
-    const lastIdea = (await page.getByTestId('suggestion').last().boundingBox())!
+    // a new chat: the composer in the middle, three ideas under it
+    await expect(page.getByTestId('suggestion')).toHaveCount(3)
+    const firstIdea = (await page.getByTestId('suggestion').first().boundingBox())!
     const composer = (await page.getByTestId('composer-input').boundingBox())!
-    expect(lastIdea.y + lastIdea.height).toBeLessThan(composer.y - 40)
+    expect(firstIdea.y).toBeGreaterThan(composer.y + composer.height)
+    expect(composer.y).toBeLessThan(520 * 0.75)
     if (process.env.GARTH_SHOTS) await page.screenshot({ path: join(process.env.GARTH_SHOTS, 'chat-new-small-dark.png') })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight)).toBe(true)
   } finally { await app.close() }

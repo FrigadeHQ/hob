@@ -336,6 +336,41 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
   }
 
+  const empty = messages.length === 0
+  // one composer: in the middle of a new chat, under the conversation once it starts
+  const composer = (
+    <>
+      {dictation.error && (
+        <p data-testid="dictation-error" className="mb-2 text-ui text-ink-soft">
+          {dictation.error.text}{' '}
+          {dictation.error.micSettings && <button onClick={() => void garth.speech.openMicSettings()} className="underline underline-offset-2 hover:text-ink">Open microphone settings</button>}
+        </p>
+      )}
+      {notice && (
+        <p data-testid="notice" className="mb-2 text-ui text-ink-soft">
+          {notice.text} {notice.folders && <button onClick={() => { onNewProject(notice.folders); setNotice(null) }} className="underline underline-offset-2 hover:text-ink">Make a project</button>}
+        </p>
+      )}
+      {queued && (
+        <div data-testid="queued" className="fade-in mb-1.5 flex items-center gap-2 rounded-control bg-line/50 px-3 py-1.5 text-ui text-ink-soft">
+          <Clock size={14} className="shrink-0 text-muted" />
+          <span className="min-w-0 flex-1 truncate">Sends when Garth is done: {queued}</span>
+          <button aria-label="Don't send" title="Don't send" onClick={() => { setInput(queued); setQueued(null) }} className="text-muted hover:text-ink"><X size={14} /></button>
+        </div>
+      )}
+      <div className="mb-1.5 flex min-h-7 items-center">
+        <ProjectChip projects={projects} value={projectId} locked={created} onChange={pickProject} onNew={() => onNewProject()} />
+      </div>
+      <Composer
+        value={input} onChange={setInput} onSend={() => void send()} onStop={stop} running={!!requestId}
+        onAttach={() => void garth.files.pick().then(addFiles)}
+        onPasteFiles={(files) => void pasteFiles(files)}
+        pending={pending} onRemovePending={(a) => setPending((p) => p.filter((x) => x.path !== a.path))}
+        inputRef={inputRef} dictation={dictation} skills={skills}
+      />
+    </>
+  )
+
   return (
     <main
       className="relative flex min-w-0 flex-1 flex-col bg-paper"
@@ -352,9 +387,9 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       )}
       <div className="drag h-12 shrink-0" />
       <div ref={scroller} onScroll={onScroll} className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[768px] space-y-8 px-6 pb-10 sm:px-8">
-          {messages.length === 0 && (
-            <div className="chat-greeting pt-12 text-center sm:pt-[63px]">
+        <div className={`mx-auto max-w-[768px] px-6 sm:px-8 ${empty ? 'flex min-h-full flex-col justify-center pb-16' : 'space-y-8 pb-10'}`}>
+          {empty && (
+            <div className="chat-greeting pt-6 text-center">
               <div className="mb-[23px] flex justify-center"><Mascot size={48} alive /></div>
               {project
                 ? <>
@@ -379,9 +414,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                       <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Garth a folder to work in</button>.
                     </p>
                   </>}
-              <div className="mt-8 grid gap-2 text-left sm:grid-cols-2">
+              <div className="mt-6 text-left">{composer}</div>
+              <div className="mt-5 px-1 text-left">
                 {pickStarters(starters, seed, { connect: showConnect }).map((s) => (
-                  <button key={s.title} data-testid="suggestion" data-file={!!s.file} data-connect={!!s.connect} onClick={() => void (s.connect ? openConnect() : s.file ? startWithFile(s.prompt) : send(s.prompt))} className="group flex items-center gap-3 rounded-card border border-line bg-surface px-3.5 py-3 text-ui text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
+                  <button key={s.title} data-testid="suggestion" data-file={!!s.file} data-connect={!!s.connect} onClick={() => void (s.connect ? openConnect() : s.file ? startWithFile(s.prompt) : send(s.prompt))} className="group flex w-full items-center gap-3 rounded-control px-3 py-2.5 text-body text-muted transition-colors hover:bg-line/50 hover:text-ink">
                     <PluginIcon name={s.icon} className="shrink-0 text-muted transition-colors group-hover:text-ink-soft" />
                     <span title={s.title} className="min-w-0 flex-1 truncate text-left">{s.title}</span>
                     {s.file && <Paperclip size={14} strokeWidth={1.75} aria-label="Asks for a file" className="shrink-0 text-muted" />}
@@ -433,44 +469,19 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
         </div>
       </div>
 
-      <div className="relative mx-auto w-full max-w-[768px] px-6 pb-5 sm:px-8">
-        {/* text scrolls under a soft fade instead of being cut by the composer */}
-        <div className="pointer-events-none absolute inset-x-0 -top-10 h-10 bg-gradient-to-b from-transparent to-paper" />
-        {/* always rendered so it can fade in and out */}
-        <button data-testid="jump-latest" aria-label="Jump to latest" aria-hidden={!showJump} tabIndex={showJump ? 0 : -1} onClick={jumpToLatest}
-          className={`absolute -top-12 left-1/2 inline-flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-line-strong bg-surface text-ink-soft shadow-md transition-[opacity,transform] duration-200 ease-out hover:text-ink ${showJump ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'}`}>
-          <ArrowDown size={16} strokeWidth={1.75} />
-        </button>
-        {dictation.error && (
-          <p data-testid="dictation-error" className="mb-2 text-ui text-ink-soft">
-            {dictation.error.text}{' '}
-            {dictation.error.micSettings && <button onClick={() => void garth.speech.openMicSettings()} className="underline underline-offset-2 hover:text-ink">Open microphone settings</button>}
-          </p>
-        )}
-        {notice && (
-          <p data-testid="notice" className="mb-2 text-ui text-ink-soft">
-            {notice.text} {notice.folders && <button onClick={() => { onNewProject(notice.folders); setNotice(null) }} className="underline underline-offset-2 hover:text-ink">Make a project</button>}
-          </p>
-        )}
-        {queued && (
-          <div data-testid="queued" className="fade-in mb-1.5 flex items-center gap-2 rounded-control bg-line/50 px-3 py-1.5 text-ui text-ink-soft">
-            <Clock size={14} className="shrink-0 text-muted" />
-            <span className="min-w-0 flex-1 truncate">Sends when Garth is done: {queued}</span>
-            <button aria-label="Don't send" title="Don't send" onClick={() => { setInput(queued); setQueued(null) }} className="text-muted hover:text-ink"><X size={14} /></button>
-          </div>
-        )}
-        <div className="mb-1.5 flex min-h-7 items-center">
-          <ProjectChip projects={projects} value={projectId} locked={created} onChange={pickProject} onNew={() => onNewProject()} />
+      {!empty && (
+        <div className="relative mx-auto w-full max-w-[768px] px-6 pb-5 sm:px-8">
+          {/* text scrolls under a soft fade instead of being cut by the composer */}
+          <div className="pointer-events-none absolute inset-x-0 -top-10 h-10 bg-gradient-to-b from-transparent to-paper" />
+          {/* always rendered so it can fade in and out */}
+          <button data-testid="jump-latest" aria-label="Jump to latest" aria-hidden={!showJump} tabIndex={showJump ? 0 : -1} onClick={jumpToLatest}
+            className={`absolute -top-12 left-1/2 inline-flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-line-strong bg-surface text-ink-soft shadow-md transition-[opacity,transform] duration-200 ease-out hover:text-ink ${showJump ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'}`}>
+            <ArrowDown size={16} strokeWidth={1.75} />
+          </button>
+          {composer}
+          <p className="mt-2 text-center text-meta text-muted">Garth can make mistakes.</p>
         </div>
-        <Composer
-          value={input} onChange={setInput} onSend={() => void send()} onStop={stop} running={!!requestId}
-          onAttach={() => void garth.files.pick().then(addFiles)}
-          onPasteFiles={(files) => void pasteFiles(files)}
-          pending={pending} onRemovePending={(a) => setPending((p) => p.filter((x) => x.path !== a.path))}
-          inputRef={inputRef} dictation={dictation} skills={skills}
-        />
-        <p className="mt-2 text-center text-meta text-muted">Garth can make mistakes.</p>
-      </div>
+      )}
     </main>
   )
 }
