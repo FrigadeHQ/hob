@@ -177,3 +177,49 @@ test('hiding the sidebar slides it away, and it comes back', async () => {
   await expect(page.getByTestId('new-chat')).toBeVisible()
   await app.close()
 })
+
+test('Windows and Linux: no title bar or menu bar; the window buttons sit over the top-right corner, clear of Hob\'s own', async () => {
+  test.skip(process.platform === 'darwin', 'the Mac keeps its traffic lights')
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
+  const page = await app.firstWindow()
+  await page.getByTestId('setup-download').click()
+  await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
+  const win = await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; return { menu: w.isMenuBarVisible(), content: w.getContentBounds(), outer: w.getBounds() } })
+  expect(win.menu).toBe(false)
+  // the page starts at the top of the window: the sidebar buttons sit where a title bar would be
+  expect(await page.getByTestId('toggle-sidebar').evaluate((el) => el.getBoundingClientRect().top)).toBeLessThan(20)
+  const overlay = await page.evaluate(() => (navigator as Navigator & { windowControlsOverlay?: { visible: boolean; getTitlebarAreaRect(): DOMRect } }).windowControlsOverlay)
+  expect(overlay).toBeTruthy()
+  const area = await page.evaluate(() => { const r = (navigator as Navigator & { windowControlsOverlay: { getTitlebarAreaRect(): DOMRect } }).windowControlsOverlay.getTitlebarAreaRect(); return { right: r.x + r.width, visible: (navigator as Navigator & { windowControlsOverlay: { visible: boolean } }).windowControlsOverlay.visible } })
+  expect(area.visible).toBe(true)
+  // Settings' close button stays left of the window buttons
+  await page.getByTestId('open-settings').click()
+  const close = (await page.getByTestId('settings-close').boundingBox())!
+  expect(close.x + close.width).toBeLessThanOrEqual(area.right)
+  await app.close()
+})
+
+test('switching between chats never flashes the new-chat screen (or hides and shows Hob in the corner)', async () => {
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
+  const page = await app.firstWindow()
+  await page.getByTestId('setup-download').click()
+  await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
+  for (const t of ['first', 'second']) {
+    await page.getByTestId('new-chat').click()
+    await page.getByTestId('composer-input').fill(t)
+    await page.getByTestId('composer-send').click()
+    await expect(page.getByTestId('message-assistant').last()).toContainText(`You said: ${t}`)
+  }
+  // watch every frame for the new-chat screen while hopping between the two chats
+  await page.evaluate(() => {
+    const w = window as unknown as { flashes: number }
+    w.flashes = 0
+    new MutationObserver(() => { if (document.querySelector('.chat-greeting')) w.flashes++ }).observe(document.body, { childList: true, subtree: true })
+  })
+  for (let i = 0; i < 4; i++) {
+    await page.getByTestId('chat-item').nth(i % 2).click()
+    await expect(page.getByTestId('message-assistant')).toHaveCount(1)
+  }
+  expect(await page.evaluate(() => (window as unknown as { flashes: number }).flashes)).toBe(0)
+  await app.close()
+})

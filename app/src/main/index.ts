@@ -15,6 +15,7 @@ import { SetupController } from './setup'
 import { registerIpc } from './ipc'
 import { Store } from './store'
 import { migrateFilesDir, migrateProfile } from './migrate'
+import { TITLE_BAR_HEIGHT, titleBarColors } from './titleBar'
 import { pruneUndo } from './agent/journal'
 import { PythonRuntime, realRuntimeDeps } from './python/runtime'
 import { VisionInstaller } from './vision/install'
@@ -67,14 +68,23 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'hob-file', privileges: { standa
 function createWindow() {
   win = new BrowserWindow({
     width: 1100, height: 760, minWidth: 720, minHeight: 520,
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    // window buttons centred on the sidebar toggle (top-2, 32px tall: centre at 24px)
-    trafficLightPosition: { x: 16, y: 17 },
-    backgroundColor: '#FAFAFA',
+    // Mac: traffic lights centred on the sidebar toggle (top-2, 32px tall: centre at 24px). Elsewhere: the window
+    // buttons over the top-right corner, and no menu bar
+    ...(process.platform === 'darwin'
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 16, y: 17 } }
+      : { titleBarStyle: 'hidden' as const, titleBarOverlay: { ...titleBarColors(nativeTheme.shouldUseDarkColors), height: TITLE_BAR_HEIGHT }, autoHideMenuBar: true }),
+    backgroundColor: titleBarColors(nativeTheme.shouldUseDarkColors).color,
     show: !BACKGROUND,
     // hidden pages would otherwise pause timers and animations
     webPreferences: { preload: join(__dirname, '../preload/index.cjs'), sandbox: false, ...(BACKGROUND ? { backgroundThrottling: false } : {}) },
   })
+  if (process.platform !== 'darwin') {
+    win.setMenuBarVisibility(false)
+    // the window buttons follow light and dark mode
+    const recolor = () => win?.setTitleBarOverlay({ ...titleBarColors(nativeTheme.shouldUseDarkColors), height: TITLE_BAR_HEIGHT })
+    nativeTheme.on('updated', recolor)
+    win.on('closed', () => nativeTheme.off('updated', recolor))
+  }
   win.webContents.setWindowOpenHandler(({ url }) => { openExternally(url); return { action: 'deny' } })
   win.webContents.on('will-navigate', (e, url) => {
     // a file dropped outside the composer must never replace the app (file://…/sales.csv)

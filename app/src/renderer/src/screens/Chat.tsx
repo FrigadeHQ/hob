@@ -368,7 +368,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
   }
 
-  const empty = messages.length === 0
+  // an existing chat is never empty: while its messages load, show the conversation layout, not the new-chat screen
+  const empty = messages.length === 0 && !initialId
   // one composer: in the middle of a new chat, under the conversation once it starts
   const composer = (
     <>

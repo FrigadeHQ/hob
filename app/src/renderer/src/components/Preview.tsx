@@ -32,7 +32,7 @@ export function PreviewHost() {
   const btn = 'inline-flex items-center gap-1.5 rounded-control px-2.5 py-1.5 text-ui text-ink-soft hover:bg-line/70 hover:text-ink'
   return (
     <div data-testid="preview" className="fade-in fixed inset-0 z-50 flex flex-col bg-paper/95 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setPath(null) }}>
-      <div className={`drag flex h-12 shrink-0 items-center gap-2 border-b border-line pr-3 ${hob.platform === 'darwin' ? 'pl-24' : 'pl-4'}`}>
+      <div className={`drag flex h-12 shrink-0 items-center gap-2 border-b border-line pr-clear-controls ${hob.platform === 'darwin' ? 'pl-24' : 'pl-4'}`}>
         <span className="min-w-0 flex-1 truncate text-ui font-medium">{name(path)}</span>
         <button className={`no-drag ${btn}`} onClick={() => void hob.files.open(path)}><SquareArrowOutUpRight size={14} />Open</button>
         <button className={`no-drag ${btn}`} onClick={() => void hob.files.show(path)}><FolderOpen size={14} />Show in {fileManager(hob.platform)}</button>

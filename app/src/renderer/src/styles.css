@@ -104,6 +104,10 @@ body {
 }
 /* thin, quiet scrollbars that don't take room from the content */
 * { scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+/* Windows and Linux draw their window buttons over the top-right corner: how far in they reach (0 on the Mac) */
+:root { --controls-inset: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)); }
+.right-clear-controls { right: calc(var(--controls-inset) + 1rem); }
+.pr-clear-controls { padding-right: calc(var(--controls-inset) + 0.75rem); }
 .drag { -webkit-app-region: drag; }
 .no-drag { -webkit-app-region: no-drag; }
 
