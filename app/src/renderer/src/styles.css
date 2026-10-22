@@ -267,13 +267,13 @@ body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] 
 .garth-working .garth-smile { opacity: 0; }
 .garth-eyes { transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: no-preference) {
-  .garth-alive .garth-eyes { animation: garth-blink 37s steps(1, end) infinite; }
+  .garth-alive .garth-eyes { animation: garth-blink 17s steps(1, end) infinite; }
   .garth-alive:not(.garth-working) .garth-flat { animation: garth-flat 53s steps(1, end) infinite; }
   .garth-alive:not(.garth-working) .garth-smile { animation: garth-smile 53s steps(1, end) infinite; }
   .garth-alive:not(.garth-working) .garth-brow { animation: garth-brow 53s steps(1, end) infinite; }
   .garth-working .garth-face { transform: translateY(1px); }
 }
-@keyframes garth-blink { 0%, 21.4%, 50.4%, 84.4%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
+@keyframes garth-blink { 0%, 21.9%, 50.9%, 84.9%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
 @keyframes garth-smile { 0%, 32%, 75%, 100% { opacity: 1; } 28%, 71% { opacity: 0; } }
 @keyframes garth-flat { 0%, 32%, 75%, 100% { opacity: 0; } 28%, 71% { opacity: 1; } }
 @keyframes garth-brow { 0%, 75%, 100% { opacity: 0; } 71% { opacity: 1; } }
