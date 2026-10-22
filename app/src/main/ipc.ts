@@ -94,6 +94,12 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     d.store.deleteChat(id)
   }
   ipcMain.handle('chats:remove', (_e, id: string) => removeChat(id))
+  // editing a sent message or trying a reply again: the chat goes back to its first n messages (never mid-reply)
+  ipcMain.handle('chats:keep', (_e, id: string, n: number) => {
+    if (live.get(String(id))) return false
+    d.store.keepMessages(String(id), Number(n))
+    return true
+  })
   /** every chat, gone from Hob; the files they made stay where they are (the page asks first) */
   ipcMain.handle('chats:removeAll', async () => {
     running.stopAll()

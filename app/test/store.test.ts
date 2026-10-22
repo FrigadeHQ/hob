@@ -96,3 +96,15 @@ it('searches chats by title and by what was said, with a snippet around the matc
   expect(s.searchChats('e_').map((c) => c.id)).toEqual(['c3'])
   expect(s.searchChats('  ')).toEqual([])
 })
+
+it('a chat can be cut back to its first messages (to edit a message or try a reply again)', () => {
+  const s = new Store(':memory:')
+  s.createChat('c', '/c'); s.createChat('other', '/o')
+  for (const [role, content] of [['user', 'one'], ['assistant', 'reply one'], ['user', 'two'], ['assistant', 'reply two']] as const) s.addMessage('c', { role, content })
+  s.addMessage('other', { role: 'user', content: 'untouched' })
+  s.keepMessages('c', 2)
+  expect(s.messages('c').map((m) => m.content)).toEqual(['one', 'reply one'])
+  expect(s.messages('other')).toHaveLength(1)
+  s.keepMessages('c', 0)
+  expect(s.messages('c')).toEqual([])
+})

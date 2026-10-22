@@ -328,3 +328,56 @@ test('Markdown streaming in never shows its ** or ` marks', async () => {
   await expect(reply.locator('code')).toHaveText('code')
   await app.close()
 })
+
+test('a sent message can be edited, and the last reply tried again; the chat keeps only the new turn', async () => {
+  const { app, page, userData } = await launch()
+  await ready(page)
+  await page.getByTestId('composer-input').fill('hello there')
+  await page.getByTestId('composer-send').click()
+  await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hello there')
+
+  // edit: the message is replaced, the reply after it goes, and Hob answers the new one
+  const mine = page.getByTestId('message-user').first()
+  await mine.hover()
+  await mine.getByTestId('edit-message').click()
+  const box = page.getByTestId('edit-input')
+  await expect(box).toHaveValue('hello there')
+  await box.fill('hello again')
+  await page.getByTestId('edit-send').click()
+  await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hello again')
+  await expect(page.getByTestId('message-user')).toHaveCount(1)
+  await expect(page.getByTestId('message-assistant')).toHaveCount(1)
+  await expect(page.getByTestId('message-user').first()).toContainText('hello again')
+
+  // cancel leaves it as it was
+  await page.getByTestId('message-user').first().hover()
+  await page.getByTestId('edit-message').click()
+  await page.getByTestId('edit-input').fill('never sent')
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('edit-input')).toHaveCount(0)
+  await expect(page.getByTestId('message-user').first()).toContainText('hello again')
+
+  // retry: the last reply is written again, not added
+  const saved = () => page.evaluate(async () => {
+    const [c] = await window.hob.chats.list()
+    const r = await window.hob.chats.get(c.id)
+    return { live: !!r?.live, roles: r?.messages.map((m) => m.role).join(',') }
+  })
+  const before = (await page.evaluate(async () => (await window.hob.chats.get((await window.hob.chats.list())[0].id))?.messages.at(-1)?.id))
+  await page.getByTestId('retry').click()
+  // saved again: still one question and one reply, the reply a new one
+  await expect.poll(async () => { const s = await saved(); return !s.live && s.roles }, { timeout: 20_000 }).toBe('user,assistant')
+  await expect.poll(() => page.evaluate(async () => (await window.hob.chats.get((await window.hob.chats.list())[0].id))?.messages.at(-1)?.id)).not.toBe(before)
+  await expect(page.getByTestId('message-assistant')).toHaveCount(1)
+  await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hello again')
+  await app.close()
+
+  // saved that way
+  const again = await launch(userData)
+  await ready(again.page)
+  await again.page.getByTestId('chat-item').first().click()
+  await expect(again.page.getByTestId('message-user')).toHaveCount(1)
+  await expect(again.page.getByTestId('message-assistant')).toHaveCount(1)
+  await expect(again.page.getByTestId('message-user').first()).toContainText('hello again')
+  await again.app.close()
+})

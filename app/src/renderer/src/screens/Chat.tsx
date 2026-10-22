@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
-import { ArrowDown, Clock, FolderOpen, Paperclip, Sparkles, Undo2, X } from 'lucide-react'
+import { ArrowDown, Clock, FolderOpen, Paperclip, Pencil, RotateCcw, Sparkles, Undo2, X } from 'lucide-react'
 import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../../shared/agent'
 import type { AccountsState, MacAccess } from '../../../shared/types'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
@@ -83,6 +83,30 @@ function ReplyText({ content, live }: { content: string; live: boolean }) {
   // live: new words fade in; finished: plain text (no extra spans in long chats)
   return text ? <Markdown remarkPlugins={REMARK} rehypePlugins={live ? [rehypeLineBreaks, rehypeFadeWords, KATEX] : [rehypeLineBreaks, KATEX]} components={MARKDOWN_COMPONENTS}>{withMath(tidyMarkdown(live ? healMarkdown(text) : text))}</Markdown> : null
 }
+/** a sent message, being edited in place: Enter sends, Shift+Enter is a new line, Esc cancels */
+function EditMessage({ text, onSend, onCancel }: { text: string; onSend(text: string): void; onCancel(): void }) {
+  const [value, setValue] = useState(text)
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => { const t = ref.current; if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length) } }, [])
+  // grows with the text, like the composer
+  useEffect(() => { const t = ref.current; if (t) { t.style.height = 'auto'; t.style.height = `${Math.min(t.scrollHeight, 320)}px` } }, [value])
+  return (
+    <div className="w-full max-w-[85%] rounded-[18px] border border-line-strong bg-surface p-3">
+      <textarea ref={ref} data-testid="edit-input" value={value} onChange={(e) => setValue(e.target.value)} rows={1}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') { e.preventDefault(); onCancel() }
+          else if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (value.trim()) onSend(value.trim()) }
+        }}
+        className="block w-full resize-none bg-transparent text-body outline-none" />
+      <div className="mt-2 flex items-center justify-end gap-2">
+        <span className="mr-auto text-meta text-muted">Hob answers again from here.</span>
+        <button data-testid="edit-cancel" onClick={onCancel} className="rounded-control px-2.5 py-1 text-ui text-ink-soft hover:bg-line/70 hover:text-ink">Cancel</button>
+        <button data-testid="edit-send" disabled={!value.trim()} onClick={() => onSend(value.trim())} className="rounded-control bg-action px-2.5 py-1 text-ui text-on-action disabled:opacity-40">Send</button>
+      </div>
+    </div>
+  )
+}
+
 /**
  * A reply with its charts: where the model wrote a placeholder for one ("{chart}", "[Chart: …]"), the chart goes
  * there; otherwise above the text, where it appears while the text is written.
@@ -370,6 +394,18 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
   }
 
+  /** which sent message is being edited (its place in the chat) */
+  const [editing, setEditing] = useState<number | null>(null)
+  /** the chat from message i on goes, then that message is sent again (edited, or as it was for a retry) */
+  async function again(i: number, text: string, attachments: Attachment[]) {
+    const id = chatIdRef.current
+    if (!id || requestId || !text.trim()) return
+    if (!(await hob.chats.keep(id, i))) return
+    setEditing(null)
+    setMessages((ms) => ms.slice(0, i))
+    await send(text, attachments)
+  }
+
   // an existing chat is never empty: while its messages load, show the conversation layout, not the new-chat screen.
   // A new chat stays on that screen until its first message, even once attaching a file has created it
   const empty = messages.length === 0 && !openedExisting
@@ -466,9 +502,20 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
             const live = !!requestId && i === messages.length - 1
             if (m.role === 'user') {
               return (
-                <div key={m.id} className="flex flex-col items-end gap-1.5">
+                <div key={m.id} data-testid="message-user" className="group flex flex-col items-end gap-1.5">
                   {m.attachments.length > 0 && <div className="flex flex-wrap items-end justify-end gap-2">{m.attachments.map((a) => <AttachmentChip key={a.path} a={a} />)}</div>}
-                  <div className="max-w-[85%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-selection px-4 py-2.5 text-body"><UserText text={m.content} skills={skills} /></div>
+                  {editing === i
+                    ? <EditMessage text={m.content} onCancel={() => setEditing(null)} onSend={(text) => void again(i, text, m.attachments)} />
+                    : (
+                      // the edit button sits beside the bubble, shown on hover, so it takes no room of its own
+                      <div className="flex max-w-[85%] items-center gap-1">
+                        {!requestId && (
+                          <button data-testid="edit-message" aria-label="Edit message" title="Edit" onClick={() => setEditing(i)}
+                            className="shrink-0 rounded-control p-1.5 text-muted opacity-0 transition-opacity hover:bg-line/70 hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"><Pencil size={14} /></button>
+                        )}
+                        <div className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-selection px-4 py-2.5 text-body"><UserText text={m.content} skills={skills} /></div>
+                      </div>
+                    )}
                 </div>
               )
             }
@@ -483,6 +530,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                 {!live && (
                   <div className="mt-1.5 -ml-1.5 flex items-center gap-1">
                     {m.content && <CopyButton text={m.content.replace(/\n\n\*Stopped\.\*$/, '')} />}
+                    {i === messages.length - 1 && !requestId && messages[i - 1]?.role === 'user' && (
+                      <button data-testid="retry" title="Write this reply again" onClick={() => void again(i - 1, messages[i - 1].content, messages[i - 1].attachments)}
+                        className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><RotateCcw size={14} />Retry</button>
+                    )}
                     {typeof m.id === 'number' && m.undoable && (m.undone
                       ? <span data-testid="undone" className="px-1.5 text-meta text-muted">{undoNotes[m.id as number] ?? 'Changes undone'}</span>
                       : <button data-testid="undo" onClick={() => void undoTask(m.id as number)} className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><Undo2 size={14} />Undo changes</button>)}

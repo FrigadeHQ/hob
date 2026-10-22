@@ -103,6 +103,10 @@ export class Store {
     })
   }
 
+  /** keep a chat's first n messages and remove the rest (editing a sent message, or trying a reply again) */
+  keepMessages(chatId: string, n: number) {
+    this.db.prepare('DELETE FROM messages WHERE chat_id = ? AND id NOT IN (SELECT id FROM messages WHERE chat_id = ? ORDER BY id LIMIT ?)').run(chatId, chatId, Math.max(0, n))
+  }
   setAttachments(messageId: number, attachments: Attachment[]) {
     this.db.prepare('UPDATE messages SET attachments = ? WHERE id = ?').run(JSON.stringify(attachments), messageId)
   }

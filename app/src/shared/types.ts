@@ -63,6 +63,8 @@ export interface HobApi {
     /** projectId: start it in that project */
     create(projectId?: string | null): Promise<ChatSummary>
     remove(id: string): Promise<void>
+    /** keep the chat's first n messages, removing the rest; false while a reply is being written */
+    keep(id: string, n: number): Promise<boolean>
     /** every chat, gone from Hob; their files stay */
     removeAll(): Promise<void>
     onChanged(cb: () => void): () => void
