@@ -89,14 +89,16 @@ test('Hob watches the cursor during setup', async () => {
     const box = (await page.getByTestId('mascot').boundingBox())!
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
     await expect(look).toHaveAttribute('transform', 'translate(0 0)')
-    await page.mouse.move(box.x + 600, box.y + 400, { steps: 4 })
+    // corners of the window, which differs in size between machines: off-window moves send no events
+    const { width, height } = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }))
+    await page.mouse.move(width - 4, height - 4, { steps: 4 })
     await expect(look).toHaveAttribute('transform', /^translate\([1-9]+ [1-9]+\)$/)
-    await page.mouse.move(Math.max(1, box.x - 500), 1, { steps: 4 })
+    await page.mouse.move(4, 4, { steps: 4 })
     await expect(look).toHaveAttribute('transform', /^translate\(-[1-9]+ -[1-9]+\)$/)
     // reduced motion turned on while open: looks ahead and stops following
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await expect(look).toHaveAttribute('transform', 'translate(0 0)')
-    await page.mouse.move(box.x + 600, box.y + 400, { steps: 4 })
+    await page.mouse.move(width - 4, height - 4, { steps: 4 })
     await expect(look).toHaveAttribute('transform', 'translate(0 0)')
   } finally { await app.close() }
 })
