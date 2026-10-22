@@ -1,5 +1,5 @@
 /* Experimental faces stay here; app behavior uses only its existing neutral, smile, blink, and eyebrow. */
-const body = '../../app/src/renderer/src/assets/garth-body.png';
+const body = '../../app/src/renderer/src/assets/hob-body.png';
 const openEyes = [[15,27,5,5],[40,27,5,5]];
 const closedEyes = [[15,29,5,2],[40,29,5,2]];
 const smile = [[25,35,10,2],[23,33,2,2],[35,33,2,2]];
@@ -24,7 +24,7 @@ const faces = [
 ];
 const rectangles = (rs) => rs.map(([x,y,w,h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#1c1b22"/>`).join('');
 function artwork(face, size) {
-  return `<svg class="garth" width="${size}" height="${size}" viewBox="0 0 60 60" shape-rendering="crispEdges" role="img" aria-label="Garth: ${face.name}"><ellipse cx="30" cy="62" rx="16" ry="2" fill="currentColor" opacity=".07"/><svg width="60" height="60" viewBox="158 155.5 937 937"><image href="${body}" width="1254" height="1254"/></svg><g class="eyes">${rectangles(face.eyes)}${rectangles(face.brow || [])}</g><g class="mouth">${rectangles(face.mouth)}</g></svg>`;
+  return `<svg class="hob" width="${size}" height="${size}" viewBox="0 0 60 60" shape-rendering="crispEdges" role="img" aria-label="Hob: ${face.name}"><ellipse cx="30" cy="62" rx="16" ry="2" fill="currentColor" opacity=".07"/><svg width="60" height="60" viewBox="158 155.5 937 937"><image href="${body}" width="1254" height="1254"/></svg><g class="eyes">${rectangles(face.eyes)}${rectangles(face.brow || [])}</g><g class="mouth">${rectangles(face.mouth)}</g></svg>`;
 }
 const hero = document.getElementById('hero');
 const mode = document.getElementById('mode');
@@ -73,7 +73,7 @@ function move(event) {
 function sync() {
   clearTimeout(faceTimer); clearInterval(glanceTimer); look(0,0);
   document.removeEventListener('pointermove',move);
-  document.getElementById('preview-hint').textContent = reduced.matches && mode.value !== 'still' ? 'Motion is paused by your reduced-motion setting.' : mode.value === 'setup' ? 'Move your cursor. Pause to let Garth look around.' : mode.value === 'cycle' ? 'A new expression every few seconds.' : 'Choose a face below.';
+  document.getElementById('preview-hint').textContent = reduced.matches && mode.value !== 'still' ? 'Motion is paused by your reduced-motion setting.' : mode.value === 'setup' ? 'Move your cursor. Pause to let Hob look around.' : mode.value === 'cycle' ? 'A new expression every few seconds.' : 'Choose a face below.';
   if (reduced.matches) { if (mode.value === 'setup') select(faces[0]); return; }
   if (mode.value === 'setup') {
     select(faces[0]); lastMove = 0;
