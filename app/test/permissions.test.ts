@@ -143,3 +143,10 @@ it("reading something that doesn't exist says so, instead of asking for the fold
   // something that exists still asks
   expect(decide({ kind: 'read', paths: [other] }, ctx({ home: root })).verdict).toBe('grant')
 })
+
+it("a missing path Hob couldn't use anyway still says how to add a folder, not that it's missing", () => {
+  // Windows has no /etc: the refusal is about where it is, as on other systems
+  const d = decide({ kind: 'read', paths: ['/etc/hob-no-such-file'] }, ctx())
+  expect(d.verdict).toBe('deny')
+  expect(d.verdict === 'deny' && d.reason).toContain('add the folder to a project')
+})

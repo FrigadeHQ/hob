@@ -1,13 +1,17 @@
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
-import { expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
 import { FakeEngine } from '../src/main/fake'
 import { Store } from '../src/main/store'
 import { allTools } from '../src/main/tools'
 import { AGENT_BUDGET, readAhead, runTurn, type TurnDeps } from '../src/main/agent/turn'
 import { systemPrompt } from '../src/main/agent/prompt'
 import type { ApprovalAnswer, ApprovalRequest, Attachment, Step } from '../src/shared/agent'
+import { ensurePdfHelper } from './pdfHelper'
+
+// the attached-PDF test reads a real PDF with the Mac helper
+beforeAll(ensurePdfHelper, 180_000)
 
 /** grant: the chat was given the Downloads folder. project: instead, the chat is in a project with that folder */
 function world(answer: ApprovalAnswer = 'allow', o: { grant?: boolean; project?: boolean; instructions?: string } = {}) {

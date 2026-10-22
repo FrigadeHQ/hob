@@ -1,20 +1,14 @@
-import { execFileSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { fillPdf, labelBlanks, pdfHelper, readPdf, runHelper, type PdfPage } from '../src/main/tools/pdf'
+import { ensurePdfHelper } from './pdfHelper'
 
 const fixtures = join(import.meta.dirname, 'fixtures')
 const mac = process.platform === 'darwin'
 
-beforeAll(() => {
-  // the helper is built from Swift; build it for the tests if needed
-  if (mac && !existsSync(pdfHelper())) {
-    mkdirSync(join(import.meta.dirname, '../resources/bin'), { recursive: true })
-    execFileSync('swiftc', ['-O', join(import.meta.dirname, '../native/hob-pdf/main.swift'), '-o', pdfHelper()])
-  }
-}, 180_000)
+beforeAll(ensurePdfHelper, 180_000)
 
 const page = (o: Partial<PdfPage>): PdfPage => ({ n: 1, width: 612, height: 792, ocr: true, lines: [], blanks: [], ...o })
 const L = (t: string, x: number, y: number, w: number, h = 12) => ({ t, x, y, w, h })
