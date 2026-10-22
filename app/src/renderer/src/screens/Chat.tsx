@@ -479,7 +479,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                   <ApprovalCard req={approval} onAnswer={(a) => { void hob.approval.answer(approval.id, a); setApproval(null) }} />
                 )}
                 <Reply content={m.content} charts={madeFiles(m.steps).filter(isChart)} live={live} thinking={live && !m.content && !m.steps.length ? thoughtBuf : undefined} />
-                <FileCards steps={m.steps} />
+                <FileCards steps={m.steps} reply={m.content} />
                 {!live && (
                   <div className="mt-1.5 -ml-1.5 flex items-center gap-1">
                     {m.content && <CopyButton text={m.content.replace(/\n\n\*Stopped\.\*$/, '')} />}

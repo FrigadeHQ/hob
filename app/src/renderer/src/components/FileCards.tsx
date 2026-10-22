@@ -1,5 +1,6 @@
 import { FileText, FolderOpen, Image as ImageIcon, SquareArrowOutUpRight } from 'lucide-react'
 import type { Step } from '../../../shared/agent'
+import { madeFiles } from '../../../shared/madeFiles'
 import { hob } from '../api'
 import { fileManager } from '../../../shared/platform'
 import { ChartCard } from './ChartCard'
@@ -9,12 +10,7 @@ const IMAGE = /\.(png|jpe?g|gif|webp|svg)$/i
 const CHART = /\.chart\.json$/i
 const name = (p: string) => p.split(/[\\/]/).pop() ?? p
 
-/** what a reply made: files it created or changed, and Hob's charts */
-export function madeFiles(steps: Step[]): string[] {
-  // a chart's data or a list of moves is a means, not a result: no card for it
-  const used = new Set(steps.flatMap((s) => s.uses ?? []))
-  return [...new Set(steps.filter((s) => s.status === 'done').flatMap((s) => s.files ?? []))].filter((f) => !used.has(f))
-}
+export { madeFiles }
 export const isChart = (f: string) => CHART.test(f)
 
 /** Hob's own charts: drawn live, not a file to open */
@@ -24,8 +20,8 @@ export function Charts({ paths, className = 'my-3' }: { paths: string[]; classNa
 }
 
 /** Files the agent created or changed, other than charts: below the reply text. */
-export function FileCards({ steps }: { steps: Step[] }) {
-  const files = madeFiles(steps).filter((f) => !isChart(f))
+export function FileCards({ steps, reply }: { steps: Step[]; reply: string }) {
+  const files = madeFiles(steps, reply).filter((f) => !isChart(f))
   if (!files.length) return null
   const reveal = `Show in ${fileManager(hob.platform)}`
   return (
