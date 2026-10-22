@@ -24,8 +24,32 @@ elif ext == '.pdf':
         print((page.extract_text() or '')[:1500])
 elif ext == '.docx':
     import docx
-    for para in docx.Document(p).paragraphs[:200]:
+    d = docx.Document(p)
+    for para in d.paragraphs[:200]:
         print(para.text)
+    for i, t in enumerate(d.tables[:5]):
+        print(f'--- table {i + 1}')
+        for row in t.rows[:20]:
+            print(' | '.join(c.text.strip() for c in row.cells))
+elif ext == '.pptx':
+    from pptx import Presentation
+    deck = Presentation(p)
+    print(f'{len(deck.slides)} slides')
+    for i, s in enumerate(deck.slides, 1):
+        if i > 30: break
+        title = s.shapes.title.text.strip() if s.shapes.title is not None and s.shapes.title.has_text_frame else ''
+        print(f'--- slide {i}: {title}' if title else f'--- slide {i}')
+        for sh in s.shapes:
+            if sh == s.shapes.title: continue
+            if sh.has_text_frame and sh.text_frame.text.strip():
+                print(sh.text_frame.text.strip())
+            if getattr(sh, 'has_table', False) and sh.has_table:
+                for row in list(sh.table.rows)[:20]:
+                    print(' | '.join(c.text.strip() for c in row.cells))
+            if sh.shape_type == 13:
+                print('[picture]')
+        if s.has_notes_slide and s.notes_slide.notes_text_frame.text.strip():
+            print('Notes: ' + s.notes_slide.notes_text_frame.text.strip())
 `
 
 /** Make sure Python is installed, showing progress as a step title. */
@@ -99,7 +123,7 @@ const scriptOf = (a: PyArgs, ctx: TurnCtx) => {
 export const runPythonTool: Tool<PyArgs> = {
   spec: {
     name: 'run_python',
-    description: 'Run Python 3.12 in the chat folder (the current directory). Installed: pandas, numpy, matplotlib, openpyxl, python-docx, pypdf, fpdf2 (to make PDFs) and Pillow (images and photo EXIF data, such as the date taken); for other packages call install_packages first. No internet unless you pass internet: true (for downloading data, e.g. stock prices). Use full paths for the user\'s files (Python doesn\'t understand ~). Code can read granted folders but can only save in the chat folder: to rename, move or delete the user\'s files, use move_files, move_file or delete_file. Save outputs into the current folder. For charts use make_chart; matplotlib only for chart types it can\'t draw. Print what you need to see. To run a skill\'s script instead of code, pass script (e.g. "weekly-report/make_report.py") and its inputs as args.',
+    description: 'Run Python 3.12 in the chat folder (the current directory). Installed: pandas, numpy, matplotlib, openpyxl and XlsxWriter (Excel), python-docx (Word), python-pptx (PowerPoint), pypdf, fpdf2 (to make PDFs) and Pillow (images and photo EXIF data, such as the date taken); for other packages call install_packages first. No internet unless you pass internet: true (for downloading data, e.g. stock prices). Use full paths for the user\'s files (Python doesn\'t understand ~). Code can read granted folders but can only save in the chat folder: to rename, move or delete the user\'s files, use move_files, move_file or delete_file. Save outputs into the current folder. For charts use make_chart; matplotlib only for chart types it can\'t draw. Print what you need to see. To run a skill\'s script instead of code, pass script (e.g. "weekly-report/make_report.py") and its inputs as args.',
     params: { type: 'object', properties: {
       code: { type: 'string' },
       script: { type: 'string', description: "a skill's script: skill-name/file.py, or its full path" },

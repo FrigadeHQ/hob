@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import {
   BookOpen, Briefcase, Calculator, Calendar, Camera, ChartColumn, ChefHat, Clock, CloudSun, Code, Coins, Dumbbell, FileText, Gamepad2, Globe,
   GraduationCap, Heart, Languages, Leaf, Lightbulb, ListChecks, Mail, Map, MessageCircle, Music, Newspaper, NotebookPen, Palette, PenLine, Plane, Plug,
-  Puzzle, ShoppingCart, Sparkles, Star, Sun, Wrench, X, Zap, type LucideIcon,
+  Presentation, Puzzle, ShoppingCart, Sparkles, Star, Sun, Wrench, X, Zap, type LucideIcon,
 } from 'lucide-react'
 
 /** Square icon-only button with an accessible label and a native tooltip. */
@@ -45,7 +45,7 @@ export const PLUGIN_ICONS: Record<string, LucideIcon> = {
   'notebook-pen': NotebookPen, 'chef-hat': ChefHat, dumbbell: Dumbbell, heart: Heart, briefcase: Briefcase, palette: Palette, wrench: Wrench,
   'file-text': FileText, calculator: Calculator, 'shopping-cart': ShoppingCart, sun: Sun, leaf: Leaf, 'gamepad-2': Gamepad2, plane: Plane,
   newspaper: Newspaper, languages: Languages, 'pen-line': PenLine, 'list-checks': ListChecks, lightbulb: Lightbulb, 'message-circle': MessageCircle,
-  clock: Clock, star: Star, zap: Zap,
+  clock: Clock, star: Star, zap: Zap, presentation: Presentation,
 }
 export function PluginIcon({ name, size = 16, className = '' }: { name: string; size?: number; className?: string }) {
   const Icon = PLUGIN_ICONS[name] ?? Puzzle

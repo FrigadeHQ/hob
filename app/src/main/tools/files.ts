@@ -12,7 +12,7 @@ import { readPdf } from './pdf'
 const REPORT_CHARS = 16000
 const WEB_PAGE = new Set(['.html', '.htm', '.xhtml'])
 const TEXT = new Set(['.txt', '.md', '.csv', '.tsv', '.json', '.log', '.xml', '.yaml', '.yml', '.py', '.js', '.ts', '.ini', '.cfg'])
-const RICH = new Set(['.xlsx', '.xlsm', '.pdf', '.docx'])
+const RICH = new Set(['.xlsx', '.xlsm', '.pdf', '.docx', '.pptx'])
 const bytes = (n: number) => (n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`)
 /** granted-folder changes are journaled; the chat folder holds copies, so it isn't */
 const inGrant = (ctx: TurnCtx, p: string) => !isInside(ctx.chatDir, p)
@@ -59,7 +59,7 @@ export const listFiles: Tool<{ path?: string }> = {
 }
 
 export const readFile: Tool<{ path: string }> = {
-  spec: { name: 'read_file', description: 'Preview a file (text, CSV, Excel, PDF, Word). Returns the start of the file and its full path; use run_python to work with all of it.', params: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
+  spec: { name: 'read_file', description: 'Preview a file (text, CSV, Excel, PDF, Word, PowerPoint). Returns the start of the file and its full path; use run_python to work with all of it.', params: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
   title: (a) => `Read ${basename(a.path)}`,
   action: (a, ctx) => ({ kind: 'read', paths: [resolvePath(ctx, a.path)] }),
   async run(a, ctx) {

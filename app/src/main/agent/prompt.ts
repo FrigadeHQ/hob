@@ -67,7 +67,7 @@ export function systemPrompt(o: {
           'To analyze or convert data, write Python and run it with run_python. Save results as files in the current folder.',
           'Use the right library for each kind of file:',
           "- When photos were taken: photo_info (it reads each photo's EXIF data). Other image work: Pillow. The date a photo was taken is in its EXIF data (DateTimeOriginal, tag 36867, in the Exif IFD: img.getexif().get_ifd(0x8769)); the file's modified date is not when it was taken.",
-          '- Spreadsheets: pandas or openpyxl. Word files: python-docx. PDFs: read_pdf, or pypdf.',
+          '- Spreadsheets: pandas or openpyxl. Word files: python-docx. PowerPoint slides: python-pptx. PDFs: read_pdf, or pypdf. Text in these files is plain: no Markdown or LaTeX.',
           has('make_chart')
             ? '- Charts: make_chart (Hob draws it, clean and interactive). Work out the numbers with run_python first if needed (save them as CSV and pass file). Use matplotlib only for charts make_chart can\'t draw (maps, heatmaps, scientific plots); save those as PNG.'
             : '- Charts: matplotlib; save them as PNG.',

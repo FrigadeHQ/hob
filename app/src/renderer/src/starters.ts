@@ -8,6 +8,7 @@ const FILE_IDEAS: StarterRef[] = [
   idea('Summarize a document in 5 points', 'list-checks', 'Summarize this in 5 short bullet points, then tell me anything I need to act on.', true),
   idea('Find the to-dos in my notes', 'list-checks', 'Find every action item in this, with who owns it and any deadline.', true),
   idea('Make my writing sound friendlier', 'message-circle', 'Rewrite this so it sounds warm and friendly, without changing what it says.', true),
+  idea('Turn my notes into slides', 'presentation', 'Turn this into a short PowerPoint deck: a title slide, one slide per main point with a few bullets, and speaker notes.', true),
   idea('Turn notes into a clean report', 'file-text', 'Turn these notes into a short, well-organized report with headings.', true),
   idea('Spot the big costs in a budget', 'coins', 'Look at this budget or statement and tell me the 5 biggest costs and anything unusual.', true),
   idea('Explain a contract simply', 'briefcase', 'Explain this contract in plain words: what I agree to, what it costs, and anything to watch out for.', true),

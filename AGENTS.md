@@ -58,7 +58,7 @@ site/                the hob.chat website (Next.js on Vercel; its own install: p
 
 ### Tools (`main/tools/`)
 - `files.ts`: list, read (a tagged annual report, `.xhtml` iXBRL, as tables of figures via `report.ts`; other web pages as text), write, move (batch moves from a JSON list), delete (to the Trash), open in the file manager.
-- `python.ts`: run Python, run a skill's script, install PyPI packages.
+- `python.ts`: run Python, run a skill's script, install PyPI packages. Word, Excel and PowerPoint work out of the box (python-docx, openpyxl, python-pptx), and `read_file` previews all three.
 - `chart.ts` (Recharts charts drawn by the UI), `pdf.ts` (read and fill, via the native helper), `photos.ts` (EXIF), `web.ts` (search and fetch), `vision.ts` (look at images), `mac.ts` (calendar and email tools).
 - Calendar & email: Mac only, through the Calendar and Mail apps (`mac.ts`, the `calendar-mail` plugin). On Windows and Linux, people connect theirs through a connector (MCP).
   - Signing in with Google or Microsoft (`main/accounts/`, desktop OAuth with PKCE, tokens encrypted with the OS keychain) is built but off: a provider is offered only once it has a client ID in `accounts/providers.ts`.

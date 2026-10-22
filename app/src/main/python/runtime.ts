@@ -21,6 +21,8 @@ export const PY_PACKAGES = [
   'pandas==3.0.6', 'numpy==2.5.3', 'matplotlib==3.11.2', 'openpyxl==3.1.5', 'python-docx==1.2.0', 'pypdf==6.19.0',
   // making PDFs ("put it in a nice PDF"): without it small models gave up or installed one each time
   'fpdf2==2.8.9', 'defusedxml==0.7.1',
+  // PowerPoint, next to Word (python-docx) and Excel (openpyxl): the Office files people have
+  'python-pptx==1.0.2', 'XlsxWriter==3.2.9',
   'contourpy==1.4.0', 'cycler==0.12.1', 'et_xmlfile==2.0.0', 'fonttools==4.66.1', 'kiwisolver==1.5.1', 'lxml==6.1.3',
   'packaging==26.3', 'pillow==12.3.0', 'pyparsing==3.3.3', 'python-dateutil==2.9.0.post0', 'six==1.17.0', 'typing_extensions==4.16.0',
   // web search (SearXNG) and what it pulls in
