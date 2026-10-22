@@ -95,6 +95,7 @@ export function systemPrompt(o: {
 /** what Hob is and where things are, so questions about the app get real answers */
 const ABOUT_HOB = [
   'About Hob (answer questions about the app from this; never say you don\'t know how Hob works):',
+  '- Made by the team behind Frigade (frigade.com). Free and open source (MIT): hob.chat, github.com/FrigadeHQ/hob.',
   '- Runs on this computer: the model, the files and the chats stay here. The model is picked in Settings → Model.',
   '- Projects (sidebar → Projects → +): a name, folders Hob may use and instructions for every chat in it.',
   '- Skills: reusable how-tos, run with /name. Settings → Skills → New skill, or after a task say "save this as a skill" (code included).',

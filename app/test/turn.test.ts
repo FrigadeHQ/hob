@@ -479,6 +479,7 @@ it('in a project, listing files with no folder named lists the project folder, n
 it('Hob knows its own features, so "how do I connect Google Calendar?" gets a real answer', () => {
   const p = systemPrompt({ chatDir: '/c', files: [], grants: [] })
   expect(p).toContain('About Hob')
+  expect(p).toMatch(/made by the team behind Frigade/i)
   expect(p).toMatch(/Settings → Connectors → Add connector/)
   expect(p).toMatch(/MCP/)
   expect(p).toMatch(process.platform === 'darwin' ? /Connect my email and calendar/ : /Google Calendar/)
