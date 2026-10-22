@@ -4,7 +4,7 @@ import type { DownloadDeps } from './downloader'
 import { TITLE_PROMPT } from './agent/prompt'
 import { InsufficientMemoryError, type ChatHandlers, type ChatRequest, type Engine, type GpuProbe } from './engine'
 
-/** Used when GARTH_FAKE=1 (E2E tests) and in unit tests. */
+/** Used when HOB_FAKE=1 (E2E tests) and in unit tests. */
 export class FakeEngine implements Engine {
   loaded: string | undefined
   failLoadFor = new Set<string>()
@@ -82,18 +82,18 @@ export class FakeEngine implements Engine {
       await new Promise((r) => setTimeout(r, 1500))
       return `All done. ${r.split('\n')[0]}`
     }
-    // says it renamed files without doing it; after Garth's check, owns up (or with "stubborn", says it again)
+    // says it renamed files without doing it; after Hob's check, owns up (or with "stubborn", says it again)
     if (first.startsWith('__ask__ ')) {
       if (h.onTool) await h.onTool('list_files', { path: first.slice('__ask__ '.length) })
       return "Here's my plan: read the dates, then rename. Let me know if you'd like me to proceed."
     }
-    if (said.startsWith('[Note from Garth') && said.includes("don't ask whether to go ahead")) return 'Renamed them.'
-    if (said.startsWith('[Note from Garth') && said.includes('you stopped before finishing')) return 'Finished it.'
+    if (said.startsWith('[Note from Hob') && said.includes("don't ask whether to go ahead")) return 'Renamed them.'
+    if (said.startsWith('[Note from Hob') && said.includes('you stopped before finishing')) return 'Finished it.'
     // does a step, then stops without a word
     if (said === '__quit__') { if (h.onTool) await h.onTool('list_files', {}); return '' }
-    if (first.startsWith('__claim__')) return 'The files have been renamed. All new names are in ~/Desktop/garth-test.'
-    if (said.startsWith('[Note from Garth')) {
-      const asked = [...req.messages].reverse().find((m) => m.role === 'user' && !m.content.startsWith('[Note from Garth'))?.content ?? ''
+    if (first.startsWith('__claim__')) return 'The files have been renamed. All new names are in ~/Desktop/hob-test.'
+    if (said.startsWith('[Note from Hob')) {
+      const asked = [...req.messages].reverse().find((m) => m.role === 'user' && !m.content.startsWith('[Note from Hob'))?.content ?? ''
       return asked.includes('stubborn') ? 'Done, the files have been renamed.' : "Sorry, I haven't renamed them yet. I only made a list of the new names."
     }
     if (said === '__saved__') return 'Jeg har gemt filen indkob.txt med din indkøbsliste.'

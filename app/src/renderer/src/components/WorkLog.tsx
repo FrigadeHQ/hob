@@ -10,7 +10,7 @@ const STATUS_ICON: Record<Row['status'], React.ReactNode> = {
   done: <Check size={14} />,
   error: <AlertCircle size={14} className="text-accent" />,
   denied: <Ban size={14} />,
-  // an attempt that didn't work while Garth is still on it: normal, not an error
+  // an attempt that didn't work while Hob is still on it: normal, not an error
   retrying: <RefreshCw size={13} />,
 }
 
@@ -121,7 +121,7 @@ export function WorkLog({ steps, running, writing, thinking, workedMs }: {
           <span className="flex w-4 justify-center text-muted"><LoaderCircle size={14} className="animate-spin" /></span>
           <span className="animate-pulse">{current?.status === 'waiting' ? 'Waiting for your OK' : current ? current.title : writing ? 'Working' : 'Thinking'}</span>
         </div>
-        {/* the latest thought stays while steps run, so what Garth is up to never vanishes */}
+        {/* the latest thought stays while steps run, so what Hob is up to never vanishes */}
         {!writing && thinking && <ThinkingLine source={thinking} />}
         {/* the step waiting for an answer is the approval card below; the running one is the line above */}
         {shown.length > 0 && <ul className="mt-2 space-y-1 border-l border-line pl-3 ml-2">{stepRows(shown, true).map((s) => <StepRow key={s.id} s={s} />)}</ul>}

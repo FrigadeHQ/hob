@@ -1,5 +1,5 @@
 import os from 'node:os'
-import type { Hardware, OS } from '@garth/picker'
+import type { Hardware, OS } from '@hob/picker'
 import type { GpuProbe } from './engine'
 import { realDeps } from './downloader'
 

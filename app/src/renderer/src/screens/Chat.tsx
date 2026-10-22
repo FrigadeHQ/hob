@@ -9,7 +9,7 @@ import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../
 import type { AccountsState, MacAccess } from '../../../shared/types'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
-import { garth } from '../api'
+import { hob } from '../api'
 import { Mascot } from '../components/Mascot'
 import { CopyButton } from '../components/CopyButton'
 import { ThinkingIndicator, WorkLog } from '../components/WorkLog'
@@ -44,7 +44,7 @@ const MARKDOWN_COMPONENTS = {
   th: ({ children, style }: { children?: React.ReactNode; style?: React.CSSProperties }) => <th style={style} className={short(children) ? 'whitespace-nowrap' : undefined}>{children}</th>,
   td: ({ children, style }: { children?: React.ReactNode; style?: React.CSSProperties }) => <td style={style} className={short(children) ? 'whitespace-nowrap' : undefined}>{children}</td>,
   img: ({ src, alt }: { src?: unknown; alt?: string }) =>
-    typeof src === 'string' && src.startsWith('garth-file:') ? <img src={src} alt={alt ?? ''} /> : <span>{alt}</span>,
+    typeof src === 'string' && src.startsWith('hob-file:') ? <img src={src} alt={alt ?? ''} /> : <span>{alt}</span>,
 }
 
 /** uiKey: a finished reply keeps the key it had while live, so its work log folds shut instead of remounting */
@@ -138,15 +138,15 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   /** the chat exists, so its project is settled */
   const [created, setCreated] = useState(!!initialId)
   useEffect(() => {
-    const load = () => void garth.projects.list().then(setProjects)
+    const load = () => void hob.projects.list().then(setProjects)
     load()
-    return garth.chats.onChanged(load)
+    return hob.chats.onChanged(load)
   }, [])
   const project = projects.find((p) => p.id === projectId)
   // a project made from this new chat (chip, too-big notice): use it here, keeping what was typed
   useEffect(() => { if (!created) { projectRef.current = initialProject; setProjectId(initialProject) } }, [initialProject])
   // let the model read this chat ahead (or the new chat about to start), so the reply starts right away
-  useEffect(() => { void garth.chat.warm(chatIdRef.current, projectId) }, [projectId, pending.length])
+  useEffect(() => { void hob.chat.warm(chatIdRef.current, projectId) }, [projectId, pending.length])
   const pickProject = (id: string | null) => { projectRef.current = id; setProjectId(id); onProjectChange(id) }
   const [dragging, setDragging] = useState(false)
   const [requestId, setRequestId] = useState<string | null>(null)
@@ -155,9 +155,9 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const [starters, setStarters] = useState<StarterRef[]>([])
   const [seed] = useState(() => Math.floor(Math.random() * 1000))
   useEffect(() => {
-    const load = () => { void garth.plugins.skills().then(setSkills); void garth.plugins.starters().then(setStarters) }
+    const load = () => { void hob.plugins.skills().then(setSkills); void hob.plugins.starters().then(setStarters) }
     load()
-    return garth.plugins.onChanged(load)
+    return hob.plugins.onChanged(load)
   }, [])
   const scroller = useRef<HTMLDivElement>(null)
   const dictation = useDictation((text) => { setInput((cur) => (cur.trim() ? `${cur.trimEnd()} ${text}` : text)); inputRef.current?.focus() })
@@ -176,7 +176,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   // the view is keyed per chat, so history loads once; later chatId changes are this view creating its chat
   useEffect(() => {
     if (!initialId) return
-    void garth.chats.get(initialId).then((r) => {
+    void hob.chats.get(initialId).then((r) => {
       if (!r || !alive.current) return
       setProjectId(r.chat.projectId)
       // a reply that kept going while another chat was open: show it so far and follow it again
@@ -192,14 +192,14 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   // leaving this chat (New chat, another chat) doesn't stop its reply: it keeps going and is saved
   // set on mount too: in development React mounts twice, and the first unmount would leave it false
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
-  useEffect(() => garth.chat.onDone((rid, reply) => {
+  useEffect(() => hob.chat.onDone((rid, reply) => {
     if (rid !== currentId.current) return
     currentId.current = null
     setMessages((ms) => [...ms.slice(0, -1), reply ? { ...reply, uiKey: `a-${rid}` } : { ...placeholder(rid), content: 'Something went wrong. Try again.' }])
     setRequestId(null); setApproval(null); clearThinking(); inputRef.current?.focus()
   }), [])
 
-  useEffect(() => garth.chat.onToken((id, text, thought) => {
+  useEffect(() => hob.chat.onToken((id, text, thought) => {
     if (id !== currentId.current) return
     if (thought) { thoughtBuf.current += text; return }
     clearThinking()
@@ -209,14 +209,14 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       return [...ms.slice(0, -1), { ...last, content: last.content + text }]
     })
   }), [])
-  useEffect(() => garth.chat.onReset((rid) => {
+  useEffect(() => hob.chat.onReset((rid) => {
     if (rid !== currentId.current) return
     setMessages((ms) => {
       const last = ms.at(-1)
       return last?.role === 'assistant' ? [...ms.slice(0, -1), { ...last, content: '' }] : ms
     })
   }), [])
-  useEffect(() => garth.chat.onStep((rid, step) => {
+  useEffect(() => hob.chat.onStep((rid, step) => {
     if (rid !== currentId.current) return
     setMessages((ms) => {
       const last = ms.at(-1)
@@ -226,7 +226,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       return [...ms.slice(0, -1), { ...last, steps }]
     })
   }), [])
-  useEffect(() => garth.chat.onApproval((req) => { if (req.requestId === currentId.current) setApproval(req) }), [])
+  useEffect(() => hob.chat.onApproval((req) => { if (req.requestId === currentId.current) setApproval(req) }), [])
   useEffect(() => { if (pinned.current) scroller.current?.scrollTo({ top: scroller.current.scrollHeight }) }, [messages])
   function onScroll() {
     const el = scroller.current
@@ -243,7 +243,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
 
   async function ensureChat() {
     if (chatIdRef.current) return chatIdRef.current
-    const c = await garth.chats.create(projectRef.current)
+    const c = await hob.chats.create(projectRef.current)
     chatIdRef.current = c.id
     setCreated(true)
     onChatChanged(c.id)
@@ -252,9 +252,9 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
 
   async function addFiles(paths: string[]): Promise<Attachment[] | undefined> {
     if (!paths.length) return
-    let r: Awaited<ReturnType<typeof garth.files.add>>
+    let r: Awaited<ReturnType<typeof hob.files.add>>
     try {
-      r = await garth.files.add(await ensureChat(), paths)
+      r = await hob.files.add(await ensureChat(), paths)
     } catch (err) {
       console.error(err)
       setNotice({ text: "Couldn't add those files." })
@@ -262,7 +262,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
     if ('error' in r) {
       setNotice(r.error === 'too-big'
-        ? { text: `That's ${r.gb.toFixed(1)} GB, too big to copy. Make a project for its folder instead, so Garth can use it where it is.`, folders: paths }
+        ? { text: `That's ${r.gb.toFixed(1)} GB, too big to copy. Make a project for its folder instead, so Hob can use it where it is.`, folders: paths }
         : { text: `${r.message}.` })
       return
     }
@@ -274,12 +274,12 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
 
   /** files copied in Finder paste with their paths; a screenshot from the clipboard only has its bytes */
   async function pasteFiles(files: File[]) {
-    const paths = garth.pathsForFiles(files)
+    const paths = hob.pathsForFiles(files)
     if (paths.length) { await addFiles(paths); return }
     const id = await ensureChat()
     const added: Attachment[] = []
-    for (const f of files) if (f.type.startsWith('image/')) added.push(...await garth.files.paste(id, new Uint8Array(await f.arrayBuffer()), f.type))
-    if (!added.length) { setNotice({ text: 'Garth can only take pasted images or files.' }); return }
+    for (const f of files) if (f.type.startsWith('image/')) added.push(...await hob.files.paste(id, new Uint8Array(await f.arrayBuffer()), f.type))
+    if (!added.length) { setNotice({ text: 'Hob can only take pasted images or files.' }); return }
     setNotice(null)
     setPending((p) => [...p, ...added])
     inputRef.current?.focus()
@@ -287,17 +287,17 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
 
   /** an idea that needs a file: pick one, then send */
   async function startWithFile(prompt: string) {
-    const added = await addFiles(await garth.files.pick())
+    const added = await addFiles(await hob.files.pick())
     if (added?.length) await send(prompt, [...pending, ...added])
   }
 
   function stop() {
-    if (requestId) void garth.chat.stop(requestId)
+    if (requestId) void hob.chat.stop(requestId)
   }
 
   // "Save as a skill": once per chat; closing it or saying yes hides it for good (only a convenience, so storage may fail)
-  const offerKey = () => `garth-skill-offer:${chatIdRef.current}`
-  const [offerClosed, setOfferClosed] = useState(() => { try { return !!initialId && localStorage.getItem(`garth-skill-offer:${initialId}`) === 'closed' } catch { return false } })
+  const offerKey = () => `hob-skill-offer:${chatIdRef.current}`
+  const [offerClosed, setOfferClosed] = useState(() => { try { return !!initialId && localStorage.getItem(`hob-skill-offer:${initialId}`) === 'closed' } catch { return false } })
   function closeOffer() {
     setOfferClosed(true)
     try { localStorage.setItem(offerKey(), 'closed') } catch { /* private window */ }
@@ -309,11 +309,11 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const [hasConnector, setHasConnector] = useState(true)
   const [connectOpen, setConnectOpen] = useState(false)
   useEffect(() => {
-    void garth.mac.access().then(setMacAccess)
-    void garth.plugins.list().then((l) => setHasConnector(l.some((p) => p.kind === 'connector')))
+    void hob.mac.access().then(setMacAccess)
+    void hob.plugins.list().then((l) => setHasConnector(l.some((p) => p.kind === 'connector')))
   }, [])
   const [accounts, setAccounts] = useState<AccountsState | null>(null)
-  useEffect(() => { void garth.accounts.get().then(setAccounts); return garth.accounts.onChanged(setAccounts) }, [])
+  useEffect(() => { void hob.accounts.get().then(setAccounts); return hob.accounts.onChanged(setAccounts) }, [])
   // until email and calendar are connected: a signed-in account, or the Mac's apps
   const showConnect = macAccess === undefined || !accounts ? false
     : accounts.current ? false
@@ -325,7 +325,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const [undoNotes, setUndoNotes] = useState<Record<number, string>>({})
   async function undoTask(id: number) {
     try {
-      const r = await garth.task.undo(id)
+      const r = await hob.task.undo(id)
       if (!r.done) return
       setMessages((ms) => ms.map((m) => (m.id === id ? { ...m, undone: true } : m)))
       if (r.failed) setUndoNotes((n) => ({ ...n, [id]: `Undone, except ${r.failed} change${r.failed > 1 ? 's' : ''} that changed since or ${r.failed > 1 ? 'are' : 'is'} in the Trash` }))
@@ -335,7 +335,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
   }
 
-  // typed while Garth was still working: sent as soon as the reply is done
+  // typed while Hob was still working: sent as soon as the reply is done
   const [queued, setQueued] = useState<string | null>(null)
   useEffect(() => {
     if (requestId || !queued) return
@@ -357,7 +357,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     let id: string | undefined
     try {
       id = await ensureChat()
-      const reply = await garth.chat.send(id, rid, text, files)
+      const reply = await hob.chat.send(id, rid, text, files)
       if (currentId.current === rid) setMessages((ms) => [...ms.slice(0, -1), { ...reply, uiKey: `a-${rid}` }])
     } catch (err) {
       console.error(err)
@@ -375,7 +375,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       {dictation.error && (
         <p data-testid="dictation-error" className="mb-2 text-ui text-ink-soft">
           {dictation.error.text}{' '}
-          {dictation.error.micSettings && <button onClick={() => void garth.speech.openMicSettings()} className="underline underline-offset-2 hover:text-ink">Open microphone settings</button>}
+          {dictation.error.micSettings && <button onClick={() => void hob.speech.openMicSettings()} className="underline underline-offset-2 hover:text-ink">Open microphone settings</button>}
         </p>
       )}
       {notice && (
@@ -386,7 +386,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       {queued && (
         <div data-testid="queued" className="fade-in mb-1.5 flex items-center gap-2 rounded-control bg-line/50 px-3 py-1.5 text-ui text-ink-soft">
           <Clock size={14} className="shrink-0 text-muted" />
-          <span className="min-w-0 flex-1 truncate">Sends when Garth is done: {queued}</span>
+          <span className="min-w-0 flex-1 truncate">Sends when Hob is done: {queued}</span>
           <button aria-label="Don't send" title="Don't send" onClick={() => { setInput(queued); setQueued(null) }} className="text-muted hover:text-ink"><X size={14} /></button>
         </div>
       )}
@@ -395,7 +395,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       </div>
       <Composer
         value={input} onChange={setInput} onSend={() => void send()} onStop={stop} running={!!requestId}
-        onAttach={() => void garth.files.pick().then(addFiles)}
+        onAttach={() => void hob.files.pick().then(addFiles)}
         onPasteFiles={(files) => void pasteFiles(files)}
         pending={pending} onRemovePending={(a) => setPending((p) => p.filter((x) => x.path !== a.path))}
         inputRef={inputRef} dictation={dictation} skills={skills}
@@ -409,9 +409,9 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       onDragEnter={(e) => { if (!e.dataTransfer.types.includes('Files')) return; e.preventDefault(); dragDepth.current++; setDragging(true) }}
       onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault() }}
       onDragLeave={() => { dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDragging(false) }}
-      onDrop={(e) => { e.preventDefault(); dragDepth.current = 0; setDragging(false); void addFiles(garth.pathsForFiles(Array.from(e.dataTransfer.files))) }}
+      onDrop={(e) => { e.preventDefault(); dragDepth.current = 0; setDragging(false); void addFiles(hob.pathsForFiles(Array.from(e.dataTransfer.files))) }}
     >
-      {connectOpen && <ConnectApps onClose={() => { setConnectOpen(false); void garth.mac.access().then(setMacAccess) }} onTry={(p) => { setConnectOpen(false); void garth.mac.access().then(setMacAccess); void send(p) }} />}
+      {connectOpen && <ConnectApps onClose={() => { setConnectOpen(false); void hob.mac.access().then(setMacAccess) }} onTry={(p) => { setConnectOpen(false); void hob.mac.access().then(setMacAccess); void send(p) }} />}
       {dragging && (
         <div data-testid="drop-overlay" className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-composer border-2 border-dashed border-line-strong bg-paper/85 text-body font-medium">
           Drop files to add them
@@ -431,7 +431,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                         <p data-testid="project-folders-line" className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-body text-ink-soft">
                           Working in
                           {project.folders.map((f) => (
-                            <button key={f} title={`Open ${f}`} onClick={() => void garth.projects.open(project.id, f)} className="inline-flex items-center gap-1 rounded-control bg-line/60 px-2 py-0.5 text-ui text-ink hover:bg-line">
+                            <button key={f} title={`Open ${f}`} onClick={() => void hob.projects.open(project.id, f)} className="inline-flex items-center gap-1 rounded-control bg-line/60 px-2 py-0.5 text-ui text-ink hover:bg-line">
                               <FolderOpen size={14} strokeWidth={1.75} className="text-ink-soft" />{folderName(f)}
                             </button>
                           ))}
@@ -443,7 +443,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                     <h1 className="text-[clamp(24px,4vw,32px)] font-semibold leading-[1.2] tracking-[-.95px]">What are we working on?</h1>
                     <p className="mt-2 text-[14px] leading-[22px] text-ink-soft">
                       Private, on your computer. Drop in files, or{' '}
-                      <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Garth a folder to work in</button>.
+                      <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Hob a folder to work in</button>.
                     </p>
                   </>}
               <div className="mt-6 text-left">{composer}</div>
@@ -472,7 +472,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
               <div key={m.uiKey ?? m.id}>
                 <WorkLog steps={m.steps} running={live} writing={!!m.content} thinking={live ? thoughtBuf : undefined} workedMs={m.workedMs} />
                 {approval && i === messages.length - 1 && (
-                  <ApprovalCard req={approval} onAnswer={(a) => { void garth.approval.answer(approval.id, a); setApproval(null) }} />
+                  <ApprovalCard req={approval} onAnswer={(a) => { void hob.approval.answer(approval.id, a); setApproval(null) }} />
                 )}
                 <Reply content={m.content} charts={madeFiles(m.steps).filter(isChart)} live={live} thinking={live && !m.content && !m.steps.length ? thoughtBuf : undefined} />
                 <FileCards steps={m.steps} />
@@ -507,7 +507,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
             <ArrowDown size={16} strokeWidth={1.75} />
           </button>
           {composer}
-          <p className="mt-2 text-center text-meta text-muted">Garth can make mistakes.</p>
+          <p className="mt-2 text-center text-meta text-muted">Hob can make mistakes.</p>
         </div>
       )}
     </main>

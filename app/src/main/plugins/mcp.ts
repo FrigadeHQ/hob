@@ -99,7 +99,7 @@ export class McpClient {
       }
       try {
         await t.open((m) => this.onMessage(m), gone)
-        await this.request('initialize', { protocolVersion: PROTOCOL, capabilities: {}, clientInfo: { name: 'Garth', version: '0.1.0' } }, START_MS)
+        await this.request('initialize', { protocolVersion: PROTOCOL, capabilities: {}, clientInfo: { name: 'Hob', version: '0.1.0' } }, START_MS)
         this.notify('notifications/initialized')
       } catch (e) {
         // a server that never finished starting must not keep running (each retry would start another)
@@ -115,7 +115,7 @@ export class McpClient {
   private onMessage(m: Incoming) {
     if (m.method && m.id !== undefined) {
       // requests from the server (ping, roots, sampling): answer ping, decline the rest
-      this.write(m.method === 'ping' ? { jsonrpc: '2.0', id: m.id, result: {} } : { jsonrpc: '2.0', id: m.id, error: { code: -32601, message: 'Not supported by Garth' } })
+      this.write(m.method === 'ping' ? { jsonrpc: '2.0', id: m.id, result: {} } : { jsonrpc: '2.0', id: m.id, error: { code: -32601, message: 'Not supported by Hob' } })
       return
     }
     const p = typeof m.id === 'number' ? this.pending.get(m.id) : undefined

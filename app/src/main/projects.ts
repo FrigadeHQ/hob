@@ -6,8 +6,8 @@ import type { ProjectRow } from './store'
 
 export const MAX_NAME = 80
 
-/** Folders the user picked: a file stands for its folder; each says why Garth can't use it, if it can't. */
-/** own: Garth's own folders (settings, chat files), never a project folder */
+/** Folders the user picked: a file stands for its folder; each says why Hob can't use it, if it can't. */
+/** own: Hob's own folders (settings, chat files), never a project folder */
 export function checkFolders(paths: string[], home?: string, own: string[] = []): FolderCheck[] {
   const seen = new Set<string>()
   const out: FolderCheck[] = []

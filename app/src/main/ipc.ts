@@ -41,7 +41,7 @@ export type IpcDeps = {
   /** absent in fake mode: dictation returns a fixed sentence */
   speech?: SpeechModel
   plugins: PluginRegistry
-  /** Garth's eyes: state for the UI, and asking about an image */
+  /** Hob's eyes: state for the UI, and asking about an image */
   /** the Google or Microsoft account for calendar and email */
   accounts: AccountsLike
   vision?: { state(): VisionState; onState(cb: (s: VisionState) => void): void; ask(image: string, question: string, signal?: AbortSignal): Promise<string>; retry(): void }
@@ -94,7 +94,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     d.store.deleteChat(id)
   }
   ipcMain.handle('chats:remove', (_e, id: string) => removeChat(id))
-  /** every chat, gone from Garth; the files they made stay where they are (the page asks first) */
+  /** every chat, gone from Hob; the files they made stay where they are (the page asks first) */
   ipcMain.handle('chats:removeAll', async () => {
     running.stopAll()
     for (const c of d.store.listChats()) await removeChat(c.id, true)
@@ -324,7 +324,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   ipcMain.handle('speech:prepare', async () => {
     if (!d.speech) return { fake: true }
     await d.speech.ensure((f) => send('speech:progress', f))
-    return { modelBase: `garth-file://f/${encodeURIComponent(d.speech.dir)}/` }
+    return { modelBase: `hob-file://f/${encodeURIComponent(d.speech.dir)}/` }
   })
   ipcMain.handle('models:list', () => d.setup.listModels())
   ipcMain.handle('models:use', (_e, id: string) => { void d.setup.useModel(id) })
@@ -344,7 +344,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
       const r = await dialog.showMessageBox(win, {
         type: full ? 'warning' : 'question', buttons: ['Add', 'Cancel'], defaultId: 0, cancelId: 1,
         message: `Add “${info.name}”?`,
-        detail: full ? 'It runs its own program with full access to your computer. Only add plugins you trust.' : 'It adds new skills or tools to Garth.',
+        detail: full ? 'It runs its own program with full access to your computer. Only add plugins you trust.' : 'It adds new skills or tools to Hob.',
       })
       if (r.response !== 0) return null
     }
@@ -355,7 +355,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     return res
   }
   ipcMain.handle('plugins:add', async () => {
-    const r = await dialog.showOpenDialog({ title: 'Add a plugin', buttonLabel: 'Add', properties: ['openFile', 'openDirectory'], filters: [{ name: 'Garth plugin or MCP bundle', extensions: PLUGIN_FILES }] })
+    const r = await dialog.showOpenDialog({ title: 'Add a plugin', buttonLabel: 'Add', properties: ['openFile', 'openDirectory'], filters: [{ name: 'Hob plugin or MCP bundle', extensions: PLUGIN_FILES }] })
     if (r.canceled || !r.filePaths[0]) return null
     return addPlugin(r.filePaths[0], true)
   })

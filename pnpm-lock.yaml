@@ -10,7 +10,7 @@ importers:
 
   app:
     dependencies:
-      '@garth/picker':
+      '@hob/picker':
         specifier: workspace:^
         version: link:../packages/picker
       '@mozilla/readability':

@@ -1,5 +1,5 @@
-appId: com.frigade.garth
-productName: Garth
+appId: com.frigade.hob
+productName: Hob
 electronVersion: 44.7.2
 copyright: Copyright © 2026 Frigade
 # GitHub Releases: every v* tag builds Mac, Windows and Linux (.github/workflows/release.yml).
@@ -7,7 +7,7 @@ copyright: Copyright © 2026 Frigade
 publish:
   provider: github
   owner: FrigadeHQ
-  repo: garth
+  repo: hob
   releaseType: release
 directories:
   output: dist
@@ -23,13 +23,13 @@ files:
 extraResources:
   - from: plugins
     to: plugins
-  # native helpers (scripts/build-native.mjs): garth-pdf reads and fills PDFs with Apple's PDFKit and Vision
+  # native helpers (scripts/build-native.mjs): hob-pdf reads and fills PDFs with Apple's PDFKit and Vision
   - from: resources/bin
     to: bin
   # licenses of things bundled into the app (the reply font)
   - from: resources/licenses
     to: licenses
-# double-clicking an MCP bundle offers Garth (Claude Desktop stays the default if it's installed)
+# double-clicking an MCP bundle offers Hob (Claude Desktop stays the default if it's installed)
 fileAssociations:
   - ext: [mcpb, dxt]
     name: MCP Bundle
@@ -50,7 +50,7 @@ mac:
     # this Mac build only needs the Apple Silicon engine binaries
     - "!**/node_modules/@node-llama-cpp/{linux,win,mac-x64}*/**"
     - "!**/node_modules/node-llama-cpp/bins/{linux,win,mac-x64}*/**"
-  artifactName: Garth-mac-${arch}.${ext}
+  artifactName: Hob-mac-${arch}.${ext}
   target:
     - target: dmg
       arch: [arm64]
@@ -60,13 +60,13 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
-    NSMicrophoneUsageDescription: Garth uses the microphone for dictation. Speech is turned into text on this computer.
-    NSCalendarsFullAccessUsageDescription: Garth reads and adds events in your calendars when you ask it to. Everything stays on this Mac.
-    NSCalendarsUsageDescription: Garth reads and adds events in your calendars when you ask it to. Everything stays on this Mac.
-    NSAppleEventsUsageDescription: Garth uses the Mail app to find and read your email and write drafts when you ask it to. It never sends email itself.
+    NSMicrophoneUsageDescription: Hob uses the microphone for dictation. Speech is turned into text on this computer.
+    NSCalendarsFullAccessUsageDescription: Hob reads and adds events in your calendars when you ask it to. Everything stays on this Mac.
+    NSCalendarsUsageDescription: Hob reads and adds events in your calendars when you ask it to. Everything stays on this Mac.
+    NSAppleEventsUsageDescription: Hob uses the Mail app to find and read your email and write drafts when you ask it to. It never sends email itself.
   # signs with the Developer ID certificate in the keychain (or CSC_LINK on CI); notarized by scripts/release-mac.sh or CI
 dmg:
-  title: Garth
+  title: Hob
   # build/background.png (+ @2x), made from build/dmg-background.svg by build/render-dmg.cjs
   background: build/background.png
   iconSize: 96
@@ -77,7 +77,7 @@ dmg:
   # the disk image is checked when downloaded, not just the app inside
   sign: true
 win:
-  artifactName: Garth-windows-${arch}.${ext}
+  artifactName: Hob-windows-${arch}.${ext}
   target:
     - target: nsis
       arch: [x64]
@@ -86,9 +86,9 @@ nsis:
   oneClick: true
   perMachine: false
 linux:
-  # the default comes from the package name (@garth/app), which isn't a valid file name
-  executableName: garth
-  artifactName: Garth-linux-${arch}.${ext}
+  # the default comes from the package name (@hob/app), which isn't a valid file name
+  executableName: hob
+  artifactName: Hob-linux-${arch}.${ext}
   target:
     - target: AppImage
       arch: [x64]

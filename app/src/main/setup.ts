@@ -1,4 +1,4 @@
-import { pick, type Catalog, type Choice, type Hardware, type PickResult } from '@garth/picker'
+import { pick, type Catalog, type Choice, type Hardware, type PickResult } from '@hob/picker'
 import { rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { ChecksumError, DiskSpaceError, ensureModelFile, fileNameFor, isVerified, partialDownloadGB, type DownloadDeps, type Progress } from './downloader'
@@ -120,7 +120,7 @@ export class SetupController {
         this.hw = hw
         this.result = pick(hw, catalog.models)
         const r = this.result
-        if (!r.recommended) return this.set({ phase: 'error', message: 'Garth needs at least 8 GB of memory to run on this computer.' })
+        if (!r.recommended) return this.set({ phase: 'error', message: 'Hob needs at least 8 GB of memory to run on this computer.' })
 
         const settings = loadSettings(this.deps.settingsPath)
         const pending = this.choices().find((c) => c.model.id === settings.pendingModelId)

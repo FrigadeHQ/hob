@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ModelOption, SetupState } from '../../../shared/types'
-import { garth } from '../api'
+import { hob } from '../api'
 import { ChevronRight, LoaderCircle } from 'lucide-react'
 import { Mascot } from '../components/Mascot'
 import { Dialog } from '../components/ui'
@@ -32,7 +32,7 @@ function DownloadDetails({ state, onClose }: { state: Extract<SetupState, { phas
 }
 
 /** First launch: the final line stays until the computer checks finish. */
-const FIRST_RUN = ['Starting Garth…', 'Checking your computer…', 'Reviewing available AI models…', 'Finding the best fit for your computer…']
+const FIRST_RUN = ['Starting Hob…', 'Checking your computer…', 'Reviewing available AI models…', 'Finding the best fit for your computer…']
 const EVERYDAY_START = ['Stoking the fire…', 'Waking up the model…', 'Warming up…', 'Putting the kettle on…', 'Gathering your chats…', 'Fluffing the cushions…', 'Almost there…']
 function ProbingLine({ firstRun }: { firstRun: boolean }) {
   const lines = firstRun ? FIRST_RUN : EVERYDAY_START
@@ -69,15 +69,15 @@ export function Onboarding({ state }: { state: SetupState }) {
       <div className="drag h-10 shrink-0" />
       <div className="onboarding-screen">
         <div className="onboarding-content">
-          {/* One mounted Garth carries the transition from checking to setup. */}
+          {/* One mounted Hob carries the transition from checking to setup. */}
           <div className="onboarding-mascot"><div className="setup-avatar"><Mascot size={72} alive watch /></div></div>
           <div className="onboarding-probing" aria-hidden={!probing}>
             {firstRun !== undefined && <ProbingLine firstRun={firstRun} />}
           </div>
           <div className="onboarding-panel" inert={probing} aria-hidden={probing}>
             <div key={`heading-${state.phase}`} className="setup-heading">
-              <h1>{state.phase === 'error' ? 'Something went wrong' : downloading ? 'Getting Garth ready' : 'Welcome to Garth'}</h1>
-              <p className="setup-subtitle">{state.phase === 'error' ? 'Let’s try that again.' : downloading ? 'Chat will open automatically.' : `Your private AI, right on your ${garth.platform === 'darwin' ? 'Mac' : 'computer'}.`}</p>
+              <h1>{state.phase === 'error' ? 'Something went wrong' : downloading ? 'Getting Hob ready' : 'Welcome to Hob'}</h1>
+              <p className="setup-subtitle">{state.phase === 'error' ? 'Let’s try that again.' : downloading ? 'Chat will open automatically.' : `Your private AI, right on your ${hob.platform === 'darwin' ? 'Mac' : 'computer'}.`}</p>
             </div>
             <div key={`stage-${state.phase}`} className="setup-stage">
               {state.phase === 'choose' && selected && <>
@@ -87,9 +87,9 @@ export function Onboarding({ state }: { state: SetupState }) {
                     <button className="setup-text-button" data-testid="setup-other-options" aria-haspopup="dialog" onClick={() => setDialog('models')}>Change model <ChevronRight size={13} /></button>
                   </div>
                 </div>
-                <button data-testid="setup-download" disabled={selected.needsDiskGB > 0} className="setup-primary" onClick={() => void garth.setup.confirm(selected.id)}>Download and start</button>
+                <button data-testid="setup-download" disabled={selected.needsDiskGB > 0} className="setup-primary" onClick={() => void hob.setup.confirm(selected.id)}>Download and start</button>
                 <p data-testid="setup-download-size" className="setup-small-print">{gb(selected.sizeGB + (starter?.sizeGB ?? 0))} download</p>
-                {selected.needsDiskGB > 0 && <div className="setup-notice" role="status"><p>Free up {Math.ceil(selected.needsDiskGB)} GB of disk space to continue.</p><button className="setup-text-button" onClick={() => void garth.setup.retry()}>Check again</button></div>}
+                {selected.needsDiskGB > 0 && <div className="setup-notice" role="status"><p>Free up {Math.ceil(selected.needsDiskGB)} GB of disk space to continue.</p><button className="setup-text-button" onClick={() => void hob.setup.retry()}>Check again</button></div>}
                 {state.liteMode && <p className="setup-small-print">A smaller model for this computer. Answers may be simpler.</p>}
               </>}
               {downloading && <>
@@ -102,7 +102,7 @@ export function Onboarding({ state }: { state: SetupState }) {
                 </div>
                 <button className="setup-text-button" aria-haspopup="dialog" onClick={() => setDialog('details')}>Download details <ChevronRight size={13} /></button>
               </>}
-              {state.phase === 'error' && <><p data-testid="setup-error" className="text-body text-ink-soft">{state.message}</p><button className="setup-primary" onClick={() => void garth.setup.retry()}>Try again</button></>}
+              {state.phase === 'error' && <><p data-testid="setup-error" className="text-body text-ink-soft">{state.message}</p><button className="setup-primary" onClick={() => void hob.setup.retry()}>Try again</button></>}
             </div>
           </div>
         </div>

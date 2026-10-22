@@ -44,7 +44,7 @@ export class UtilityEngine implements Engine {
 
   private ensure(): UtilityProcess {
     if (this.proc) return this.proc
-    const proc = utilityProcess.fork(this.workerPath, [], { serviceName: 'Garth Engine' })
+    const proc = utilityProcess.fork(this.workerPath, [], { serviceName: 'Hob Engine' })
     proc.on('message', (e: EngineEvent) => {
       const p = this.pending.get(e.id)
       if (!p) return

@@ -3,14 +3,14 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-// Manual QA helper: screenshots every screen. Run with GARTH_SHOTS=<dir>.
-const dir = process.env.GARTH_SHOTS
-test.skip(!dir, 'set GARTH_SHOTS to capture screenshots')
+// Manual QA helper: screenshots every screen. Run with HOB_SHOTS=<dir>.
+const dir = process.env.HOB_SHOTS
+test.skip(!dir, 'set HOB_SHOTS to capture screenshots')
 const main = join(import.meta.dirname, '../out/main/index.js')
 
 test('screens', async () => {
-  const userData = mkdtempSync(join(tmpdir(), 'garth-shots-'))
-  const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: userData, GARTH_FAKE_STEP_MS: '1500' } })
+  const userData = mkdtempSync(join(tmpdir(), 'hob-shots-'))
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: userData, HOB_FAKE_STEP_MS: '1500' } })
   const page = await app.firstWindow()
   const shot = (n: string) => page.screenshot({ animations: 'disabled', path: join(dir!, `${n}.png`) })
   await page.getByTestId('setup-download').waitFor()
@@ -42,8 +42,8 @@ test('screens', async () => {
 })
 
 test('low disk', async () => {
-  const userData = mkdtempSync(join(tmpdir(), 'garth-shots-'))
-  const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: userData, GARTH_FAKE_FREE_GB: '15' } })
+  const userData = mkdtempSync(join(tmpdir(), 'hob-shots-'))
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: userData, HOB_FAKE_FREE_GB: '15' } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').waitFor()
   await page.screenshot({ animations: 'disabled', path: join(dir!, '10-low-disk.png') })

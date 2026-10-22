@@ -6,7 +6,7 @@ import type { SetupState } from '../src/shared/types'
 
 test('calm setup: bounded picker, real progress, finishing, and single-model details', async () => {
   const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: {
-    ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-design-')),
+    ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-design-')),
   } })
   try {
     const page = await app.firstWindow()
@@ -15,7 +15,7 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
     const send = (state: SetupState) => app.evaluate(({ BrowserWindow }, s) => BrowserWindow.getAllWindows()[0].webContents.send('setup:state', s), state)
     const change = page.getByTestId('setup-other-options')
     await expect(change).toBeVisible()
-    if (process.env.GARTH_SHOTS) await page.screenshot({ path: join(process.env.GARTH_SHOTS, 'recommendation-light.png') })
+    if (process.env.HOB_SHOTS) await page.screenshot({ path: join(process.env.HOB_SHOTS, 'recommendation-light.png') })
     const original = await page.getByTestId('setup-recommended').boundingBox()
     const mascot = await page.getByTestId('mascot').elementHandle()
     await change.click()
@@ -58,7 +58,7 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
     await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100')
     await expect(page.getByTestId('setup-progress-card')).toContainText('Finishing setup')
     await expect(page.getByTestId('setup-eta')).toHaveText('Almost ready…')
-    if (process.env.GARTH_SHOTS) await page.screenshot({ path: join(process.env.GARTH_SHOTS, 'finishing-dark.png') })
+    if (process.env.HOB_SHOTS) await page.screenshot({ path: join(process.env.HOB_SHOTS, 'finishing-dark.png') })
     await send({ ...downloading, target: starter, starter: undefined, progress: .5, etaSec: 0 })
     await expect(page.getByTestId('setup-eta')).toHaveText('Estimating time remaining…')
     await page.getByRole('button', { name: 'Download details' }).click()
@@ -66,9 +66,9 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
     await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: 'Download details' })).toBeFocused()
     await send({ phase: 'probing', firstRun: true })
-    await expect(page.getByTestId('setup-probing')).toContainText('Starting Garth…')
+    await expect(page.getByTestId('setup-probing')).toContainText('Starting Hob…')
     await expect(change).not.toBeVisible()
-    const recommendation = await page.evaluate(() => window.garth.setup.getState())
+    const recommendation = await page.evaluate(() => window.hob.setup.getState())
     await send(recommendation)
     await expect(change).toBeVisible()
     expect(await mascot!.evaluate(el => el.isConnected)).toBe(true)
@@ -76,9 +76,9 @@ test('calm setup: bounded picker, real progress, finishing, and single-model det
   } finally { await app.close() }
 })
 
-test('Garth watches the cursor during setup', async () => {
+test('Hob watches the cursor during setup', async () => {
   const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: {
-    ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-design-')),
+    ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-design-')),
   } })
   try {
     const page = await app.firstWindow()

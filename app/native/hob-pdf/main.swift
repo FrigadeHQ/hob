@@ -1,9 +1,9 @@
-// garth-pdf: reads PDFs (recognizing text on scanned pages) and fills them in. Mac only (PDFKit + Vision).
+// hob-pdf: reads PDFs (recognizing text on scanned pages) and fills them in. Mac only (PDFKit + Vision).
 //
-//   garth-pdf read <file.pdf> [--pages 1,3-5]   → JSON: text lines, blanks to fill, form fields (points, top-left origin)
-//   garth-pdf fill <file.pdf> <out.pdf> <answers.json>
+//   hob-pdf read <file.pdf> [--pages 1,3-5]   → JSON: text lines, blanks to fill, form fields (points, top-left origin)
+//   hob-pdf fill <file.pdf> <out.pdf> <answers.json>
 //        answers: { "fields": { "<field name>": "value" | true }, "marks": [{ "page": 1, "x":, "y":, "w":, "h":, "text":, "kind": "text"|"check" }] }
-//   garth-pdf render <file.pdf> <page> <out.png>
+//   hob-pdf render <file.pdf> <page> <out.png>
 import AppKit
 import Foundation
 import PDFKit
@@ -29,7 +29,7 @@ func emit<T: Encodable>(_ v: T) {
 func r1(_ v: CGFloat) -> Double { (Double(v) * 10).rounded() / 10 }
 
 func open(_ path: String) -> PDFDocument {
-  guard let doc = PDFDocument(url: URL(fileURLWithPath: path)) else { fail("That file isn't a PDF Garth can open.") }
+  guard let doc = PDFDocument(url: URL(fileURLWithPath: path)) else { fail("That file isn't a PDF Hob can open.") }
   if doc.isLocked { fail("This PDF is password-protected.") }
   return doc
 }
@@ -327,5 +327,5 @@ case "read" where args.count >= 3:
   read(args[2], pages: i.map { args.count > $0 + 1 ? args[$0 + 1] : "" })
 case "fill" where args.count >= 5: fill(args[2], args[3], args[4])
 case "render" where args.count >= 5: render(args[2], Int(args[3]) ?? 1, args[4])
-default: fail("usage: garth-pdf read <pdf> [--pages 1,3-5] | fill <pdf> <out.pdf> <answers.json> | render <pdf> <page> <out.png>")
+default: fail("usage: hob-pdf read <pdf> [--pages 1,3-5] | fill <pdf> <out.pdf> <answers.json> | render <pdf> <page> <out.png>")
 }

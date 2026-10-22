@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Folder, FolderPlus, MessageSquare, Puzzle, Settings, SquarePen, type LucideIcon } from 'lucide-react'
 import type { ChatSummary, Project } from '../../../shared/agent'
-import { garth } from '../api'
+import { hob } from '../api'
 
-export const MOD = garth.platform === 'darwin' ? '⌘' : 'Ctrl+'
+export const MOD = hob.platform === 'darwin' ? '⌘' : 'Ctrl+'
 
 export type Action = { id: string; label: string; icon: LucideIcon; keys?: string; run(): void }
 type Item = { key: string; section: string; label: string; icon?: LucideIcon; hint?: string; snippet?: string; run(): void }
@@ -27,11 +27,11 @@ export function CommandBar({ onClose, onOpenChat, onNew, onNewInProject, onNewPr
   const [active, setActive] = useState(0)
   const list = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { void garth.chats.list().then((c) => setRecent(c.slice(0, 5))); void garth.projects.list().then(setProjects) }, [])
+  useEffect(() => { void hob.chats.list().then((c) => setRecent(c.slice(0, 5))); void hob.projects.list().then(setProjects) }, [])
   useEffect(() => {
     if (!query.trim()) { setFound([]); return }
     // a short pause so each keystroke doesn't search
-    const t = setTimeout(() => void garth.chats.search(query).then(setFound), 80)
+    const t = setTimeout(() => void hob.chats.search(query).then(setFound), 80)
     return () => clearTimeout(t)
   }, [query])
 

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 
-/** pendingModelId: a model download that was still in progress when Garth last ran */
+/** pendingModelId: a model download that was still in progress when Hob last ran */
 /** theme: light or dark regardless of the system; follows the system when left out */
 export type Settings = { activeModelId?: string; pendingModelId?: string; webAccess?: boolean; filesDir?: string; theme?: 'light' | 'dark' }
 

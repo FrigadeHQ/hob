@@ -1,5 +1,5 @@
 /**
- * Garth's face, in pixels on a 60×60 grid, drawn over the body artwork (assets/garth-body.png).
+ * Hob's face, in pixels on a 60×60 grid, drawn over the body artwork (assets/hob-body.png).
  * Shared by the app (animated) and the icon script.
  */
 export type Expression = 'smile' | 'skeptical' | 'blink' | 'neutral' | 'neutral-blink'
@@ -7,7 +7,7 @@ export type Rect = { x: number; y: number; w: number; h: number; fill: string }
 
 const INK = '#1C1B22'
 
-/** Garth's colour. The body art is grey; this is what its main tone becomes. */
+/** Hob's colour. The body art is grey; this is what its main tone becomes. */
 export const BODY_COLOR = '#A9A5D9'
 /** the art's main grey, measured from the PNG */
 const ART_GREY = [189, 186, 182]

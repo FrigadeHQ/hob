@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net'
 
 /**
  * Signing in to a remote MCP server, as the MCP spec asks (OAuth 2.1 + PKCE):
- * find the server's auth server, register Garth as a client, open the browser, catch the redirect on 127.0.0.1.
+ * find the server's auth server, register Hob as a client, open the browser, catch the redirect on 127.0.0.1.
  */
 export type OAuthClient = { client_id: string; client_secret?: string; redirect_uri: string }
 export type OAuthTokens = { access_token: string; refresh_token?: string; expires_at?: number }
@@ -18,7 +18,7 @@ export type OAuthState = {
 }
 type AsMeta = { authorization_endpoint: string; token_endpoint: string; registration_endpoint?: string }
 
-/** the port Garth listens on for the browser to come back; registered with each server, so it's stable when free */
+/** the port Hob listens on for the browser to come back; registered with each server, so it's stable when free */
 export const CALLBACK_PORT = 33418
 const SIGN_IN_MS = 5 * 60_000
 const TIMEOUT_MS = 20_000
@@ -55,7 +55,7 @@ export async function discover(serverUrl: string, wwwAuthenticate?: string): Pro
   for (const url of [...new Set(prmUrls)]) if ((prm = await getJson(url))?.authorization_servers?.length) break
   // RFC 9728 §3.3: the metadata must describe this server. Otherwise a server could have the user sign in to
   // another service and receive that service's token.
-  if (prm?.resource && !covers(prm.resource, serverUrl)) throw new Error(`This app's sign-in details don't match its link (${u.host}). Garth won't sign in to it.`)
+  if (prm?.resource && !covers(prm.resource, serverUrl)) throw new Error(`This app's sign-in details don't match its link (${u.host}). Hob won't sign in to it.`)
   const issuer = prm?.authorization_servers?.[0] ?? u.origin
   const iu = new URL(issuer)
   const ip = iu.pathname.replace(/\/$/, '')
@@ -76,13 +76,13 @@ const listen = (server: Server, port: number) => new Promise<number>((resolve, r
 })
 
 async function register(meta: AsMeta, redirect: string): Promise<OAuthClient> {
-  if (!meta.registration_endpoint) throw new Error("This app doesn't let Garth sign in by itself. Check its website for an API key, then add it as a header when you connect.")
+  if (!meta.registration_endpoint) throw new Error("This app doesn't let Hob sign in by itself. Check its website for an API key, then add it as a header when you connect.")
   const r = await fetch(meta.registration_endpoint, {
     method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ client_name: 'Garth', redirect_uris: [redirect], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' }),
+    body: JSON.stringify({ client_name: 'Hob', redirect_uris: [redirect], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   }).catch((e: Error) => { throw new Error(`Couldn't reach the sign-in server: ${e.message}`) })
-  if (!r.ok) throw new Error(`The sign-in server didn't accept Garth (${r.status}). ${(await r.text().catch(() => '')).slice(0, 200)}`.trim())
+  if (!r.ok) throw new Error(`The sign-in server didn't accept Hob (${r.status}). ${(await r.text().catch(() => '')).slice(0, 200)}`.trim())
   const c = (await r.json()) as { client_id: string; client_secret?: string }
   return { client_id: c.client_id, ...(c.client_secret ? { client_secret: c.client_secret } : {}), redirect_uri: redirect }
 }
@@ -130,7 +130,7 @@ export async function signIn(o: SignInOpts): Promise<OAuthState> {
   const { meta, resource, scope } = await discover(o.serverUrl, o.wwwAuthenticate)
   stopped()
   const server = createServer()
-  // the port the saved client was registered with first, then Garth's usual one, then any
+  // the port the saved client was registered with first, then Hob's usual one, then any
   const savedPort = Number(o.saved?.client.redirect_uri.match(/:(\d+)\//)?.[1]) || undefined
   let port = 0
   for (const p of [...new Set([savedPort, CALLBACK_PORT, 0])].filter((x): x is number => x !== undefined)) {
@@ -162,12 +162,12 @@ export async function signIn(o: SignInOpts): Promise<OAuthState> {
         const u = new URL(req.url ?? '/', redirect)
         if (u.pathname !== '/callback') { res.writeHead(404); res.end(); return }
         // another page can't finish (or cancel) this sign-in
-        if (u.searchParams.get('state') !== state) { res.writeHead(400, { 'content-type': 'text/html' }); res.end(PAGE('Something went wrong', 'This sign-in link is out of date. Go back to Garth and try again.')); return }
+        if (u.searchParams.get('state') !== state) { res.writeHead(400, { 'content-type': 'text/html' }); res.end(PAGE('Something went wrong', 'This sign-in link is out of date. Go back to Hob and try again.')); return }
         const err = u.searchParams.get('error')
         res.writeHead(200, { 'content-type': 'text/html' })
-        res.end(err ? PAGE('Not connected', 'You can close this tab and go back to Garth.') : PAGE("You're signed in", 'You can close this tab and go back to Garth.'))
+        res.end(err ? PAGE('Not connected', 'You can close this tab and go back to Hob.') : PAGE("You're signed in", 'You can close this tab and go back to Hob.'))
         clearTimeout(timer)
-        if (err) reject(new Error(err === 'access_denied' ? "You didn't allow Garth to connect." : `Sign-in failed: ${u.searchParams.get('error_description') ?? err}`))
+        if (err) reject(new Error(err === 'access_denied' ? "You didn't allow Hob to connect." : `Sign-in failed: ${u.searchParams.get('error_description') ?? err}`))
         else resolve(u.searchParams.get('code') ?? '')
       })
       void Promise.resolve(o.open(url.toString())).catch(reject)

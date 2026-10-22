@@ -7,11 +7,11 @@ import type { CalEvent, CalMail, FoundMail, Mail, NewEvent } from '../accounts/t
 /**
  * Calendar and email tools. They work with whichever source is connected (accounts/types.ts): a Google or
  * Microsoft account the user signed in to, or on a Mac the Calendar and Mail apps with every account the Mac has.
- * The Mac source: Calendar through Garth's helper (EventKit), Mail through the Mail app (JavaScript for
- * Automation). Garth never sends mail: it writes drafts the user sends.
+ * The Mac source: Calendar through Hob's helper (EventKit), Mail through the Mail app (JavaScript for
+ * Automation). Hob never sends mail: it writes drafts the user sends.
  */
 export type MacDeps = {
-  /** native/garth-mac: JSON out, or a readable error */
+  /** native/hob-mac: JSON out, or a readable error */
   helper(args: string[], signal?: AbortSignal): Promise<unknown>
   /** a script for the Mail app; returns what it printed */
   mail(script: string, args: string[], signal?: AbortSignal): Promise<string>
@@ -19,9 +19,9 @@ export type MacDeps = {
 
 export function macHelperPath(): string {
   const candidates = [
-    process.resourcesPath && join(process.resourcesPath, 'bin', 'garth-mac'),
-    join(__dirname, '../../resources/bin/garth-mac'),
-    join(__dirname, '../../../resources/bin/garth-mac'),
+    process.resourcesPath && join(process.resourcesPath, 'bin', 'hob-mac'),
+    join(__dirname, '../../resources/bin/hob-mac'),
+    join(__dirname, '../../../resources/bin/hob-mac'),
   ].filter((x): x is string => !!x)
   return candidates.find((c) => existsSync(c)) ?? candidates.at(-1)!
 }
@@ -30,7 +30,7 @@ export const realMacDeps: MacDeps = {
   helper: (args, signal) => new Promise((resolve, reject) => {
     execFile(macHelperPath(), args, { timeout: 150_000, signal, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
       if (err) return reject(new Error(stderr.trim() || err.message))
-      try { resolve(JSON.parse(stdout)) } catch { reject(new Error('The Calendar helper gave an answer Garth could not read.')) }
+      try { resolve(JSON.parse(stdout)) } catch { reject(new Error('The Calendar helper gave an answer Hob could not read.')) }
     })
   }),
   mail: (script, args, signal) => new Promise((resolve, reject) => {
@@ -38,7 +38,7 @@ export const realMacDeps: MacDeps = {
       if (!err) return resolve(stdout.trim())
       const e = stderr.trim()
       reject(new Error(/-1743|not allowed|Not authorized/i.test(e)
-        ? "Garth isn't allowed to use Mail yet. Allow it in System Settings → Privacy & Security → Automation → Garth → Mail."
+        ? "Hob isn't allowed to use Mail yet. Allow it in System Settings → Privacy & Security → Automation → Hob → Mail."
         : /-600|isn.t running/i.test(e) ? 'Mail needs to be set up on this Mac (open Mail and add your account).' : e || err.message))
     })
   }),
@@ -61,7 +61,7 @@ export const macCalMail: CalMail = {
 /** the source the tools use: a signed-in account, else the Mac's apps; undefined: nothing connected */
 let source: () => CalMail | undefined = () => (process.platform === 'darwin' ? macCalMail : undefined)
 export const setCalMailSource = (s: () => CalMail | undefined) => { source = s }
-const NOTHING = "Garth isn't connected to an email or calendar yet. Tell the user they can connect one: the “Connect my email and calendar” idea on the new chat screen, or Settings → Plugins → Calendar & Mail."
+const NOTHING = "Hob isn't connected to an email or calendar yet. Tell the user they can connect one: the “Connect my email and calendar” idea on the new chat screen, or Settings → Plugins → Calendar & Mail."
 const use = () => source()
 
 const when = (iso: string, allDay: boolean) => {
@@ -179,7 +179,7 @@ export const mailRead: Tool<{ id: string }> = {
     if (!src) return { text: NOTHING, failed: true }
     const m = await src.readMail(String(a.id), ctx.signal)
     if (!m) return { text: `There's no email with id ${a.id} in the inbox. Search again.`, failed: true }
-    // whatever an email says comes from someone else: it could try to steer Garth
+    // whatever an email says comes from someone else: it could try to steer Hob
     ctx.untrusted = true
     return { text: `From: ${m.from}\nTo: ${m.to.join(', ')}\nDate: ${when(m.date, false)}\nSubject: ${m.subject}\n\n${m.content}`, title: `Read “${m.subject}”` }
   },
@@ -188,7 +188,7 @@ export const mailRead: Tool<{ id: string }> = {
 export const mailDraft: Tool<{ to: string; subject: string; body: string }> = {
   spec: {
     name: 'mail_draft',
-    description: 'Write an email as a draft, for the user to check and send. Garth never sends email itself.',
+    description: 'Write an email as a draft, for the user to check and send. Hob never sends email itself.',
     params: { type: 'object', properties: { to: { type: 'string', description: 'Addresses, separated by commas' }, subject: { type: 'string' }, body: { type: 'string' } }, required: ['to', 'subject', 'body'] },
   },
   title: (a) => `Drafted an email to ${a.to}`,
@@ -201,7 +201,7 @@ export const mailDraft: Tool<{ to: string; subject: string; body: string }> = {
   },
 }
 
-/** may Garth use Calendar and Mail? (no prompts) */
+/** may Hob use Calendar and Mail? (no prompts) */
 export async function macAccess(): Promise<{ calendar: string; mail: string }> {
   const [c, m] = await Promise.all([
     deps.helper(['calendar-status']).catch(() => ({ status: 'unavailable' })),

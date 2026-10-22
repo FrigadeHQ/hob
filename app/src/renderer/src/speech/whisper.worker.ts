@@ -16,7 +16,7 @@ if (env.backends.onnx.wasm) env.backends.onnx.wasm.wasmPaths = { mjs: ortMjs, wa
 let asr: Promise<AutomaticSpeechRecognitionPipeline> | undefined
 
 function load(modelBase?: string) {
-  // model files come from Garth's own verified download, never straight from the internet; no second cache
+  // model files come from Hob's own verified download, never straight from the internet; no second cache
   env.allowRemoteModels = false
   env.allowLocalModels = true
   env.useBrowserCache = false

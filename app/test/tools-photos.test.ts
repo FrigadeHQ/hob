@@ -8,13 +8,13 @@ import type { TurnCtx } from '../src/main/agent/tool'
 import type { PythonRuntime } from '../src/main/python/runtime'
 import { photoInfo } from '../src/main/tools/photos'
 
-// Garth's own Python (with Pillow), when it's installed on this machine
-const root = join(homedir(), 'Library', 'Application Support', 'Garth', 'python')
+// Hob's own Python (with Pillow), when it's installed on this machine
+const root = join(homedir(), 'Library', 'Application Support', 'Hob', 'python')
 const python = join(root, 'python', 'bin', 'python3')
 
 it.skipIf(!existsSync(python))('photo_info reads the date taken from EXIF, not the file date', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'garth-photos-'))
-  const chatDir = join(dir, 'chat'); const photos = join(dir, 'garth-test')
+  const dir = mkdtempSync(join(tmpdir(), 'hob-photos-'))
+  const chatDir = join(dir, 'chat'); const photos = join(dir, 'hob-test')
   mkdirSync(chatDir); mkdirSync(photos)
   execFileSync(python, ['-I', '-c', `
 import sys

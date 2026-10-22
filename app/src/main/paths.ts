@@ -7,7 +7,7 @@ export function makePaths(userData: string) {
     models: join(userData, 'models'),
     settings: join(userData, 'settings.json'),
     catalogCache: join(userData, 'catalog.json'),
-    db: join(userData, 'garth.db'),
+    db: join(userData, 'hob.db'),
     python: join(userData, 'python'),
     undo: join(userData, 'undo'),
     /** dictation model */
@@ -16,7 +16,7 @@ export function makePaths(userData: string) {
     runTmp: join(userData, 'run-tmp'),
     /** plugins the user added */
     plugins: join(userData, 'plugins'),
-    /** Garth's eyes: the vision model and llama.cpp's server */
+    /** Hob's eyes: the vision model and llama.cpp's server */
     vision: join(userData, 'vision'),
   }
   for (const d of [p.models, p.python, p.undo, p.runTmp, p.speech, p.plugins, p.vision]) mkdirSync(d, { recursive: true })

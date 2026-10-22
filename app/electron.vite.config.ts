@@ -10,7 +10,7 @@ const ortDist = dirname(createRequire(import.meta.url).resolve('onnxruntime-web'
 export default defineConfig({
   main: {
     build: {
-      externalizeDeps: { exclude: ['@garth/picker'] },
+      externalizeDeps: { exclude: ['@hob/picker'] },
       rollupOptions: {
         input: { index: resolve('src/main/index.ts'), engine: resolve('src/engine/worker.ts') },
       },
@@ -29,10 +29,10 @@ export default defineConfig({
       tailwindcss(),
       {
         // Strict CSP for shipped builds; dev needs inline scripts for hot reload.
-        name: 'garth-csp',
+        name: 'hob-csp',
         apply: 'build',
         transformIndexHtml: (html: string) =>
-          html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' garth-file:; style-src 'self' 'unsafe-inline'; img-src 'self' data: garth-file:; font-src 'self' data:; media-src 'self' blob:" />`),
+          html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' hob-file:; style-src 'self' 'unsafe-inline'; img-src 'self' data: hob-file:; font-src 'self' data:; media-src 'self' blob:" />`),
       },
     ],
   },

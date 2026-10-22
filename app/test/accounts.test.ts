@@ -89,7 +89,7 @@ import { PROVIDERS } from '../src/main/accounts/providers'
 const idToken = (claims: object) => `x.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.y`
 /** a pretend Google: the browser says yes at once; its token endpoint and calendar API answer */
 function world() {
-  const dir = mkdtempSync(join(tmpdir(), 'garth-accounts-'))
+  const dir = mkdtempSync(join(tmpdir(), 'hob-accounts-'))
   const seen: { url: string; body?: string; auth?: string }[] = []
   let tokenCalls = 0
   let expired = false
@@ -108,7 +108,7 @@ function world() {
     }
     return new Response('{}', { status: 404 })
   }) as typeof fetch
-  // the "browser": follows the sign-in page straight back to Garth with a code
+  // the "browser": follows the sign-in page straight back to Hob with a code
   const open = async (url: string) => {
     const u = new URL(url)
     const back = new URL(u.searchParams.get('redirect_uri')!)

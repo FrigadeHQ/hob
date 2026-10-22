@@ -62,14 +62,14 @@ it('projects: a name, folders in order (the first is the main one), instructions
 })
 
 it('persists to disk', () => {
-  const path = join(mkdtempSync(join(tmpdir(), 'garth-db-')), 'garth.db')
+  const path = join(mkdtempSync(join(tmpdir(), 'hob-db-')), 'hob.db')
   const a = new Store(path); a.createChat('c', '/w', 1); a.close()
   expect(new Store(path).getChat('c')?.dir).toBe('/w')
 })
 
 it('keeps how long the agent worked on a reply, and upgrades older databases', async () => {
   const { DatabaseSync } = await import('node:sqlite')
-  const path = join(mkdtempSync(join(tmpdir(), 'garth-db-')), 'old.db')
+  const path = join(mkdtempSync(join(tmpdir(), 'hob-db-')), 'old.db')
   const old = new DatabaseSync(path)
   old.exec(`CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL, attachments TEXT NOT NULL DEFAULT '[]', steps TEXT NOT NULL DEFAULT '[]', task_id TEXT, undoable INTEGER NOT NULL DEFAULT 0, undone INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)`)
   old.close()

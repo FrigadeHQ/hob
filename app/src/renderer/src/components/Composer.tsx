@@ -3,7 +3,7 @@ import { CornerDownLeft, FileText, Image as ImageIcon, Mic, Plus, Square, X } fr
 import { canPreview, previewFile } from './Preview'
 import { MicMenu } from './MicMenu'
 import { PdfThumb } from './PdfView'
-import { garth } from '../api'
+import { hob } from '../api'
 import { useThumbnail } from '../thumbnail'
 import type { Attachment } from '../../../shared/agent'
 import type { SkillRef } from '../../../shared/plugins'
@@ -13,7 +13,7 @@ const size = (b: number) => (b < 1e6 ? `${Math.max(1, Math.round(b / 1e3))} KB` 
 
 /** the attachment card's photo, shrunk smoothly (see useThumbnail) */
 function PhotoThumb({ path }: { path: string }) {
-  const url = garth.fileUrl(path)
+  const url = hob.fileUrl(path)
   const thumb = useThumbnail(url, 128, 104)
   return <img data-testid="attachment-thumb-image" data-smooth={thumb ? 'yes' : 'no'} src={thumb ?? url} alt="" className="block h-full w-full rounded-card object-cover" />
 }
@@ -59,7 +59,7 @@ export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () =
   const Icon = image ? ImageIcon : FileText
   return (
     <span data-testid="attachment-chip" className="group relative inline-flex items-center gap-1.5 rounded-control border border-line bg-surface px-2 py-1 text-ui">
-      {/* click to look at it: photos and PDFs in Garth, anything else in its own app */}
+      {/* click to look at it: photos and PDFs in Hob, anything else in its own app */}
       <button data-testid="attachment-open" title={canPreview(a.path) ? 'Preview' : 'Open'} onClick={() => previewFile(a.path)} className="inline-flex min-w-0 items-center gap-1.5 hover:text-ink">
         <Icon size={14} strokeWidth={1.75} className="shrink-0 text-ink-soft" />
         <span className="max-w-48 truncate underline-offset-2 hover:underline">{a.name}</span>
@@ -166,7 +166,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
       if ((e.key === 'Enter' || e.key === 'Tab') && items[active] && !e.shiftKey) { e.preventDefault(); pick(items[active]); return }
       if (e.key === 'Escape') { e.preventDefault(); setDismissed(value); return }
     }
-    // while Garth works, Enter queues the message (the chat sends it when the reply is done)
+    // while Hob works, Enter queues the message (the chat sends it when the reply is done)
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (value.trim()) onSend() }
   }
   return (
@@ -185,7 +185,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
           onKeyDown={onKeyDown}
           // a pasted screenshot or copied file becomes an attachment; pasted text stays text
           onPaste={(e) => { const files = Array.from(e.clipboardData.files); if (files.length && onPasteFiles) { e.preventDefault(); onPasteFiles(files) } }}
-          placeholder={dictation?.hint ?? (running ? 'Garth is working. Type your next message, it sends when Garth is done' : skills.length ? 'Ask Garth anything, type / for skills' : 'Ask Garth anything, or drop files here')}
+          placeholder={dictation?.hint ?? (running ? 'Hob is working. Type your next message, it sends when Hob is done' : skills.length ? 'Ask Hob anything, type / for skills' : 'Ask Hob anything, or drop files here')}
           rows={1}
           className={`block max-h-60 min-h-[48px] w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-body outline-none placeholder:text-muted [field-sizing:content] ${dictation?.hint ? 'placeholder:italic' : ''}`}
         />

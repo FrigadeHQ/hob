@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Calendar, Check, Circle, Mail } from 'lucide-react'
 import type { AccountsState, MacAccess } from '../../../shared/types'
-import { garth } from '../api'
+import { hob } from '../api'
 import { button, Dialog } from './ui'
 
 export const connected = (a: MacAccess | null) => !!a && a.calendar === 'granted' && a.mail === 'granted'
@@ -20,21 +20,21 @@ const NAMES = { google: 'Google', microsoft: 'Microsoft' } as const
  * Mail apps with every account the Mac already has.
  */
 export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt: string): void }) {
-  const mac = garth.platform === 'darwin'
+  const mac = hob.platform === 'darwin'
   const [access, setAccess] = useState<MacAccess | null>(null)
   const [accounts, setAccounts] = useState<AccountsState | null>(null)
   const [asking, setAsking] = useState(false)
   const [signingIn, setSigningIn] = useState<'google' | 'microsoft' | null>(null)
   const [error, setError] = useState('')
   useEffect(() => {
-    if (mac) void garth.mac.access().then(setAccess)
-    void garth.accounts.get().then(setAccounts)
-    return garth.accounts.onChanged(setAccounts)
+    if (mac) void hob.mac.access().then(setAccess)
+    void hob.accounts.get().then(setAccounts)
+    return hob.accounts.onChanged(setAccounts)
   }, [mac])
-  const ask = async () => { setAsking(true); setAccess(await garth.mac.ask()); setAsking(false) }
+  const ask = async () => { setAsking(true); setAccess(await hob.mac.ask()); setAsking(false) }
   const signIn = async (p: 'google' | 'microsoft') => {
     setError(''); setSigningIn(p)
-    try { setAccounts(await garth.accounts.signIn(p)) } catch (err) { setError(err instanceof Error ? err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '') : String(err)) } finally { setSigningIn(null) }
+    try { setAccounts(await hob.accounts.signIn(p)) } catch (err) { setError(err instanceof Error ? err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '') : String(err)) } finally { setSigningIn(null) }
   }
   const account = accounts?.current
   const done = !!account || connected(access)
@@ -59,7 +59,7 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
           {signingIn === p ? 'Finish signing in in your browser…' : `Continue with ${NAMES[p]}`}
         </button>
       ))}
-      {signingIn && <button className="w-full text-meta text-muted underline underline-offset-2 hover:text-ink" onClick={() => void garth.accounts.cancel()}>Cancel</button>}
+      {signingIn && <button className="w-full text-meta text-muted underline underline-offset-2 hover:text-ink" onClick={() => void hob.accounts.cancel()}>Cancel</button>}
     </div>
   )
   return (
@@ -68,16 +68,16 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
         <div data-testid="account-connected" className="flex items-center gap-3 rounded-card border border-line px-4 py-3 text-ui">
           {account.provider === 'google' ? <GoogleMark /> : <MicrosoftMark />}
           <span className="min-w-0 flex-1"><span className="block font-medium">Connected to {NAMES[account.provider]}</span><span className="block truncate text-meta text-ink-soft">{account.email}</span></span>
-          <button data-testid="account-signout" className="text-meta text-ink-soft underline underline-offset-2 hover:text-ink" onClick={() => void garth.accounts.signOut().then(setAccounts)}>Sign out</button>
+          <button data-testid="account-signout" className="text-meta text-ink-soft underline underline-offset-2 hover:text-ink" onClick={() => void hob.accounts.signOut().then(setAccounts)}>Sign out</button>
         </div>
       ) : mac ? (
         <>
-          <p className="text-ui text-ink-soft">Garth can use the Calendar and Mail apps on this Mac, with every account you added there: iCloud, Google, Outlook and more.</p>
+          <p className="text-ui text-ink-soft">Hob can use the Calendar and Mail apps on this Mac, with every account you added there: iCloud, Google, Outlook and more.</p>
           <ul className="mt-4 space-y-2.5 rounded-card border border-line px-4 py-3">
             {row(Calendar, 'Calendar', access?.calendar)}
             {row(Mail, 'Mail', access?.mail)}
           </ul>
-          {denied && <p className="mt-3 text-ui text-ink-soft">To change it, allow Garth in System Settings → Privacy & Security → Calendars and → Automation.</p>}
+          {denied && <p className="mt-3 text-ui text-ink-soft">To change it, allow Hob in System Settings → Privacy & Security → Calendars and → Automation.</p>}
           {providers.length > 0 && !connected(access) && (
             <>
               <p className="mb-3 mt-5 text-ui text-ink-soft">Or sign in to your Google or Microsoft account instead:</p>
@@ -91,12 +91,12 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
           {signInButtons}
         </>
       ) : (
-        <p className="text-ui text-ink-soft">Connecting email and calendar isn't available in this version of Garth yet.</p>
+        <p className="text-ui text-ink-soft">Connecting email and calendar isn't available in this version of Hob yet.</p>
       )}
       {error && <p data-testid="account-error" className="mt-3 text-ui text-accent">{error}</p>}
       <p className="mt-4 text-meta text-muted">
         {account || !mac ? 'Your email and calendar go straight from your account to this computer, never to anyone else. ' : 'Nothing leaves your computer. '}
-        Garth only writes email drafts: you send them.
+        Hob only writes email drafts: you send them.
       </p>
       <div className="mt-5 flex justify-end gap-2">
         <button className={button.quiet} onClick={onClose}>{done ? 'Close' : 'Not now'}</button>

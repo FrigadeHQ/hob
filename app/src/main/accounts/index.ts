@@ -19,10 +19,10 @@ export type AccountsDeps = {
   providers?: Record<ProviderId, Provider>
 }
 
-/** what the rest of Garth uses (tests and fake mode have their own) */
+/** what the rest of Hob uses (tests and fake mode have their own) */
 export type AccountsLike = Pick<Accounts, 'available' | 'current' | 'signIn' | 'cancelSignIn' | 'signOut' | 'calMail'>
 
-/** The Google or Microsoft account Garth reads calendar and email from: sign in, stay signed in, sign out. */
+/** The Google or Microsoft account Hob reads calendar and email from: sign in, stay signed in, sign out. */
 export class Accounts {
   private saved: Saved | undefined
   private signingIn: AbortController | undefined
@@ -36,13 +36,13 @@ export class Accounts {
     else rmSync(this.d.file, { force: true })
   }
 
-  /** the providers Garth can sign in to (those with an app registration) */
+  /** the providers Hob can sign in to (those with an app registration) */
   available(): ProviderId[] { return (Object.values(this.providers) as Provider[]).filter((p) => p.clientId).map((p) => p.id) }
   current(): Account | undefined { return this.saved && { provider: this.saved.provider, email: this.saved.email } }
 
   async signIn(id: ProviderId): Promise<Account> {
     const p = this.providers[id]
-    if (!p?.clientId) throw new Error(`Signing in with ${p?.name ?? id} isn't available in this version of Garth.`)
+    if (!p?.clientId) throw new Error(`Signing in with ${p?.name ?? id} isn't available in this version of Hob.`)
     this.signingIn?.abort()
     const ac = (this.signingIn = new AbortController())
     try {
@@ -67,7 +67,7 @@ export class Accounts {
     if (!s) throw new Error('Not signed in.')
     const fresh = !s.tokens.expires_at || s.tokens.expires_at - 60_000 > Date.now()
     if (fresh && !force) return s.tokens.access_token
-    if (!s.tokens.refresh_token) throw new Error(`Garth's sign-in to ${this.providers[s.provider].name} ran out. Sign in again in Settings → Plugins → Calendar & Mail.`)
+    if (!s.tokens.refresh_token) throw new Error(`Hob's sign-in to ${this.providers[s.provider].name} ran out. Sign in again in Settings → Plugins → Calendar & Mail.`)
     try {
       const t = await tokenRequest(this.fetch, this.providers[s.provider], { grant_type: 'refresh_token', refresh_token: s.tokens.refresh_token })
       // providers may or may not send a new refresh token
@@ -77,7 +77,7 @@ export class Accounts {
     } catch (err) {
       // revoked or expired for good: signed out, and the user is told how to sign in again
       if ((err as { code?: string }).code === 'invalid_grant') { this.saved = undefined; this.save() }
-      throw new Error(`Garth couldn't stay signed in to ${this.providers[s.provider].name}. Sign in again in Settings → Plugins → Calendar & Mail.`)
+      throw new Error(`Hob couldn't stay signed in to ${this.providers[s.provider].name}. Sign in again in Settings → Plugins → Calendar & Mail.`)
     }
   }
 

@@ -1,5 +1,5 @@
 /**
- * Google and Microsoft sign-in. The client IDs come from Garth's app registrations (Google Cloud Console:
+ * Google and Microsoft sign-in. The client IDs come from Hob's app registrations (Google Cloud Console:
  * OAuth client of type "Desktop app"; Microsoft Entra: app registration with the "Mobile and desktop
  * applications" platform and redirect http://localhost). A desktop app can't keep a secret, so these are not
  * secrets: Google's "client secret" for desktop apps is public by design, and PKCE protects each sign-in.

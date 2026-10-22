@@ -1,5 +1,5 @@
 /**
- * Where Garth reads the user's calendar and email: the Mac's own Calendar and Mail apps, or a Google or Microsoft
+ * Where Hob reads the user's calendar and email: the Mac's own Calendar and Mail apps, or a Google or Microsoft
  * account the user signed in to. The tools (tools/mac.ts) talk to whichever is connected, the same way.
  */
 export type CalEvent = { title: string; start: string; end: string; allDay: boolean; calendar: string; location?: string; notes?: string; attendees?: string[] }

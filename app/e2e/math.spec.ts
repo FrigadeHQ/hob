@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 test('formulas in a reply are drawn as math; prices stay text', async () => {
-  const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
+  const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
   try {
     const page = await app.firstWindow()
     await page.getByTestId('setup-download').click()
@@ -19,6 +19,6 @@ test('formulas in a reply are drawn as math; prices stay text', async () => {
     await expect(msg.locator('.katex-display .mfrac')).toBeVisible()
     await expect(msg.locator('.katex-error')).toHaveCount(0)
     await expect(msg).not.toContainText('\\(')
-    if (process.env.GARTH_SHOTS) await page.screenshot({ path: join(process.env.GARTH_SHOTS, 'math.png') })
+    if (process.env.HOB_SHOTS) await page.screenshot({ path: join(process.env.HOB_SHOTS, 'math.png') })
   } finally { await app.close() }
 })

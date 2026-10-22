@@ -18,7 +18,7 @@ function fakeDeps(root: string, fail = false) {
 }
 
 it('downloads, extracts, installs pinned packages once, then reports ready', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'garth-py-'))
+  const root = mkdtempSync(join(tmpdir(), 'hob-py-'))
   const { deps, calls } = fakeDeps(root)
   const rt = new PythonRuntime(root, deps, 'darwin-arm64')
   expect(rt.isReady()).toBe(false)
@@ -35,7 +35,7 @@ it('downloads, extracts, installs pinned packages once, then reports ready', asy
 })
 
 it('a failed install is not marked ready and can be retried', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'garth-py-'))
+  const root = mkdtempSync(join(tmpdir(), 'hob-py-'))
   const rt = new PythonRuntime(root, fakeDeps(root, true).deps, 'darwin-arm64')
   await expect(rt.ensure()).rejects.toThrow('pip failed')
   expect(rt.isReady()).toBe(false)
@@ -43,7 +43,7 @@ it('a failed install is not marked ready and can be retried', async () => {
 })
 
 it('unsupported platforms get a plain message', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'garth-py-'))
+  const root = mkdtempSync(join(tmpdir(), 'hob-py-'))
   await expect(new PythonRuntime(root, fakeDeps(root).deps, 'sunos-sparc').ensure()).rejects.toThrow('available on this computer')
 })
 
@@ -54,7 +54,7 @@ it('pins every package the data stack pulls in, not just the top-level ones', ()
 })
 
 it('an install made with a different package list is not ready (reinstalls)', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'garth-py-'))
+  const root = mkdtempSync(join(tmpdir(), 'hob-py-'))
   const rt = new PythonRuntime(root, fakeDeps(root).deps, 'darwin-arm64')
   await rt.ensure()
   const { writeFileSync: w } = await import('node:fs')
@@ -63,7 +63,7 @@ it('an install made with a different package list is not ready (reinstalls)', as
 })
 
 it('also installs the pinned SearXNG source and its packages', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'garth-py-'))
+  const root = mkdtempSync(join(tmpdir(), 'hob-py-'))
   const { deps, calls } = fakeDeps(root)
   await new PythonRuntime(root, deps, 'darwin-arm64').ensure()
   expect(calls.some((c) => c.startsWith('fetch') && c.includes('4e2c1ea7f468c9d1b16206e9d4079999a2eb0627.tar.gz'))).toBe(true)

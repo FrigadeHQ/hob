@@ -5,7 +5,7 @@ import { expect, it } from 'vitest'
 import { Journal, undo, type UndoOp } from '../src/main/agent/journal'
 
 it('undo reverses create, replace, move and delete in reverse order', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'garth-undo-'))
+  const dir = mkdtempSync(join(tmpdir(), 'hob-undo-'))
   const ops: UndoOp[] = []
   const j = new Journal({ backupDir: join(dir, '.backup'), save: (op) => ops.push(op) })
   writeFileSync(join(dir, 'keep.txt'), 'original')
@@ -29,7 +29,7 @@ it('undo reverses create, replace, move and delete in reverse order', async () =
 })
 
 it('undo keeps a created folder the user has since put files in', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'garth-undo-'))
+  const dir = mkdtempSync(join(tmpdir(), 'hob-undo-'))
   mkdirSync(join(dir, 'Docs')); writeFileSync(join(dir, 'Docs', 'mine.txt'), 'user file')
   const trashed: string[] = []
   await undo([{ type: 'created', path: join(dir, 'Docs') }], async (p) => { trashed.push(p) })
@@ -37,7 +37,7 @@ it('undo keeps a created folder the user has since put files in', async () => {
 })
 
 it('undo keeps going past problems and reports how many changes it could not undo', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'garth-undo-'))
+  const dir = mkdtempSync(join(tmpdir(), 'hob-undo-'))
   writeFileSync(join(dir, 'a.txt'), 'mine now')          // user put a new file where a.txt was
   writeFileSync(join(dir, 'moved-a.txt'), 'original a')
   writeFileSync(join(dir, 'moved-b.txt'), 'original b')
@@ -54,7 +54,7 @@ it('undo keeps going past problems and reports how many changes it could not und
 })
 
 it('big deletes are not copied; their undo reports them as not restorable', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'garth-undo-'))
+  const dir = mkdtempSync(join(tmpdir(), 'hob-undo-'))
   writeFileSync(join(dir, 'big.bin'), Buffer.alloc(3000))
   const ops: UndoOp[] = []
   const j = new Journal({ backupDir: join(dir, '.backup'), save: (op) => ops.push(op), maxBackupBytes: 1000 })
@@ -68,7 +68,7 @@ it('big deletes are not copied; their undo reports them as not restorable', asyn
 it('pruneUndo removes backups for given tasks and ones older than the cutoff', async () => {
   const { pruneUndo } = await import('../src/main/agent/journal')
   const { utimesSync } = await import('node:fs')
-  const root = mkdtempSync(join(tmpdir(), 'garth-undo-'))
+  const root = mkdtempSync(join(tmpdir(), 'hob-undo-'))
   for (const t of ['old', 'keep', 'chatTask']) mkdirSync(join(root, t))
   const past = new Date(Date.now() - 40 * 86_400_000)
   utimesSync(join(root, 'old'), past, past)

@@ -6,8 +6,8 @@ import { join } from 'node:path'
 const main = join(import.meta.dirname, '../out/main/index.js')
 
 /** a pretend home folder: project folders must be inside it (temp folders count as system folders) */
-async function launch(userData = mkdtempSync(join(tmpdir(), 'garth-e2e-')), home = mkdtempSync(join(tmpdir(), 'garth-home-'))) {
-  const app = await electron.launch({ args: [main], env: { ...process.env, HOME: home, USERPROFILE: home, GARTH_FAKE: '1', GARTH_USER_DATA: userData } })
+async function launch(userData = mkdtempSync(join(tmpdir(), 'hob-e2e-')), home = mkdtempSync(join(tmpdir(), 'hob-home-'))) {
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOME: home, USERPROFILE: home, HOB_FAKE: '1', HOB_USER_DATA: userData } })
   const page = await app.firstWindow()
   return { app, page, userData, home }
 }
@@ -23,7 +23,7 @@ const stubOpenDialog = (app: ElectronApplication, paths: string[]) =>
   app.evaluate(({ dialog }, filePaths) => { dialog.showOpenDialog = (async () => ({ canceled: false, filePaths })) as never }, paths)
 
 test('attach a file, the agent works on it, the chat is saved', async () => {
-  const src = mkdtempSync(join(tmpdir(), 'garth-src-'))
+  const src = mkdtempSync(join(tmpdir(), 'hob-src-'))
   writeFileSync(join(src, 'sales.csv'), 'name,sales\nA,10\nB,30\n')
   const { app, page, userData } = await launch()
   await ready(page)
@@ -175,7 +175,7 @@ test('dictation fills the message box', async () => {
 })
 
 test('the work log stays live while the model talks between steps; the chat is titled right away', async () => {
-  const src = mkdtempSync(join(tmpdir(), 'garth-src-'))
+  const src = mkdtempSync(join(tmpdir(), 'hob-src-'))
   writeFileSync(join(src, 'notes.txt'), 'hi')
   const { app, page } = await launch()
   await ready(page)
@@ -195,8 +195,8 @@ test('the work log stays live while the model talks between steps; the chat is t
 })
 
 test('the microphone is available to the page; the camera is not', async () => {
-  const userData = mkdtempSync(join(tmpdir(), 'garth-e2e-'))
-  const app = await electron.launch({ args: [main, '--use-fake-device-for-media-stream'], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: userData } })
+  const userData = mkdtempSync(join(tmpdir(), 'hob-e2e-'))
+  const app = await electron.launch({ args: [main, '--use-fake-device-for-media-stream'], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: userData } })
   const page = await app.firstWindow()
   const r = await page.evaluate(async () => {
     const tryGet = async (c: MediaStreamConstraints) => { try { (await navigator.mediaDevices.getUserMedia(c)).getTracks().forEach((t) => t.stop()); return 'ok' } catch (e) { return (e as Error).name } }
@@ -209,8 +209,8 @@ test('the microphone is available to the page; the camera is not', async () => {
 
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
 
-test('Garth looks at an attached photo and answers from what it sees', async () => {
-  const src = mkdtempSync(join(tmpdir(), 'garth-src-'))
+test('Hob looks at an attached photo and answers from what it sees', async () => {
+  const src = mkdtempSync(join(tmpdir(), 'hob-src-'))
   writeFileSync(join(src, 'receipt.png'), PNG)
   const { app, page } = await launch()
   await ready(page)
@@ -241,8 +241,8 @@ test('a pasted screenshot becomes an attachment', async () => {
   await app.close()
 })
 
-test('clicking an attached photo or PDF previews it inside Garth', async () => {
-  const src = mkdtempSync(join(tmpdir(), 'garth-src-'))
+test('clicking an attached photo or PDF previews it inside Hob', async () => {
+  const src = mkdtempSync(join(tmpdir(), 'hob-src-'))
   writeFileSync(join(src, 'receipt.png'), PNG)
   const { copyFileSync } = await import('node:fs')
   copyFileSync(join(import.meta.dirname, '../test/fixtures/form-fields.pdf'), join(src, 'form.pdf'))
@@ -281,7 +281,7 @@ test('the mic menu lists microphones and keeps the dictation language', async ()
   await app.close()
 })
 
-test('Mac: "Connect my email and calendar" asks for access once, then Garth reads the calendar and drafts email', async () => {
+test('Mac: "Connect my email and calendar" asks for access once, then Hob reads the calendar and drafts email', async () => {
   test.skip(process.platform !== 'darwin', 'Calendar & Mail is Mac only')
   const { app, page } = await launch()
   await ready(page)

@@ -81,7 +81,7 @@ export class PythonRuntime {
   sitePackages() { return sitePackagesOf(this.packagesDir, this.key.split('-')[0]) }
   private baseSitePackages() { return this.key.startsWith('win32') ? join(this.root, 'python', 'Lib', 'site-packages') : sitePackagesOf(join(this.root, 'python'), this.key.split('-')[0]) }
 
-  /** installed version of each package (by its PyPI name), from the user's packages or Garth's own */
+  /** installed version of each package (by its PyPI name), from the user's packages or Hob's own */
   versions(names: string[]): Record<string, string | undefined> {
     const all = installedVersions([this.sitePackages(), this.baseSitePackages()])
     return Object.fromEntries(names.map((n) => [n, all.get(nameOf(n))]))

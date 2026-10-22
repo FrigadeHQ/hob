@@ -73,7 +73,7 @@ describe('engineSchema review fixes', () => {
     expect(p.meta).toEqual({ type: 'object', properties: {}, additionalProperties: true })
     expect(p.bag).toEqual({ type: 'object', properties: {}, additionalProperties: true })
   })
-  it('drops the nulls Garth added inside arrays, choices and refs; keeps nulls the tool itself allows', () => {
+  it('drops the nulls Hob added inside arrays, choices and refs; keeps nulls the tool itself allows', () => {
     const schema = {
       type: 'object', required: ['items'],
       properties: {

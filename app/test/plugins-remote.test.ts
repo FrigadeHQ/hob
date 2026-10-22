@@ -13,7 +13,7 @@ let reg: PluginRegistry | undefined
 let fx: Awaited<ReturnType<typeof startHttpFixture>> | undefined
 afterEach(async () => { reg?.close(); await fx?.close(); reg = undefined; fx = undefined })
 
-/** follows the sign-in page's redirect back to Garth, like the user's browser would */
+/** follows the sign-in page's redirect back to Hob, like the user's browser would */
 const browser = (opened: string[]) => async (url: string) => {
   opened.push(url)
   const r = await fetch(url, { redirect: 'manual' })
@@ -22,7 +22,7 @@ const browser = (opened: string[]) => async (url: string) => {
 }
 
 function world() {
-  const root = mkdtempSync(join(tmpdir(), 'garth-remote-'))
+  const root = mkdtempSync(join(tmpdir(), 'hob-remote-'))
   const builtinDir = join(root, 'builtin'); const installDir = join(root, 'installed')
   mkdirSync(builtinDir); mkdirSync(installDir)
   const store = new Store(':memory:')
@@ -92,7 +92,7 @@ describe('MCP bundles (.mcpb)', () => {
     expect(c).toEqual({ command: '/b/bin', args: ['--dirs', '/a', '/c', 'x=', 'v'], env: { K: 'v', U: '${UNKNOWN}' } })
   })
 
-  it('installs a .mcpb, waits for required settings, then runs on Garth’s own Node with them', async () => {
+  it('installs a .mcpb, waits for required settings, then runs on Hob’s own Node with them', async () => {
     const w = world()
     expect(w.r.install(bundle(w.root))).toEqual({ ok: true, id: 'notes-bundle' })
     const info = w.r.list().find((p) => p.id === 'notes-bundle')!
@@ -138,7 +138,7 @@ describe('online connectors', () => {
     fx = await startHttpFixture({ auth: true, apiKeys: ['k-9'] })
     const w = world()
     expect(w.r.connectApp({ name: 'Svc', command: fx.url, env: 'Authorization: Bearer k-9' })).toEqual({ ok: true, id: 'svc' })
-    const raw = readFileSync(join(w.installDir, 'svc', 'garth-plugin.json'), 'utf8')
+    const raw = readFileSync(join(w.installDir, 'svc', 'hob-plugin.json'), 'utf8')
     expect(raw).not.toContain('k-9')
     expect(w.r.list().find((p) => p.id === 'svc')!.settings[0]).toMatchObject({ label: 'Authorization', secret: true, set: true })
     expect(await w.r.connect('svc')).toEqual({ ok: true, id: 'svc' })

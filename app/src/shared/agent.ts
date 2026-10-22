@@ -4,7 +4,7 @@ import type { ModelOption } from './types'
 export type ToolSpec = { name: string; description: string; params: Record<string, unknown> }
 
 /** A file copied into a chat's folder. path is absolute. */
-/** seen: what Garth saw in a photo, kept so follow-ups still know it */
+/** seen: what Hob saw in a photo, kept so follow-ups still know it */
 export type Attachment = { name: string; path: string; sizeBytes: number; seen?: string }
 
 export type StepStatus = 'running' | 'waiting' | 'done' | 'error' | 'denied'
@@ -14,7 +14,7 @@ export type StepStatus = 'running' | 'waiting' | 'done' | 'error' | 'denied'
 /** reason: why it failed or was refused, short and readable */
 export type Step = { id: string; title: string; status: StepStatus; detail?: string; files?: string[]; uses?: string[]; tool?: string; reason?: string }
 
-/** access: Garth asks to use a folder it can't see yet (allow adds it to the folders it can use) */
+/** access: Hob asks to use a folder it can't see yet (allow adds it to the folders it can use) */
 export type ApprovalRequest = { id: string; requestId: string; text: string; folder?: string; detail?: string; access?: boolean }
 export type ApprovalAnswer = 'allow' | 'always' | 'deny'
 
@@ -23,7 +23,7 @@ export type ChatSummary = { id: string; title: string; dir: string; updatedAt: n
 /** folders[0] is the main folder: new files go there. missing: folders that can't be found right now */
 export type Project = { id: string; name: string; instructions: string; folders: string[]; missing: string[] }
 export type ProjectInput = { name: string; instructions: string; folders: string[] }
-/** a folder the user picked; problem: why Garth can't use it */
+/** a folder the user picked; problem: why Hob can't use it */
 export type FolderCheck = { path: string; problem?: string }
 export type StoredMessage = {
   id: number

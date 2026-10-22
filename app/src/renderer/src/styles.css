@@ -11,7 +11,7 @@
 }
 
 /*
- * Garth design system
+ * Hob design system
  * Type: core sizes. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
  * Color: paper (app) · sidebar · surface (composer, cards) · ink · ink-soft (secondary text) · muted (hints, placeholders) · line · line-strong · accent
  * Radius: 8 controls · 12 cards · 18 composer. Icons: lucide, 16px in UI, 14px in steps.
@@ -123,7 +123,7 @@ body {
   --tw-prose-code: var(--color-ink);
   --tw-prose-th-borders: var(--color-line-strong);
   --tw-prose-td-borders: var(--color-line);
-  /* section breaks (---): Garth's soft divider, not the prose default (too bright in dark mode) */
+  /* section breaks (---): Hob's soft divider, not the prose default (too bright in dark mode) */
   --tw-prose-hr: var(--color-line);
 }
 .reply.prose :where(p, ul, ol, table, pre) { margin-top: 0.6em; margin-bottom: 0.6em; }
@@ -148,7 +148,7 @@ html[data-text-size="large"] { --reply-step: 2px; }
 /* new text fades in instead of popping */
 @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 .fade-in { animation: fade-in 400ms ease-out both; }
-/* First loading screen: Garth, then the status, then the reassurance. */
+/* First loading screen: Hob, then the status, then the reassurance. */
 @keyframes setup-appear { from { opacity: 0; } to { opacity: 1; } }
 .setup-avatar { animation: setup-appear 250ms ease-out both; }
 .setup-status { animation: setup-appear 400ms ease-out 150ms both; }
@@ -256,25 +256,25 @@ html[data-text-size="large"] { --reply-step: 2px; }
 body:has(> [data-scrim]) #root [data-scrim], body > [data-scrim]:has(~ [data-scrim]) { background-color: transparent; }
 body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] { animation: none; }
 
-/* One Garth at a time: the greeting shows Garth until a conversation starts. */
+/* One Hob at a time: the greeting shows Hob until a conversation starts. */
 .status-presence { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; }
-.status-presence:has(.garth-mascot) > .status-dot { display: none; }
-#root:has(.chat-greeting) .status-presence .garth-mascot { display: none; }
+.status-presence:has(.hob-mascot) > .status-dot { display: none; }
+#root:has(.chat-greeting) .status-presence .hob-mascot { display: none; }
 #root:has(.chat-greeting) .status-presence > .status-dot { display: block; }
-/* Garth smiles, also while working; now and then the mouth goes flat for a moment, or an eyebrow goes up */
-.garth-flat, .garth-brow { opacity: 0; }
-.garth-eyes { transform-box: fill-box; transform-origin: center; }
+/* Hob smiles, also while working; now and then the mouth goes flat for a moment, or an eyebrow goes up */
+.hob-flat, .hob-brow { opacity: 0; }
+.hob-eyes { transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: no-preference) {
-  .garth-alive .garth-eyes { animation: garth-blink 17s steps(1, end) infinite; }
-  .garth-alive:not(.garth-working) .garth-flat { animation: garth-flat 53s steps(1, end) infinite; }
-  .garth-alive:not(.garth-working) .garth-smile { animation: garth-smile 53s steps(1, end) infinite; }
-  .garth-alive:not(.garth-working) .garth-brow { animation: garth-brow 53s steps(1, end) infinite; }
-  .garth-working .garth-face { transform: translateY(1px); }
+  .hob-alive .hob-eyes { animation: hob-blink 17s steps(1, end) infinite; }
+  .hob-alive:not(.hob-working) .hob-flat { animation: hob-flat 53s steps(1, end) infinite; }
+  .hob-alive:not(.hob-working) .hob-smile { animation: hob-smile 53s steps(1, end) infinite; }
+  .hob-alive:not(.hob-working) .hob-brow { animation: hob-brow 53s steps(1, end) infinite; }
+  .hob-working .hob-face { transform: translateY(1px); }
 }
-@keyframes garth-blink { 0%, 21.9%, 50.9%, 84.9%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
-@keyframes garth-smile { 0%, 32%, 75%, 100% { opacity: 1; } 28%, 71% { opacity: 0; } }
-@keyframes garth-flat { 0%, 32%, 75%, 100% { opacity: 0; } 28%, 71% { opacity: 1; } }
-@keyframes garth-brow { 0%, 75%, 100% { opacity: 0; } 71% { opacity: 1; } }
+@keyframes hob-blink { 0%, 21.9%, 50.9%, 84.9%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
+@keyframes hob-smile { 0%, 32%, 75%, 100% { opacity: 1; } 28%, 71% { opacity: 0; } }
+@keyframes hob-flat { 0%, 32%, 75%, 100% { opacity: 0; } 28%, 71% { opacity: 1; } }
+@keyframes hob-brow { 0%, 75%, 100% { opacity: 0; } 71% { opacity: 1; } }
 
 @media (max-height: 620px) { .chat-greeting { padding-top: 16px; } }
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }

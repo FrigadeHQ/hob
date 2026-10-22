@@ -1,5 +1,5 @@
 {
-  "name": "@garth/app",
+  "name": "@hob/app",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "native": "node scripts/build-native.mjs"
   },
   "dependencies": {
-    "@garth/picker": "workspace:^",
+    "@hob/picker": "workspace:^",
     "@mozilla/readability": "0.6.0",
     "katex": "0.16.47",
     "linkedom": "0.18.13",
@@ -47,9 +47,9 @@
     "vite": "^8.3.4",
     "vitest": "^5.0.4"
   },
-  "productName": "Garth",
+  "productName": "Hob",
   "description": "The full AI coworker experience. None of the cloud.",
   "author": "Frigade",
   "license": "MIT",
-  "repository": "github:FrigadeHQ/garth"
+  "repository": "github:FrigadeHQ/hob"
 }

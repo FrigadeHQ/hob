@@ -7,7 +7,7 @@ const main = join(import.meta.dirname, '../out/main/index.js')
 
 test('Settings → Model: Change model opens the same picker as setup; the download shows its progress there', async () => {
   // a slow stand-in download: about 6 seconds
-  const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_FAKE_STEP_MS: '1500', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_FAKE_STEP_MS: '1500', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 30_000 })
@@ -35,8 +35,8 @@ test('Settings → Model: Change model opens the same picker as setup; the downl
 })
 
 test('Settings opens over the app; the theme can be System, Light or Dark and is remembered', async () => {
-  const userData = mkdtempSync(join(tmpdir(), 'garth-e2e-'))
-  const launch = () => electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_USER_DATA: userData } })
+  const userData = mkdtempSync(join(tmpdir(), 'hob-e2e-'))
+  const launch = () => electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_USER_DATA: userData } })
   let app = await launch()
   let page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
@@ -60,7 +60,7 @@ test('Settings opens over the app; the theme can be System, Light or Dark and is
 })
 
 test('a model download in Settings can be cancelled, and chat stays on the current model', async () => {
-  const app = await electron.launch({ args: [main], env: { ...process.env, GARTH_FAKE: '1', GARTH_FAKE_STEP_MS: '1500', GARTH_USER_DATA: mkdtempSync(join(tmpdir(), 'garth-e2e-')) } })
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_FAKE_STEP_MS: '1500', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
   const page = await app.firstWindow()
   await page.getByTestId('setup-download').click()
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 30_000 })

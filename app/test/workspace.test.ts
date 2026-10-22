@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { copyIn, isInside, newChatDir, TooBigError } from '../src/main/workspace'
 
-const tmp = () => mkdtempSync(join(tmpdir(), 'garth-ws-'))
+const tmp = () => mkdtempSync(join(tmpdir(), 'hob-ws-'))
 
 describe('isInside', () => {
   it('accepts the root, children and not-yet-existing children', () => {

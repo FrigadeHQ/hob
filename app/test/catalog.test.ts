@@ -6,7 +6,7 @@ import { loadCatalog } from '../src/main/catalog'
 import bundled from '../../catalog/catalog.json'
 import licenses from '../../catalog/licenses.json'
 
-const cachePath = () => join(mkdtempSync(join(tmpdir(), 'garth-cat-')), 'catalog.json')
+const cachePath = () => join(mkdtempSync(join(tmpdir(), 'hob-cat-')), 'catalog.json')
 // a smaller valid catalog: the starter plus one more
 const remote = { ...bundled, models: [bundled.models.find((m) => m.starter)!, bundled.models.find((m) => !m.starter)!] }
 const ok = (body: unknown) => (async () => new Response(JSON.stringify(body))) as unknown as typeof fetch

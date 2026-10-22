@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, ChevronRight, FolderOpen, Globe, Link, LogIn, LogOut, Pencil, Plug, Plus, ShieldCheck, Sparkles, Trash2, TriangleAlert, X } from 'lucide-react'
 import type { NewSkill, PluginInfo, PluginResult, PluginTrust } from '../../../shared/plugins'
-import { garth } from '../api'
+import { hob } from '../api'
 import { confirmAction } from '../components/Confirm'
 import { Dialog, Field, PluginIcon, Switch, button, field } from '../components/ui'
 import { fileManager } from '../../../shared/platform'
@@ -10,8 +10,8 @@ import { ConnectApps } from '../components/ConnectApps'
 
 const TRUST: Record<PluginTrust, { icon: typeof Box; text: string }> = {
   instructions: { icon: ShieldCheck, text: "Adds know-how. Doesn't run anything." },
-  builtin: { icon: ShieldCheck, text: 'Part of Garth. Runs nothing extra.' },
-  code: { icon: Box, text: "Runs code in Garth's safe space" },
+  builtin: { icon: ShieldCheck, text: 'Part of Hob. Runs nothing extra.' },
+  code: { icon: Box, text: "Runs code in Hob's safe space" },
   network: { icon: Globe, text: 'Uses the internet' },
   online: { icon: Globe, text: 'Connects to an online service' },
   full: { icon: TriangleAlert, text: 'Runs its own program with full access to your computer' },
@@ -20,7 +20,7 @@ const TRUST: Record<PluginTrust, { icon: typeof Box; text: string }> = {
 function CalendarMailStatus() {
   const [accounts, setAccounts] = useState<AccountsState | null>(null)
   const [open, setOpen] = useState(false)
-  useEffect(() => { void garth.accounts.get().then(setAccounts); return garth.accounts.onChanged(setAccounts) }, [])
+  useEffect(() => { void hob.accounts.get().then(setAccounts); return hob.accounts.onChanged(setAccounts) }, [])
   if (!accounts) return null
   const who = accounts.current && `${accounts.current.provider === 'google' ? 'Google' : 'Microsoft'} (${accounts.current.email})`
   return (
@@ -32,13 +32,13 @@ function CalendarMailStatus() {
   )
 }
 
-const GUIDE = 'https://github.com/FrigadeHQ/garth/blob/main/docs/plugins/README.md'
+const GUIDE = 'https://github.com/FrigadeHQ/hob/blob/main/docs/plugins/README.md'
 
 function SkillDialog({ initial, onClose, onSaved }: { initial?: NewSkill; onClose(): void; onSaved(name: string): void }) {
   const [s, setS] = useState<NewSkill>(initial ?? { name: '', description: '', instructions: '' })
   const [error, setError] = useState('')
   const save = async () => {
-    const r = await garth.plugins.saveSkill(s, !!initial)
+    const r = await hob.plugins.saveSkill(s, !!initial)
     if (r.ok) onSaved(s.name)
     else setError(r.error)
   }
@@ -48,7 +48,7 @@ function SkillDialog({ initial, onClose, onSaved }: { initial?: NewSkill; onClos
         <Field label="Name" hint={s.name ? `Use it by typing /${s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}` : 'Short, like “Weekly report”'}>
           <input data-testid="skill-name" autoFocus={!initial} disabled={!!initial} className={field} value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} placeholder="Weekly report" />
         </Field>
-        <Field label="When should Garth use it?">
+        <Field label="When should Hob use it?">
           <input data-testid="skill-description" className={field} value={s.description} onChange={(e) => setS({ ...s, description: e.target.value })} placeholder="When I ask for my weekly update for the team" />
         </Field>
         <Field label="Instructions" hint="Write it like you'd explain it to a friend. Steps and examples help.">
@@ -77,16 +77,16 @@ function ConnectDialog({ onClose, onDone }: { onClose(): void; onDone(notice: { 
   const link = isLink(command)
   const connect = async () => {
     setError('')
-    const r = await garth.plugins.connectApp({ name, command, env })
+    const r = await hob.plugins.connectApp({ name, command, env })
     if (!r.ok) { setError(r.error); return }
     // connect right away: problems show here, and apps that need a sign-in open the browser
     setConnecting(r.id)
-    const c = await garth.plugins.connect(r.id)
+    const c = await hob.plugins.connect(r.id)
     setConnecting(null)
-    onDone(c.ok ? { text: 'Connected. Garth can use it in your next message.' } : { text: `Added, but it isn't connected yet: ${c.error}`, error: true }, r.id)
+    onDone(c.ok ? { text: 'Connected. Hob can use it in your next message.' } : { text: `Added, but it isn't connected yet: ${c.error}`, error: true }, r.id)
   }
   const cancel = () => {
-    if (connecting) { void garth.plugins.cancelConnect(connecting); return }
+    if (connecting) { void hob.plugins.cancelConnect(connecting); return }
     onClose()
   }
   return (
@@ -95,13 +95,13 @@ function ConnectDialog({ onClose, onDone }: { onClose(): void; onDone(notice: { 
         ? (
           <div data-testid="connect-waiting" className="space-y-4">
             <p className="flex items-center gap-2 text-body"><span className="size-2 animate-pulse rounded-full bg-ink" />Connecting…</p>
-            <p className="text-ui text-ink-soft">If your browser opens, sign in there and allow Garth. Then come back here.</p>
+            <p className="text-ui text-ink-soft">If your browser opens, sign in there and allow Hob. Then come back here.</p>
             <div className="flex justify-end"><button className={button.quiet} onClick={cancel}>Cancel</button></div>
           </div>
         )
         : (
           <div className="space-y-4">
-            <p className="text-ui text-ink-soft">Connect Garth to an app or service with any MCP server: a link to an online one, or a program on this computer.</p>
+            <p className="text-ui text-ink-soft">Connect Hob to an app or service with any MCP server: a link to an online one, or a program on this computer.</p>
             <Field label="Name"><input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder={json ? 'Taken from the config' : link ? 'Taken from the link' : 'Notes'} /></Field>
             <Field label="Link, command or config" hint="A link like https://mcp.example.com/mcp, a command like npx -y @modelcontextprotocol/server-memory, or a pasted {“mcpServers”: …} config.">
               <textarea data-testid="connect-command" rows={3} className={`${field} resize-none font-mono text-meta leading-5`} value={command} onChange={(e) => setCommand(e.target.value)} placeholder="https://mcp.example.com/mcp" />
@@ -113,7 +113,7 @@ function ConnectDialog({ onClose, onDone }: { onClose(): void; onDone(notice: { 
             )}
             <p className="flex gap-2 rounded-control bg-line/50 p-3 text-ui text-ink-soft">
               {link
-                ? <><Globe size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />Garth sends what it needs for a task to this online service. If it asks you to sign in, your browser opens.</>
+                ? <><Globe size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />Hob sends what it needs for a task to this online service. If it asks you to sign in, your browser opens.</>
                 : <><TriangleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />This connector runs its own program with full access to your computer. Only add ones you trust.</>}
             </p>
             {error && <p className="text-ui text-accent">{error}</p>}
@@ -129,7 +129,7 @@ function ConnectDialog({ onClose, onDone }: { onClose(): void; onDone(notice: { 
 
 function SettingInput({ p, s }: { p: PluginInfo; s: PluginInfo['settings'][number] }) {
   const [v, setV] = useState(s.value ?? '')
-  const save = (next: string) => { setV(next); void garth.plugins.setSetting(p.id, s.key, next) }
+  const save = (next: string) => { setV(next); void hob.plugins.setSetting(p.id, s.key, next) }
   const label = s.required ? `${s.label} (needed)` : s.label
   if (s.kind === 'boolean') {
     const on = (s.value ?? s.default ?? 'false') === 'true'
@@ -143,7 +143,7 @@ function SettingInput({ p, s }: { p: PluginInfo; s: PluginInfo['settings'][numbe
   if (s.kind === 'directory' || s.kind === 'file') {
     const items = (s.value ?? s.default ?? '').split('\n').filter(Boolean)
     const choose = async () => {
-      const picked = await garth.plugins.choosePath(s.kind as 'directory' | 'file', s.multiple)
+      const picked = await hob.plugins.choosePath(s.kind as 'directory' | 'file', s.multiple)
       if (picked.length) save((s.multiple ? [...new Set([...items, ...picked])] : picked.slice(0, 1)).join('\n'))
     }
     return (
@@ -167,8 +167,8 @@ function SettingInput({ p, s }: { p: PluginInfo; s: PluginInfo['settings'][numbe
   return (
     <Field label={label} hint={s.help}>
       <input type={s.secret ? 'password' : s.kind === 'number' ? 'number' : 'text'} className={field} value={v} placeholder={s.secret && s.set ? 'Saved. Type to replace' : s.default ?? ''}
-        onChange={(e) => setV(e.target.value)} onBlur={() => { if (v !== (s.value ?? '') || (s.secret && v)) void garth.plugins.setSetting(p.id, s.key, v) }} />
-      {s.secret && s.set && <button type="button" className="mt-1 text-meta text-muted underline underline-offset-2 hover:text-ink" onClick={() => { setV(''); void garth.plugins.setSetting(p.id, s.key, '') }}>Clear</button>}
+        onChange={(e) => setV(e.target.value)} onBlur={() => { if (v !== (s.value ?? '') || (s.secret && v)) void hob.plugins.setSetting(p.id, s.key, v) }} />
+      {s.secret && s.set && <button type="button" className="mt-1 text-meta text-muted underline underline-offset-2 hover:text-ink" onClick={() => { setV(''); void hob.plugins.setSetting(p.id, s.key, '') }}>Clear</button>}
     </Field>
   )
 }
@@ -178,14 +178,14 @@ function SignInButton({ p }: { p: PluginInfo }) {
   const [error, setError] = useState('')
   const go = async () => {
     setBusy(true); setError('')
-    const r = await garth.plugins.connect(p.id)
+    const r = await hob.plugins.connect(p.id)
     setBusy(false)
     if (!r.ok && !/stopped/i.test(r.error)) setError(r.error)
   }
   return (
     <span className="mt-2 flex flex-wrap items-center gap-2">
       {busy
-        ? <><span className="text-ui text-ink-soft">Sign in in your browser, then come back.</span><button className={button.quiet} onClick={() => void garth.plugins.cancelConnect(p.id)}>Cancel</button></>
+        ? <><span className="text-ui text-ink-soft">Sign in in your browser, then come back.</span><button className={button.quiet} onClick={() => void hob.plugins.cancelConnect(p.id)}>Cancel</button></>
         : <button data-testid="plugin-signin" className={button.primary} onClick={() => void go()}><LogIn size={14} />Sign in</button>}
       {error && <span className="text-ui text-accent">{error}</span>}
     </span>
@@ -217,7 +217,7 @@ function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; on
               </span>
             )}
         </button>
-        <Switch on={p.enabled} label={`${p.enabled ? 'Turn off' : 'Turn on'} ${p.name}`} testId="plugin-toggle" onChange={(on) => void garth.plugins.setEnabled(p.id, on)} />
+        <Switch on={p.enabled} label={`${p.enabled ? 'Turn off' : 'Turn on'} ${p.name}`} testId="plugin-toggle" onChange={(on) => void hob.plugins.setEnabled(p.id, on)} />
       </div>
       {p.signIn && p.enabled && <div className="ml-12"><SignInButton p={p} /></div>}
       {p.id === 'calendar-mail' && p.enabled && <div className="ml-12 mt-2"><CalendarMailStatus /></div>}
@@ -238,7 +238,7 @@ function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; on
           )}
           {p.tools.length > 0 && (
             <div>
-              <p className="mb-1 text-meta font-medium text-muted">Tools Garth can use</p>
+              <p className="mb-1 text-meta font-medium text-muted">Tools Hob can use</p>
               <p className="flex flex-wrap gap-1.5">{p.tools.map((t) => <code key={t} className="rounded-[6px] bg-line/70 px-1.5 text-meta leading-5 text-ink-soft">{t}</code>)}</p>
             </div>
           )}
@@ -251,10 +251,10 @@ function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; on
           {p.settings.length > 0 && <div className="max-w-sm space-y-3">{p.settings.map((s) => <SettingInput key={s.key} p={p} s={s} />)}</div>}
           <div className="flex flex-wrap items-center gap-1 -ml-2 text-meta text-muted">
             {(p.version !== '0.0.0' || p.author) && <span className="px-2">{[p.author, p.version !== '0.0.0' && `v${p.version}`].filter(Boolean).join(' · ')}</span>}
-            <button className={button.quiet} onClick={() => void garth.plugins.show(p.id)}><FolderOpen size={14} />Show in {fileManager(garth.platform)}</button>
-            {p.signedIn && !p.signIn && <button className={button.quiet} onClick={() => void garth.plugins.signOut(p.id)}><LogOut size={14} />Sign out</button>}
+            <button className={button.quiet} onClick={() => void hob.plugins.show(p.id)}><FolderOpen size={14} />Show in {fileManager(hob.platform)}</button>
+            {p.signedIn && !p.signIn && <button className={button.quiet} onClick={() => void hob.plugins.signOut(p.id)}><LogOut size={14} />Sign out</button>}
             {p.source !== 'builtin' && (
-              <button data-testid="plugin-remove" className={button.quiet} onClick={() => void confirmAction({ title: `Remove “${p.name}”?`, body: p.source === 'linked' ? 'Garth stops using it. The folder stays where it is.' : 'Garth stops using it and deletes its copy.', ok: p.source === 'linked' ? 'Unlink' : 'Remove', danger: true }).then((yes) => { if (yes) void garth.plugins.remove(p.id) })}>
+              <button data-testid="plugin-remove" className={button.quiet} onClick={() => void confirmAction({ title: `Remove “${p.name}”?`, body: p.source === 'linked' ? 'Hob stops using it. The folder stays where it is.' : 'Hob stops using it and deletes its copy.', ok: p.source === 'linked' ? 'Unlink' : 'Remove', danger: true }).then((yes) => { if (yes) void hob.plugins.remove(p.id) })}>
                 <Trash2 size={14} />{p.source === 'linked' ? 'Unlink' : 'Remove'}
               </button>
             )}
@@ -268,8 +268,8 @@ function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; on
 
 export type Tab = 'skills' | 'connectors' | 'plugins'
 const BLURB: Record<Tab, string> = {
-  skills: 'How-tos Garth uses when a task calls for them. Type / to run one yourself.',
-  connectors: 'Link Garth to your apps and services through MCP.',
+  skills: 'How-tos Hob uses when a task calls for them. Type / to run one yourself.',
+  connectors: 'Link Hob to your apps and services through MCP.',
   plugins: 'Bundles of skills, tools and connectors.',
 }
 const TABS: { id: Tab; label: string }[] = [{ id: 'skills', label: 'Skills' }, { id: 'connectors', label: 'Connectors' }, { id: 'plugins', label: 'Plugins' }]
@@ -294,7 +294,7 @@ function SkillCard({ s, from, onEdit }: { s: { name: string; description: string
       {!from && (
         <span className="flex items-center gap-1">
           <IconAction label={`Edit ${s.name}`} onClick={onEdit}><Pencil size={14} /></IconAction>
-          <IconAction label={`Delete ${s.name}`} onClick={() => void confirmAction({ title: `Delete the /${s.name} skill?`, ok: 'Delete skill', danger: true }).then((yes) => { if (yes) void garth.plugins.removeSkill(s.name) })}><Trash2 size={14} /></IconAction>
+          <IconAction label={`Delete ${s.name}`} onClick={() => void confirmAction({ title: `Delete the /${s.name} skill?`, ok: 'Delete skill', danger: true }).then((yes) => { if (yes) void hob.plugins.removeSkill(s.name) })}><Trash2 size={14} /></IconAction>
         </span>
       )}
     </li>
@@ -326,12 +326,12 @@ export function Plugins({ opened, section, onSection }: { opened?: PluginResult 
   const menuRef = useRef<HTMLDivElement>(null)
   /** something just added: show it on its tab once the list has it */
   const focus = useRef<string | null>(null)
-  const reload = () => void garth.plugins.list().then((list) => {
+  const reload = () => void hob.plugins.list().then((list) => {
     setPlugins(list)
     const p = focus.current && list.find((x) => x.id === focus.current)
     if (p) { setTab(tabOf(p)); setOpen(p.id); focus.current = null }
   })
-  useEffect(() => { reload(); return garth.plugins.onChanged(reload) }, [])
+  useEffect(() => { reload(); return hob.plugins.onChanged(reload) }, [])
   useEffect(() => {
     if (!menu) return
     const close = (e: MouseEvent) => { if (!menuRef.current?.contains(e.target as Node)) setMenu(false) }
@@ -350,10 +350,10 @@ export function Plugins({ opened, section, onSection }: { opened?: PluginResult 
   const drop = async (e: React.DragEvent) => {
     e.preventDefault()
     setDragging(false)
-    const paths = garth.pathsForFiles(Array.from(e.dataTransfer.files))
-    for (const path of paths) added(await garth.plugins.addFile(path))
+    const paths = hob.pathsForFiles(Array.from(e.dataTransfer.files))
+    for (const path of paths) added(await hob.plugins.addFile(path))
   }
-  const editSkill = async (name: string) => { const s = await garth.plugins.getSkill(name); if (s) setDialog({ kind: 'skill', edit: s }) }
+  const editSkill = async (name: string) => { const s = await hob.plugins.getSkill(name); if (s) setDialog({ kind: 'skill', edit: s }) }
   const mine = plugins.find((p) => p.kind === 'skills')?.skills ?? []
   const fromPlugins = plugins.filter((p) => p.kind === 'plugin').flatMap((p) => p.skills.map((s) => ({ s, from: p })))
   const connectors = plugins.filter((p) => p.kind === 'connector')
@@ -364,8 +364,8 @@ export function Plugins({ opened, section, onSection }: { opened?: PluginResult 
     </ul>
   )
   const addMenu = [
-    { icon: FolderOpen, label: 'Add a plugin', hint: 'A folder or .zip', test: 'add-plugin', run: () => void garth.plugins.add().then(added) },
-    { icon: Link, label: 'Link a folder', hint: 'For developers: reloads as you edit', test: 'link-plugin', run: () => void garth.plugins.link().then(added) },
+    { icon: FolderOpen, label: 'Add a plugin', hint: 'A folder or .zip', test: 'add-plugin', run: () => void hob.plugins.add().then(added) },
+    { icon: Link, label: 'Link a folder', hint: 'For developers: reloads as you edit', test: 'link-plugin', run: () => void hob.plugins.link().then(added) },
   ]
 
   return (
@@ -411,8 +411,8 @@ export function Plugins({ opened, section, onSection }: { opened?: PluginResult 
               )
               : null}
             {!mine.length && (
-              <Empty icon={Sparkles} title="Teach Garth something" onClick={() => setDialog({ kind: 'skill' })}
-                text="Write down how you like a task done, then run it any time with /name. Or after Garth does something, say “save this as a skill”." />
+              <Empty icon={Sparkles} title="Teach Hob something" onClick={() => setDialog({ kind: 'skill' })}
+                text="Write down how you like a task done, then run it any time with /name. Or after Hob does something, say “save this as a skill”." />
             )}
           </section>
         )}
@@ -421,11 +421,11 @@ export function Plugins({ opened, section, onSection }: { opened?: PluginResult 
           <section className="space-y-3">
             {connectors.length ? rows(connectors) : (
               <Empty icon={Plug} title="Connect an app" onClick={() => setDialog({ kind: 'connect' })}
-                text="Let Garth use your apps and services, like notes, calendars or project tools, through any MCP server." />
+                text="Let Hob use your apps and services, like notes, calendars or project tools, through any MCP server." />
             )}
             <p className="text-meta text-muted">
               Have an .mcpb file? Drop it here or{' '}
-              <button data-testid="add-mcpb" className="underline underline-offset-2 hover:text-ink" onClick={() => void garth.plugins.add().then(added)}>choose it</button>.
+              <button data-testid="add-mcpb" className="underline underline-offset-2 hover:text-ink" onClick={() => void hob.plugins.add().then(added)}>choose it</button>.
             </p>
           </section>
         )}
@@ -434,7 +434,7 @@ export function Plugins({ opened, section, onSection }: { opened?: PluginResult 
           <section className="space-y-3">
             {rows(bundles)}
             <p className="text-meta text-muted">
-              Drop a plugin here to add it. Make your own: a plugin is a folder with a garth-plugin.json, plus skills, Python tools or connectors.{' '}
+              Drop a plugin here to add it. Make your own: a plugin is a folder with a hob-plugin.json, plus skills, Python tools or connectors.{' '}
               <a href={GUIDE} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-ink">Read the guide</a>
             </p>
           </section>

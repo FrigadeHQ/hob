@@ -1,5 +1,5 @@
 /**
- * Garth's "eyes": a small vision model that looks at an image and says what's in it, for whatever main model is
+ * Hob's "eyes": a small vision model that looks at an image and says what's in it, for whatever main model is
  * running. Qwen3-VL (Apache-2.0) at one pinned revision, and llama.cpp's own server at one pinned build
  * (≥2 weeks old when pinned); every file checksummed.
  */

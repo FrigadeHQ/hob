@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Cpu, FolderOpen, Monitor, Moon, Plug, Puzzle, Search, Settings as Cog, Shield, Sparkles, Sun, X } from 'lucide-react'
 import type { Theme, UserSettings } from '../../../shared/agent'
 import type { PluginResult } from '../../../shared/plugins'
-import { garth } from '../api'
+import { hob } from '../api'
 import { appearance, type TextSize } from '../appearance'
 import { LANGUAGES, prefs } from '../speech/prefs'
 import { FilesSettings, Heading, ModelSettings, PrivacySettings, Row, Segmented } from '../screens/Settings'
@@ -29,16 +29,16 @@ function GeneralSettings() {
   const [s, setS] = useState<UserSettings | null>(null)
   const [size, setSize] = useState<TextSize>(appearance.textSize())
   const [language, setLanguage] = useState(prefs.language())
-  useEffect(() => { void garth.settings.get().then(setS) }, [])
+  useEffect(() => { void hob.settings.get().then(setS) }, [])
   return (
     <>
       <Heading>Appearance</Heading>
       <Row label="Theme">
-        <Segmented<Theme> testId="theme" value={s?.theme ?? 'system'} onChange={(theme) => void garth.settings.set({ theme }).then(setS)} options={[
+        <Segmented<Theme> testId="theme" value={s?.theme ?? 'system'} onChange={(theme) => void hob.settings.set({ theme }).then(setS)} options={[
           { id: 'system', label: <Monitor size={15} />, title: 'Match the system' }, { id: 'light', label: <Sun size={15} />, title: 'Light' }, { id: 'dark', label: <Moon size={15} />, title: 'Dark' },
         ]} />
       </Row>
-      <Row label="Text size" help="Size of Garth's replies.">
+      <Row label="Text size" help="Size of Hob's replies.">
         <Segmented<TextSize> testId="text-size" value={size} onChange={(v) => { setSize(v); appearance.setTextSize(v) }} options={[
           { id: 'small', label: 'Small' }, { id: 'medium', label: 'Medium' }, { id: 'large', label: 'Large' },
         ]} />

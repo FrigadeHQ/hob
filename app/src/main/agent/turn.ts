@@ -27,7 +27,7 @@ export const AGENT_BUDGET = 8192
 
 export type TurnDeps = {
   engine: Engine
-  /** Garth's eyes, for look_at_image */
+  /** Hob's eyes, for look_at_image */
   vision?: TurnCtx['vision']
   store: Store
   tools: Tool<any>[]
@@ -36,7 +36,7 @@ export type TurnDeps = {
   trash(path: string): Promise<void>
   undoDir: string
   runTmp: string
-  /** Garth's own settings folder: never offered as a folder to give access to */
+  /** Hob's own settings folder: never offered as a folder to give access to */
   appData?: string
   /** the user's home folder (tests use a pretend one) */
   home?: string
@@ -57,7 +57,7 @@ export type TurnDeps = {
   emit: {
     token(requestId: string, text: string, thought: boolean): void
     step(requestId: string, step: Step): void
-    /** the reply so far is being replaced (Garth caught it claiming something it didn't do) */
+    /** the reply so far is being replaced (Hob caught it claiming something it didn't do) */
     reset?(requestId: string): void
   }
 }
@@ -65,7 +65,7 @@ export type TurnArgs = { chatId: string; requestId: string; text: string; attach
 
 const withFiles = (content: string, attachments: Attachment[]) => {
   if (!attachments.length) return content
-  const seen = attachments.filter((f) => f.seen).map((f) => PDF.test(f.name) ? `[What's in ${f.name}, read by Garth:\n${f.seen}]` : `[What's in ${f.name}, seen by Garth's image model: ${f.seen}]`)
+  const seen = attachments.filter((f) => f.seen).map((f) => PDF.test(f.name) ? `[What's in ${f.name}, read by Hob:\n${f.seen}]` : `[What's in ${f.name}, seen by Hob's image model: ${f.seen}]`)
   return [`${content}\n\n[Attached: ${attachments.map((f) => f.name).join(', ')}]`, ...seen].join('\n')
 }
 /** photos the image model can look at */
@@ -157,17 +157,17 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
       let granted: string | undefined
       if ('paths' in action && action.paths.some((p) => !p.startsWith(ctx.chatDir))) outside = true
       if (decision.verdict === 'grant') {
-        // a folder Garth can't use yet: ask the user right here instead of failing
+        // a folder Hob can't use yet: ask the user right here instead of failing
         const folder = decision.folder
         const home = d.home ?? homedir()
         const shown = folder.startsWith(home + sep) ? `~${folder.slice(home.length)}` : folder
         show({ ...step, status: 'waiting' })
-        const answer = await d.approve({ id: step.id, requestId: a.requestId, text: `Let Garth use your “${basename(folder)}” folder?`, detail: shown, access: true }, a.signal)
+        const answer = await d.approve({ id: step.id, requestId: a.requestId, text: `Let Hob use your “${basename(folder)}” folder?`, detail: shown, access: true }, a.signal)
         if (answer === 'deny') {
           show({ ...step, status: 'denied', reason: 'You said not now.' })
-          return `The user didn't give Garth access to ${folder}. Don't try again. Tell them it isn't done, and that they can add the folder to a project (the + next to Projects in the sidebar).`
+          return `The user didn't give Hob access to ${folder}. Don't try again. Tell them it isn't done, and that they can add the folder to a project (the + next to Projects in the sidebar).`
         }
-        // for this chat only; folders Garth uses again and again belong in a project
+        // for this chat only; folders Hob uses again and again belong in a project
         d.store.addChatGrant(a.chatId, folder)
         grants.push(folder)
         chatGrants.push(folder)
@@ -176,7 +176,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
         decision = gate()
       }
       if (decision.verdict === 'deny') { show({ ...step, status: 'denied', reason: short(decision.reason) }); return decision.reason }
-      if (decision.verdict === 'grant') { show({ ...step, status: 'denied', reason: 'Garth has no access to that folder.' }); return 'Garth still has no access to that folder.' }
+      if (decision.verdict === 'grant') { show({ ...step, status: 'denied', reason: 'Hob has no access to that folder.' }); return 'Hob still has no access to that folder.' }
       if (decision.verdict === 'ask') {
         show({ ...step, status: 'waiting' })
         const answer = await d.approve({ id: step.id, requestId: a.requestId, text: tool.ask?.(input) ?? `${step.title}?`, folder: decision.folder, ...(tool.askDetail ? { detail: tool.askDetail(input) } : {}) }, a.signal)
@@ -322,7 +322,7 @@ export async function readAhead(d: PromptDeps & Pick<TurnDeps, 'engine' | 'tools
 
 /** what the model can now do in a folder the user just allowed */
 export const grantedNote = (folder: string) =>
-  `The user just gave Garth access to ${folder}. You can now read everything there, including with run_python and photo_info. Change files there with move_files (many at once), move_file, write_file and delete_file; Garth asks the user before each change, so just call them.`
+  `The user just gave Hob access to ${folder}. You can now read everything there, including with run_python and photo_info. Change files there with move_files (many at once), move_file, write_file and delete_file; Hob asks the user before each change, so just call them.`
 
 /** Ask the model for a short title; keeps the first-line title if anything goes wrong. */
 async function nameChat(d: TurnDeps, chatId: string, placeholder: string, user: string, reply: string) {
@@ -362,7 +362,7 @@ function codeThatWorked(steps: Step[]): string {
 
 /** the first readable line of an error, for the work log: no tracebacks, no hints meant for the model */
 export function short(text: string): string {
-  const lines = text.split('\n').map((l) => l.trim()).filter((l) => l && !/^(Traceback|File "|Exit code|\^+$|Garth: )/.test(l))
+  const lines = text.split('\n').map((l) => l.trim()).filter((l) => l && !/^(Traceback|File "|Exit code|\^+$|Hob: )/.test(l))
   const line = (lines.find((l) => /Error|error:|can't|couldn't|not found|No such|denied|failed/i.test(l)) ?? lines[0] ?? '').replace(/^Error:\s*/, '')
   const first = line.split(/(?<=[.!?])\s/)[0]
   return first.length > 160 ? `${first.slice(0, 159)}…` : first

@@ -11,7 +11,7 @@ export type Action =
   | { kind: 'app'; ask?: boolean }
 /** grants: every folder this chat may use (project folders + ones allowed in the chat). project: the project's folders, where new files need no approval */
 export type GateCtx = { chatDir: string; grants: string[]; project?: string[]; always: string[]; untrusted: boolean; webAccess: boolean; home?: string; appData?: string }
-/** grant: outside every folder, but the user can let Garth use `folder` */
+/** grant: outside every folder, but the user can let Hob use `folder` */
 export type Decision = { verdict: 'auto' } | { verdict: 'ask'; folder?: string } | { verdict: 'grant'; folder: string } | { verdict: 'deny'; reason: string }
 
 const SYSTEM = [
@@ -45,15 +45,15 @@ export function accessFolder(p: string, home = homedir(), appData?: string): str
 /** Why a folder the user picked for a project can't be used; undefined if it can. */
 export function folderProblem(p: string, home = homedir(), own: string[] = []): string | undefined {
   if (isInside(p, home)) return 'Pick a folder inside your home folder, not the whole thing.'
-  // Garth's settings and its chat files: a project there would reach every chat
-  if (own.some((o) => isInside(o, p) || isInside(p, o))) return "That's Garth's own folder."
+  // Hob's settings and its chat files: a project there would reach every chat
+  if (own.some((o) => isInside(o, p) || isInside(p, o))) return "That's Hob's own folder."
   if (!existsSync(p) || !statSync(p).isDirectory()) return "Can't find this folder."
-  if (accessFolder(p, home, own[0]) !== resolve(p)) return "Garth can't use that folder."
+  if (accessFolder(p, home, own[0]) !== resolve(p)) return "Hob can't use that folder."
   return undefined
 }
 
 /**
- * A mistyped path near a folder Garth can use: the path it probably meant. Either the folder's name shows up
+ * A mistyped path near a folder Hob can use: the path it probably meant. Either the folder's name shows up
  * further down the path, or the name was cut off at a space ("untitled" for "untitled folder").
  */
 function nearMiss(p: string, grants: string[]): string | undefined {
@@ -85,15 +85,15 @@ export function decide(a: Action, c: GateCtx): Decision {
     if (!root || partsBelow(root, p).some((part) => part.startsWith('.'))) inProject = false
     const g = c.grants.find((root) => isInside(root, p))
     if (!g) {
-      // a path that doesn't exist but is one letter or a cut-off name away from a folder Garth can use:
+      // a path that doesn't exist but is one letter or a cut-off name away from a folder Hob can use:
       // correct it instead of asking for the whole folder around it
       const near = existsSync(p) ? undefined : nearMiss(p, c.grants)
-      if (near) return { verdict: 'deny', reason: `Garth can't use “${p}”: there's a typo in the path. Did you mean “${near}”? Copy paths exactly, including spaces, or save the list from code.` }
+      if (near) return { verdict: 'deny', reason: `Hob can't use “${p}”: there's a typo in the path. Did you mean “${near}”? Copy paths exactly, including spaces, or save the list from code.` }
       // asking for the folder around something that isn't there can't help the read; say so instead
       if (a.kind === 'read' && !existsSync(p)) return { verdict: 'deny', reason: `“${p}” doesn't exist. Check the path; the chat's own folder is ${c.chatDir}.` }
       const ask = accessFolder(p, c.home, c.appData)
       if (ask) return { verdict: 'grant', folder: ask }
-      return { verdict: 'deny', reason: `Garth can't use ${p}. Tell the user they can add the folder to a project (the + next to Projects in the sidebar), then ask again.` }
+      return { verdict: 'deny', reason: `Hob can't use ${p}. Tell the user they can add the folder to a project (the + next to Projects in the sidebar), then ask again.` }
     }
     folder = g
   }
