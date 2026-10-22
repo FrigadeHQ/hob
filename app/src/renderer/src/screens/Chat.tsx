@@ -137,6 +137,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const projectRef = useRef(initialProject)
   /** the chat exists, so its project is settled */
   const [created, setCreated] = useState(!!initialId)
+  /** this view opened a chat that already existed (not one it created) */
+  const [openedExisting] = useState(!!initialId)
   useEffect(() => {
     const load = () => void hob.projects.list().then(setProjects)
     load()
@@ -368,8 +370,9 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     }
   }
 
-  // an existing chat is never empty: while its messages load, show the conversation layout, not the new-chat screen
-  const empty = messages.length === 0 && !initialId
+  // an existing chat is never empty: while its messages load, show the conversation layout, not the new-chat screen.
+  // A new chat stays on that screen until its first message, even once attaching a file has created it
+  const empty = messages.length === 0 && !openedExisting
   // one composer: in the middle of a new chat, under the conversation once it starts
   const composer = (
     <>

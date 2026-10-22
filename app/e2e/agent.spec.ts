@@ -31,6 +31,9 @@ test('attach a file, the agent works on it, the chat is saved', async () => {
   await stubOpenDialog(app, [join(src, 'sales.csv')])
   await page.getByTestId('attach').click()
   await expect(page.getByTestId('attachment-chip')).toContainText('sales.csv')
+  // still the new-chat screen (composer in the middle) until the message is sent
+  await expect(page.locator('.chat-greeting')).toBeVisible()
+  await expect(page.getByTestId('suggestion')).toHaveCount(3)
 
   await page.getByTestId('composer-input').fill('__tools__ [["read_file",{"path":"sales.csv"}],["write_file",{"path":"summary.txt","content":"total 40"}]]')
   await page.getByTestId('composer-send').click()
