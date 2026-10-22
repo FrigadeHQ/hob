@@ -52,9 +52,13 @@ const rank = (a: Choice, b: Choice) =>
 
 export function pick(hw: Hardware, models: CatalogModel[], opts: { minTokPerSec?: number } = {}): PickResult {
   const minTok = opts.minTokPerSec ?? MIN_TOK_PER_SEC
-  const fitting = models
+  const runs = models
     .map((m) => m.builds.map((b) => evaluate(hw, m, b)).filter((c): c is Choice => c !== null).sort(rank)[0])
     .filter((c): c is Choice => !!c)
+  // a last-resort model or a squeezed build isn't offered where something better runs well
+  const good = new Set(runs.filter((c) => c.estTokPerSec >= minTok && !c.model.lastResort).map((c) => c.model.id))
+  const hidden = new Set(models.filter((m) => (m.lastResort && good.size > 0) || (m.squeezedOf && good.has(m.squeezedOf))).map((m) => m.id))
+  const fitting = runs.filter((c) => !hidden.has(c.model.id))
 
   const all = fitting.filter((c) => c.estTokPerSec >= minTok).sort(rank)
   const recommended = all[0] ?? null
@@ -74,7 +78,7 @@ export function pick(hw: Hardware, models: CatalogModel[], opts: { minTokPerSec?
   const selectable = new Set([...all, ...(smarter ? [smarter] : [])].map((c) => c.model.id))
   const fittingIds = new Set(fitting.map((c) => c.model.id))
   const unavailable = models
-    .filter((m) => !selectable.has(m.id))
+    .filter((m) => !selectable.has(m.id) && !hidden.has(m.id))
     .map((m) => ({ model: m, reason: fittingIds.has(m.id) ? ('slow' as const) : ('memory' as const) }))
 
   return {

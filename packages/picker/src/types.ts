@@ -29,6 +29,10 @@ export interface CatalogModel {
   minAppVersion: string
   addedAt: string
   starter: boolean
+  /** offered only when no other model runs well here (a tiny model for weak computers) */
+  lastResort?: boolean
+  /** a squeezed build of this other model: offered only where that one doesn't run well */
+  squeezedOf?: string
   /** one-line trade-off shown in the model list, e.g. "Very fast, less capable" */
   description?: string
   builds: CatalogBuild[]

@@ -144,11 +144,14 @@ describe('SetupController', () => {
     await c.start()
     expect(states).toContainEqual(expect.objectContaining({ phase: 'downloading', chatReady: true, initialUpgrade: !activeModelId }))
   })
-  it('choose lists every catalog model: runnable ones selectable, others greyed with a reason', async () => {
+  it('choose lists the catalog models: runnable ones selectable, others greyed with a reason', async () => {
     const { c } = setup()
     await c.start()
     const s = c.state as Extract<SetupState, { phase: 'choose' }>
-    expect(s.models).toHaveLength(catalog.models.length)
+    // on this 32 GB Mac the tiny last-resort model and the squeezed 26B aren't offered: better ones run
+    expect(s.models.map((m) => m.id)).not.toContain('qwen3-1.7b')
+    expect(s.models.map((m) => m.id)).not.toContain('gemma-4-26b-a4b-compact')
+    expect(s.models).toHaveLength(catalog.models.length - 2)
     expect(s.models.find((m) => m.id === 'gemma-4-26b-a4b')).toMatchObject({ available: true, recommended: true })
     expect(s.models.find((m) => m.id === 'gpt-oss-120b')).toMatchObject({ available: false, reason: 'memory' })
     expect(s.models.every((m) => m.description.length > 0)).toBe(true)

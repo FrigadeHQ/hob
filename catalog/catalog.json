@@ -3,6 +3,7 @@
   "models": [
     {
       "id": "qwen3-1.7b",
+      "lastResort": true,
       "name": "Qwen3 1.7B",
       "family": "qwen3",
       "license": "Apache-2.0",
@@ -111,6 +112,30 @@
           "url": "https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/resolve/d1c082be9cf3c8a514acf63b8761f4b41935842e/gemma-4-26B_q4_0-it.gguf",
           "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
           "sizeGB": 14.44,
+          "paramsB": 26,
+          "activeParamsB": 4
+        }
+      ]
+    },
+    {
+      "id": "gemma-4-26b-a4b-compact",
+      "name": "Gemma 4 26B Compact",
+      "family": "gemma4",
+      "license": "Apache-2.0",
+      "agentScore": 5,
+      "chatScore": 6,
+      "contextMax": 262144,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-22",
+      "starter": false,
+      "squeezedOf": "gemma-4-26b-a4b",
+      "description": "Gemma 4 26B squeezed to fit 16 GB. Try it if E4B feels too simple.",
+      "builds": [
+        {
+          "quant": "IQ2_XXS",
+          "url": "https://huggingface.co/bartowski/google_gemma-4-26B-A4B-it-GGUF/resolve/10f3b41bcf8d3047f4e136e7197ffc2dd1654c9d/google_gemma-4-26B-A4B-it-IQ2_XXS.gguf",
+          "sha256": "2f3685099756ae2cde65c6328be73e5406b602803f2186536dce3ae06ea83c77",
+          "sizeGB": 9.66,
           "paramsB": 26,
           "activeParamsB": 4
         }

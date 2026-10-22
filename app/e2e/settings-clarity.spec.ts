@@ -82,7 +82,7 @@ test('settings explain reply size, unavailable models, and automatic image suppo
     await expect(spare.getByTestId('model-use')).toHaveText('Use model')
     await expect(spare.getByTestId('model-delete')).toHaveText('Remove download')
     await spare.getByTestId('model-delete').click()
-    await expect(page.getByTestId('settings-model').filter({ hasText: 'Qwen3 1.7B' }).getByTestId('model-use')).toHaveText('Download & use')
+    await expect(page.getByTestId('settings-model').filter({ hasText: 'Gemma 4 E4B' }).getByTestId('model-use')).toHaveText('Download & use')
     await expect(page.getByTestId('status')).toHaveText(/^Ready$/)
     await page.setViewportSize({ width: 800, height: 600 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

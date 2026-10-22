@@ -8,10 +8,11 @@ describe('pick', () => {
   it('lists models that cannot run, with why (M1 Max 32GB: 120B needs more memory)', () => {
     const r = pick(machines.m1max32, models)
     expect(r.unavailable.find((u) => u.model.id === 'gpt-oss-120b')).toMatchObject({ reason: 'memory' })
-    // every catalog model is either selectable or unavailable, never both
+    // every catalog model is selectable, unavailable, or not offered here (a last resort or squeezed build
+    // where something better runs), never two of those
     const selectable = new Set([...r.all, ...(r.smarter ? [r.smarter] : [])].map((c) => c.model.id))
     for (const u of r.unavailable) expect(selectable.has(u.model.id)).toBe(false)
-    expect(selectable.size + r.unavailable.length).toBe(models.length)
+    expect(selectable.size + r.unavailable.length).toBe(models.length - 2)
   })
   it('a model that fits but would be painfully slow is unavailable for speed', () => {
     const dense = { ...models[4], id: 'dense-32b', builds: [{ ...models[4].builds[0], sizeGB: 12, paramsB: 32, activeParamsB: 32 }] }
@@ -101,5 +102,25 @@ describe('pick ranking', () => {
     const r = pick(machines.m1max32, [...models, squeezed])
     expect(r.all.find((c) => c.model.id === 'squeezed')?.contextSize).toBe(8192)
     expect(id(r.recommended)).toBe('gemma-4-26b-a4b')
+  })
+})
+
+describe('models only for some computers', () => {
+  const ids = (r: ReturnType<typeof pick>) => r.all.map((c) => c.model.id)
+  it('Qwen3 1.7B only where nothing better fits', () => {
+    expect(ids(pick(machines.m3air16, models))).not.toContain('qwen3-1.7b')
+    expect(ids(pick(machines.m1max32, models))).not.toContain('qwen3-1.7b')
+    expect(pick(machines.winLaptop8, models).recommended?.model.id).toBe('qwen3-1.7b')
+  })
+  it('a 16 GB Mac can try the squeezed Gemma 26B; E4B stays the pick', () => {
+    const r = pick(machines.m3air16, models)
+    expect(r.recommended?.model.id).toBe('gemma-4-e4b')
+    expect(ids(r)).toContain('gemma-4-26b-a4b-compact')
+  })
+  it('where the full model fits, its squeezed version is not offered', () => {
+    const r = pick(machines.m1max32, models)
+    expect(ids(r)).toContain('gemma-4-26b-a4b')
+    expect(ids(r)).not.toContain('gemma-4-26b-a4b-compact')
+    expect(r.unavailable.map((u) => u.model.id)).not.toContain('gemma-4-26b-a4b-compact')
   })
 })

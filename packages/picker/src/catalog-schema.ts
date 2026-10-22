@@ -21,6 +21,8 @@ const Model = z.object({
   minAppVersion: z.string(),
   addedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   starter: z.boolean(),
+  lastResort: z.boolean().optional(),
+  squeezedOf: z.string().optional(),
   description: z.string().max(80).optional(),
   builds: z.array(Build).min(1),
 })
