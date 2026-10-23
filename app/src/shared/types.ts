@@ -112,7 +112,7 @@ export interface HobApi {
   }
   approval: { answer(id: string, answer: ApprovalAnswer): Promise<void> }
   /** Calendar & Mail through the Mac's own apps; null on other systems */
-  mac: { access(): Promise<MacAccess | null>; ask(): Promise<MacAccess | null>; openAccounts(): Promise<void> }
+  mac: { access(): Promise<MacAccess | null>; ask(): Promise<MacAccess | null>; openAccounts(): Promise<void>; onChanged(cb: (access: MacAccess | null) => void): () => void }
   accounts: {
     get(): Promise<AccountsState>
     /** opens the provider's page in the browser; resolves once signed in */

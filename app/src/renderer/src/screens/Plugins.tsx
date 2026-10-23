@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Box, ChevronRight, FolderOpen, Globe, Link, LogIn, LogOut, Pencil, Plug, Plus, ShieldCheck, Sparkles, Trash2, TriangleAlert, X } from 'lucide-react'
+import { Box, Check, ChevronRight, FolderOpen, Globe, Link, LogIn, LogOut, Pencil, Plug, Plus, ShieldCheck, Sparkles, Trash2, TriangleAlert, X } from 'lucide-react'
 import type { NewSkill, PluginInfo, PluginResult, PluginTrust } from '../../../shared/plugins'
 import { hob } from '../api'
 import { confirmAction } from '../components/Confirm'
 import { Dialog, Field, PluginIcon, Switch, button, field } from '../components/ui'
 import { fileManager } from '../../../shared/platform'
 import type { AccountsState } from '../../../shared/types'
-import { ConnectApps } from '../components/ConnectApps'
+import { ConnectApps, connected, useMacAccess } from '../components/ConnectApps'
 import { msg, t } from '../../../shared/i18n'
 import { tx } from '../i18n'
 
@@ -19,17 +19,19 @@ const TRUST: Record<PluginTrust, { icon: typeof Box; text: string }> = {
   full: { icon: TriangleAlert, text: msg('Runs its own program with full access to your computer') },
 }
 /** Calendar & Mail: which account it uses, and the way to connect or change it */
-function CalendarMailStatus() {
+function CalendarMailStatus({ onTryPrompt }: { onTryPrompt(prompt: string): void }) {
+  const access = useMacAccess()
   const [accounts, setAccounts] = useState<AccountsState | null>(null)
   const [open, setOpen] = useState(false)
   useEffect(() => { void hob.accounts.get().then(setAccounts); return hob.accounts.onChanged(setAccounts) }, [])
-  if (!accounts) return null
+  if (!accounts || access === undefined) return null
   const who = accounts.current && `${accounts.current.provider === 'google' ? 'Google' : 'Microsoft'} (${accounts.current.email})`
+  const done = !!who || connected(access)
   return (
     <>
-      <span className="text-ui text-ink-soft">{who ? `${t('Connected to {who}.', { who })} ` : ''}</span>
-      <button data-testid="calendar-mail-connect" className="text-ui underline underline-offset-2 hover:text-ink" onClick={() => setOpen(true)}>{who ? t('Change') : t('Connect')}</button>
-      {open && <ConnectApps onClose={() => setOpen(false)} onTry={() => setOpen(false)} />}
+      {done && <span className="me-3 inline-flex items-center gap-1 text-ui text-ink-soft"><Check size={14} className="text-emerald-600 dark:text-emerald-400" aria-hidden="true" />{who ? t('Connected to {who}.', { who }) : t('Connected')}</span>}
+      <button data-testid="calendar-mail-connect" className="text-ui underline underline-offset-2 hover:text-ink" onClick={() => setOpen(true)}>{done ? t('Manage') : t('Connect')}</button>
+      {open && <ConnectApps onClose={() => setOpen(false)} onTry={onTryPrompt} />}
     </>
   )
 }
@@ -194,7 +196,7 @@ function SignInButton({ p }: { p: PluginInfo }) {
   )
 }
 
-function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; onToggleOpen(): void }) {
+function PluginRow({ p, open, onToggleOpen, onTryPrompt }: { p: PluginInfo; open: boolean; onToggleOpen(): void; onTryPrompt(prompt: string): void }) {
   const trust = TRUST[p.trust]
   return (
     <li data-testid="plugin" data-id={p.id} className="px-4 py-3.5">
@@ -222,7 +224,7 @@ function PluginRow({ p, open, onToggleOpen }: { p: PluginInfo; open: boolean; on
         <Switch on={p.enabled} label={p.enabled ? t('Turn off {name}', { name: t(p.name) }) : t('Turn on {name}', { name: t(p.name) })} testId="plugin-toggle" onChange={(on) => void hob.plugins.setEnabled(p.id, on)} />
       </div>
       {p.signIn && p.enabled && <div className="ms-12"><SignInButton p={p} /></div>}
-      {p.id === 'calendar-mail' && p.enabled && <div className="ms-12 mt-2"><CalendarMailStatus /></div>}
+      {p.id === 'calendar-mail' && p.enabled && <div className="ms-12 mt-2"><CalendarMailStatus onTryPrompt={onTryPrompt} /></div>}
       {open && (
         <div className="fade-in mt-3 ms-12 space-y-4">
           {p.skills.length > 0 && (
@@ -316,7 +318,7 @@ function Empty({ icon: Icon, title, text, onClick, testId }: { icon: typeof Box;
 }
 
 /** Settings → Skills, Connectors or Plugins. onSection: something added belongs on another page (an .mcpb is a connector) */
-export function Plugins({ opened, section, onSection }: { opened?: PluginResult | null; section: Tab; onSection(t: Tab): void }) {
+export function Plugins({ opened, section, onSection, onTryPrompt }: { opened?: PluginResult | null; section: Tab; onSection(t: Tab): void; onTryPrompt(prompt: string): void }) {
   const [plugins, setPlugins] = useState<PluginInfo[]>([])
   const tab = section
   const setTab = onSection
@@ -362,7 +364,7 @@ export function Plugins({ opened, section, onSection }: { opened?: PluginResult 
   const bundles = plugins.filter((p) => p.kind === 'plugin')
   const rows = (list: PluginInfo[]) => (
     <ul className="divide-y divide-line rounded-card border border-line bg-surface">
-      {list.map((p) => <PluginRow key={p.id} p={p} open={open === p.id} onToggleOpen={() => setOpen(open === p.id ? null : p.id)} />)}
+      {list.map((p) => <PluginRow key={p.id} p={p} open={open === p.id} onToggleOpen={() => setOpen(open === p.id ? null : p.id)} onTryPrompt={onTryPrompt} />)}
     </ul>
   )
   const addMenu = [

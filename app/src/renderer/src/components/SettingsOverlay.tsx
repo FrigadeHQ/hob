@@ -70,8 +70,8 @@ function GeneralSettings() {
 }
 
 /** Settings and customizing, in one place over the app (the gear, or ⌘,) */
-export function SettingsOverlay({ section, onSection, onClose, opened, onAllChatsDeleted }: {
-  section: Section; onSection(s: Section): void; onClose(): void; opened?: PluginResult | null; onAllChatsDeleted(): void
+export function SettingsOverlay({ section, onSection, onClose, opened, onAllChatsDeleted, onTryPrompt }: {
+  section: Section; onSection(s: Section): void; onClose(): void; opened?: PluginResult | null; onAllChatsDeleted(): void; onTryPrompt(prompt: string): void
 }) {
   const [q, setQ] = useState('')
   useEffect(() => {
@@ -115,7 +115,7 @@ export function SettingsOverlay({ section, onSection, onClose, opened, onAllChat
             {section === 'model' && <ModelSettings />}
             {section === 'privacy' && <PrivacySettings />}
             {section === 'files' && <FilesSettings onAllChatsDeleted={onAllChatsDeleted} />}
-            {(section === 'skills' || section === 'connectors' || section === 'plugins') && <Plugins section={section} onSection={onSection} opened={opened} />}
+            {(section === 'skills' || section === 'connectors' || section === 'plugins') && <Plugins section={section} onSection={onSection} opened={opened} onTryPrompt={onTryPrompt} />}
           </div>
         </div>
       </div>

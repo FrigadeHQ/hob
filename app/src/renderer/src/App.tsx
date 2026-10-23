@@ -47,6 +47,7 @@ export function App() {
   const [screen, setScreen] = useState<Screen>('chat')
   /** the project a new (not yet sent) chat starts in */
   const [draftProject, setDraftProject] = useState<string | null>(null)
+  const [initialPrompt, setInitialPrompt] = useState('')
   /** project: editing it; folders: a new one starting with these */
   const [projectDialog, setProjectDialog] = useState<{ project?: Project; folders?: string[] } | null>(null)
   const narrow = useNarrow()
@@ -101,7 +102,7 @@ export function App() {
   const [, setHistoryTick] = useState(0)
   const show = (p: Place, fresh = false) => {
     // a new chat starts empty; the chat it replaces keeps running in the background
-    if (fresh || p.chat !== selected) { setSelected(p.chat); setDraftProject(p.project ?? null); setViewKey((k) => k + 1) }
+    if (fresh || p.chat !== selected) { setSelected(p.chat); setDraftProject(p.project ?? null); setInitialPrompt(''); setViewKey((k) => k + 1) }
     setScreen(p.screen)
     if (narrow) setSidebar(false)
   }
@@ -128,6 +129,7 @@ export function App() {
   }
   const go = (s: Screen) => visit({ screen: s, chat: selected })
   const open = (id: string | null, project: string | null = null) => visit({ screen: 'chat', chat: id, project }, id === null)
+  const tryPrompt = (prompt: string) => { setSettingsAt(null); open(null); setInitialPrompt(prompt) }
   const [palette, setPalette] = useState(false)
   // a ref so the shortcut handler always calls the latest closures
   const keys = useRef<(e: KeyboardEvent) => void>(() => {})
@@ -152,11 +154,11 @@ export function App() {
   return (
     <div className="relative h-full flex">
       <ConfirmHost />
-      {settingsAt && <SettingsOverlay section={settingsAt} onSection={setSettingsAt} onClose={() => setSettingsAt(null)} opened={opened}
+      {settingsAt && <SettingsOverlay section={settingsAt} onSection={setSettingsAt} onClose={() => setSettingsAt(null)} opened={opened} onTryPrompt={tryPrompt}
         onAllChatsDeleted={() => {
           // nothing to go back to
           history.current = { list: [{ screen: 'chat', chat: null }], i: 0 }
-          setSelected(null); setViewKey((k) => k + 1); setRefreshKey((k) => k + 1)
+          setSelected(null); setInitialPrompt(''); setViewKey((k) => k + 1); setRefreshKey((k) => k + 1)
         }} />}
       {sidebar && narrow && <div className="fade-in absolute inset-0 z-20 bg-black/20" onClick={() => setSidebar(false)} />}
       {/* stays mounted so it can slide: in and out of the layout when docked, over the chat when the window is narrow */}
@@ -171,7 +173,7 @@ export function App() {
       </div>
       {/* stays mounted under other screens: unmounting a chat stops its reply */}
       <div className={screen === 'chat' ? 'contents' : 'hidden'}>
-        <ChatView key={viewKey} chatId={selected} projectId={draftProject} onProjectChange={(id) => { setDraftProject(id); const h = history.current; h.list[h.i] = { ...h.list[h.i], project: id } }}
+        <ChatView key={viewKey} chatId={selected} projectId={draftProject} initialPrompt={initialPrompt} onTryPrompt={tryPrompt} onProjectChange={(id) => { setDraftProject(id); const h = history.current; h.list[h.i] = { ...h.list[h.i], project: id } }}
           onNewProject={(folders) => setProjectDialog({ folders })} onConnectors={() => setSettingsAt('connectors')} onChatChanged={(id) => { setSelected(id); setRefreshKey((k) => k + 1); const h = history.current; h.list[h.i] = { ...h.list[h.i], chat: id } }} onRefresh={() => setRefreshKey((k) => k + 1)} />
       </div>
       {/* next to the window buttons, like Notes and Mail. Last in the page on purpose:

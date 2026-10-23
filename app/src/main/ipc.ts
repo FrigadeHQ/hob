@@ -318,8 +318,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   ipcMain.handle('mac:access', async () => (process.platform !== 'darwin' ? null : d.fake ? fakeMac : macAccess()))
   ipcMain.handle('mac:ask', async () => {
     if (process.platform !== 'darwin') return null
-    if (d.fake) return (fakeMac = { calendar: 'granted', mail: 'granted' })
-    const r = await askMacAccess()
+    const r = d.fake ? (fakeMac = { calendar: 'granted', mail: 'granted' }) : await askMacAccess()
     send('mac:access', r)
     return r
   })

@@ -6,7 +6,7 @@ import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 import { ArrowDown, Clock, FolderOpen, Paperclip, Pencil, RotateCcw, Sparkles, Undo2, X } from 'lucide-react'
 import type { ApprovalRequest, Attachment, Project, StoredMessage } from '../../../shared/agent'
-import type { AccountsState, MacAccess } from '../../../shared/types'
+import type { AccountsState } from '../../../shared/types'
 import type { SkillRef, StarterRef } from '../../../shared/plugins'
 import { PluginIcon } from '../components/ui'
 import { hob } from '../api'
@@ -23,7 +23,7 @@ import { healMarkdown, splitAtCharts, tidyMarkdown, withMath } from '../../../sh
 import { rehypeLineBreaks } from '../lineBreaks'
 import { pickStarters } from '../starters'
 import { rehypeFadeWords } from '../fadeWords'
-import { ConnectApps, connected } from '../components/ConnectApps'
+import { ConnectApps, connected, useMacAccess } from '../components/ConnectApps'
 import { skillOffer } from '../../../shared/skillOffer'
 import { FAILED, failedReply, shownReply } from '../../../shared/replies'
 import { language, t } from '../../../shared/i18n'
@@ -139,6 +139,8 @@ const placeholder = (rid: string): UiMessage => ({ id: `a-${rid}`, role: 'assist
 
 type Props = {
   chatId: string | null
+  initialPrompt: string
+  onTryPrompt(prompt: string): void
   /** a new chat starts in this project */
   projectId: string | null
   /** the user picked another project for this new chat */
@@ -153,9 +155,9 @@ type Props = {
   onRefresh(): void
 }
 
-export function ChatView({ chatId: initialId, projectId: initialProject, onProjectChange, onNewProject, onConnectors, onChatChanged, onRefresh }: Props) {
+export function ChatView({ chatId: initialId, projectId: initialProject, initialPrompt, onTryPrompt, onProjectChange, onNewProject, onConnectors, onChatChanged, onRefresh }: Props) {
   const [messages, setMessages] = useState<UiMessage[]>([])
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState(initialPrompt)
   const [pending, setPending] = useState<Attachment[]>([])
   /** folders: offer to make a project for them (things too big to copy) */
   const [notice, setNotice] = useState<{ text: string; folders?: string[] } | null>(null)
@@ -336,11 +338,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   const offerAt = offerClosed || requestId ? -1 : skillOffer(messages, skills.map((s) => s.name))
 
   // "Connect my email and calendar" stays on the home screen until that's done
-  const [macAccess, setMacAccess] = useState<MacAccess | null | undefined>(undefined)
+  const macAccess = useMacAccess()
   const [hasConnector, setHasConnector] = useState(true)
   const [connectOpen, setConnectOpen] = useState(false)
   useEffect(() => {
-    void hob.mac.access().then(setMacAccess)
     void hob.plugins.list().then((l) => setHasConnector(l.some((p) => p.kind === 'connector')))
   }, [])
   const [accounts, setAccounts] = useState<AccountsState | null>(null)
@@ -456,7 +457,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       onDragLeave={() => { dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDragging(false) }}
       onDrop={(e) => { e.preventDefault(); dragDepth.current = 0; setDragging(false); void addFiles(hob.pathsForFiles(Array.from(e.dataTransfer.files))) }}
     >
-      {connectOpen && <ConnectApps onClose={() => { setConnectOpen(false); void hob.mac.access().then(setMacAccess) }} onTry={(p) => { setConnectOpen(false); void hob.mac.access().then(setMacAccess); void send(p) }} />}
+      {connectOpen && <ConnectApps onClose={() => setConnectOpen(false)} onTry={onTryPrompt} />}
       {dragging && (
         <div data-testid="drop-overlay" className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-composer border-2 border-dashed border-line-strong bg-paper/85 text-body font-medium">
           {t('Drop files to add them')}

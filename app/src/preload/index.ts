@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
 import type { ApprovalRequest, LiveSummary, Step, StoredMessage } from '../shared/agent'
-import type { AccountsState, SetupState, HobApi, VisionState } from '../shared/types'
+import type { AccountsState, MacAccess, SetupState, HobApi, VisionState } from '../shared/types'
 import type { PluginResult } from '../shared/plugins'
 
 const invoke = (channel: string) => (...args: unknown[]) => ipcRenderer.invoke(channel, ...args)
@@ -38,7 +38,7 @@ const api: HobApi = {
     onLive: (cb) => listen<[LiveSummary[]]>('chat:live', cb),
   },
   approval: { answer: invoke('approval:answer') },
-  mac: { access: invoke('mac:access'), ask: invoke('mac:ask'), openAccounts: invoke('mac:openAccounts') },
+  mac: { access: invoke('mac:access'), ask: invoke('mac:ask'), openAccounts: invoke('mac:openAccounts'), onChanged: (cb) => listen<[MacAccess | null]>('mac:access', cb) },
   accounts: { get: invoke('accounts:get'), signIn: invoke('accounts:signIn'), cancel: invoke('accounts:cancel'), signOut: invoke('accounts:signOut'), onChanged: (cb) => listen<[AccountsState]>('accounts:changed', cb) },
   vision: { getState: invoke('vision:getState'), onState: (cb) => listen<[VisionState]>('vision:state', cb), retry: invoke('vision:retry') },
   task: { undo: invoke('task:undo') },

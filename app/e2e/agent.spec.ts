@@ -336,8 +336,14 @@ test('Mac: "Connect my email and calendar" asks for access once, then Hob reads 
   await idea.click()
   await expect(page.getByTestId('connect-apps')).toContainText('Calendar and Mail apps on this Mac')
   await page.getByTestId('connect-apps-allow').click()
-  await expect(page.getByTestId('connect-apps')).toContainText('Connected')
+  await expect(page.getByRole('heading', { name: 'Email and calendar connected' })).toBeVisible()
   await page.getByTestId('connect-apps-try').click()
+  await expect(page.getByTestId('connect-apps')).toBeHidden()
+  await expect(page.getByTestId('composer-input')).toHaveValue("What's on my calendar this week?")
+  await expect(page.getByTestId('composer-input')).toBeFocused()
+  await expect(page.getByTestId('message-user')).toHaveCount(0)
+  await page.getByTestId('composer-input').press('Enter')
+  await expect(page.getByTestId('message-user')).toHaveText("What's on my calendar this week?")
   await expect(page.getByTestId('composer-send')).toBeVisible()
   // done: the idea is gone from the home screen
   await page.getByTestId('new-chat').click()
@@ -351,6 +357,102 @@ test('Mac: "Connect my email and calendar" asks for access once, then Hob reads 
   await page.getByTestId('approval-allow').click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('Added “Lunch with Sam” to the Home calendar')
   await app.close()
+})
+
+test('Mac: connecting in Settings updates both entry points and Try opens an unsent draft', async () => {
+  test.skip(process.platform !== 'darwin', 'Calendar & Mail is Mac only')
+  const { app, page } = await launch()
+  try {
+    await ready(page)
+    const idea = page.getByTestId('suggestion').filter({ hasText: 'Connect my email and calendar' })
+    await expect(idea).toBeVisible()
+    await page.getByTestId('open-settings').click()
+    await page.getByTestId('settings-nav-plugins').click()
+    const connection = page.getByTestId('calendar-mail-connect')
+    const plugin = page.getByTestId('plugin').filter({ has: connection })
+    await expect(connection).toHaveText('Connect')
+    await connection.click()
+    await page.getByTestId('connect-apps-allow').click()
+    await expect(page.getByRole('heading', { name: 'Email and calendar connected' })).toBeVisible()
+    await page.getByTestId('connect-apps').getByRole('button', { name: 'Done', exact: true }).click()
+    await expect(connection).toHaveText('Manage')
+    await expect(plugin).toContainText('Connected')
+    await page.getByTestId('settings-close').click()
+    await expect(idea).toHaveCount(0)
+
+    // Starting the example must leave an existing conversation intact.
+    await page.getByTestId('composer-input').fill('Keep this conversation')
+    await page.getByTestId('composer-send').click()
+    await expect(page.getByTestId('message-assistant')).toContainText('Keep this conversation')
+    await page.getByTestId('open-settings').click()
+    await page.getByTestId('settings-nav-plugins').click()
+    await expect(connection).toHaveText('Manage')
+    await connection.click()
+    await page.getByTestId('connect-apps-try').click()
+    await expect(page.getByTestId('settings')).toBeHidden()
+    await expect(page.getByTestId('connect-apps')).toBeHidden()
+    await expect(page.getByTestId('composer-input')).toHaveValue("What's on my calendar this week?")
+    await expect(page.getByTestId('composer-input')).toBeFocused()
+    await expect(page.getByTestId('message-user')).toHaveCount(0)
+    await expect(page.getByTestId('chat-item')).toHaveCount(1)
+    await page.getByTestId('composer-input').press('Enter')
+    await expect(page.getByTestId('message-assistant')).toContainText("What's on my calendar this week?")
+    await expect(page.getByTestId('chat-item')).toHaveCount(2)
+    await page.getByTestId('new-chat').click()
+    await expect(page.getByTestId('composer-input')).toHaveValue('')
+    await page.getByTestId('chat-item').filter({ hasText: 'Keep this conversation' }).click()
+    await expect(page.getByTestId('message-user')).toHaveText('Keep this conversation')
+    await expect(page.getByTestId('composer-input')).toHaveValue('')
+  } finally { await app.close() }
+})
+
+test('Mac: partial access stays unconnected, an access error can be retried, and System Settings changes refresh', async () => {
+  test.skip(process.platform !== 'darwin', 'Calendar & Mail is Mac only')
+  const { app, page } = await launch()
+  try {
+    await ready(page)
+    await app.evaluate(({ ipcMain }) => {
+      ipcMain.removeHandler('mac:ask')
+      ipcMain.handle('mac:ask', () => { throw new Error('Could not ask for access') })
+    })
+    await page.getByTestId('open-settings').click()
+    await page.getByTestId('settings-nav-plugins').click()
+    const connection = page.getByTestId('calendar-mail-connect')
+    await connection.click()
+    const allow = page.getByTestId('connect-apps-allow')
+    await allow.click()
+    await expect(page.getByTestId('account-error')).toHaveText('Could not ask for access')
+    await expect(allow).toBeEnabled()
+    await app.evaluate(({ ipcMain, BrowserWindow }) => {
+      const access = { calendar: 'granted', mail: 'denied' }
+      ipcMain.removeHandler('mac:access'); ipcMain.handle('mac:access', () => access)
+      ipcMain.removeHandler('mac:ask')
+      ipcMain.handle('mac:ask', () => {
+        for (const w of BrowserWindow.getAllWindows()) w.webContents.send('mac:access', access)
+        return access
+      })
+    })
+    await allow.click()
+    await expect(page.getByTestId('account-error')).toHaveCount(0)
+    await expect(page.getByTestId('connect-apps')).toContainText('Not allowed')
+    await expect(page.getByTestId('connect-apps-try')).toHaveCount(0)
+    await page.getByTestId('connect-apps').getByRole('button', { name: 'Not now' }).click()
+    await expect(connection).toHaveText('Connect')
+    await page.getByTestId('settings-close').click()
+    const idea = page.getByTestId('suggestion').filter({ hasText: 'Connect my email and calendar' })
+    await expect(idea).toBeVisible()
+
+    // Permissions may also change in System Settings while Hob is in the background.
+    await app.evaluate(({ ipcMain }) => {
+      ipcMain.removeHandler('mac:access')
+      ipcMain.handle('mac:access', () => ({ calendar: 'granted', mail: 'granted' }))
+    })
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await expect(idea).toHaveCount(0)
+    await page.getByTestId('open-settings').click()
+    await page.getByTestId('settings-nav-plugins').click()
+    await expect(connection).toHaveText('Manage')
+  } finally { await app.close() }
 })
 
 test('Markdown streaming in never shows its ** or ` marks', async () => {

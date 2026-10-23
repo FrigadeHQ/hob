@@ -5,7 +5,19 @@ import { hob } from '../api'
 import { button, Dialog } from './ui'
 import { t } from '../../../shared/i18n'
 
-export const connected = (a: MacAccess | null) => !!a && a.calendar === 'granted' && a.mail === 'granted'
+export const connected = (a: MacAccess | null | undefined) => !!a && a.calendar === 'granted' && a.mail === 'granted'
+
+export function useMacAccess() {
+  const [access, setAccess] = useState<MacAccess | null | undefined>(undefined)
+  useEffect(() => {
+    const refresh = () => void hob.mac.access().then(setAccess)
+    refresh()
+    const unsubscribe = hob.mac.onChanged(setAccess)
+    window.addEventListener('focus', refresh)
+    return () => { unsubscribe(); window.removeEventListener('focus', refresh) }
+  }, [])
+  return access
+}
 
 /** the providers' own marks, as their sign-in guidelines ask for */
 const GoogleMark = () => (
@@ -22,17 +34,19 @@ const NAMES = { google: 'Google', microsoft: 'Microsoft' } as const
  */
 export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt: string): void }) {
   const mac = hob.platform === 'darwin'
-  const [access, setAccess] = useState<MacAccess | null>(null)
+  const access = useMacAccess()
   const [accounts, setAccounts] = useState<AccountsState | null>(null)
   const [asking, setAsking] = useState(false)
   const [signingIn, setSigningIn] = useState<'google' | 'microsoft' | null>(null)
   const [error, setError] = useState('')
   useEffect(() => {
-    if (mac) void hob.mac.access().then(setAccess)
     void hob.accounts.get().then(setAccounts)
     return hob.accounts.onChanged(setAccounts)
-  }, [mac])
-  const ask = async () => { setAsking(true); setAccess(await hob.mac.ask()); setAsking(false) }
+  }, [])
+  const ask = async () => {
+    setError(''); setAsking(true)
+    try { await hob.mac.ask() } catch (err) { setError(err instanceof Error ? err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '') : String(err)) } finally { setAsking(false) }
+  }
   const signIn = async (p: 'google' | 'microsoft') => {
     setError(''); setSigningIn(p)
     try { setAccounts(await hob.accounts.signIn(p)) } catch (err) { setError(err instanceof Error ? err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '') : String(err)) } finally { setSigningIn(null) }
@@ -46,7 +60,7 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
       <Icon size={16} strokeWidth={1.75} className="text-ink-soft" />
       <span className="flex-1">{label}</span>
       {status === 'granted'
-        ? <span className="inline-flex items-center gap-1 text-ink-soft"><Check size={14} />{t('Connected')}</span>
+        ? <span className="inline-flex items-center gap-1 font-medium"><Check size={14} className="text-emerald-600 dark:text-emerald-400" />{t('Connected')}</span>
         : status === 'denied' ? <span className="text-accent">{t('Not allowed')}</span>
         : <span className="inline-flex items-center gap-1 text-muted"><Circle size={10} />{t('Not yet')}</span>}
     </li>
@@ -64,7 +78,11 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
     </div>
   )
   return (
-    <Dialog title={t('Connect your email and calendar')} onClose={onClose} testId="connect-apps">
+    <Dialog title={done ? t('Email and calendar connected') : t('Connect your email and calendar')} onClose={onClose} testId="connect-apps">
+      {done && <div role="status" className="mb-4 flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-600 dark:text-emerald-400"><Check size={22} strokeWidth={2} aria-hidden="true" /></span>
+        <p className="text-ui text-ink-soft">{t('Connected. Hob can use it in your next message.')}</p>
+      </div>}
       {account ? (
         <div data-testid="account-connected" className="flex items-center gap-3 rounded-card border border-line px-4 py-3 text-ui">
           {account.provider === 'google' ? <GoogleMark /> : <MicrosoftMark />}
@@ -73,8 +91,8 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
         </div>
       ) : mac ? (
         <>
-          <p className="text-ui text-ink-soft">{t('Hob can use the Calendar and Mail apps on this Mac, with every account you added there: iCloud, Google, Outlook and more.')}</p>
-          <ul className="mt-4 space-y-2.5 rounded-card border border-line px-4 py-3">
+          {!done && <p className="text-ui text-ink-soft">{t('Hob can use the Calendar and Mail apps on this Mac, with every account you added there: iCloud, Google, Outlook and more.')}</p>}
+          <ul className={`${done ? '' : 'mt-4'} space-y-2.5 rounded-card border border-line px-4 py-3`}>
             {row(Calendar, t('Calendar'), access?.calendar)}
             {row(Mail, t('Mail'), access?.mail)}
           </ul>
@@ -100,9 +118,9 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
         {t('Hob only writes email drafts: you send them.')}
       </p>
       <div className="mt-5 flex justify-end gap-2">
-        <button className={button.quiet} onClick={onClose}>{done ? t('Close') : t('Not now')}</button>
+        <button className={button.quiet} onClick={onClose}>{done ? t('Done') : t('Not now')}</button>
         {done
-          ? <button data-testid="connect-apps-try" className={button.primary} onClick={() => onTry("What's on my calendar this week?")}>{t('Try “What’s on my calendar?”')}</button>
+          ? <button data-testid="connect-apps-try" className={button.primary} onClick={() => onTry(t("What's on my calendar this week?"))}>{t('Try in chat')}</button>
           : mac && <button data-testid="connect-apps-allow" className={button.primary} disabled={asking} onClick={() => void ask()}>{asking ? t('Waiting for your Mac…') : t('Allow access')}</button>}
       </div>
     </Dialog>
