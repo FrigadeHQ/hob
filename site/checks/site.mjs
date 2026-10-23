@@ -7,6 +7,10 @@ assert(html.includes('An easier way to use AI'))
 assert(!/Design comparison|headline-study|mascot-study|hob-palettes|noindex|Connected tools share information/.test(html))
 assert(html.includes('https://hob.chat/'))
 assert(html.includes('sandbox="allow-scripts"'))
+// link previews: a 1200×630 image that ships with the site
+const og = html.match(/property="og:image" content="https:\/\/hob\.chat(\/[^"]+)"/)?.[1]
+assert(og && fs.existsSync(path.join('public', og)), 'og:image must point at a file in public/')
+assert(html.includes('name="twitter:card" content="summary_large_image"'))
 const files = new Set()
 for (const [, url] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
   if (/^(https?:|#|data:)/.test(url)) continue
