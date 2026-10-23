@@ -59,7 +59,7 @@ function useCollapsed() {
   return [ids, toggle] as const
 }
 
-const row = 'group flex h-8 items-center gap-2 rounded-control px-2 text-ui'
+const row = 'group mb-px flex h-8 items-center gap-2 rounded-control px-2 text-ui'
 const label = 'px-2 pb-1 pt-4 text-meta text-muted'
 /** the + next to a heading: shows when the heading is hovered (or focused from the keyboard) */
 const headAction = 'mt-3 rounded-control p-1 text-muted opacity-0 transition-opacity hover:bg-line/70 hover:text-ink focus-visible:opacity-100 group-hover/head:opacity-100'
