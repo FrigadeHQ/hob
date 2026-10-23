@@ -77,9 +77,10 @@ jobs:
       - name: Real tools as a standard user
         shell: pwsh
         run: |
-          $pw = "Hob-$([guid]::NewGuid().ToString('N').Substring(0, 16))-aA1!"
-          net user hobuser $pw /add | Out-Null
-          $cred = New-Object PSCredential('hobuser', (ConvertTo-SecureString $pw -AsPlainText -Force))
+          $pw = ConvertTo-SecureString "Hob-$([guid]::NewGuid().ToString('N').Substring(0, 16))-aA1!" -AsPlainText -Force
+          New-LocalUser -Name hobuser -Password $pw -AccountNeverExpires -PasswordNeverExpires | Out-Null
+          Add-LocalGroupMember -Group Users -Member hobuser
+          $cred = New-Object PSCredential('hobuser', $pw)
           $out = 'C:\hob-smoke'
           New-Item -ItemType Directory -Force $out | Out-Null
           # the account reads the checkout (node_modules too) and writes its results here
