@@ -96,6 +96,14 @@ jobs:
           $script = @"
           cd /d "$env:GITHUB_WORKSPACE\app"
           mklink "$out\link-check" "%COMSPEC%" > "$out\mklink.txt" 2>&1
+          rem its own temp and profile folders, not the admin's it inherits
+          mkdir "$out\tmp" "$out\home" 2> nul
+          set TEMP=$out\tmp
+          set TMP=$out\tmp
+          set USERPROFILE=$out\home
+          set APPDATA=$out\home
+          set LOCALAPPDATA=$out\home
+          set GITHUB_ACTIONS=
           set HOB_SMOKE=1
           "$node" "$vitest" run test/smoke.test.ts > "$out\smoke.txt" 2>&1
           echo %ERRORLEVEL% > "$out\code.txt"
