@@ -9,7 +9,7 @@ const glances = [{ x: -3, y: 0 }, { x: 3, y: 0 }, { x: 0, y: 0 }, { x: -2, y: 1 
 const greetings: Partial<Record<Expression, string>> = { content: 'Hob smiles.', wink: 'Hob winks.', laugh: 'Hob laughs.', skeptical: 'Hob raises an eyebrow.' }
 
 /** Click reactions are shared; only setup and the empty chat look around. */
-function usePlayfulFace(on: boolean) {
+function usePlayfulFace(on: boolean, tapFace?: Expression) {
   const ref = useRef<SVGSVGElement>(null)
   const [gaze, setGaze] = useState({ x: 0, y: 0 })
   const [expression, setExpression] = useState<Expression>('smile')
@@ -21,11 +21,11 @@ function usePlayfulFace(on: boolean) {
     const count = now - taps.current.at > 1800 ? 1 : Math.min(6, taps.current.count + 1)
     taps.current = { count, at: now }
     clearTimeout(reactionTimer.current)
-    setReaction(count >= 6 ? 'skeptical' : count >= 3 ? 'laugh' : count === 2 ? 'wink' : 'content')
+    setReaction(tapFace ?? (count >= 6 ? 'skeptical' : count >= 3 ? 'laugh' : count === 2 ? 'wink' : 'content'))
     reactionTimer.current = setTimeout(() => {
       setReaction(null)
       setExpression('smile')
-    }, count >= 6 ? 1400 : count >= 3 ? 1100 : 700)
+    }, tapFace ? 1100 : count >= 6 ? 1400 : count >= 3 ? 1100 : 700)
   }
   useEffect(() => {
     if (!on) return () => clearTimeout(reactionTimer.current)
@@ -80,8 +80,9 @@ function usePlayfulFace(on: boolean) {
 }
 
 /** Every living Hob responds to a hello; the sidebar keeps its quiet idle face. */
-export function Mascot({ size = 96, alive = false, working = false, playful = false }: { size?: number; alive?: boolean; working?: boolean; playful?: boolean }) {
-  const face = usePlayfulFace(alive && playful)
+/** tapFace: the face every click makes (the corner Hob laughs); otherwise clicks run through smile, wink, laugh */
+export function Mascot({ size = 96, alive = false, working = false, playful = false, tapFace }: { size?: number; alive?: boolean; working?: boolean; playful?: boolean; tapFace?: Expression }) {
+  const face = usePlayfulFace(alive && playful, tapFace)
   const interactive = alive || playful
   const expression = playful || face.reaction ? face.expression : null
   const artwork = (

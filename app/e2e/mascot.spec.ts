@@ -177,20 +177,21 @@ test('a happier Hob responds to clicks and keys, then forgives a flurry of click
     const littleHello = sidebar.getByRole('button', { name: 'Say hello to Hob' })
     await expect(littleHello).toBeVisible()
     await expect(hello).toHaveCount(1)
-    await page.clock.pauseAt(await page.evaluate(() => Date.now()))
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000))
     const resting = await littleHob.boundingBox()
-    for (const expression of ['content', 'wink', 'laugh', 'laugh', 'laugh', 'skeptical']) {
+    // the corner Hob laughs at every click
+    for (let i = 0; i < 6; i++) {
       await littleHello.click()
-      await expect(littleHob).toHaveAttribute('data-expression', expression)
+      await expect(littleHob).toHaveAttribute('data-expression', 'laugh')
     }
-    await expect(littleHello.getByRole('status')).toHaveText('Hob raises an eyebrow.')
+    await expect(littleHello.getByRole('status')).toHaveText('Hob laughs.')
     await page.clock.runFor(2000)
     await expect(littleHob).toHaveAttribute('data-expression', 'smile')
     await littleHello.focus()
     await page.keyboard.press('Enter')
-    await expect(littleHob).toHaveAttribute('data-expression', 'content')
+    await expect(littleHob).toHaveAttribute('data-expression', 'laugh')
     await page.keyboard.press('Space')
-    await expect(littleHob).toHaveAttribute('data-expression', 'wink')
+    await expect(littleHob).toHaveAttribute('data-expression', 'laugh')
     await expect(littleHello).toBeFocused()
     await page.clock.runFor(10_000)
     await expect(littleHob).toHaveAttribute('data-expression', 'smile')
@@ -203,7 +204,7 @@ test('a happier Hob responds to clicks and keys, then forgives a flurry of click
     await page.getByTestId('composer-send').click()
     await expect(littleHob).toHaveAttribute('data-expression', 'working')
     await littleHello.click()
-    await expect(littleHob).toHaveAttribute('data-expression', 'content')
+    await expect(littleHob).toHaveAttribute('data-expression', 'laugh')
     await expect(page.getByTestId('status')).toHaveText('Working…')
     await expect(littleHob).toHaveAttribute('data-expression', 'working')
     await page.getByTestId('composer-stop').click()
@@ -213,3 +214,32 @@ test('a happier Hob responds to clicks and keys, then forgives a flurry of click
     await expect(page.getByRole('button', { name: 'Say hello to Hob' })).toHaveCount(1)
   } finally { await app.close() }
 })
+
+test('Hob in the corner shows what "Ready" shows, and laughs when clicked', async () => {
+  const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: {
+    ...process.env, HOB_FAKE: '1', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-corner-')),
+  } })
+  try {
+    const page = await app.firstWindow()
+    await page.getByTestId('setup-download').click()
+    await expect(page.getByTestId('status')).toHaveText(/^Ready$/, { timeout: 20_000 })
+    // the corner Hob shows once a chat is open (the new-chat screen has the big one)
+    await page.getByTestId('composer-input').fill('hi')
+    await page.getByTestId('composer-send').click()
+    await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hi')
+    const corner = page.getByTestId('sidebar').getByTestId('mascot')
+    await corner.hover()
+    await expect(page.getByTestId('status-tooltip')).toBeVisible()
+    await expect(page.getByTestId('status-tooltip')).toContainText('Runs on this computer')
+    await corner.click()
+    await expect(corner).toHaveAttribute('data-expression', 'laugh')
+    // every click, not only the third
+    await page.mouse.move(600, 300)
+    await expect(corner).not.toHaveAttribute('data-expression', 'laugh', { timeout: 5_000 })
+    await corner.click()
+    await expect(corner).toHaveAttribute('data-expression', 'laugh')
+  } finally {
+    await app.close()
+  }
+})
+

@@ -70,14 +70,17 @@ export function Status({ state, working = false }: { state: SetupState; working?
   )
   return (
     <span className="flex min-w-0 items-center gap-2 text-meta text-ink-soft">
-      <span className="status-presence">
-        {state.phase === 'ready' && !state.note && !state.canRetry && <Mascot size={24} alive working={working} />}
-        <span className={`status-dot size-1.5 rounded-full ${state.phase === 'ready' && !state.note && !state.canRetry ? 'bg-emerald-600' : 'bg-amber-500 motion-safe:animate-pulse'}`} />
-      </span>
+      {/* one tooltip for Hob and the words beside it */}
       <Tooltip content={tip}>
-        <span data-testid="status" tabIndex={0} className="flex min-w-0 items-center gap-1 cursor-default outline-none">
-          <span className="truncate">{label}</span>
-          {state.phase === 'downloading' && !state.note && <span className="shrink-0">{' '}{pct}%</span>}
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="status-presence">
+            {state.phase === 'ready' && !state.note && !state.canRetry && <Mascot size={24} alive working={working} tapFace="laugh" />}
+            <span className={`status-dot size-1.5 rounded-full ${state.phase === 'ready' && !state.note && !state.canRetry ? 'bg-emerald-600' : 'bg-amber-500 motion-safe:animate-pulse'}`} />
+          </span>
+          <span data-testid="status" tabIndex={0} className="flex min-w-0 items-center gap-1 cursor-default outline-none">
+            <span className="truncate">{label}</span>
+            {state.phase === 'downloading' && !state.note && <span className="shrink-0">{' '}{pct}%</span>}
+          </span>
         </span>
       </Tooltip>
       {state.phase === 'ready' && state.canRetry && (
