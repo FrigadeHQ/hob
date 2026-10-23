@@ -18,7 +18,8 @@ export class FakeEngine implements Engine {
   /** what was read ahead last (system prompt + history) */
   lastPreload: ChatRequest['messages'] | undefined
   preloads = 0
-  async preload(messages: ChatRequest['messages']) { this.lastPreload = messages; this.preloads++ }
+  lastPreloadReasoning: ChatRequest['reasoning']
+  async preload(messages: ChatRequest['messages'], _tools?: unknown, reasoning?: ChatRequest['reasoning']) { this.lastPreload = messages; this.lastPreloadReasoning = reasoning; this.preloads++ }
   side: string | undefined
   async loadSide(modelPath: string) { this.side = modelPath }
   lastRequest: ChatRequest | undefined

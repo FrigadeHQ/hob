@@ -290,6 +290,28 @@ test('the mic menu lists microphones and keeps the dictation language', async ()
   await app.close()
 })
 
+test('how long Hob thinks is picked beside the mic, Normal at first, and kept', async () => {
+  const userData = mkdtempSync(join(tmpdir(), 'hob-e2e-'))
+  const { app, page } = await launch(userData)
+  await ready(page)
+  await expect(page.getByTestId('effort')).toContainText('Normal')
+  await page.getByTestId('effort').click()
+  await expect(page.getByTestId('effort-option')).toHaveText([/Quick/, /Normal/, /Deep/])
+  await page.getByTestId('effort-option').filter({ hasText: 'Deep' }).click()
+  await expect(page.getByTestId('effort-options')).toHaveCount(0)
+  await expect(page.getByTestId('effort')).toContainText('Deep')
+  await expect.poll(() => page.evaluate(async () => (await window.hob.settings.get()).effort)).toBe('deep')
+  // a reply still comes, thinking longer
+  await page.getByTestId('composer-input').fill('hello')
+  await page.getByTestId('composer-send').click()
+  await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hello')
+  await app.close()
+  const again = await launch(userData)
+  await ready(again.page)
+  await expect(again.page.getByTestId('effort')).toContainText('Deep')
+  await again.app.close()
+})
+
 test('a dictation error goes away once the person writes again', async () => {
   const { app, page } = await launch()
   await ready(page)

@@ -18,13 +18,14 @@ import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
 import { isInside } from '../workspace'
 import { FAILED, NO_ANSWER, REPEATING } from '../../shared/replies'
+import { DEFAULT_EFFORT, effortBudgets, type Effort } from '../../shared/effort'
 
 const CHANGES = new Set(['write_file', 'move_file', 'move_files', 'delete_file'])
 /** what "renamed / moved / deleted" in a reply has to be backed by */
 const MOVES = new Set(['move_file', 'move_files', 'delete_file'])
 
-export const CHAT_BUDGET = 256
-export const AGENT_BUDGET = 8192
+export const CHAT_BUDGET = effortBudgets('normal', false).thoughtBudget
+export const AGENT_BUDGET = effortBudgets('normal', true).thoughtBudget
 
 export type TurnDeps = {
   engine: Engine
@@ -34,6 +35,8 @@ export type TurnDeps = {
   tools: Tool<any>[]
   python: PythonRuntime | undefined
   webAccess(): boolean
+  /** how long it thinks (beside the mic); Normal when left out */
+  effort?(): Effort
   trash(path: string): Promise<void>
   undoDir: string
   runTmp: string
@@ -242,7 +245,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   const usesFiles = listing.length > 0 || grants.length > 0 || a.attachments.length > 0 || command.skill !== undefined || namesPath
   let content: string
   const ask = (msgs: ChatMessage[]) => d.engine.chat(
-    { messages: msgs, tools: specs, thoughtBudget: usesFiles ? AGENT_BUDGET : CHAT_BUDGET, thoughtBudgetWithTools: AGENT_BUDGET },
+    { messages: msgs, tools: specs, ...effortBudgets(d.effort?.() ?? DEFAULT_EFFORT, usesFiles) },
     { onToken, onTool },
     AbortSignal.any([a.signal, loop.signal]),
   ).then((t) => t.trim())
@@ -319,9 +322,10 @@ export function conversation(d: PromptDeps, chat: ChatRef, history: StoredMessag
 }
 
 /** Read a chat ahead (or a new chat that will use this folder), so its next message starts at once. */
-export async function readAhead(d: PromptDeps & Pick<TurnDeps, 'engine' | 'tools' | 'webAccess'>, chat: ChatRef): Promise<void> {
+export async function readAhead(d: PromptDeps & Pick<TurnDeps, 'engine' | 'tools' | 'webAccess' | 'effort'>, chat: ChatRef): Promise<void> {
   const specs = specsFor(d.tools, d.webAccess())
-  await d.engine.preload(conversation(d, chat, chat.id ? d.store.messages(chat.id) : [], specs), specs)
+  // gpt-oss's reasoning level is part of what it reads first, so it's read ahead the same way
+  await d.engine.preload(conversation(d, chat, chat.id ? d.store.messages(chat.id) : [], specs), specs, effortBudgets(d.effort?.() ?? DEFAULT_EFFORT, false).reasoning)
 }
 
 /** what the model can now do in a folder the user just allowed */

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CornerDownLeft, FileText, Image as ImageIcon, Mic, Plus, Square, X } from 'lucide-react'
 import { canPreview, previewFile } from './Preview'
+import { EffortMenu } from './EffortMenu'
 import { MicMenu } from './MicMenu'
 import { PdfThumb } from './PdfView'
 import { hob } from '../api'
@@ -192,6 +193,7 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
         <div className="flex items-center gap-0.5 px-2 pb-2">
           <IconButton icon={Plus} label="Add files" testId="attach" onClick={onAttach} />
           <div className="flex-1" />
+          <EffortMenu />
           {/* same buttons while recording: the wave appears next to the mic, which turns blue */}
           {dictation?.listening && <Waveform level={dictation.level} />}
           {dictation?.busy && (

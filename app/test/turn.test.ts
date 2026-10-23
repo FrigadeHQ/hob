@@ -46,6 +46,19 @@ it('stores both messages and names the chat after the first message', async () =
   expect(w.engine.lastRequest?.tools?.map((t) => t.name)).not.toContain('web_search')
 })
 
+it('the effort picked beside the mic sets how long it thinks, and how much gpt-oss reasons', async () => {
+  const w = world('allow', { grant: false })
+  w.deps.effort = () => 'deep'
+  await w.turn('a hard question')
+  expect(w.engine.lastRequest).toMatchObject({ thoughtBudget: 4096, thoughtBudgetWithTools: 16384, reasoning: 'high' })
+  w.deps.effort = () => 'quick'
+  await w.turn('a quick one')
+  expect(w.engine.lastRequest).toMatchObject({ thoughtBudget: 64, reasoning: 'low' })
+  w.deps.effort = () => 'normal'
+  await w.turn('a normal one')
+  expect(w.engine.lastRequest?.reasoning).toBeUndefined()
+})
+
 it('runs tools, shows steps, and saves files into the chat folder', async () => {
   const w = world()
   writeFileSync(join(w.chatDir, 'sales.csv'), 'a,b\n1,2\n')

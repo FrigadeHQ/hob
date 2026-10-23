@@ -24,7 +24,8 @@ import { PLUGIN_FILES, type PluginRegistry } from './plugins/registry'
 import { saveSkillTool, useSkillTool } from './plugins/skillTools'
 import type { NewSkill } from '../shared/plugins'
 import { AlreadyHereError, copyIn, isInside, isRunnable, nextChatDir, sizeOf, TooBigError, validFilesDir } from './workspace'
-import { loadSettings, updateSettings, webAccessOn } from './settings'
+import { isEffort } from '../shared/effort'
+import { effortOf, loadSettings, updateSettings, webAccessOn } from './settings'
 import { checkFolders, cleanProject, withMissing } from './projects'
 import type { SearchResult } from './search/searxng'
 
@@ -55,7 +56,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   const live = new LiveTurns((list) => send('chat:live', list))
   const approvals = new Approvals((req) => { live.approval(req); send('chat:approval', req) })
   const trash = (p: string) => shell.trashItem(p)
-  const userSettings = (): UserSettings => ({ webAccess: webAccessOn(loadSettings(d.paths.settings)), filesDir: d.filesDir(), theme: loadSettings(d.paths.settings).theme ?? 'system' })
+  const userSettings = (): UserSettings => ({ webAccess: webAccessOn(loadSettings(d.paths.settings)), filesDir: d.filesDir(), theme: loadSettings(d.paths.settings).theme ?? 'system', effort: effortOf(loadSettings(d.paths.settings)) })
   d.setup.onState((s) => send('setup:state', s))
   d.vision?.onState((s) => send('vision:state', s))
   ipcMain.handle('vision:getState', () => d.vision?.state() ?? { phase: 'off' })
@@ -204,6 +205,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     skills: { list: () => d.plugins.skills(), find: (n: string) => d.plugins.findSkill(n) },
     prompts: (offered: string[]) => d.plugins.prompts(offered),
     webAccess: () => webAccessOn(loadSettings(d.paths.settings)),
+    effort: () => effortOf(loadSettings(d.paths.settings)),
   }
 
   // Read ahead what the user is looking at (a chat, or the new chat about to start), so the model has already
@@ -288,7 +290,10 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
       ...(patch.webAccess !== undefined ? { webAccess: !!patch.webAccess } : {}),
       ...(patch.filesDir && validFilesDir(String(patch.filesDir)) ? { filesDir: String(patch.filesDir) } : {}),
       ...(patch.theme !== undefined ? { theme: patch.theme === 'light' || patch.theme === 'dark' ? patch.theme : undefined } : {}),
+      ...(isEffort(patch.effort) ? { effort: patch.effort } : {}),
     })
+    // gpt-oss reads its reasoning level first: read the chat ahead again with the new one
+    if (patch.effort !== undefined) void warm()
     // the whole app, system dialogs included, follows it
     if (patch.theme !== undefined) nativeTheme.themeSource = loadSettings(d.paths.settings).theme ?? 'system'
     // Web access is also the Web search plugin's switch

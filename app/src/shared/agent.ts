@@ -1,3 +1,4 @@
+import type { Effort } from './effort'
 import type { ModelOption } from './types'
 
 /** A tool the model can call. params is a JSON schema object. */
@@ -39,7 +40,7 @@ export type StoredMessage = {
 }
 
 export type Theme = 'system' | 'light' | 'dark'
-export type UserSettings = { webAccess: boolean; filesDir: string; theme: Theme }
+export type UserSettings = { webAccess: boolean; filesDir: string; theme: Theme; effort: Effort }
 export type ModelRow = ModelOption & { downloaded: boolean; active: boolean }
 
 /** a reply still being written: its chat may be closed and opened again meanwhile */

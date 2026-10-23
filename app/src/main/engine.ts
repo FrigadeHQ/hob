@@ -8,8 +8,8 @@ export type { GpuProbe }
 export class InsufficientMemoryError extends Error { name = 'InsufficientMemoryError' }
 
 /** maxTokens: cap on the answer (short jobs like naming a chat) */
-/** thoughtBudgetWithTools: the budget once a tool has been called. side: the small second model, if loaded */
-export type ChatRequest = { messages: ChatMessage[]; tools?: ToolSpec[]; thoughtBudget?: number; thoughtBudgetWithTools?: number; maxTokens?: number; side?: boolean }
+/** thoughtBudgetWithTools: the budget once a tool has been called. side: the small second model, if loaded. reasoning: gpt-oss's own level */
+export type ChatRequest = { messages: ChatMessage[]; tools?: ToolSpec[]; thoughtBudget?: number; thoughtBudgetWithTools?: number; maxTokens?: number; side?: boolean; reasoning?: 'low' | 'high' }
 export type ChatHandlers = {
   onToken(t: string, thought?: boolean): void
   /** run a tool the model asked for; the string goes back to the model */
@@ -21,7 +21,7 @@ export interface Engine {
   load(modelPath: string, contextSize: number): Promise<void>
   chat(req: ChatRequest, h: ChatHandlers, signal?: AbortSignal): Promise<string>
   /** read a conversation ahead so its next message starts at once; a newer preload replaces one still waiting */
-  preload(messages: ChatMessage[], tools: ToolSpec[]): Promise<void>
+  preload(messages: ChatMessage[], tools: ToolSpec[], reasoning?: 'low' | 'high'): Promise<void>
   /** a small second model for side jobs (naming chats) */
   loadSide(modelPath: string, contextSize: number): Promise<void>
   unload(): Promise<void>
@@ -83,24 +83,24 @@ export class UtilityEngine implements Engine {
   async loadSide(modelPath: string, contextSize: number) { await this.call({ type: 'loadSide', modelPath, contextSize }).done }
 
   /** the preload waiting its turn: only the newest is worth reading (the user moved on) */
-  private queued: { messages: ChatMessage[]; tools: ToolSpec[]; done: Promise<void> } | undefined
+  private queued: { messages: ChatMessage[]; tools: ToolSpec[]; reasoning?: 'low' | 'high'; done: Promise<void> } | undefined
   /** requests sent and not answered yet; a preload goes out once the worker is free */
   private busy = 0
-  preload(messages: ChatMessage[], tools: ToolSpec[]): Promise<void> {
-    if (this.queued) { this.queued.messages = messages; this.queued.tools = tools; return this.queued.done }
-    const q = { messages, tools, done: Promise.resolve() }
+  preload(messages: ChatMessage[], tools: ToolSpec[], reasoning?: 'low' | 'high'): Promise<void> {
+    if (this.queued) { Object.assign(this.queued, { messages, tools, reasoning }); return this.queued.done }
+    const q: { messages: ChatMessage[]; tools: ToolSpec[]; reasoning?: 'low' | 'high'; done: Promise<void> } = { messages, tools, reasoning, done: Promise.resolve() }
     this.queued = q
     q.done = (async () => {
       // wait for chats in progress: the worker runs one thing at a time, and a stale preload would delay the next chat
       while (this.busy > 0) await new Promise((r) => setTimeout(r, 100))
       this.queued = undefined
-      await this.call({ type: 'preload', messages: q.messages, tools: q.tools }).done.catch(() => {})
+      await this.call({ type: 'preload', messages: q.messages, tools: q.tools, ...(q.reasoning ? { reasoning: q.reasoning } : {}) }).done.catch(() => {})
     })()
     return q.done
   }
 
   chat(req: ChatRequest, h: ChatHandlers, signal?: AbortSignal) {
-    const { id, done } = this.call<string>({ type: 'chat', messages: req.messages, tools: req.tools ?? [], thoughtBudget: req.thoughtBudget ?? 256, ...(req.thoughtBudgetWithTools ? { thoughtBudgetWithTools: req.thoughtBudgetWithTools } : {}), ...(req.maxTokens ? { maxTokens: req.maxTokens } : {}), ...(req.side ? { side: true } : {}) }, h)
+    const { id, done } = this.call<string>({ type: 'chat', messages: req.messages, tools: req.tools ?? [], thoughtBudget: req.thoughtBudget ?? 256, ...(req.thoughtBudgetWithTools ? { thoughtBudgetWithTools: req.thoughtBudgetWithTools } : {}), ...(req.maxTokens ? { maxTokens: req.maxTokens } : {}), ...(req.side ? { side: true } : {}), ...(req.reasoning ? { reasoning: req.reasoning } : {}) }, h)
     this.busy++
     void done.catch(() => {}).finally(() => { this.busy-- })
     signal?.addEventListener('abort', () => { this.call({ type: 'abort', targetId: id }).done.catch(() => {}) }, { once: true })

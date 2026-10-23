@@ -1,8 +1,9 @@
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { DEFAULT_EFFORT, isEffort, type Effort } from '../shared/effort'
 
 /** pendingModelId: a model download that was still in progress when Hob last ran */
-/** theme: light or dark regardless of the system; follows the system when left out */
-export type Settings = { activeModelId?: string; pendingModelId?: string; webAccess?: boolean; filesDir?: string; theme?: 'light' | 'dark' }
+/** theme: light or dark regardless of the system; follows the system when left out. effort: how long Hob thinks */
+export type Settings = { activeModelId?: string; pendingModelId?: string; webAccess?: boolean; filesDir?: string; theme?: 'light' | 'dark'; effort?: Effort }
 
 export function loadSettings(path: string): Settings {
   try { return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {} } catch { return {} }
@@ -22,3 +23,6 @@ export function updateSettings(path: string, patch: Partial<Settings>): Settings
 
 /** Web search is on unless the user switched it off. */
 export const webAccessOn = (s: Settings) => s.webAccess !== false
+
+/** Normal unless the user picked another */
+export const effortOf = (s: Settings): Effort => (isEffort(s.effort) ? s.effort : DEFAULT_EFFORT)

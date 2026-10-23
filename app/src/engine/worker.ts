@@ -1,4 +1,4 @@
-import { getLlama, InsufficientMemoryError, LlamaChatSession, type ChatSessionModelFunctions, type Llama, type LlamaContext, type LlamaContextSequence, type LlamaModel, type ChatHistoryItem } from 'node-llama-cpp'
+import { getLlama, InsufficientMemoryError, LlamaChatSession, resolveChatWrapper, type ChatSessionModelFunctions, type ChatWrapper, type Llama, type LlamaContext, type LlamaContextSequence, type LlamaModel, type ChatHistoryItem } from 'node-llama-cpp'
 import { finalAnswer } from './answer'
 import { cleanAnswer, streamCleaner } from './control'
 import { samplingFor } from './sampling'
@@ -92,13 +92,13 @@ function toHistory(messages: ChatMessage[]): ChatHistoryItem[] {
     : { type: 'model', response: [m.content] })
 }
 
-async function chat(id: number, req: { messages: ChatMessage[]; tools: ToolSpec[]; thoughtBudget: number; thoughtBudgetWithTools?: number; maxTokens?: number; side?: boolean }) {
+async function chat(id: number, req: { messages: ChatMessage[]; tools: ToolSpec[]; thoughtBudget: number; thoughtBudgetWithTools?: number; maxTokens?: number; side?: boolean; reasoning?: 'low' | 'high' }) {
   const sequence = req.side && side ? side.sequence : main
   if (!sequence) throw new Error('No model loaded')
   const { messages, tools, maxTokens } = req
   const last = messages.at(-1)
   if (!last || last.role !== 'user') throw new Error('Last message must be from the user')
-  const session = new LlamaChatSession({ contextSequence: sequence })
+  const session = new LlamaChatSession({ contextSequence: sequence, chatWrapper: wrapperFor(req.side && side ? side.model : model, req.reasoning) })
   session.setChatHistory(toHistory(messages.slice(0, -1)))
   const ac = new AbortController()
   aborts.set(id, ac)
@@ -132,10 +132,19 @@ async function chat(id: number, req: { messages: ChatMessage[]; tools: ToolSpec[
   }
 }
 
+/**
+ * gpt-oss takes a reasoning level (low, medium, high) in what it reads first; the rest, and gpt-oss at the default,
+ * use the model's own chat format
+ */
+function wrapperFor(m: LlamaModel | undefined, reasoning?: 'low' | 'high'): 'auto' | ChatWrapper {
+  if (!m || !reasoning || m.fileInfo.metadata.general.architecture !== 'gpt-oss') return 'auto'
+  return resolveChatWrapper(m, { customWrapperSettings: { harmony: { reasoningEffort: reasoning } } })
+}
+
 /** read the conversation so far (and the start of the next user turn) into `main`, answering nothing */
-async function preload(messages: ChatMessage[], tools: ToolSpec[]) {
+async function preload(messages: ChatMessage[], tools: ToolSpec[], reasoning?: 'low' | 'high') {
   if (!main) return
-  const session = new LlamaChatSession({ contextSequence: main })
+  const session = new LlamaChatSession({ contextSequence: main, chatWrapper: wrapperFor(model, reasoning) })
   session.setChatHistory(toHistory(messages))
   try {
     await session.preloadPrompt('', { functions: tools.length ? (toolFunctions(tools, async () => '') as unknown as ChatSessionModelFunctions) : undefined })
@@ -148,7 +157,7 @@ async function handle(req: EngineRequest): Promise<unknown> {
   if (req.type === 'probe') return probe()
   if (req.type === 'load') return load(req.modelPath, req.contextSize)
   if (req.type === 'chat') return chat(req.id, { ...req, tools: req.tools ?? [], thoughtBudget: req.thoughtBudget ?? CHAT_THOUGHT_BUDGET })
-  if (req.type === 'preload') return preload(req.messages, req.tools ?? [])
+  if (req.type === 'preload') return preload(req.messages, req.tools ?? [], req.reasoning)
   if (req.type === 'loadSide') return loadSide(req.modelPath, req.contextSize)
   if (req.type === 'unload') return unload()
 }
