@@ -1,0 +1,67 @@
+.work-comparison .section-intro{max-width:650px}
+.work-comparison .proof-feature{display:grid;grid-template-columns:.85fr 1.15fr;gap:64px;align-items:center;background:#f7f7f8;border:1px solid #efeff0;border-radius:10px;padding:48px;margin-top:44px;overflow:hidden}
+.work-comparison h3{font-size:30px;line-height:1.16;font-weight:700;letter-spacing:-1px}
+.work-comparison .proof-copy>p{font-size:17px;line-height:1.65;color:var(--muted);margin-top:18px;max-width:350px}
+.work-comparison .proof-files{display:grid;gap:10px;margin-top:36px;font-size:13px;color:#707070}
+.work-comparison .proof-files span{display:flex;align-items:center;gap:9px}
+.work-comparison .file-icon{width:15px;height:18px;border:1px solid #b3b3b8;border-radius:2px;display:inline-block;position:relative;flex-shrink:0}
+.work-comparison .file-icon:after{content:'';position:absolute;left:3px;right:3px;top:6px;height:1px;background:#b3b3b8;box-shadow:0 3px #b3b3b8}
+.work-comparison .proof-window{background:#fff;border:1px solid #e5e5e8;border-radius:7px;box-shadow:0 3px 5px #20202a03,0 14px 35px -18px #20202a30;overflow:hidden;min-width:0}
+.work-comparison .proof-titlebar{display:flex;align-items:center;gap:9px;border-bottom:1px solid #efeff1;padding:13px 18px;font-size:12px;color:#646469}
+.work-comparison .proof-titlebar>svg{width:15px;height:15px;margin-left:auto;color:#929298}
+.work-comparison .report-page{padding:30px 34px 26px}
+.work-comparison .report-date{font-size:11px;color:#85858a;margin-bottom:5px}
+.work-comparison .report-heading{font-size:23px;line-height:1.2;font-weight:650;letter-spacing:-.6px}
+.work-comparison .report-metric{margin-top:24px;padding-top:20px;border-top:1px solid #eeeeef;display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.work-comparison .report-metric span{font-size:12px;color:#737378}
+.work-comparison .report-metric strong{font-size:30px;line-height:1.1;letter-spacing:-1px;font-weight:600;font-variant-numeric:tabular-nums}
+.work-comparison .report-chart{display:flex;gap:24px;height:136px;margin-top:24px;align-items:flex-end;border-bottom:1px solid #eee}
+.work-comparison .report-chart>div{height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;font-size:10px;color:#818187}
+.work-comparison .report-chart i{width:100%;max-width:70px;background:#d9d3f1;display:block;border-radius:2px 2px 0 0}
+.work-comparison .report-chart>div:last-child i{background:#8270cf}
+.work-comparison .report-months{display:flex;gap:24px;margin-top:7px;color:#85858a;font-size:10px;text-align:center}
+.work-comparison .report-months span{flex:1}
+.work-comparison .report-note{font-size:12px;line-height:1.6;color:#737378;margin-top:22px}
+.work-comparison .proof-pair{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px}
+.work-comparison .proof-small{min-width:0}
+.work-comparison .proof-stage{height:370px;padding:32px;display:flex;align-items:center;justify-content:center;background:#f7f7f8;border:1px solid #efeff0;border-radius:10px;overflow:hidden}
+.work-comparison .proof-stage .proof-window{width:100%;max-width:440px}
+.work-comparison .proof-small h3{font-size:24px;margin-top:25px;letter-spacing:-.6px}
+.work-comparison .proof-small>p{font-size:16px;color:var(--muted);line-height:1.7;max-width:450px;margin-top:12px}
+.work-comparison .sheet-table{border-collapse:collapse;width:100%;font-size:12px;text-align:left;font-variant-numeric:tabular-nums}
+.work-comparison .sheet-table th,.work-comparison .sheet-table td{padding:10px 17px;border-bottom:1px solid #efeff1}
+.work-comparison .sheet-table th{font-weight:500;color:#8a8a90;font-size:11px;background:#fcfcfc}
+.work-comparison .sheet-table th:last-child,.work-comparison .sheet-table td:last-child{text-align:right;border-left:1px solid #efeff1}
+.work-comparison .sheet-table tfoot{font-weight:600;background:#f8f6fd}
+.work-comparison .sheet-table tfoot td{border-bottom:0}
+.work-comparison .sheet-status{display:flex;align-items:center;gap:7px;padding:12px 17px;font-size:11px;color:#77777d;border-top:1px solid #efeff1}
+.work-comparison .sheet-status svg{width:13px;height:13px;color:var(--accent-ink);flex-shrink:0}
+.work-comparison .meeting-page{padding:26px 28px 28px}
+.work-comparison .meeting-sources{display:flex;gap:17px;font-size:11px;color:#85858b;margin-bottom:22px}
+.work-comparison .meeting-sources span{display:flex;align-items:center;gap:6px}
+.work-comparison .meeting-sources svg{width:14px;height:14px}
+.work-comparison .meeting-heading{font-size:20px;font-weight:600;letter-spacing:-.4px;line-height:1.2}
+.work-comparison .meeting-time{font-size:11px;color:#85858b;margin-top:6px}
+.work-comparison .meeting-list{list-style:none;margin:20px 0 0;padding:16px 0 0;border-top:1px solid #eee;font-size:12px;color:#65656c;display:grid;gap:10px}
+.work-comparison .meeting-list li{display:flex;align-items:center;gap:10px}
+.work-comparison .meeting-list li:before{content:'';width:4px;height:4px;background:#9c8fd0;flex-shrink:0}
+@media(max-width:900px){
+  .work-comparison .proof-feature{gap:30px;padding:30px;grid-template-columns:.85fr 1.15fr}
+  .work-comparison h3{font-size:26px}
+  .work-comparison .proof-copy>p{font-size:16px}
+  .work-comparison .report-page{padding:24px}
+  .work-comparison .proof-stage{padding:24px 20px;height:370px}
+  .work-comparison .meeting-page{padding:24px 20px}
+}
+@media(max-width:600px){
+  .work-comparison .proof-feature{grid-template-columns:1fr;gap:28px;padding:25px 20px 20px;margin-top:30px}
+  .work-comparison h3{font-size:27px;max-width:280px}
+  .work-comparison .proof-copy>p{margin-top:14px}
+  .work-comparison .proof-files{margin-top:22px;font-size:12px;gap:8px}
+  .work-comparison .proof-pair{grid-template-columns:1fr;gap:35px;margin-top:24px}
+  .work-comparison .proof-stage{height:auto;padding:24px 18px}
+  .work-comparison .proof-small h3{font-size:23px;margin-top:22px;max-width:none}
+  .work-comparison .report-page{padding:23px 20px}
+  .work-comparison .report-heading{font-size:21px}
+  .work-comparison .report-metric strong{font-size:27px}
+}
