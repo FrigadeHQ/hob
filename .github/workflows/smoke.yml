@@ -77,6 +77,8 @@ jobs:
       - name: Real tools as a standard user
         shell: pwsh
         run: |
+          # GitHub's images turn on Developer Mode, which lets any account make symlinks; most PCs don't have it
+          Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' AllowDevelopmentWithoutDevLicense 0 -Type DWord
           $pw = ConvertTo-SecureString "Hob-$([guid]::NewGuid().ToString('N').Substring(0, 16))-aA1!" -AsPlainText -Force
           New-LocalUser -Name hobuser -Password $pw -AccountNeverExpires -PasswordNeverExpires | Out-Null
           Add-LocalGroupMember -Group Users -Member hobuser
@@ -87,18 +89,22 @@ jobs:
           icacls $env:GITHUB_WORKSPACE /grant 'hobuser:(OI)(CI)M' /T /C /Q | Out-Null
           icacls $out /grant 'hobuser:(OI)(CI)F' /T /C /Q | Out-Null
           $node = (Get-Command node).Source
+          Push-Location app
+          $vitest = node -p "require('path').join(require('path').dirname(require.resolve('vitest/package.json')), 'vitest.mjs')"
+          Pop-Location
           icacls (Split-Path (Split-Path $node)) /grant 'hobuser:(OI)(CI)RX' /T /C /Q | Out-Null
           $script = @"
           cd /d "$env:GITHUB_WORKSPACE\app"
           mklink "$out\link-check" "%COMSPEC%" > "$out\mklink.txt" 2>&1
           set HOB_SMOKE=1
-          "$node" node_modules\vitest\vitest.mjs run test/smoke.test.ts > "$out\smoke.txt" 2>&1
+          "$node" "$vitest" run test/smoke.test.ts > "$out\smoke.txt" 2>&1
           echo %ERRORLEVEL% > "$out\code.txt"
           "@
           Set-Content -Path "$out\run.cmd" -Value $script
           $p = Start-Process cmd.exe -ArgumentList '/c', "$out\run.cmd" -Credential $cred -LoadUserProfile -WorkingDirectory $out -Wait -PassThru
           Write-Host "--- can this account make symlinks? (it shouldn't, like most people's)"
           Get-Content "$out\mklink.txt"
+          if (Test-Path "$out\link-check") { throw 'this account can make symlinks, so it is not like most people''s' }
           Write-Host '--- smoke test'
           Get-Content "$out\smoke.txt"
           $code = (Get-Content "$out\code.txt" -ErrorAction SilentlyContinue | Select-Object -First 1)
