@@ -9,7 +9,7 @@ import { faceRects } from '../src/shared/mascot.ts'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const bodyPath = join(root, 'src/renderer/src/assets/hob-body.svg')
 const body = readFileSync(bodyPath).toString('base64')
-copyFileSync(bodyPath, join(root, '../site/public/hob-body.svg'))
+copyFileSync(bodyPath, join(root, '../site/public/marketing/assets/hob-body.svg'))
 const face = faceRects('smile').map((r) => `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${r.fill}"/>`).join('')
 // Use the same crop as Mascot.tsx so the face lines up in both places.
 const mascot = `<svg width="60" height="60" viewBox="158 155.5 937 937"><image href="data:image/svg+xml;base64,${body}" width="1254" height="1254"/></svg><g shape-rendering="crispEdges">${face}</g>`

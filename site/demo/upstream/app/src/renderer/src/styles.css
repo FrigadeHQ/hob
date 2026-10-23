@@ -1,0 +1,297 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* The same variable font as the marketing site, bundled for offline use. */
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("./assets/hanken-grotesk.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/*
+ * Hob design system
+ * Type: core sizes. meta 12 (labels, hints) · ui 13 (sidebar, steps, buttons) · body 15 (messages, composer) · title 22 (screen titles)
+ * Color: paper (app) · sidebar · surface (composer, cards) · ink · ink-soft (secondary text) · muted (hints, placeholders) · line · line-strong · accent
+ * Radius: 8 controls · 12 cards · 18 composer. Icons: lucide, 16px in UI, 14px in steps.
+ */
+@theme {
+  --font-sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-meta: 12px;
+  --text-meta--line-height: 16px;
+  --text-ui: 13px;
+  --text-ui--line-height: 20px;
+  --text-body: 15px;
+  --text-body--line-height: 24px;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+
+  --color-paper: #FAFAFA;
+  --color-sidebar: #FAFAFA;
+  --color-surface: #FFFFFF;
+  --color-ink: #1C1C1C;
+  --color-ink-soft: #575757;
+  --color-muted: #818181;
+  --color-line: #E7E7E7;
+  --color-line-strong: #D6D6D6;
+  --color-action: #242424;
+  --color-on-action: #ffffff;
+  --color-selection: #E8E8E8;
+  --color-focus: #888888;
+  --color-accent: #c2410c;
+  /* the mic while it's recording */
+  --color-rec: #dbe7fb;
+  --color-rec-ink: #2f5bb7;
+  /* actions that can't be taken back */
+  --color-danger: #b42318;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-composer: 18px;
+}
+
+/* charts: calm, tell-apart colours, accent first. Outside @theme: only JavaScript reads them, and Tailwind drops theme colours no class uses */
+:root {
+  --color-chart-1: #c2410c;
+  --color-chart-2: #2563eb;
+  --color-chart-3: #0d9488;
+  --color-chart-4: #ca8a04;
+  --color-chart-5: #7c3aed;
+  --color-chart-6: #db2777;
+  --color-chart-7: #65a30d;
+  --color-chart-8: #57534e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #191817;
+    --color-sidebar: #141312;
+    --color-surface: #22201e;
+    --color-ink: #f2f1ef;
+    --color-ink-soft: #c4beb8;
+    --color-muted: #938c85;
+    --color-line: #2f2c29;
+    --color-line-strong: #423e3a;
+    --color-action: #e6e2de;
+    --color-on-action: #211f1d;
+    --color-selection: #302d2a;
+    --color-focus: #77716b;
+    --color-rec: #24344f;
+    --color-rec-ink: #9cc0ff;
+    --color-danger: #f97066;
+    --color-chart-1: #fb923c;
+    --color-chart-2: #60a5fa;
+    --color-chart-3: #2dd4bf;
+    --color-chart-4: #facc15;
+    --color-chart-5: #a78bfa;
+    --color-chart-6: #f472b6;
+    --color-chart-7: #a3e635;
+    --color-chart-8: #a8a29e;
+  }
+}
+
+/* the window never scrolls as a page (that slid the whole app up under the title bar); panels scroll inside */
+html, body, #root { height: 100%; overflow: hidden; }
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-ui);
+  -webkit-font-smoothing: antialiased;
+}
+/* thin, quiet scrollbars that don't take room from the content */
+* { scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+/* Windows and Linux draw their window buttons over the top-right corner: how far in they reach (0 on the Mac) */
+:root { --controls-inset: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)); }
+.right-clear-controls { right: calc(var(--controls-inset) + 1rem); }
+.pr-clear-controls { padding-right: calc(var(--controls-inset) + 0.75rem); }
+.drag { -webkit-app-region: drag; }
+.no-drag { -webkit-app-region: no-drag; }
+
+/* Replies use the same face, with more room to read. */
+.reply.prose {
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  font-size: calc(var(--text-body) + 1px + var(--reply-step, 0px));
+  line-height: 1.65;
+  color: var(--color-ink);
+  --tw-prose-body: var(--color-ink);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-links: var(--color-ink);
+  --tw-prose-bullets: var(--color-muted);
+  --tw-prose-counters: var(--color-muted);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-th-borders: var(--color-line-strong);
+  --tw-prose-td-borders: var(--color-line);
+  /* section breaks (---): Hob's soft divider, not the prose default (too bright in dark mode) */
+  --tw-prose-hr: var(--color-line);
+}
+.reply.prose :where(p, ul, ol, table, pre) { margin-top: 0.6em; margin-bottom: 0.6em; }
+.reply.prose :where(h1, h2, h3) { font-size: var(--text-body); line-height: var(--text-body--line-height); font-weight: 600; margin: 1em 0 0.4em; }
+.reply.prose :where(li) { margin: 0.2em 0; }
+/* Settings → General: text size */
+html[data-text-size="small"] { --reply-step: -1.5px; }
+html[data-text-size="large"] { --reply-step: 2px; }
+.reply.prose :where(hr) { border-color: var(--color-line); margin: 1.6em 0; }
+.reply.prose :where(code):not(pre code) { font-size: 0.87em; background: var(--color-line); border-radius: 5px; padding: 0.1em 0.35em; font-weight: 400; }
+.reply.prose :where(code):not(pre code)::before, .reply.prose :where(code):not(pre code)::after { content: none; }
+.reply.prose :where(pre) { background: var(--color-sidebar); color: var(--color-ink); border: 1px solid var(--color-line); border-radius: var(--radius-card); font-size: var(--text-ui); }
+.reply.prose :where(table) { font-size: var(--text-ui); }
+/* the reply may break long links anywhere; in a table that squeezed columns until words split ("Da / y") */
+.reply.prose .table-scroll { overflow-x: auto; margin-top: 0.6em; margin-bottom: 0.6em; }
+.reply.prose .table-scroll table { margin: 0; overflow-wrap: normal; }
+.reply.prose :where(td, th) { min-width: 6rem; }
+.reply.prose :where(td, th):first-child { min-width: 0; }
+.reply.prose :where(a) { text-decoration-color: var(--color-line-strong); text-underline-offset: 3px; }
+.reply.prose > :first-child { margin-top: 0; }
+
+/* new text fades in instead of popping */
+@keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+.fade-in { animation: fade-in 400ms ease-out both; }
+/* First loading screen: Hob, then the status, then the reassurance. */
+@keyframes setup-appear { from { opacity: 0; } to { opacity: 1; } }
+.setup-status { animation: setup-appear 400ms ease-out 150ms both; }
+.setup-assurance { animation: setup-appear 400ms ease-out 450ms both; }
+/* the app appearing after setup, and dialogs opening */
+@keyframes reveal { from { opacity: 0; } to { opacity: 1; } }
+.reveal { animation: reveal 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes pop { from { opacity: 0; transform: translateY(4px) scale(0.98); } to { opacity: 1; transform: none; } }
+.pop { animation: pop 180ms ease-out both; }
+/* a reply's words as they stream in: fade up from nothing, softly, so the end of the text has a gentle edge */
+@keyframes fw { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: none; } }
+.fw { animation: fw 650ms cubic-bezier(0.2, 0.6, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .reveal, .pop, .fade-in, .fw, .setup-status, .setup-assurance { animation: none; } }
+
+/* Carry Hob between screens at full opacity; only the surrounding content fades. */
+/* Keep the chat live while Hob arrives, instead of capturing the whole document. */
+:root { view-transition-name: none; }
+.onboarding { view-transition-name: setup-screen; background: var(--color-paper); }
+.onboarding-mascot .hob-mascot, .chat-greeting .hob-mascot { view-transition-name: hob-setup; }
+::view-transition { pointer-events: none; }
+::view-transition-group(hob-setup) { animation-duration: 440ms; animation-timing-function: cubic-bezier(.22,1,.36,1); }
+::view-transition-old(hob-setup) { animation: none; opacity: 0; }
+::view-transition-new(hob-setup) { animation: none; height: 100%; }
+::view-transition-old(setup-screen) { animation: reveal 140ms ease-out reverse both; }
+::view-transition-new(setup-screen) { animation: reveal 240ms ease-out 80ms both; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
+}
+
+/* Onboarding: the same quiet frame for recommendation, download, and preparation. */
+.onboarding, .setup-dialog { --setup-selection: var(--color-selection); --setup-hover: color-mix(in srgb, var(--color-line) 40%, var(--color-surface)); color-scheme: light; }
+.onboarding-screen { flex: 1; min-height: 0; display: flex; align-items: safe center; justify-content: center; padding: 28px 38px 42px; overflow: auto; }
+.onboarding-content { position: relative; width: 430px; max-width: 100%; text-align: center; }
+.onboarding-mascot { width: 72px; height: 72px; margin: 0 auto 25px; }
+.onboarding-mascot svg[data-testid=mascot] { width: 100%; height: 100%; }
+.onboarding-mascot .hob-interaction { width: 100%; height: 100%; }
+.onboarding[data-phase=probing] .onboarding-mascot { transform: translateY(133px) scale(1.555556); }
+.onboarding-probing { position: absolute; top: 247px; left: 0; right: 0; opacity: 0; pointer-events: none; }
+.onboarding[data-phase=probing] .onboarding-probing { opacity: 1; }
+.onboarding-panel { min-height: 285.4px; }
+.onboarding[data-phase=probing] .onboarding-panel { visibility: hidden; }
+.setup-heading h1 { font-size: 28px; font-weight: 550; letter-spacing: -.8px; line-height: 1.2; white-space: nowrap; }
+.setup-subtitle { font-size: 14px; color: var(--color-ink-soft); margin-top: 10px; line-height: 1.7; white-space: nowrap; }
+.setup-stage { width: 380px; max-width: 100%; min-height: 192px; margin: 26px auto 0; }
+.setup-card { height: 96px; padding: 16px 17px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-surface); text-align: left; }
+.setup-hardware { font-size: 11px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setup-model-line { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 10px; }
+.setup-model-name { font-size: 17px; font-weight: 550; letter-spacing: -.35px; white-space: nowrap; }
+.setup-primary { height: 43px; border-radius: 9px; background: var(--color-ink); color: var(--color-paper); font-size: 13px; font-weight: 550; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+.setup-primary:disabled { opacity: .35; cursor: not-allowed; }
+.setup-stage > .setup-primary { width: 240px; max-width: 100%; margin-top: 24px; }
+.setup-small-print { font-size: 11px; color: var(--color-muted); line-height: 1.7; margin-top: 10px; }
+.setup-text-button { font-size: 12px; color: var(--color-muted); display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 3px 0; white-space: nowrap; }
+.setup-stage > .setup-text-button { margin-top: 24px; }
+.setup-progress-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; gap: 12px; color: var(--color-ink-soft); }
+.setup-track { height: 4px; background: var(--color-line); border-radius: 8px; overflow: hidden; margin: 12px 0 10px; }
+.setup-track > span { display: block; height: 100%; background: var(--color-ink-soft); border-radius: 8px; transform-origin: left; transition: transform 300ms ease-out; }
+.setup-eta { font-size: 11px; color: var(--color-muted); }
+.setup-notice { margin-top: 14px; font-size: 12px; color: var(--color-accent); }
+.onboarding:not([data-phase=probing]) .setup-assurance { animation: none; opacity: 0; pointer-events: none; transition: opacity 120ms ease-out; }
+.app-dialog { margin: auto; max-width: min(512px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; }
+.dialog-layer[open] { display: flex; }
+.dialog-layer::backdrop { background: transparent; }
+.setup-dialog { width: 568px; max-width: calc(100vw - 48px); max-height: min(600px, calc(100dvh - 48px)); padding: 0; overflow: hidden; text-align: left; border-color: var(--color-line-strong); }
+.setup-dialog { display: flex; flex-direction: column; }
+.dialog-layer:has(.setup-dialog)::backdrop { backdrop-filter: blur(3px); }
+.setup-dialog .dialog-header { padding: 20px 24px 0; margin: 0; flex-shrink: 0; }
+.setup-dialog .dialog-header h2 { font-size: 18px; font-weight: 550; letter-spacing: -.4px; }
+.setup-dialog-description { padding: 3px 24px 19px; font-size: 12px; color: var(--color-muted); border-bottom: 1px solid var(--color-line); }
+.setup-model-scroll { overflow: auto; overscroll-behavior: contain; min-height: 0; padding: 9px 10px; }
+.setup-model-option { display: flex; gap: 13px; align-items: flex-start; padding: 13px 14px; border-radius: 9px; cursor: pointer; }
+.setup-model-option:has(input:checked) { background: var(--setup-selection); }
+.setup-model-option input { margin: 4px 0 0; accent-color: var(--color-ink); flex: none; }
+.setup-option-copy { flex: 1; min-width: 0; }
+.setup-option-title { display: flex; align-items: center; gap: 9px; font-size: 13px; white-space: nowrap; }
+.setup-option-description { font-size: 11px; color: var(--color-muted); display: block; margin-top: 4px; }
+.setup-option-size { white-space: nowrap; font-size: 12px; color: var(--color-ink-soft); padding-top: 1px; }
+.setup-tag { font-size: 10px; line-height: 20px; padding: 0 7px; border-radius: 4px; background: var(--color-line); color: var(--color-ink-soft); }
+.setup-model-option.unavailable { cursor: default; opacity: .5; }
+.setup-model-section { font-size: 10px; color: var(--color-muted); padding: 16px 14px 6px; border-top: 1px solid var(--color-line); margin-top: 8px; }
+.setup-dialog-footer { padding: 17px 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-top: 1px solid var(--color-line); flex-shrink: 0; }
+.setup-dialog-footer > span { font-size: 11px; color: var(--color-muted); }
+.setup-dialog-footer .setup-primary { height: 37px; padding: 0 18px; font-size: 12px; }
+.setup-details-dialog { width: 480px; }
+.setup-download-details { padding: 8px 24px 22px; overflow: auto; }
+.setup-detail-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 19px 0; }
+.setup-detail-row + .setup-detail-row { border-top: 1px solid var(--color-line); }
+.setup-detail-row p { font-size: 13px; font-weight: 500; }
+.setup-detail-row small { display: block; margin-top: 5px; font-size: 11px; color: var(--color-muted); }
+.setup-detail-row > span { font-size: 11px; color: var(--color-muted); white-space: nowrap; padding-top: 2px; }
+.setup-detail-explanation { font-size: 12px; color: var(--color-ink-soft); margin-top: 2px; }
+.onboarding button:focus-visible, .onboarding input:focus-visible, .setup-dialog button:focus-visible, .setup-dialog input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
+@media (prefers-color-scheme: dark) {
+  .onboarding, .setup-dialog { --color-muted: #9b948d; --setup-selection: #37312c; --setup-hover: #2b2723; color-scheme: dark; }
+}
+@media (max-width: 800px) {
+  .onboarding-screen { padding: 20px 30px 36px; }
+  .onboarding-mascot { width: 60px; height: 60px; margin-bottom: 17px; }
+  .onboarding[data-phase=probing] .onboarding-mascot { transform: translateY(124px) scale(1.866667); }
+  .onboarding-probing { top: 232px; }
+  .setup-heading h1 { font-size: 26px; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .setup-primary:not(:disabled):hover { opacity: .9; }
+  .setup-text-button:hover { color: var(--color-ink); }
+  .setup-model-option:not(.unavailable):hover { background: var(--setup-hover); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .setup-track > span { transition: none; }
+}
+
+/* the dimmed layer behind Settings, dialogs and search: one shade everywhere */
+.scrim { background-color: rgb(0 0 0 / 0.3); }
+/* one dimmed layer at a time: a dialog over Settings (or over another dialog) takes over the dimming, at once,
+   so the background never changes shade; only the layer under the new dialog gets dimmer */
+body:has(> [data-scrim]) #root [data-scrim], body > [data-scrim]:has(~ [data-scrim]) { background-color: transparent; }
+body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] { animation: none; }
+
+/* One Hob at a time: the greeting shows Hob until a conversation starts. */
+.status-presence { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; }
+.status-presence:has(.hob-mascot) > .status-dot { display: none; }
+#root:has(.chat-greeting) .status-presence .hob-mascot { display: none; }
+#root:has(.chat-greeting) .status-presence > .status-dot { display: block; }
+.hob-interaction { display: block; flex: none; padding: 0; border: 0; border-radius: 14px; background: transparent; color: inherit; line-height: 0; cursor: pointer; -webkit-app-region: no-drag; }
+.hob-interaction > svg { display: block; }
+.hob-interaction:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 5px; }
+.hob-neutral { opacity: 0; }
+.hob-smile { opacity: 1; }
+.hob-working .hob-neutral { opacity: 1; }
+.hob-working .hob-smile { opacity: 0; }
+.hob-eyes { transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .hob-alive .hob-eyes { animation: hob-blink 17s steps(1, end) infinite; }
+  .hob-alive:not(.hob-working) .hob-neutral { animation: hob-neutral 43s steps(1, end) infinite; }
+  .hob-alive:not(.hob-working) .hob-smile { animation: hob-smile 43s steps(1, end) infinite; }
+  .hob-working .hob-face { transform: translateY(1px); }
+}
+@keyframes hob-blink { 0%, 21.9%, 50.9%, 84.9%, 100% { transform: scaleY(1); } 21%, 50%, 84% { transform: scaleY(.4); } }
+@keyframes hob-neutral { 0%, 46%, 100% { opacity: 0; } 42% { opacity: 1; } }
+@keyframes hob-smile { 0%, 46%, 100% { opacity: 1; } 42% { opacity: 0; } }
+
+@media (max-height: 620px) { .chat-greeting { padding-top: 16px; } }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }

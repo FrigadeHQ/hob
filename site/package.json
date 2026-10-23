@@ -4,7 +4,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node checks/site.mjs",
+    "demo:build": "node demo/build.cjs",
+    "demo:test": "node checks/demo.cjs"
   },
   "dependencies": {
     "next": "16.4.1",

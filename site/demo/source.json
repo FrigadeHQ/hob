@@ -1,0 +1,29 @@
+{
+  "repository": "https://github.com/FrigadeHQ/hob",
+  "commit": "38aa606c377a3812a9fcf5fdc82ae0f018d1b45e",
+  "files": [
+    "app/src/renderer/src/components/Sidebar.tsx",
+    "app/src/renderer/src/components/Status.tsx",
+    "app/src/renderer/src/components/ui.tsx",
+    "app/src/renderer/src/components/Confirm.tsx",
+    "app/src/renderer/src/components/Composer.tsx",
+    "app/src/renderer/src/components/MicMenu.tsx",
+    "app/src/renderer/src/components/Mascot.tsx",
+    "app/src/renderer/src/starters.ts",
+    "app/src/renderer/src/thumbnail.ts",
+    "app/src/renderer/src/speech/prefs.ts",
+    "app/src/renderer/src/styles.css",
+    "app/src/renderer/src/assets/hob-body.png",
+    "app/src/shared/platform.ts",
+    "app/src/shared/mascot.ts",
+    "LICENSE",
+    "app/src/renderer/src/components/WorkLog.tsx",
+    "app/src/renderer/src/components/ChartCard.tsx",
+    "app/src/renderer/src/components/CopyButton.tsx",
+    "app/src/shared/chart.ts",
+    "app/src/shared/thinking.ts",
+    "app/src/shared/steps.ts"
+  ],
+  "layout": "app/src/renderer/src/screens/Chat.tsx and app/src/renderer/src/App.tsx",
+  "demo_reference": "Christian: HobExample2.mp4 (2026-10-22); prompt, attachment, activity states and chart reproduced in code."
+}
