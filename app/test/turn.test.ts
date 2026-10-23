@@ -6,7 +6,7 @@ import { FakeEngine } from '../src/main/fake'
 import { Store } from '../src/main/store'
 import { allTools } from '../src/main/tools'
 import { AGENT_BUDGET, readAhead, runTurn, type TurnDeps } from '../src/main/agent/turn'
-import { systemPrompt } from '../src/main/agent/prompt'
+import { TIME_NOTE, systemPrompt } from '../src/main/agent/prompt'
 import type { ApprovalAnswer, ApprovalRequest, Attachment, Step } from '../src/shared/agent'
 import { ensurePdfHelper } from './pdfHelper'
 
@@ -57,6 +57,16 @@ it('the effort picked beside the mic sets how long it thinks, and how much gpt-o
   w.deps.effort = () => 'normal'
   await w.turn('a normal one')
   expect(w.engine.lastRequest?.reasoning).toBeUndefined()
+})
+
+it('the model hears the time and time zone with each message; the chat keeps what the user wrote', async () => {
+  const w = world('allow', { grant: false })
+  await w.turn('what time is it?')
+  const sent = w.engine.lastRequest?.messages.at(-1)?.content ?? ''
+  expect(sent).toMatch(/what time is it\?/)
+  expect(sent).toMatch(/\b\d{2}:\d{2}\b/)
+  expect(sent).toContain(Intl.DateTimeFormat().resolvedOptions().timeZone)
+  expect(w.store.messages('c')[0].content).toBe('what time is it?')
 })
 
 it('runs tools, shows steps, and saves files into the chat folder', async () => {
@@ -199,13 +209,13 @@ it('/skill sends the skill instructions with the message, and the prompt lists s
   const req = w.engine.lastRequest!
   expect(req.messages[0].content).toContain('- plan-trip: Plan trips day by day')
   expect(req.messages[0].content).toContain('use convert_currency')
-  expect(req.messages.at(-1)!.content).toMatch(/^Rome in May\n\n\[The user picked the skill “plan-trip”[\s\S]*Make a day-by-day plan\.$/)
+  expect(req.messages.at(-1)!.content).toMatch(/^Rome in May\n\n\[The user picked the skill “plan-trip”[\s\S]*Make a day-by-day plan\.\n\[Sent [^\]]*\]$/)
   expect(w.store.messages('c')[0].content).toBe('/plan-trip Rome in May') // the chat shows what the user typed
   // a follow-up still carries the instructions; an unknown /word is left alone
   await w.turn('shorter please')
   expect(w.engine.lastRequest!.messages.at(-3)!.content).toContain('Make a day-by-day plan.')
   await w.turn('/nope hi')
-  expect(w.engine.lastRequest!.messages.at(-1)!.content).toBe('/nope hi')
+  expect(w.engine.lastRequest!.messages.at(-1)!.content.replace(TIME_NOTE, '')).toBe('/nope hi')
 })
 
 it('the model names the chat after the first reply; later turns keep the name', async () => {

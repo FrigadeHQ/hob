@@ -33,6 +33,17 @@ function projectLines(p: PromptProject): string {
   return lines.join('\n')
 }
 
+/**
+ * The time, with each message the model reads (not in the system prompt: that would change every minute, and the
+ * whole conversation would be read again). A line of its own, after what the user wrote.
+ */
+export function timeNote(now = new Date()): string {
+  const day = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
+  return `[Sent ${day}, ${time}, ${Intl.DateTimeFormat().resolvedOptions().timeZone} time]`
+}
+export const TIME_NOTE = /\n*\[Sent [^\]\n]*\]$/
+
 export function systemPrompt(o: {
   chatDir: string; files: string[]; grants: string[]; now?: Date
   /** the user's home folder, so "my Desktop" and "~/Desktop" become real paths */

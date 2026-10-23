@@ -13,7 +13,7 @@ import { Journal } from './journal'
 import { fitHistory, ToolBudget } from './history'
 import { decide } from './permissions'
 import { asksToProceed, claimCheck, claimsFileChanges, missingCheck, NOTHING_CHANGED, unbackedFiles, proceedCheck, unfinishedCheck } from './claims'
-import { chatTitle, cleanTitle, expandCommand, systemPrompt, titleRequest, type PromptSkill } from './prompt'
+import { chatTitle, cleanTitle, expandCommand, systemPrompt, timeNote, titleRequest, type PromptSkill } from './prompt'
 import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
 import { isInside } from '../workspace'
@@ -237,7 +237,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   const command = expandCommand(a.text, (n) => d.skills?.find(n))
   const messages: ChatMessage[] = [
     ...conversation(d, chat, history, specs, a.text),
-    { role: 'user', content: [withFiles(command.text, a.attachments), ...lookNotes].join('\n') },
+    { role: 'user', content: [withFiles(command.text, a.attachments), ...lookNotes, timeNote()].join('\n') },
   ]
   // file work from the start: signals that don't depend on the language the user writes in. Anything else
   // starts with a short think and gets the long one as soon as the model calls a tool
