@@ -21,11 +21,11 @@ function usePlayfulFace(on: boolean, tapFace?: Expression) {
     const count = now - taps.current.at > 1800 ? 1 : Math.min(6, taps.current.count + 1)
     taps.current = { count, at: now }
     clearTimeout(reactionTimer.current)
-    setReaction(tapFace ?? (count >= 6 ? 'skeptical' : count >= 3 ? 'laugh' : count === 2 ? 'wink' : 'content'))
+    setReaction(count >= 6 ? 'skeptical' : tapFace ?? (count >= 3 ? 'laugh' : count === 2 ? 'wink' : 'content'))
     reactionTimer.current = setTimeout(() => {
       setReaction(null)
       setExpression('smile')
-    }, tapFace ? 1100 : count >= 6 ? 1400 : count >= 3 ? 1100 : 700)
+    }, count >= 6 ? 1400 : tapFace || count >= 3 ? 1100 : 700)
   }
   useEffect(() => {
     if (!on) return () => clearTimeout(reactionTimer.current)
@@ -80,7 +80,7 @@ function usePlayfulFace(on: boolean, tapFace?: Expression) {
 }
 
 /** Every living Hob responds to a hello; the sidebar keeps its quiet idle face. */
-/** tapFace: the face every click makes (the corner Hob laughs); otherwise clicks run through smile, wink, laugh */
+/** tapFace: the face each click makes (the corner Hob laughs); otherwise clicks run through smile, wink, laugh. A flurry of clicks raises an eyebrow either way */
 export function Mascot({ size = 96, alive = false, working = false, playful = false, tapFace }: { size?: number; alive?: boolean; working?: boolean; playful?: boolean; tapFace?: Expression }) {
   const face = usePlayfulFace(alive && playful, tapFace)
   const interactive = alive || playful

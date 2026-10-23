@@ -179,12 +179,12 @@ test('a happier Hob responds to clicks and keys, then forgives a flurry of click
     await expect(hello).toHaveCount(1)
     await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000))
     const resting = await littleHob.boundingBox()
-    // the corner Hob laughs at every click
-    for (let i = 0; i < 6; i++) {
+    // the corner Hob laughs at each click, and a flurry of them raises an eyebrow
+    for (const expression of ['laugh', 'laugh', 'laugh', 'laugh', 'laugh', 'skeptical']) {
       await littleHello.click()
-      await expect(littleHob).toHaveAttribute('data-expression', 'laugh')
+      await expect(littleHob).toHaveAttribute('data-expression', expression)
     }
-    await expect(littleHello.getByRole('status')).toHaveText('Hob laughs.')
+    await expect(littleHello.getByRole('status')).toHaveText('Hob raises an eyebrow.')
     await page.clock.runFor(2000)
     await expect(littleHob).toHaveAttribute('data-expression', 'smile')
     await littleHello.focus()
