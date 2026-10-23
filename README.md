@@ -28,6 +28,6 @@
 </p>
 <p></p>
 <p align="center">
-  <a href="docs/README.md">Help</a> · <a href="CONTRIBUTING.md">Contributing</a> · <a href="LICENSE">MIT license</a><br><p></p>
+  <a href="docs/README.md">Help</a> · <a href="CONTRIBUTING.md">Contributing</a> · <a href="LICENSE">MIT license</a><br><br>
   Made by <a href="https://frigade.com?utm_source=github&utm_medium=readme&utm_campaign=hob">Frigade</a>.
 </p>
