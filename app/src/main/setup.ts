@@ -1,6 +1,7 @@
 import { pick, type Catalog, type Choice, type Hardware, type PickResult } from '@hob/picker'
 import { rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { cpuTensorsFirst } from './gguf/reorder'
 import { ChecksumError, DiskSpaceError, ensureModelFile, fileNameFor, isVerified, partialDownloadGB, type DownloadDeps, type Progress } from './downloader'
 import { InsufficientMemoryError, type Engine } from './engine'
 import { loadSettings, updateSettings } from './settings'
@@ -272,7 +273,10 @@ export class SetupController {
     const signal = this.stopping?.signal
     for (let attempt = 0; ; attempt++) {
       try {
-        return await ensureModelFile({ url: c.build.url, sha256: this.sha(c), sizeGB: c.build.sizeGB, dir: this.deps.modelsDir, onProgress, signal }, this.deps.download)
+        const path = await ensureModelFile({ url: c.build.url, sha256: this.sha(c), sizeGB: c.build.sizeGB, dir: this.deps.modelsDir, onProgress, signal }, this.deps.download)
+        // Macs: keep what only the processor reads out of the graphics chip's memory (once per file)
+        if (process.platform === 'darwin') await cpuTensorsFirst(path).catch((err) => console.warn('the model file was not reordered', err))
+        return path
       } catch (err) {
         if (signal?.aborted || err instanceof DiskSpaceError || err instanceof ChecksumError || attempt >= delays.length) throw err
         await new Promise((r) => setTimeout(r, delays[attempt]))
