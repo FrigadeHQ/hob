@@ -1,23 +1,11 @@
 /**
- * Hob's face, in pixels on a 60×60 grid, drawn over the body artwork (assets/hob-body.png).
+ * Hob's face, in pixels on a 60×60 grid, drawn over the Iris SVG (assets/hob-body.svg).
  * Shared by the app (animated) and the icon script.
  */
 export type Expression = 'smile' | 'skeptical' | 'blink' | 'neutral' | 'neutral-blink' | 'content' | 'wink' | 'laugh'
 export type Rect = { x: number; y: number; w: number; h: number; fill: string }
 
-const INK = '#1C1B22'
-
-/** Hob's colour. The body art is grey; this is what its main tone becomes. */
-export const BODY_COLOR = '#A9A5D9'
-/** the art's main grey, measured from the PNG */
-const ART_GREY = [189, 186, 182]
-
-/** an feColorMatrix that colours the grey art: each channel scaled, so the rim and shading keep their depth */
-export function tintMatrix(hex = BODY_COLOR): string {
-  const rgb = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
-  const [r, g, b] = rgb.map((c, i) => +(c / ART_GREY[i]).toFixed(3))
-  return `${r} 0 0 0 0 0 ${g} 0 0 0 0 0 ${b} 0 0 0 0 0 1 0`
-}
+const INK = '#292929'
 
 /** the face, shifted (dx, dy) on the fine grid to look somewhere; whole units keep it pixel-sharp */
 export function faceRects(e: Expression, dx = 0, dy = 0): Rect[] {

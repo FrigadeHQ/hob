@@ -4,6 +4,7 @@ set -e
 cd "$(dirname "$0")/.."
 node scripts/make-brand.mjs
 npx electron build/render.cjs build/icon.svg build/icon.png
+sips -z 64 64 build/icon.png --out ../site/public/favicon.png >/dev/null
 npx electron build/render.cjs ../docs/assets/hob-logo.svg ../docs/assets/hob-logo.png
 # the disk image window ("Drag Hob into Applications")
 npx electron build/render-dmg.cjs 1
