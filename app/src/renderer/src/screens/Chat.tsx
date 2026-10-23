@@ -25,6 +25,7 @@ import { pickStarters } from '../starters'
 import { rehypeFadeWords } from '../fadeWords'
 import { ConnectApps, connected } from '../components/ConnectApps'
 import { skillOffer } from '../../../shared/skillOffer'
+import { FAILED, failedReply } from '../../../shared/replies'
 
 /** "/plan-trip Rome" shows the command as a label */
 function UserText({ text, skills }: { text: string; skills: SkillRef[] }) {
@@ -187,6 +188,8 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   }, [])
   const scroller = useRef<HTMLDivElement>(null)
   const dictation = useDictation((text) => { setInput((cur) => (cur.trim() ? `${cur.trimEnd()} ${text}` : text)); inputRef.current?.focus() })
+  // a dictation error is old news once the person writes something
+  useEffect(() => { if (input) dictation.dismiss() }, [input])
   /** follow new text only while the user is at the bottom; scrolling up stops it */
   const pinned = useRef(true)
   const [showJump, setShowJump] = useState(false)
@@ -221,7 +224,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
   useEffect(() => hob.chat.onDone((rid, reply) => {
     if (rid !== currentId.current) return
     currentId.current = null
-    setMessages((ms) => [...ms.slice(0, -1), reply ? { ...reply, uiKey: `a-${rid}` } : { ...placeholder(rid), content: 'Something went wrong. Try again.' }])
+    setMessages((ms) => [...ms.slice(0, -1), reply ? { ...reply, uiKey: `a-${rid}` } : { ...placeholder(rid), content: FAILED }])
     setRequestId(null); setApproval(null); clearThinking(); inputRef.current?.focus()
   }), [])
 
@@ -387,7 +390,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       if (currentId.current === rid) setMessages((ms) => [...ms.slice(0, -1), { ...reply, uiKey: `a-${rid}` }])
     } catch (err) {
       console.error(err)
-      if (currentId.current === rid) setMessages((ms) => [...ms.slice(0, -1), { ...placeholder(rid), content: 'Something went wrong. Try again.' }])
+      if (currentId.current === rid) setMessages((ms) => [...ms.slice(0, -1), { ...placeholder(rid), content: FAILED }])
     } finally {
       if (currentId.current === rid) { currentId.current = null; setRequestId(null); setApproval(null); clearThinking(); inputRef.current?.focus() }
       if (id) { if (alive.current) onChatChanged(id); else onRefresh() }
@@ -530,7 +533,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                 {!live && (
                   <div className="mt-1.5 -ml-1.5 flex items-center gap-1">
                     {m.content && <CopyButton text={m.content.replace(/\n\n\*Stopped\.\*$/, '')} />}
-                    {i === messages.length - 1 && !requestId && messages[i - 1]?.role === 'user' && (
+                    {i === messages.length - 1 && !requestId && messages[i - 1]?.role === 'user' && failedReply(m.content) && (
                       <button data-testid="retry" title="Write this reply again" onClick={() => void again(i - 1, messages[i - 1].content, messages[i - 1].attachments)}
                         className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><RotateCcw size={14} />Retry</button>
                     )}

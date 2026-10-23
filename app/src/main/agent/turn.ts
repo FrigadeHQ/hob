@@ -17,6 +17,7 @@ import { chatTitle, cleanTitle, expandCommand, systemPrompt, titleRequest, type 
 import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
 import { isInside } from '../workspace'
+import { FAILED, NO_ANSWER, REPEATING } from '../../shared/replies'
 
 const CHANGES = new Set(['write_file', 'move_file', 'move_files', 'delete_file'])
 /** what "renamed / moved / deleted" in a reply has to be backed by */
@@ -269,19 +270,19 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
       final = await ask([...messages, { role: 'assistant', content: final }, { role: 'user', content: check === 'claim' ? claimCheck(ran) : check === 'unfinished' ? unfinishedCheck(ran) : check === 'missing' ? missingCheck(missing) : proceedCheck() }])
       if (!a.signal.aborted && unbacked(final)) final = `${final}\n\n${NOTHING_CHANGED}`
     }
-    content = a.signal.aborted ? (final ? `${final}\n\n*Stopped.*` : '*Stopped.*') : final || "I couldn't come up with an answer. Try rephrasing."
+    content = a.signal.aborted ? (final ? `${final}\n\n*Stopped.*` : '*Stopped.*') : final || NO_ANSWER
   } catch (err) {
     console.error(err)
-    content = a.signal.aborted ? '*Stopped.*' : 'Something went wrong. Try again.'
+    content = a.signal.aborted ? '*Stopped.*' : FAILED
   }
   if (cut !== -1 && !a.signal.aborted) {
-    content = `${streamed.slice(0, cut).trim()}\n\n*I started repeating myself, so I stopped. Try asking again, a bit more specifically.*`
+    content = `${streamed.slice(0, cut).trim()}\n\n${REPEATING}`
   }
   for (const s of steps) if (s.status === 'running' || s.status === 'waiting') s.status = 'error'
   const undoable = journal.count > 0
   const workedMs = Date.now() - started
   const id = d.store.addMessage(a.chatId, { role: 'assistant', content, steps, taskId, undoable, workedMs })
-  const naming = firstTurn && !a.signal.aborted && cut === -1 && content !== 'Something went wrong. Try again.' ? nameChat(d, a.chatId, placeholder, a.text, content) : Promise.resolve()
+  const naming = firstTurn && !a.signal.aborted && cut === -1 && content !== FAILED ? nameChat(d, a.chatId, placeholder, a.text, content) : Promise.resolve()
   // the model is free again (naming done too): time to read ahead whatever the user looks at now
   void naming.then(() => d.onIdle?.()).catch(() => {})
   return { id, role: 'assistant', content, attachments: [], steps, taskId, undoable, undone: false, workedMs }

@@ -78,6 +78,7 @@ export function useDictation(onText: (text: string) => void) {
 
   return {
     listening: state === 'listening', busy: state === 'transcribing', hint, error, level, cancel,
+    dismiss: () => setError(null),
     toggle: () => void (state === 'idle' ? start() : state === 'listening' ? finish() : undefined),
   }
 }

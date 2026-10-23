@@ -8,6 +8,7 @@ import { InsufficientMemoryError, type ChatHandlers, type ChatRequest, type Engi
 export class FakeEngine implements Engine {
   loaded: string | undefined
   failLoadFor = new Set<string>()
+  flaked = false
   constructor(public gpu: GpuProbe = { gpuType: 'metal', vramTotalGB: 24, unifiedGB: 24, gpuNames: ['Apple M1 Max'] }) {}
   async probe() { return this.gpu }
   async load(modelPath: string) {
@@ -46,6 +47,8 @@ export class FakeEngine implements Engine {
     if (req.messages[0]?.content.startsWith(TITLE_PROMPT)) return `Title for: ${said.replace(/^User: /, '').split('\n\nAssistant:')[0].split(/\s+/).slice(0, 4).join(' ')}`
     if (said === '__empty__') return ''
     if (said === '__error__') throw new Error('boom')
+    // fails the first time only, so Retry can be tested
+    if (said === '__flaky__' && !this.flaked) { this.flaked = true; throw new Error('boom') }
     // streams Markdown in small pieces, so a bold word arrives as "**", "Impor", "tant", "**"
     if (said === '__markdown__') {
       const parts = ['This is ', '**', 'Impor', 'tant', '**', ' and ', '*', 'quite', '*', ' ', '`cod', 'e`', ' done.']

@@ -290,6 +290,21 @@ test('the mic menu lists microphones and keeps the dictation language', async ()
   await app.close()
 })
 
+test('a dictation error goes away once the person writes again', async () => {
+  const { app, page } = await launch()
+  await ready(page)
+  // speech can't be turned into text
+  await app.evaluate(({ ipcMain }) => { ipcMain.removeHandler('speech:prepare'); ipcMain.handle('speech:prepare', () => { throw new Error('no model') }) })
+  await page.getByTestId('dictate').click()
+  await page.getByTestId('dictate').click()
+  await expect(page.getByTestId('dictation-error')).toContainText("Couldn't turn that into text")
+  await page.getByTestId('composer-input').fill('hello')
+  await page.getByTestId('composer-send').click()
+  await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hello')
+  await expect(page.getByTestId('dictation-error')).toHaveCount(0)
+  await app.close()
+})
+
 test('Mac: "Connect my email and calendar" asks for access once, then Hob reads the calendar and drafts email', async () => {
   test.skip(process.platform !== 'darwin', 'Calendar & Mail is Mac only')
   const { app, page } = await launch()
@@ -335,7 +350,7 @@ test('Markdown streaming in never shows its ** or ` marks', async () => {
   await app.close()
 })
 
-test('a sent message can be edited, and the last reply tried again; the chat keeps only the new turn', async () => {
+test('a sent message can be edited, and a reply that went wrong tried again; the chat keeps only the new turn', async () => {
   const { app, page, userData } = await launch()
   await ready(page)
   await page.getByTestId('composer-input').fill('hello there')
@@ -363,19 +378,26 @@ test('a sent message can be edited, and the last reply tried again; the chat kee
   await expect(page.getByTestId('edit-input')).toHaveCount(0)
   await expect(page.getByTestId('message-user').first()).toContainText('hello again')
 
-  // retry: the last reply is written again, not added
+  // a good reply offers no Retry
+  await expect(page.getByTestId('retry')).toHaveCount(0)
+
+  // retry: a failed reply is written again, not added
+  await page.getByTestId('message-user').first().hover()
+  await page.getByTestId('edit-message').click()
+  await page.getByTestId('edit-input').fill('__flaky__')
+  await page.getByTestId('edit-send').click()
+  await expect(page.getByTestId('message-assistant').last()).toContainText('Something went wrong')
   const saved = () => page.evaluate(async () => {
     const [c] = await window.hob.chats.list()
     const r = await window.hob.chats.get(c.id)
-    return { live: !!r?.live, roles: r?.messages.map((m) => m.role).join(',') }
+    return { live: !!r?.live, roles: r?.messages.map((m) => m.role).join(','), last: r?.messages.at(-1)?.content }
   })
-  const before = (await page.evaluate(async () => (await window.hob.chats.get((await window.hob.chats.list())[0].id))?.messages.at(-1)?.id))
   await page.getByTestId('retry').click()
-  // saved again: still one question and one reply, the reply a new one
+  // saved again: still one question and one reply, now a real one
   await expect.poll(async () => { const s = await saved(); return !s.live && s.roles }, { timeout: 20_000 }).toBe('user,assistant')
-  await expect.poll(() => page.evaluate(async () => (await window.hob.chats.get((await window.hob.chats.list())[0].id))?.messages.at(-1)?.id)).not.toBe(before)
+  await expect.poll(async () => (await saved()).last).toContain('You said: __flaky__')
   await expect(page.getByTestId('message-assistant')).toHaveCount(1)
-  await expect(page.getByTestId('message-assistant').last()).toContainText('You said: hello again')
+  await expect(page.getByTestId('retry')).toHaveCount(0)
   await app.close()
 
   // saved that way
@@ -384,6 +406,6 @@ test('a sent message can be edited, and the last reply tried again; the chat kee
   await again.page.getByTestId('chat-item').first().click()
   await expect(again.page.getByTestId('message-user')).toHaveCount(1)
   await expect(again.page.getByTestId('message-assistant')).toHaveCount(1)
-  await expect(again.page.getByTestId('message-user').first()).toContainText('hello again')
+  await expect(again.page.getByTestId('message-user').first()).toContainText('__flaky__')
   await again.app.close()
 })
