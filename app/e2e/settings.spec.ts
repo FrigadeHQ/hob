@@ -115,3 +115,21 @@ test('Hob starts in the computer’s language, and the language can be changed i
   await expect(page.getByTestId('settings-nav-general')).toHaveText(de['General'])
   await app.close()
 })
+
+test('in another language, Hob shows that it’s thinking but not its English thoughts', async () => {
+  const de = JSON.parse(readFileSync(join(import.meta.dirname, '../src/shared/locales/de.json'), 'utf8'))
+  const app = await electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_SYSTEM_LANGUAGES: 'de-DE', HOB_USER_DATA: mkdtempSync(join(tmpdir(), 'hob-e2e-')) } })
+  const page = await app.firstWindow()
+  await page.getByTestId('setup-download').click()
+  await page.getByTestId('composer-input').fill('__think__')
+  await page.getByTestId('composer-send').click()
+  await expect(page.getByTestId('thinking')).toContainText(de['Thinking'])
+  // watch until the answer: in English the stand-in model's thoughts show after about 3 s
+  let shown = false
+  while (!(await page.getByTestId('message-assistant').last().textContent())?.includes('Here is my answer')) {
+    shown ||= (await page.getByTestId('thinking-preview').count()) > 0
+    await page.waitForTimeout(100)
+  }
+  expect(shown).toBe(false)
+  await app.close()
+})

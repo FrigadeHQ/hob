@@ -3,7 +3,7 @@ import { AlertCircle, Ban, Check, ChevronRight, Hand, LoaderCircle, RefreshCw } 
 import type { Step } from '../../../shared/agent'
 import { thinkingPreview } from '../../../shared/thinking'
 import { stepRows, type StepRow as Row } from '../../../shared/steps'
-import { t } from '../../../shared/i18n'
+import { language, t } from '../../../shared/i18n'
 
 const STATUS_ICON: Record<Row['status'], React.ReactNode> = {
   running: <LoaderCircle size={14} className="animate-spin" />,
@@ -58,7 +58,8 @@ function ThinkingLine({ source }: { source: React.MutableRefObject<string> }) {
     const timer = setInterval(tick, THINKING_REFRESH_MS)
     return () => clearInterval(timer)
   }, [source])
-  if (!line) return null
+  // models think in English: in another language, "Thinking" and the steps say enough
+  if (!line || language() !== 'en') return null
   return <p key={line} data-testid="thinking-preview" className="fade-in mt-1 ms-6 line-clamp-2 text-ui text-muted">{line}</p>
 }
 
