@@ -60,3 +60,46 @@ jobs:
           name: smoke-report-${{ runner.os }}
           path: app/test-results
           if-no-files-found: ignore
+
+  # GitHub's Windows runners are admins, and admins can do what most people's accounts can't (make symlinks, say).
+  # The real tools again, as a standard user like on a user's PC.
+  windows-standard-user:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Real tools as a standard user
+        shell: pwsh
+        run: |
+          $pw = "Hob-$([guid]::NewGuid().ToString('N').Substring(0, 16))-aA1!"
+          net user hobuser $pw /add | Out-Null
+          $cred = New-Object PSCredential('hobuser', (ConvertTo-SecureString $pw -AsPlainText -Force))
+          $out = 'C:\hob-smoke'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          # the account reads the checkout (node_modules too) and writes its results here
+          icacls $env:GITHUB_WORKSPACE /grant 'hobuser:(OI)(CI)M' /T /C /Q | Out-Null
+          icacls $out /grant 'hobuser:(OI)(CI)F' /T /C /Q | Out-Null
+          $node = (Get-Command node).Source
+          icacls (Split-Path (Split-Path $node)) /grant 'hobuser:(OI)(CI)RX' /T /C /Q | Out-Null
+          $script = @"
+          cd /d "$env:GITHUB_WORKSPACE\app"
+          mklink "$out\link-check" "%COMSPEC%" > "$out\mklink.txt" 2>&1
+          set HOB_SMOKE=1
+          "$node" node_modules\vitest\vitest.mjs run test/smoke.test.ts > "$out\smoke.txt" 2>&1
+          echo %ERRORLEVEL% > "$out\code.txt"
+          "@
+          Set-Content -Path "$out\run.cmd" -Value $script
+          $p = Start-Process cmd.exe -ArgumentList '/c', "$out\run.cmd" -Credential $cred -LoadUserProfile -WorkingDirectory $out -Wait -PassThru
+          Write-Host "--- can this account make symlinks? (it shouldn't, like most people's)"
+          Get-Content "$out\mklink.txt"
+          Write-Host '--- smoke test'
+          Get-Content "$out\smoke.txt"
+          $code = (Get-Content "$out\code.txt" -ErrorAction SilentlyContinue | Select-Object -First 1)
+          if ("$code".Trim() -ne '0') { throw "the smoke test failed as a standard user (exit $code)" }
+
