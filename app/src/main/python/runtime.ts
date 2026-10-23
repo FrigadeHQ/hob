@@ -71,9 +71,15 @@ export const realRuntimeDeps: RuntimeDeps = {
 
 const MARKER = 'ready.json'
 
+const SEARXNG_MARKER = 'searxng.json'
+
+/** Left out of the SearXNG source: its deploy scripts and templates hold a symlink, which Windows can't create without admin rights (tar fails) */
+export const SEARXNG_SKIP = ['--exclude=*/utils']
+
 /** Python + data libraries, installed into app data on first need. */
 export class PythonRuntime {
   private installing: Promise<string> | undefined
+  private installingSearxng: Promise<void> | undefined
   constructor(private root: string, private deps: RuntimeDeps, private key = `${process.platform}-${process.arch}`) {}
 
   get python() { return pythonBin(this.root, this.key.split('-')[0]) }
@@ -101,7 +107,7 @@ export class PythonRuntime {
     try {
       const m = JSON.parse(readFileSync(join(this.root, MARKER), 'utf8'))
       // a different release or package list means an update: reinstall
-      return m.release === PY_RELEASE && JSON.stringify(m.packages) === JSON.stringify(PY_PACKAGES) && m.searxng === SEARXNG_SHA256 && existsSync(this.python)
+      return m.release === PY_RELEASE && JSON.stringify(m.packages) === JSON.stringify(PY_PACKAGES) && existsSync(this.python)
     } catch { return false }
   }
 
@@ -109,6 +115,30 @@ export class PythonRuntime {
   ensure(onProgress: (fraction: number) => void = () => {}): Promise<string> {
     if (this.isReady()) return Promise.resolve(this.python)
     return (this.installing ??= this.install(onProgress).finally(() => { this.installing = undefined }))
+  }
+
+  /**
+   * Python plus the SearXNG source, for web search. Kept apart from ensure(), so a search install that
+   * fails doesn't take Python and the image tools down with it.
+   */
+  async ensureSearxng(): Promise<void> {
+    await this.ensure()
+    if (this.searxngReady()) return
+    return (this.installingSearxng ??= this.installSearxng().finally(() => { this.installingSearxng = undefined }))
+  }
+
+  private searxngReady(): boolean {
+    try { return JSON.parse(readFileSync(join(this.root, SEARXNG_MARKER), 'utf8')).sha256 === SEARXNG_SHA256 } catch { return false }
+  }
+
+  private async installSearxng() {
+    rmSync(join(this.root, SEARXNG_MARKER), { force: true })
+    const searx = await this.deps.fetchFile(SEARXNG_URL, SEARXNG_SHA256, 0.01, this.root, () => {}, 'searxng.tar.gz')
+    rmSync(join(this.root, 'searxng'), { recursive: true, force: true })
+    mkdirSync(join(this.root, 'searxng'))
+    await this.deps.exec(tarCmd(this.key), ['-xzf', searx, '-C', join(this.root, 'searxng'), '--strip-components=1', ...SEARXNG_SKIP])
+    rmSync(searx, { force: true })
+    writeFileSync(join(this.root, SEARXNG_MARKER), JSON.stringify({ sha256: SEARXNG_SHA256 }))
   }
 
   private async install(onProgress: (fraction: number) => void): Promise<string> {
@@ -119,18 +149,13 @@ export class PythonRuntime {
     rmSync(join(this.root, MARKER), { force: true })
     const tgz = await this.deps.fetchFile(pyUrl(this.key), build.sha256, build.sizeGB, this.root, (f) => onProgress(f * 0.3))
     await this.deps.exec(tarCmd(this.key), ['-xzf', tgz, '-C', this.root])
-    const searx = await this.deps.fetchFile(SEARXNG_URL, SEARXNG_SHA256, 0.01, this.root, () => {}, 'searxng.tar.gz')
-    rmSync(join(this.root, 'searxng'), { recursive: true, force: true })
-    mkdirSync(join(this.root, 'searxng'))
-    await this.deps.exec(tarCmd(this.key), ['-xzf', searx, '-C', join(this.root, 'searxng'), '--strip-components=1'])
-    rmSync(searx, { force: true })
     onProgress(0.35)
     await this.deps.exec(this.python, ['-m', 'pip', 'install', '--disable-pip-version-check', '--no-input', '--only-binary=:all:', ...PY_PACKAGES])
     onProgress(0.9)
     // precompiled bytecode: the sandbox can't write __pycache__, and first runs drop from ~13 s to <1 s
     await this.deps.exec(this.python, ['-m', 'compileall', '-q', join(this.root, 'python')]).catch(() => {})
     rmSync(tgz, { force: true })
-    writeFileSync(join(this.root, MARKER), JSON.stringify({ release: PY_RELEASE, packages: PY_PACKAGES, searxng: SEARXNG_SHA256 }))
+    writeFileSync(join(this.root, MARKER), JSON.stringify({ release: PY_RELEASE, packages: PY_PACKAGES }))
     onProgress(1)
     return this.python
   }

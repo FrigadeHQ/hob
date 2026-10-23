@@ -190,12 +190,15 @@ test('Windows and Linux: no title bar or menu bar; the window buttons sit over t
   expect(await page.getByTestId('toggle-sidebar').evaluate((el) => el.getBoundingClientRect().top)).toBeLessThan(20)
   const overlay = await page.evaluate(() => (navigator as Navigator & { windowControlsOverlay?: { visible: boolean; getTitlebarAreaRect(): DOMRect } }).windowControlsOverlay)
   expect(overlay).toBeTruthy()
-  const area = await page.evaluate(() => { const r = (navigator as Navigator & { windowControlsOverlay: { getTitlebarAreaRect(): DOMRect } }).windowControlsOverlay.getTitlebarAreaRect(); return { right: r.x + r.width, visible: (navigator as Navigator & { windowControlsOverlay: { visible: boolean } }).windowControlsOverlay.visible } })
+  const area = await page.evaluate(() => { const r = (navigator as Navigator & { windowControlsOverlay: { getTitlebarAreaRect(): DOMRect } }).windowControlsOverlay.getTitlebarAreaRect(); return { right: r.x + r.width, bottom: r.y + r.height, visible: (navigator as Navigator & { windowControlsOverlay: { visible: boolean } }).windowControlsOverlay.visible } })
   expect(area.visible).toBe(true)
-  // Settings' close button stays left of the window buttons
+  // Settings opens below the window buttons, with its close button in its own top-right corner
   await page.getByTestId('open-settings').click()
+  const card = (await page.getByTestId('settings').boundingBox())!
   const close = (await page.getByTestId('settings-close').boundingBox())!
-  expect(close.x + close.width).toBeLessThanOrEqual(area.right)
+  expect(card.y).toBeGreaterThanOrEqual(area.bottom)
+  expect(card.x + card.width - (close.x + close.width)).toBeLessThan(24)
+  expect(close.y - card.y).toBeLessThan(24)
   await app.close()
 })
 

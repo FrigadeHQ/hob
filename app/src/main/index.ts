@@ -166,7 +166,7 @@ app.whenReady().then(() => {
   const searx = python ? new SearxngServer({ python: python.python, runtimeRoot: python.dir, settingsDir: paths.runTmp }) : undefined
   const search = FAKE && !REAL_TOOLS
     ? async (q: string): Promise<SearchResult[]> => [{ title: `Lisbon: results for ${q}`, url: 'https://example.com/lisbon', snippet: 'Sunny, 24°C.' }]
-    : async (q: string, signal: AbortSignal) => { await python!.ensure(); return searx!.search(q, signal) }
+    : async (q: string, signal: AbortSignal) => { await python!.ensureSearxng(); return searx!.search(q, signal) }
   app.on('before-quit', () => searx?.stop())
   // microphone for dictation; nothing else (camera, screen) is ever granted
   const audioOnly = (types?: string[]) => !!types?.length && types.every((t) => t === 'audio')
@@ -236,7 +236,9 @@ app.whenReady().then(() => {
     codeToolsStarted = true
     plugins.warmUp()
     if (!python) return
-    void python.ensure().catch((err) => console.warn('code tools install failed; will retry on first use', err))
+    void python.ensure()
+      .then(() => python.ensureSearxng().catch((err) => console.warn('web search install failed; will retry on first search', err)))
+      .catch((err) => console.warn('code tools install failed; will retry on first use', err))
   })
   // dev runs use the plain Electron bundle; show Hob's icon in the Dock anyway
   if (process.platform === 'darwin' && !app.isPackaged && !BACKGROUND) app.dock?.setIcon(join(__dirname, '../../build/icon.png'))
