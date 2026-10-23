@@ -273,7 +273,7 @@ body:has(#root [data-scrim]) > [data-scrim], body > [data-scrim] ~ [data-scrim] 
 /* One Hob at a time: the greeting shows Hob until a conversation starts. */
 .status-presence { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; }
 .status-presence:has(.hob-mascot) > .status-dot { display: none; }
-#root:has(.chat-greeting) .status-presence .hob-mascot { display: none; }
+#root:has(.chat-greeting) .status-presence .hob-interaction { display: none; }
 #root:has(.chat-greeting) .status-presence > .status-dot { display: block; }
 .hob-interaction { display: block; flex: none; padding: 0; border: 0; border-radius: 14px; background: transparent; color: inherit; line-height: 0; cursor: pointer; -webkit-app-region: no-drag; }
 .hob-interaction > svg { display: block; }
