@@ -10,6 +10,7 @@ export const models: CatalogModel[] = [
   { ...m('qwen3-1.7b', 2, 3, 1.83, 1.7, 1.7), lastResort: true },
   m('gemma-4-e2b', 5, 5, 3.35, 5.1, 2.3),
   m('gemma-4-e4b', 7, 7, 5.15, 8, 4, true),
+  { ...m('gemma-4-e4b-compact', 6, 6, 3.86, 8, 4), squeezedOf: 'gemma-4-e4b' },
   m('gpt-oss-20b', 6, 7, 12.11, 21, 3.6),
   m('gemma-4-26b-a4b', 8, 8, 14.44, 26, 4),
   { ...m('gemma-4-26b-a4b-compact', 5, 6, 9.66, 26, 4), squeezedOf: 'gemma-4-26b-a4b' },
@@ -23,6 +24,8 @@ const hw = (o: Partial<Hardware> & Pick<Hardware, 'gpu' | 'totalRamGB'>): Hardwa
 export const machines = {
   winLaptop8: hw({ os: 'win32', arch: 'x64', cpuModel: 'Intel Core i5-1135G7', totalRamGB: 8, gpu: { kind: 'none', name: '', vramGB: 0 } }),
   linux3060: hw({ os: 'linux', arch: 'x64', cpuModel: 'AMD Ryzen 5 5600X', totalRamGB: 16, gpu: { kind: 'discrete', name: 'NVIDIA GeForce RTX 3060', vramGB: 12 } }),
+  // an 8 GB Mac reports 8.6 GB, a 16 GB Mac about 17.2 GB (bytes / 1e9)
+  mac8: hw({ cpuModel: 'Apple M1', totalRamGB: 8.6, gpu: { kind: 'unified', name: 'Apple M1', vramGB: 6 } }),
   // a 16 GB Mac reports about 17.2 GB (bytes / 1e9)
   m3air16: hw({ cpuModel: 'Apple M3', totalRamGB: 17.2, gpu: { kind: 'unified', name: 'Apple M3', vramGB: 12 } }),
   m1_16: hw({ cpuModel: 'Apple M1', totalRamGB: 16, gpu: { kind: 'unified', name: 'Apple M1', vramGB: 12 } }),

@@ -72,6 +72,30 @@
       ]
     },
     {
+      "id": "gemma-4-e4b-compact",
+      "name": "Gemma 4 E4B Compact",
+      "family": "gemma4",
+      "license": "Apache-2.0",
+      "agentScore": 6,
+      "chatScore": 6,
+      "contextMax": 131072,
+      "minAppVersion": "0.1.0",
+      "addedAt": "2026-10-22",
+      "starter": false,
+      "squeezedOf": "gemma-4-e4b",
+      "description": "E4B made smaller to fit 8 GB. For writing, summaries, and simple file tasks.",
+      "builds": [
+        {
+          "quant": "Q3_K_S",
+          "url": "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/bfc15c382204943c3a8fff0c750b94ae2364d7a3/gemma-4-E4B-it-Q3_K_S.gguf",
+          "sha256": "fe6e02cdcd5f3287b4ac146ea68ea2c73363bf935159aa254a9d280a4ffe31aa",
+          "sizeGB": 3.86,
+          "paramsB": 8,
+          "activeParamsB": 4
+        }
+      ]
+    },
+    {
       "id": "gpt-oss-20b",
       "name": "gpt-oss 20B",
       "family": "gpt-oss",

@@ -8,11 +8,11 @@ describe('pick', () => {
   it('lists models that cannot run, with why (M1 Max 32GB: 120B needs more memory)', () => {
     const r = pick(machines.m1max32, models)
     expect(r.unavailable.find((u) => u.model.id === 'gpt-oss-120b')).toMatchObject({ reason: 'memory' })
-    // every catalog model is selectable, unavailable, or not offered here (a last resort or squeezed build
+    // every catalog model is selectable, unavailable, or not offered here (a last resort or squeezed builds
     // where something better runs), never two of those
     const selectable = new Set([...r.all, ...(r.smarter ? [r.smarter] : [])].map((c) => c.model.id))
     for (const u of r.unavailable) expect(selectable.has(u.model.id)).toBe(false)
-    expect(selectable.size + r.unavailable.length).toBe(models.length - 2)
+    expect(selectable.size + r.unavailable.length).toBe(models.length - 3)
   })
   it('a model that fits but would be painfully slow is unavailable for speed', () => {
     const dense = { ...models[4], id: 'dense-32b', builds: [{ ...models[4].builds[0], sizeGB: 12, paramsB: 32, activeParamsB: 32 }] }
@@ -74,8 +74,11 @@ describe('pick', () => {
     expect(id(r.recommended)).toBe('gemma-4-e4b')
     expect(r.liteMode).toBe(false)
   })
-  it('8GB Mac → Gemma 4 E2B, not the tiny last resort', () => {
-    expect(id(pick({ ...machines.m1_16, totalRamGB: 8 }, models).recommended)).toBe('gemma-4-e2b')
+  it('8GB Mac → Gemma 4 E4B Compact, not E2B', () => {
+    const r = pick(machines.mac8, models)
+    expect(id(r.recommended)).toBe('gemma-4-e4b-compact')
+    expect(r.liteMode).toBe(false)
+    expect(r.all.map((c) => c.model.id)).toContain('gemma-4-e2b')
   })
   it('nothing fits → recommended null, no crash', () => {
     const r = pick(machines.tiny4, models)
@@ -111,6 +114,11 @@ describe('models only for some computers', () => {
     expect(ids(pick(machines.m3air16, models))).not.toContain('qwen3-1.7b')
     expect(ids(pick(machines.m1max32, models))).not.toContain('qwen3-1.7b')
     expect(pick(machines.winLaptop8, models).recommended?.model.id).toBe('qwen3-1.7b')
+  })
+  it('E4B Compact is hidden wherever the full E4B runs well', () => {
+    for (const hw of [machines.m1_16, machines.m3air16, machines.m1max32]) {
+      expect(pick(hw, models).all.map((c) => c.model.id)).not.toContain('gemma-4-e4b-compact')
+    }
   })
   it('a 16 GB Mac can try the squeezed Gemma 26B; E4B stays the pick', () => {
     const r = pick(machines.m3air16, models)
