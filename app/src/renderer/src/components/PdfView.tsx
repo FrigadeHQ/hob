@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import * as pdfjs from 'pdfjs-dist'
 import worker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { hob } from '../api'
+import { t } from '../../../shared/i18n'
 
 pdfjs.GlobalWorkerOptions.workerSrc = worker
 /** past this, "Open" shows the rest: a preview, not a full reader */
@@ -35,7 +36,7 @@ export function PdfView({ path }: { path: string }) {
           if (!cancelled) box.current?.appendChild(canvas)
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error && /password/i.test(err.message) ? 'This PDF is password-protected. Open it to read it.' : "Couldn't show this PDF. Open it to read it.")
+        if (!cancelled) setError(err instanceof Error && /password/i.test(err.message) ? t('This PDF is password-protected. Open it to read it.') : t("Couldn't show this PDF. Open it to read it."))
       }
     })()
     return () => { cancelled = true; void doc?.cleanup(); if (box.current) box.current.innerHTML = '' }
@@ -44,7 +45,7 @@ export function PdfView({ path }: { path: string }) {
     <div className="h-full w-full overflow-y-auto">
       {error && <p className="mt-10 text-center text-ui text-ink-soft">{error}</p>}
       <div ref={box} data-testid="preview-pdf" className="py-2" />
-      {pages && pages.total > pages.shown && <p className="pb-6 text-center text-meta text-muted">Showing {pages.shown} of {pages.total} pages. Open it to see the rest.</p>}
+      {pages && pages.total > pages.shown && <p className="pb-6 text-center text-meta text-muted">{t('Showing {shown} of {total} pages. Open it to see the rest.', { shown: pages.shown, total: pages.total })}</p>}
     </div>
   )
 }

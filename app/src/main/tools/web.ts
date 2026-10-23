@@ -1,6 +1,7 @@
 import { Readability } from '@mozilla/readability'
 import { parseHTML } from 'linkedom'
 import { PREVIEW_CHARS, type Tool, type TurnCtx } from '../agent/tool'
+import { t } from '../../shared/i18n'
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", apos: "'", nbsp: ' ' }
 const decode = (s: string) => s.replace(/&(#?\w+);/g, (m, e: string) => ENTITIES[e] ?? (e.startsWith('#') ? String.fromCodePoint(Number(e.slice(1).replace(/^x/, '0x'))) : m))
@@ -74,7 +75,7 @@ export function onTopic(results: Result[], query: string): Result[] {
 
 export const webSearch: Tool<{ query: string }> = {
   spec: { name: 'web_search', description: 'Search the web for current information. Returns titles, links and snippets; use fetch_url to read a page.', params: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
-  title: (a) => `Searched the web for “${a.query}”`,
+  title: (a) => t('Searched the web for “{query}”', { query: a.query }),
   action: () => ({ kind: 'web' }),
   async run(a, ctx) {
     ctx.untrusted = true
@@ -92,7 +93,7 @@ export const webSearch: Tool<{ query: string }> = {
 
 export const fetchUrl: Tool<{ url: string }> = {
   spec: { name: 'fetch_url', description: 'Read a web page as text.', params: { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] } },
-  title: (a) => { try { return `Read ${new URL(a.url).hostname.replace(/^www\./, '')}` } catch { return 'Read a web page' } },
+  title: (a) => { try { return t('Read {name}', { name: new URL(a.url).hostname.replace(/^www\./, '') }) } catch { return t('Read a web page') } },
   action: () => ({ kind: 'web' }),
   async run(a, ctx) {
     if (!/^https?:\/\//.test(a.url)) return { text: 'Only http and https links can be opened.', failed: true }

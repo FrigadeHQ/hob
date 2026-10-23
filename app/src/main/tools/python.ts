@@ -3,6 +3,7 @@ import { basename, join } from 'node:path'
 import { runPython } from '../python/run'
 import { isInside } from '../workspace'
 import type { Tool, TurnCtx } from '../agent/tool'
+import { language, t } from '../../shared/i18n'
 
 const PREVIEW_PY = `
 import sys, os
@@ -55,8 +56,8 @@ elif ext == '.pptx':
 /** Make sure Python is installed, showing progress as a step title. */
 export async function ensurePython(ctx: TurnCtx): Promise<string> {
   if (!ctx.python) throw new Error('Code tools are not available.')
-  if (!ctx.python.isReady()) ctx.progress?.('Setting up code tools…')
-  return ctx.python.ensure((f) => ctx.progress?.(`Setting up code tools… ${Math.round(f * 100)}%`))
+  if (!ctx.python.isReady()) ctx.progress?.(t('Setting up code tools…'))
+  return ctx.python.ensure((f) => ctx.progress?.(t('Setting up code tools… {percent}%', { percent: Math.round(f * 100) })))
 }
 
 /** file → mtime, a few levels deep, to spot what code created or changed */
@@ -131,7 +132,7 @@ export const runPythonTool: Tool<PyArgs> = {
       internet: { type: 'boolean', description: 'true if the code needs the internet (APIs, downloads)' },
     } },
   },
-  title: (a) => (typeof a.script === 'string' && a.script.trim() ? `Ran ${basename(a.script.trim())}` : 'Ran code'),
+  title: (a) => (typeof a.script === 'string' && a.script.trim() ? t('Ran {name}', { name: basename(a.script.trim()) }) : t('Ran code')),
   // code online is web work: only while Web access is on, no extra OK (like any web step); what it brings back is untrusted
   refuse: (a, ctx) => (a.internet === true && !ctx.webAccess ? 'Code can only use the internet while Web access is on. Tell the user they can turn it on in Settings, or do it without the internet.' : undefined),
   action: (a, ctx) => (scriptOf(a, ctx)?.network ? { kind: 'web' } : { kind: 'run' }),
@@ -147,12 +148,12 @@ export const runPythonTool: Tool<PyArgs> = {
       const missing = need.filter((p) => !have[p] || (p.includes('==') && p.split('==')[1] !== have[p]))
       if (missing.length && !ctx.webAccess) return { text: `This skill needs ${andList(missing)} installed once, which needs the internet, and Web access is off. Tell the user they can turn it on in Settings.`, failed: true }
       if (missing.length) {
-        ctx.progress?.(`Installing ${andList(missing)}…`)
+        ctx.progress?.(t('Installing {packages}…', { packages: shownList(missing) }))
         const r = await ctx.python!.installPackages(missing)
         if (!r.ok) return { text: `Couldn't install what this skill needs: ${r.error}`, failed: true }
       }
     }
-    ctx.progress?.(skill ? `Running ${basename(skill.path)}…` : 'Running code…')
+    ctx.progress?.(skill ? t('Running {name}…', { name: basename(skill.path) }) : t('Running code…'))
     const before = snapshot(ctx.chatDir)
     const args = (Array.isArray(a.args) ? a.args : []).map(String)
     const code = skill ? LAUNCH(skill.path, args) : a.code!
@@ -167,11 +168,13 @@ export const runPythonTool: Tool<PyArgs> = {
     const status = r.stopped ? 'Stopped by the user.' : r.timedOut ? 'Took longer than 2 minutes and was stopped.' : `Exit code ${r.exitCode}`
     const changed = files.length ? `\nFiles created or changed: ${files.map((f) => f.slice(ctx.chatDir.length + 1)).join(', ')}` : ''
     const shown = skill ? `${skill.path} ${args.join(' ')}`.trim() : a.code!
-    return { text: `${status}\n${r.output}${changed}${pythonHint(r.output, skill ? '' : a.code)}`, detail: `${shown}\n\n--- output ---\n${r.output || '(no output)'}`, files, failed: r.exitCode !== 0 }
+    return { text: `${status}\n${r.output}${changed}${pythonHint(r.output, skill ? '' : a.code)}`, detail: `${shown}\n\n--- output ---\n${r.output || t('(no output)')}`, files, failed: r.exitCode !== 0 }
   },
 }
 
 const andList = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`)
+/** the same list in the person's language */
+const shownList = (xs: string[]) => (language() === 'en' ? andList(xs) : new Intl.ListFormat(language(), { type: 'conjunction' }).format(xs))
 
 /** Packages from PyPI for run_python, like a coworker installing a library. Prebuilt only; the code using them stays sandboxed. */
 export const installPackagesTool: Tool<{ packages: string[] }> = {
@@ -180,15 +183,15 @@ export const installPackagesTool: Tool<{ packages: string[] }> = {
     description: 'Install Python packages from PyPI for run_python, e.g. ["yfinance"] or ["yfinance==0.2.54"]. Only when the code needs a package that isn\'t installed yet.',
     params: { type: 'object', properties: { packages: { type: 'array', items: { type: 'string' }, description: 'PyPI names, optionally with ==version' } }, required: ['packages'] },
   },
-  title: (a) => `Installed ${andList((Array.isArray(a.packages) ? a.packages : []).map(String))}`,
+  title: (a) => t('Installed {packages}', { packages: shownList((Array.isArray(a.packages) ? a.packages : []).map(String)) }),
   refuse: (_a, ctx) => (ctx.webAccess ? undefined : 'Installing packages needs the internet, and Web access is off. Tell the user they can turn it on in Settings, or do it with the packages already installed.'),
   action: () => ({ kind: 'run' }),
   async run(a, ctx) {
     if (!ctx.python) throw new Error('Code tools are not available.')
     const specs = (Array.isArray(a.packages) ? a.packages : []).map((p) => String(p).trim()).filter(Boolean)
     if (!specs.length) return { text: 'Say which packages to install.', failed: true }
-    if (!ctx.python.isReady()) ctx.progress?.('Setting up code tools…')
-    ctx.progress?.(`Installing ${andList(specs)}…`)
+    if (!ctx.python.isReady()) ctx.progress?.(t('Setting up code tools…'))
+    ctx.progress?.(t('Installing {packages}…', { packages: shownList(specs) }))
     const r = await ctx.python.installPackages(specs)
     if (!r.ok) return { text: r.error, failed: true }
     const got = Object.entries(r.versions).map(([n, v]) => (v ? `${n.split(/[[=]/)[0]} ${v}` : n)).join(', ')

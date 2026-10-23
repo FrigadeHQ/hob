@@ -193,6 +193,11 @@ it("tells the model today's date (so web searches use the right year)", () => {
   expect(p).toContain('Today is Thursday, 15 October 2026')
 })
 
+it("answers in the app's language unless the user writes in another", () => {
+  expect(systemPrompt({ chatDir: '/c', files: [], grants: [], language: 'de' })).toContain("Hob's screens are in German. Reply in the language the user writes in; German when unsure.")
+  expect(systemPrompt({ chatDir: '/c', files: [], grants: [], language: 'en' })).not.toContain("Hob's screens are in")
+})
+
 it('a reply that starts repeating itself is stopped and trimmed', async () => {
   const w = world()
   const reply = await w.turn('__loop__')

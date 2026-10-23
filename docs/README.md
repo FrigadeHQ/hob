@@ -13,6 +13,7 @@ Hob strives to work with the same quality and functionality as Claude and ChatGP
 - **No setup.** Hob checks your hardware and downloads the best model it can run well. No account or model understanding required.
 - **Works on your files.** Projects, folders, spreadsheets, PDFs, photos, and much more.
 - **Safe by default.** Approval confirmations before anything in your folders changes, Undo for every task, and code runs in a sandbox.
+- **In your language.** 32 languages, matching your computer's (change it in Settings). Hob answers in whatever language you write in.
 - **Free and open source.** [MIT licensed](../LICENSE). No account, no subscription, no limits.
 
 *A hob is a household spirit from English folklore that quietly helps with the chores.*

@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Tool } from '../agent/tool'
 import type { CalEvent, CalMail, FoundMail, Mail, NewEvent } from '../accounts/types'
+import { language, t } from '../../shared/i18n'
 
 /**
  * Calendar and email tools. They work with whichever source is connected (accounts/types.ts): a Google or
@@ -69,6 +70,12 @@ const when = (iso: string, allDay: boolean) => {
   return allDay ? d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
     : d.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
+/** the same, in the person's language, for the approval card */
+const whenShown = (iso: string, allDay: boolean) => {
+  const d = new Date(iso)
+  return allDay ? d.toLocaleDateString(language(), { weekday: 'short', day: 'numeric', month: 'short' })
+    : d.toLocaleString(language(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
 const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d }
 
 export const calendarEvents: Tool<{ from?: string; to?: string; query?: string }> = {
@@ -81,7 +88,7 @@ export const calendarEvents: Tool<{ from?: string; to?: string; query?: string }
       query: { type: 'string', description: 'Only events whose title, place or notes have these words' },
     } },
   },
-  title: (a) => (a.query ? `Searched your calendar for “${a.query}”` : 'Looked at your calendar'),
+  title: (a) => (a.query ? t('Searched your calendar for “{query}”', { query: a.query }) : t('Looked at your calendar')),
   action: () => ({ kind: 'run' }),
   async run(a, ctx) {
     const from = a.from?.trim() || startOfToday().toISOString()
@@ -106,11 +113,11 @@ export const calendarAddEvent: Tool<NewEvent> = {
       calendar: { type: 'string' }, location: { type: 'string' }, notes: { type: 'string' }, allDay: { type: 'boolean' },
     }, required: ['title', 'start'] },
   },
-  title: (a) => `Added “${a.title}” to your calendar`,
+  title: (a) => t('Added “{title}” to your calendar', { title: a.title }),
   // it changes the user's calendar (and may invite nobody, but still): always ask
   action: () => ({ kind: 'app', ask: true }),
-  ask: (a) => `Add “${a.title}” to your calendar${isNaN(Date.parse(a.start)) ? '' : ` on ${when(a.start, !!a.allDay)}`}?`,
-  askDetail: (a) => [a.calendar && `Calendar: ${a.calendar}`, a.location && `Where: ${a.location}`, a.notes].filter(Boolean).join('\n'),
+  ask: (a) => (isNaN(Date.parse(a.start)) ? t('Add “{title}” to your calendar?', { title: a.title }) : t('Add “{title}” to your calendar on {when}?', { title: a.title, when: whenShown(a.start, !!a.allDay) })),
+  askDetail: (a) => [a.calendar && t('Calendar: {name}', { name: a.calendar }), a.location && t('Where: {place}', { place: a.location }), a.notes].filter(Boolean).join('\n'),
   async run(a, ctx) {
     const src = use()
     if (!src) return { text: NOTHING, failed: true }
@@ -154,7 +161,7 @@ export const mailSearch: Tool<{ query?: string; limit?: number }> = {
     description: "Find emails in the user's inbox: by words in the subject or sender. Leave the query out for the latest emails. Returns ids for mail_read.",
     params: { type: 'object', properties: { query: { type: 'string' }, limit: { type: 'number', description: 'How many, newest first (default 25)' } } },
   },
-  title: (a) => (a.query ? `Searched your email for “${a.query}”` : 'Looked at your latest email'),
+  title: (a) => (a.query ? t('Searched your email for “{query}”', { query: a.query }) : t('Looked at your latest email')),
   action: () => ({ kind: 'run' }),
   async run(a, ctx) {
     const src = use()
@@ -172,7 +179,7 @@ export const mailRead: Tool<{ id: string }> = {
     description: 'Read one email, by the id mail_search gave.',
     params: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
   },
-  title: () => 'Read an email',
+  title: () => t('Read an email'),
   action: () => ({ kind: 'run' }),
   async run(a, ctx) {
     const src = use()
@@ -181,7 +188,7 @@ export const mailRead: Tool<{ id: string }> = {
     if (!m) return { text: `There's no email with id ${a.id} in the inbox. Search again.`, failed: true }
     // whatever an email says comes from someone else: it could try to steer Hob
     ctx.untrusted = true
-    return { text: `From: ${m.from}\nTo: ${m.to.join(', ')}\nDate: ${when(m.date, false)}\nSubject: ${m.subject}\n\n${m.content}`, title: `Read “${m.subject}”` }
+    return { text: `From: ${m.from}\nTo: ${m.to.join(', ')}\nDate: ${when(m.date, false)}\nSubject: ${m.subject}\n\n${m.content}`, title: t('Read “{subject}”', { subject: m.subject }) }
   },
 }
 
@@ -191,7 +198,7 @@ export const mailDraft: Tool<{ to: string; subject: string; body: string }> = {
     description: 'Write an email as a draft, for the user to check and send. Hob never sends email itself.',
     params: { type: 'object', properties: { to: { type: 'string', description: 'Addresses, separated by commas' }, subject: { type: 'string' }, body: { type: 'string' } }, required: ['to', 'subject', 'body'] },
   },
-  title: (a) => `Drafted an email to ${a.to}`,
+  title: (a) => t('Drafted an email to {to}', { to: a.to }),
   action: () => ({ kind: 'run' }),
   async run(a, ctx) {
     const src = use()

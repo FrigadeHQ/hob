@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { button, Dialog } from './ui'
+import { t } from '../../../shared/i18n'
 
 /** what to ask; danger: the action deletes or removes something */
 export type ConfirmOptions = { title: string; body?: string; ok: string; danger?: boolean }
@@ -24,7 +25,7 @@ export function ConfirmHost() {
       <Dialog title={p.title} onClose={() => done(false)} testId="confirm">
         {p.body && <p className="text-ui text-ink-soft">{p.body}</p>}
         <div className="mt-5 flex justify-end gap-2">
-          <button data-testid="confirm-cancel" className={button.quiet} onClick={() => done(false)}>Cancel</button>
+          <button data-testid="confirm-cancel" className={button.quiet} onClick={() => done(false)}>{t('Cancel')}</button>
           <button data-testid="confirm-ok" autoFocus className={p.danger ? button.danger : button.primary} onClick={() => done(true)}>{p.ok}</button>
         </div>
       </Dialog>

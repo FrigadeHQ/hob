@@ -3,6 +3,7 @@ import { extname, join } from 'node:path'
 import { CHART_TYPES, parseCsv, validateChart } from '../../shared/chart'
 import { isInside, uniqueName } from '../workspace'
 import { resolvePath, type Tool, type TurnCtx } from '../agent/tool'
+import { t } from '../../shared/i18n'
 
 type ChartArgs = { type: string; title?: string; x: string; series: unknown; data?: unknown; file?: string; unit?: string; stacked?: boolean; fileError?: string }
 
@@ -42,12 +43,12 @@ export const makeChart: Tool<ChartArgs> = {
     },
   },
   prepare: (a, ctx) => (a.file && !a.data ? { ...a, ...rowsFromFile(a.file, ctx) } : a),
-  title: (a) => `Made a chart: ${a.title ?? a.type}`,
+  title: (a) => t('Made a chart: {title}', { title: a.title ?? a.type }),
   action: (a, ctx) => ({ kind: 'create', paths: [target(a, ctx)] }),
   async run(a, ctx) {
-    if (a.fileError) return { text: a.fileError, failed: true, title: "Couldn't make the chart" }
+    if (a.fileError) return { text: a.fileError, failed: true, title: t("Couldn't make the chart") }
     const r = validateChart(a)
-    if ('error' in r) return { text: r.error, failed: true, title: "Couldn't make the chart" }
+    if ('error' in r) return { text: r.error, failed: true, title: t("Couldn't make the chart") }
     const p = join(ctx.chatDir, uniqueName(ctx.chatDir, `${fileTitle(r.spec.title)}.chart.json`))
     writeFileSync(p, JSON.stringify(r.spec))
     return { text: `Made the chart "${r.spec.title}". It shows in the chat; don't describe it again, just give the main takeaway.`, files: [p], ...(a.file ? { uses: [resolvePath(ctx, a.file)] } : {}) }

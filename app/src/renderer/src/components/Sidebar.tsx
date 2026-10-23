@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { shownTitle } from '../../../shared/replies'
 import { ExternalLink, Folder, FolderOpen, FolderPlus, Hand, LoaderCircle, Pencil, Plus, Puzzle, Settings, SquarePen, X } from 'lucide-react'
 import type { ChatSummary, LiveSummary, Project } from '../../../shared/agent'
 import { fileManager } from '../../../shared/platform'
@@ -8,11 +9,12 @@ import { hob } from '../api'
 import { Status } from './Status'
 import { confirmAction } from './Confirm'
 import { IconButton } from './ui'
+import { msg, t } from '../../../shared/i18n'
 
 const DAY = 86_400_000
 function group(chats: ChatSummary[]) {
   const start = new Date().setHours(0, 0, 0, 0)
-  const g: [string, ChatSummary[]][] = [['Today', []], ['Yesterday', []], ['Earlier', []]]
+  const g: [string, ChatSummary[]][] = [[msg('Today'), []], [msg('Yesterday'), []], [msg('Earlier'), []]]
   for (const c of chats) g[c.updatedAt >= start ? 0 : c.updatedAt >= start - DAY ? 1 : 2][1].push(c)
   return g.filter(([, list]) => list.length)
 }
@@ -79,7 +81,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
   useEffect(() => hob.chats.onChanged(reload), [])
 
   async function remove(c: ChatSummary) {
-    if (!await confirmAction({ title: `Delete “${c.title}”?`, body: 'The chat is removed from Hob. Files you added to it, or that Hob made in it, move to the Trash.', ok: 'Delete chat', danger: true })) return
+    if (!await confirmAction({ title: t('Delete “{title}”?', { title: shownTitle(c.title) }), body: t('The chat is removed from Hob. Files you added to it, or that Hob made in it, move to the Trash.'), ok: t('Delete chat'), danger: true })) return
     await hob.chats.remove(c.id)
     if (c.id === selected) onNew()
     reload()
@@ -87,35 +89,35 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
 
   const fm = fileManager(hob.platform)
   const chatRow = (c: ChatSummary, inProject: boolean) => (
-    <div key={c.id} className={`${row} ${inProject ? 'pl-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
-      <button data-testid="chat-item" onClick={() => onSelect(c.id)} className="min-w-0 flex-1 truncate text-left">{c.title}</button>
+    <div key={c.id} className={`${row} ${inProject ? 'ps-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
+      <button data-testid="chat-item" onClick={() => onSelect(c.id)} className="min-w-0 flex-1 truncate text-start">{shownTitle(c.title)}</button>
       {(() => {
         const l = live.find((x) => x.chatId === c.id)
         if (!l) return null
         return l.waiting
-          ? <span data-testid="chat-waiting" title="Waiting for your OK" className="text-accent"><Hand size={14} /></span>
-          : <span data-testid="chat-working" title="Working" className="text-muted"><LoaderCircle size={14} className="animate-spin" /></span>
+          ? <span data-testid="chat-waiting" title={t('Waiting for your OK')} className="text-accent"><Hand size={14} /></span>
+          : <span data-testid="chat-working" title={t('Working')} className="text-muted"><LoaderCircle size={14} className="animate-spin" /></span>
       })()}
-      <button aria-label="Delete chat" title="Delete chat" onClick={() => void remove(c)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><X size={14} /></button>
+      <button aria-label={t('Delete chat')} title={t('Delete chat')} onClick={() => void remove(c)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><X size={14} /></button>
     </div>
   )
 
   return (
-    <aside data-testid="sidebar" style={{ width }} className="relative flex shrink-0 flex-col border-r border-line bg-sidebar">
+    <aside data-testid="sidebar" style={{ width }} className="relative flex shrink-0 flex-col border-e border-line bg-sidebar">
       <div className="drag h-12 shrink-0" />
       <div className="space-y-0.5 px-2">
         <button data-testid="new-chat" onClick={onNew} className={`no-drag w-full ${row} font-medium ${!selected && !draftProject && screen === 'chat' ? 'bg-selection' : 'hover:bg-line/70'}`}>
-          <SquarePen size={16} strokeWidth={1.75} className="text-ink-soft" />New chat
+          <SquarePen size={16} strokeWidth={1.75} className="text-ink-soft" />{t('New chat')}
         </button>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 pb-2">
         <div className="group/head flex items-center justify-between">
-          <p className={label}>Projects</p>
-          <button data-testid="new-project" aria-label="New project" title="New project" onClick={() => onEditProject(null)} className={headAction}><Plus size={14} /></button>
+          <p className={label}>{t('Projects')}</p>
+          <button data-testid="new-project" aria-label={t('New project')} title={t('New project')} onClick={() => onEditProject(null)} className={headAction}><Plus size={14} /></button>
         </div>
         {projects.length === 0 && (
           <button onClick={() => onEditProject(null)} className={`w-full ${row} text-muted hover:bg-line/60 hover:text-ink`}>
-            <FolderPlus size={16} strokeWidth={1.75} />New project
+            <FolderPlus size={16} strokeWidth={1.75} />{t('New project')}
           </button>
         )}
         {projects.map((p) => {
@@ -125,16 +127,16 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
           return (
             <div key={p.id} data-testid="project-item">
               <div className={`${row} ${here ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`} title={p.folders[0]}>
-                <button aria-label={open ? `Hide chats in ${p.name}` : `Show chats in ${p.name}`} onClick={() => toggle(p.id)} className="shrink-0 text-ink-soft hover:text-ink">
+                <button aria-label={open ? t('Hide chats in {name}', { name: p.name }) : t('Show chats in {name}', { name: p.name })} onClick={() => toggle(p.id)} className="shrink-0 text-ink-soft hover:text-ink">
                   {open ? <FolderOpen size={16} strokeWidth={1.75} /> : <Folder size={16} strokeWidth={1.75} />}
                 </button>
-                <button data-testid="project-open" onClick={() => onNewInProject(p.id)} className="min-w-0 flex-1 truncate text-left">{p.name}</button>
+                <button data-testid="project-open" onClick={() => onNewInProject(p.id)} className="min-w-0 flex-1 truncate text-start">{p.name}</button>
                 {p.folders.length > 0 && (
-                  <button data-testid="project-reveal" aria-label={`Open in ${fm}`} title={`Open in ${fm}`} onClick={() => void hob.projects.open(p.id)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><ExternalLink size={14} /></button>
+                  <button data-testid="project-reveal" aria-label={t('Open in {app}', { app: fm })} title={t('Open in {app}', { app: fm })} onClick={() => void hob.projects.open(p.id)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><ExternalLink size={14} /></button>
                 )}
-                <button data-testid="project-edit" aria-label="Edit project" title="Edit project" onClick={() => onEditProject(p)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><Pencil size={14} /></button>
+                <button data-testid="project-edit" aria-label={t('Edit project')} title={t('Edit project')} onClick={() => onEditProject(p)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><Pencil size={14} /></button>
               </div>
-              {open && (list.length ? list.map((c) => chatRow(c, true)) : <p className="py-1 pl-8 text-meta text-muted">No chats</p>)}
+              {open && (list.length ? list.map((c) => chatRow(c, true)) : <p className="py-1 ps-8 text-meta text-muted">{t('No chats')}</p>)}
             </div>
           )
         })}
@@ -143,27 +145,27 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
             {i === 0
               ? (
                 <div className="group/head flex items-center justify-between">
-                  <p className={label}>{name}</p>
-                  <button data-testid="new-chat-inline" aria-label="New chat" title="New chat" onClick={onNew} className={headAction}><Plus size={14} /></button>
+                  <p className={label}>{t(name)}</p>
+                  <button data-testid="new-chat-inline" aria-label={t('New chat')} title={t('New chat')} onClick={onNew} className={headAction}><Plus size={14} /></button>
                 </div>
               )
-              : <p className={label}>{name}</p>}
+              : <p className={label}>{t(name)}</p>}
             {list.map((c) => chatRow(c, false))}
           </div>
         ))}
       </nav>
-      <div className="flex items-center justify-between gap-2 border-t border-line py-2.5 pl-4 pr-3">
+      <div className="flex items-center justify-between gap-2 border-t border-line py-2.5 ps-4 pe-3">
         <Status state={state} working={live.some((c) => c.chatId === selected && !c.waiting)} />
-        <IconButton icon={Settings} label="Settings" testId="open-settings" onClick={onSettings} />
+        <IconButton icon={Settings} label={t('Settings')} testId="open-settings" onClick={onSettings} />
       </div>
       {/* drag the edge to resize; double-click puts it back. Last in the sidebar so it wins over the window-drag strip */}
       <div
-        data-testid="sidebar-resize" role="separator" aria-orientation="vertical" aria-label="Resize sidebar" title="Drag to resize"
+        data-testid="sidebar-resize" role="separator" aria-orientation="vertical" aria-label={t('Resize sidebar')} title={t('Drag to resize')}
         onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); drag.current = { x: e.clientX, w: width }; setResizing(true) }}
         onPointerMove={(e) => { if (drag.current) setWidth(clamp(drag.current.w + e.clientX - drag.current.x)) }}
         onPointerUp={() => { drag.current = null; setResizing(false) }}
         onDoubleClick={() => setWidth(WIDTH.normal)}
-        className={`no-drag absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize transition-colors ${resizing ? 'bg-line-strong/60' : 'hover:bg-line-strong/40'}`}
+        className={`no-drag absolute inset-y-0 -end-1 z-10 w-2 cursor-col-resize transition-colors ${resizing ? 'bg-line-strong/60' : 'hover:bg-line-strong/40'}`}
       />
     </aside>
   )

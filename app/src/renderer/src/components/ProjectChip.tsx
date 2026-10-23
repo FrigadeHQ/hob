@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronDown, Folder, FolderPlus, MessageSquare, type LucideIcon } from 'lucide-react'
 import type { Project } from '../../../shared/agent'
+import { t } from '../../../shared/i18n'
 
 type Props = {
   projects: Project[]
@@ -37,10 +38,10 @@ export function ProjectChip({ projects, value, locked, onChange, onNew }: Props)
         <Icon size={14} strokeWidth={1.75} />{current.name}<ChevronDown size={12} />
       </button>
       {open && (
-        <div data-testid="project-menu" role="menu" className="fade-in absolute bottom-full left-0 z-30 mb-1 max-h-72 w-64 overflow-y-auto rounded-card border border-line bg-surface p-1 shadow-lg">
+        <div data-testid="project-menu" role="menu" className="fade-in absolute bottom-full start-0 z-30 mb-1 max-h-72 w-64 overflow-y-auto rounded-card border border-line bg-surface p-1 shadow-lg">
           {projects.map((p) => <Item key={p.id} icon={Folder} label={p.name} on={p.id === value} onClick={() => choose(p.id)} />)}
-          <Item icon={MessageSquare} label="Not in a project" onClick={() => choose(null)} />
-          <Item icon={FolderPlus} label="New project…" onClick={() => { setOpen(false); onNew() }} />
+          <Item icon={MessageSquare} label={t('Not in a project')} onClick={() => choose(null)} />
+          <Item icon={FolderPlus} label={t('New project…')} onClick={() => { setOpen(false); onNew() }} />
         </div>
       )}
     </div>
@@ -49,7 +50,7 @@ export function ProjectChip({ projects, value, locked, onChange, onNew }: Props)
 
 function Item({ icon: Icon, label, on, onClick }: { icon: LucideIcon; label: string; on?: boolean; onClick(): void }) {
   return (
-    <button role="menuitem" data-testid="project-option" onClick={onClick} className="flex w-full items-center gap-2 rounded-control px-2.5 py-1.5 text-left text-ui hover:bg-line/70">
+    <button role="menuitem" data-testid="project-option" onClick={onClick} className="flex w-full items-center gap-2 rounded-control px-2.5 py-1.5 text-start text-ui hover:bg-line/70">
       <Icon size={14} strokeWidth={1.75} className="shrink-0 text-ink-soft" />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {on && <Check size={14} className="shrink-0 text-ink-soft" />}

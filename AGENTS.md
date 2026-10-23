@@ -96,6 +96,11 @@ site/                the hob.chat website (Next.js on Vercel; its own install: p
   - `Plugins.tsx`: the Skills, Connectors and Plugins pages.
 - `components/SettingsOverlay.tsx` holds General, Model, Privacy, Files & storage, and Customize.
 - Styling is Tailwind v4 with tokens in `styles.css` (light and dark). The interface and replies use Hanken Grotesk (bundled, OFL).
+- **Languages:** the interface follows the computer's language (`main/locale.ts`) unless one is picked in Settings → General. `shared/i18n.ts` has the language list and `t('English text', { blank })`; the English text is the key, and each language's table is `shared/locales/<id>.json` (en.json holds only English plural forms, keyed by `{count}`). `msg()` marks text in constants, `tx()` (renderer) fills blanks with elements.
+  - Wrap every new piece of text a person sees; never text sent to the model. Keys must be plain literals, so `t('Saved {name}', { name })`, never a template.
+  - `test/i18n-tables.test.ts` fails when a table misses text the app shows (`node scripts/i18n-keys.mjs` lists it all), has text it no longer shows, or drops a blank. Changing English text changes its key: translate it again everywhere.
+  - Arabic and Hebrew lay out right to left: use logical classes (`ms-`, `pe-`, `start-`, `text-start`, `border-s`), not `ml-`/`left-`; only offsets for the window's own buttons stay physical.
+  - The model is told the interface language and answers in the language the user writes in.
 - Dictation runs Whisper in a web worker (`speech/`), fully local.
 
 ### Data on disk

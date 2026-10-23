@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { faceRects, type Expression, type Rect } from '../../../shared/mascot'
 import bodyUrl from '../assets/hob-body.svg'
+import { msg, t } from '../../../shared/i18n'
 
 const neutral = faceRects('neutral')
 const smile = faceRects('smile').slice(2)
 const rect = (r: Rect, i: number) => <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill} />
 const glances = [{ x: -3, y: 0 }, { x: 3, y: 0 }, { x: 0, y: 0 }, { x: -2, y: 1 }, { x: 2, y: 1 }, { x: 0, y: -2 }]
-const greetings: Partial<Record<Expression, string>> = { content: 'Hob smiles.', wink: 'Hob winks.', laugh: 'Hob laughs.', skeptical: 'Hob raises an eyebrow.' }
+const greetings: Partial<Record<Expression, string>> = { content: msg('Hob smiles.'), wink: msg('Hob winks.'), laugh: msg('Hob laughs.'), skeptical: msg('Hob raises an eyebrow.') }
 
 /** Click reactions are shared; only setup and the empty chat look around. */
 function usePlayfulFace(on: boolean, tapFace?: Expression) {
@@ -101,7 +102,7 @@ export function Mascot({ size = 96, alive = false, working = false, playful = fa
       </g>
     </svg>
   )
-  return interactive ? <button type="button" className="hob-interaction" aria-label="Say hello to Hob" onClick={face.sayHello}>
-    {artwork}<span className="sr-only" role="status">{face.reaction ? greetings[face.reaction] : ''}</span>
+  return interactive ? <button type="button" className="hob-interaction" aria-label={t('Say hello to Hob')} onClick={face.sayHello}>
+    {artwork}<span className="sr-only" role="status">{face.reaction ? t(greetings[face.reaction] ?? '') : ''}</span>
   </button> : artwork
 }

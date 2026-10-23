@@ -14,6 +14,8 @@ import { IconButton } from './components/ui'
 import { CommandBar, MOD } from './components/CommandBar'
 import { ProjectDialog } from './components/ProjectDialog'
 import type { Project } from '../../shared/agent'
+import { useLanguage } from './i18n'
+import { t } from '../../shared/i18n'
 
 export type Screen = 'chat' | 'settings' | 'plugins'
 /** where the user was, for back and forward; project: a new chat waiting to start in it */
@@ -34,6 +36,8 @@ function useNarrow() {
 }
 
 export function App() {
+  // everything below re-renders in a newly picked language
+  useLanguage()
   const [state, setState] = useState<SetupState>({ phase: 'probing' })
   const [selected, setSelected] = useState<string | null>(null)
   /** bumps when the user switches chats, so the chat view starts fresh */
@@ -158,7 +162,7 @@ export function App() {
       {/* stays mounted so it can slide: in and out of the layout when docked, over the chat when the window is narrow */}
       <div inert={!sidebar} aria-hidden={!sidebar} data-testid="sidebar-slot"
         className={narrow
-          ? `absolute inset-y-0 left-0 z-30 flex shadow-xl transition-transform duration-200 ease-out ${sidebar ? 'translate-x-0' : '-translate-x-full shadow-none'}`
+          ? `absolute inset-y-0 start-0 z-30 flex shadow-xl transition-transform duration-200 ease-out ${sidebar ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full shadow-none'}`
           : `flex shrink-0 overflow-hidden transition-[max-width] duration-200 ease-out ${sidebar ? 'max-w-[480px]' : 'max-w-0'}`}>
         <Sidebar state={state} selected={selected} refreshKey={refreshKey} screen={screen} draftProject={draftProject}
           onSelect={(id) => open(id)} onNew={() => open(null)} onNewInProject={(id) => open(null, id)}
@@ -173,12 +177,12 @@ export function App() {
       {/* next to the window buttons, like Notes and Mail. Last in the page on purpose:
           Electron lets the later of overlapping drag/no-drag areas win, so before the
           drag strips the button can't be clicked */}
-      {/* hidden under Settings, which covers the app */}
-      <div className={`absolute top-2.5 z-40 flex items-center ${mac ? 'left-[86px]' : 'left-2'} ${settingsAt ? 'hidden' : ''}`}>
-        <IconButton icon={PanelLeft} label={sidebar ? 'Hide sidebar' : 'Show sidebar'} testId="toggle-sidebar" size={15} small onClick={() => setSidebar((s) => !s)} />
-        <IconButton icon={Search} label={`Search (${MOD}K)`} testId="open-search" size={15} small onClick={() => setPalette(true)} />
-        <IconButton icon={ArrowLeft} label={`Back (${MOD}[)`} testId="go-back" size={15} small disabled={history.current.i === 0} onClick={() => void step(-1)} />
-        <IconButton icon={ArrowRight} label={`Forward (${MOD}])`} testId="go-forward" size={15} small disabled={history.current.i >= history.current.list.length - 1} onClick={() => void step(1)} />
+      {/* hidden under Settings, which covers the app; next to the window's own buttons, so left to right in every language */}
+      <div dir="ltr" className={`absolute top-2.5 z-40 flex items-center ${mac ? 'left-[86px]' : 'left-2'} ${settingsAt ? 'hidden' : ''}`}>
+        <IconButton icon={PanelLeft} label={sidebar ? t('Hide sidebar') : t('Show sidebar')} testId="toggle-sidebar" size={15} small onClick={() => setSidebar((s) => !s)} />
+        <IconButton icon={Search} label={t('Search ({keys})', { keys: `${MOD}K` })} testId="open-search" size={15} small onClick={() => setPalette(true)} />
+        <IconButton icon={ArrowLeft} label={t('Back ({keys})', { keys: `${MOD}[` })} testId="go-back" size={15} small disabled={history.current.i === 0} onClick={() => void step(-1)} />
+        <IconButton icon={ArrowRight} label={t('Forward ({keys})', { keys: `${MOD}]` })} testId="go-forward" size={15} small disabled={history.current.i >= history.current.list.length - 1} onClick={() => void step(1)} />
       </div>
       {/* last: over everything, and its title-bar buttons win over the drag strips under it (Electron lets the later area win) */}
       <PreviewHost />

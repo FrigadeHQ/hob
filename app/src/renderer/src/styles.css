@@ -196,7 +196,7 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .setup-heading h1 { font-size: 28px; font-weight: 550; letter-spacing: -.8px; line-height: 1.2; white-space: nowrap; }
 .setup-subtitle { font-size: 14px; color: var(--color-ink-soft); margin-top: 10px; line-height: 1.7; white-space: nowrap; }
 .setup-stage { width: 380px; max-width: 100%; min-height: 192px; margin: 26px auto 0; }
-.setup-card { height: 96px; padding: 16px 17px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-surface); text-align: left; }
+.setup-card { height: 96px; padding: 16px 17px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-surface); text-align: start; }
 .setup-hardware { font-size: 11px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .setup-model-line { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 10px; }
 .setup-model-name { font-size: 17px; font-weight: 550; letter-spacing: -.35px; white-space: nowrap; }
@@ -209,13 +209,14 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .setup-progress-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; gap: 12px; color: var(--color-ink-soft); }
 .setup-track { height: 4px; background: var(--color-line); border-radius: 8px; overflow: hidden; margin: 12px 0 10px; }
 .setup-track > span { display: block; height: 100%; background: var(--color-ink-soft); border-radius: 8px; transform-origin: left; transition: transform 300ms ease-out; }
+[dir=rtl] .setup-track > span { transform-origin: right; }
 .setup-eta { font-size: 11px; color: var(--color-muted); }
 .setup-notice { margin-top: 14px; font-size: 12px; color: var(--color-accent); }
 .onboarding:not([data-phase=probing]) .setup-assurance { animation: none; opacity: 0; pointer-events: none; transition: opacity 120ms ease-out; }
 .app-dialog { margin: auto; max-width: min(512px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; }
 .dialog-layer[open] { display: flex; }
 .dialog-layer::backdrop { background: transparent; }
-.setup-dialog { width: 568px; max-width: calc(100vw - 48px); max-height: min(600px, calc(100dvh - 48px)); padding: 0; overflow: hidden; text-align: left; border-color: var(--color-line-strong); }
+.setup-dialog { width: 568px; max-width: calc(100vw - 48px); max-height: min(600px, calc(100dvh - 48px)); padding: 0; overflow: hidden; text-align: start; border-color: var(--color-line-strong); }
 .setup-dialog { display: flex; flex-direction: column; }
 .dialog-layer:has(.setup-dialog)::backdrop { backdrop-filter: blur(3px); }
 .setup-dialog .dialog-header { padding: 20px 24px 0; margin: 0; flex-shrink: 0; }

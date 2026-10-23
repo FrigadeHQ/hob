@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { hob } from '../api'
 import { startRecording } from './record'
 import { prefs } from './prefs'
+import { t } from '../../../shared/i18n'
 
 type Prepared = Awaited<ReturnType<typeof hob.speech.prepare>>
 
@@ -23,7 +24,7 @@ export function useDictation(onText: (text: string) => void) {
   async function start() {
     setError(null)
     // the system prompt appears here the first time; after a "no", point to Settings
-    if (!(await hob.speech.mic())) return setError({ text: 'Hob needs microphone access for dictation.', micSettings: true })
+    if (!(await hob.speech.mic())) return setError({ text: t('Hob needs microphone access for dictation.'), micSettings: true })
     if (!prepared.current) {
       prepared.current = hob.speech.prepare()
       prepared.current.catch(() => { prepared.current = null })
@@ -37,8 +38,8 @@ export function useDictation(onText: (text: string) => void) {
       console.error(err)
       const name = (err as Error).name
       setError(name === 'NotAllowedError' || name === 'SecurityError'
-        ? { text: 'Hob needs microphone access for dictation.', micSettings: true }
-        : { text: name === 'NotFoundError' ? 'No microphone found.' : "Couldn't start the microphone. Try again." })
+        ? { text: t('Hob needs microphone access for dictation.'), micSettings: true }
+        : { text: name === 'NotFoundError' ? t('No microphone found.') : t("Couldn't start the microphone. Try again.") })
     }
   }
 
@@ -64,7 +65,7 @@ export function useDictation(onText: (text: string) => void) {
       if (text) onText(text)
     } catch (err) {
       console.error(err)
-      setError({ text: "Couldn't turn that into text. Try again." })
+      setError({ text: t("Couldn't turn that into text. Try again.") })
     } finally {
       recording.current = null
       setProgress(null)
@@ -72,8 +73,8 @@ export function useDictation(onText: (text: string) => void) {
     }
   }
 
-  const hint = state === 'listening' ? 'Listening…'
-    : state === 'transcribing' ? (progress !== null ? `Getting dictation ready… ${Math.round(progress * 100)}%` : 'Turning speech into text…')
+  const hint = state === 'listening' ? t('Listening…')
+    : state === 'transcribing' ? (progress !== null ? t('Getting dictation ready… {percent}%', { percent: Math.round(progress * 100) }) : t('Turning speech into text…'))
     : undefined
 
   return {

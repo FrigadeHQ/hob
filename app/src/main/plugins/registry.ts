@@ -13,6 +13,7 @@ import { refreshTokens, signIn as oauthSignIn, tokenFresh, type OAuthState } fro
 import { parseSkill, skillFile, skillFilesProblem, skillNameOk, slug, type Skill } from './skills'
 import { packageSpecProblem } from '../python/packages'
 import { mcpTool, pythonTool, safeToolName, type PluginRef } from './tools'
+import { language, t } from '../../shared/i18n'
 
 export const MANIFEST = 'hob-plugin.json'
 export const MY_SKILLS = 'my-skills'
@@ -94,6 +95,8 @@ const wait = (ms: number, signal?: AbortSignal) => new Promise<undefined>((r) =>
 /** "Weekly report" → "weekly-report"; what the user types after / */
 export const skillName = (n: string) => (skillNameOk(n) ? n : slug(n))
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e))
+/** “API key” and “Region”, in the person's language */
+const settingList = (labels: string[]) => { const q = labels.map((m) => `“${m}”`); return language() === 'en' ? q.join(' and ') : new Intl.ListFormat(language(), { type: 'conjunction' }).format(q) }
 
 const broken = (dir: string, source: PluginSource, error: string): Loaded => ({
   manifest: { id: slug(basename(dir)) || 'plugin', name: basename(dir), version: '0.0.0', description: '', icon: 'puzzle', permissions: { network: false }, starters: [], tools: [], mcpServers: {}, settings: [] },
@@ -356,7 +359,7 @@ export class PluginRegistry {
         } else out.push(pythonTool(ref, t, name(p, t.name)))
       }
       const missing = Object.keys(p.manifest.mcpServers).length ? this.missing(p) : []
-      if (missing.length) { this.runtimeErrors.set(p.manifest.id, `Fill in ${missing.map((m) => `“${m}”`).join(' and ')} to use it.`); continue }
+      if (missing.length) { this.runtimeErrors.set(p.manifest.id, t('Fill in {settings} to use it.', { settings: settingList(missing) })); continue }
       for (const [server, cfg] of Object.entries(p.manifest.mcpServers)) {
         const key = `${p.manifest.id}/${server}`
         if (this.authNeeded.has(key) || Date.now() - (this.failedAt.get(key) ?? 0) < RETRY_MS) continue
@@ -392,8 +395,8 @@ export class PluginRegistry {
     this.failedAt.set(key, Date.now())
     if (e instanceof McpAuthError) {
       this.authNeeded.set(key, e.wwwAuthenticate)
-      this.runtimeErrors.set(id, 'Sign in to use it.')
-    } else this.runtimeErrors.set(id, `Couldn't connect: ${errText(e)}`)
+      this.runtimeErrors.set(id, t('Sign in to use it.'))
+    } else this.runtimeErrors.set(id, t("Couldn't connect: {error}", { error: errText(e) }))
     this.d.onChange?.()
   }
 
@@ -415,10 +418,10 @@ export class PluginRegistry {
    */
   async connect(id: string, signal?: AbortSignal): Promise<PluginResult> {
     const p = this.get(id)
-    if (!p) return { ok: false, error: 'That plugin is gone.' }
+    if (!p) return { ok: false, error: t('That plugin is gone.') }
     if (p.error) return { ok: false, error: p.error }
     const missing = this.missing(p)
-    if (missing.length) return { ok: false, error: `Fill in ${missing.map((m) => `“${m}”`).join(' and ')} first.` }
+    if (missing.length) return { ok: false, error: t('Fill in {settings} first.', { settings: settingList(missing) }) }
     for (const [server, cfg] of Object.entries(p.manifest.mcpServers)) {
       const key = `${id}/${server}`
       // really ask the server, not the tools remembered from before
@@ -437,7 +440,7 @@ export class PluginRegistry {
         this.runtimeErrors.delete(id)
       } catch (e) {
         this.failed(id, key, e)
-        return { ok: false, error: e instanceof McpAuthError ? 'Sign in to use it.' : errText(e) }
+        return { ok: false, error: e instanceof McpAuthError ? t('Sign in to use it.') : errText(e) }
       } finally {
         this.d.onChange?.()
       }
@@ -446,7 +449,7 @@ export class PluginRegistry {
   }
 
   private async signIn(id: string, server: string, cfg: McpUrlConfig, wwwAuthenticate: string | undefined, signal?: AbortSignal) {
-    if (!this.d.openExternal) throw new Error("Hob can't open a browser to sign in.")
+    if (!this.d.openExternal) throw new Error(t("Hob can't open a browser to sign in."))
     const key = `${id}/${server}`
     const p = this.get(id)!
     const url = (await this.spec(p, server, cfg) as { url: string }).url
@@ -532,13 +535,13 @@ export class PluginRegistry {
     try {
       return this.opened(path, (src) => {
         const p = load(src, 'installed')
-        if (!p) return { ok: false as const, error: `That isn't a Hob plugin or MCP bundle: there's no ${MANIFEST} in it.` }
+        if (!p) return { ok: false as const, error: t("That isn't a Hob plugin or MCP bundle: there's no {file} in it.", { file: MANIFEST }) }
         if (p.error) return { ok: false as const, error: p.error }
         const servers = Object.values(p.manifest.mcpServers)
         const trust: PluginTrust = servers.some((c) => !isUrlConfig(c)) ? 'full' : servers.length ? 'online' : 'code'
         return { ok: true as const, name: p.manifest.name, trust }
       })
-    } catch (e) { return { ok: false, error: `Couldn't open that file: ${errText(e)}` } }
+    } catch (e) { return { ok: false, error: t("Couldn't open that file: {error}", { error: errText(e) }) } }
   }
 
   /** copy a plugin folder (or a .zip / .mcpb of one) into Hob; replaces an older copy */
@@ -546,21 +549,21 @@ export class PluginRegistry {
     try {
       return this.opened(path, (src) => this.installFrom(src))
     } catch (e) {
-      return { ok: false, error: `Couldn't add that plugin: ${errText(e)}` }
+      return { ok: false, error: t("Couldn't add that plugin: {error}", { error: errText(e) }) }
     }
   }
 
   private installFrom(src: string): { ok: true; id: string } | { ok: false; error: string } {
     {
-      if (existsSync(src) && isInside(realpathSync(this.d.installDir), realpathSync(src))) return { ok: false, error: 'That plugin is already added.' }
+      if (existsSync(src) && isInside(realpathSync(this.d.installDir), realpathSync(src))) return { ok: false, error: t('That plugin is already added.') }
       const p = load(src, 'installed')
-      if (!p) return { ok: false, error: `That isn't a Hob plugin or MCP bundle: there's no ${MANIFEST} in it.` }
+      if (!p) return { ok: false, error: t("That isn't a Hob plugin or MCP bundle: there's no {file} in it.", { file: MANIFEST }) }
       if (p.error) return { ok: false, error: p.error }
       const id = p.manifest.id
-      if (id === MY_SKILLS) return { ok: false, error: `The id “${MY_SKILLS}” is reserved for your own skills.` }
+      if (id === MY_SKILLS) return { ok: false, error: t('The id “{id}” is reserved for your own skills.', { id: MY_SKILLS }) }
       const existing = this.get(id)
-      if (existing?.source === 'builtin') return { ok: false, error: `“${p.manifest.name}” comes with Hob already.` }
-      if (existing?.source === 'linked') return { ok: false, error: `“${p.manifest.name}” is linked from a folder. Unlink it first.` }
+      if (existing?.source === 'builtin') return { ok: false, error: t('“{name}” comes with Hob already.', { name: p.manifest.name }) }
+      if (existing?.source === 'linked') return { ok: false, error: t('“{name}” is linked from a folder. Unlink it first.', { name: p.manifest.name }) }
       // copy next to the old version, then swap: a failed copy never loses what was installed
       const dest = join(this.d.installDir, id)
       const staging = join(this.d.installDir, `.incoming-${id}-${Date.now()}`)
@@ -578,9 +581,9 @@ export class PluginRegistry {
   /** use a developer's folder in place; it reloads when its files change */
   link(dir: string): { ok: true; id: string } | { ok: false; error: string } {
     const p = load(dir, 'linked')
-    if (!p) return { ok: false, error: `There's no ${MANIFEST} (or MCP bundle manifest.json) in that folder.` }
+    if (!p) return { ok: false, error: t("There's no {file} (or MCP bundle manifest.json) in that folder.", { file: MANIFEST }) }
     if (p.error) return { ok: false, error: p.error }
-    if (this.get(p.manifest.id) && this.get(p.manifest.id)!.dir !== dir) return { ok: false, error: `A plugin with the id “${p.manifest.id}” is already added.` }
+    if (this.get(p.manifest.id) && this.get(p.manifest.id)!.dir !== dir) return { ok: false, error: t('A plugin with the id “{id}” is already added.', { id: p.manifest.id }) }
     this.d.store.addPluginLink(dir)
     this.reload()
     return { ok: true, id: p.manifest.id }
@@ -599,10 +602,10 @@ export class PluginRegistry {
   /** a skill the user (or Hob, with the user's OK) wrote; saved in "My skills" */
   saveSkill(s: NewSkill, o: { replace?: boolean } = {}): { ok: true; id: string; name: string } | { ok: false; error: string } {
     const name = skillName(s.name)
-    if (!name) return { ok: false, error: 'Give the skill a name with letters or numbers.' }
-    if (!o.replace && this.findSkill(name)) return { ok: false, error: `There's already a skill called /${name}. Pick another name.` }
-    if (!s.description.trim()) return { ok: false, error: 'Say when Hob should use this skill.' }
-    if (!s.instructions.trim()) return { ok: false, error: 'Write the instructions for this skill.' }
+    if (!name) return { ok: false, error: t('Give the skill a name with letters or numbers.') }
+    if (!o.replace && this.findSkill(name)) return { ok: false, error: t("There's already a skill called /{name}. Pick another name.", { name }) }
+    if (!s.description.trim()) return { ok: false, error: t('Say when Hob should use this skill.') }
+    if (!s.instructions.trim()) return { ok: false, error: t('Write the instructions for this skill.') }
     const files = s.files ?? {}
     const problem = skillFilesProblem(files) ?? (s.packages ?? []).map(packageSpecProblem).find(Boolean)
     if (problem) return { ok: false, error: problem }
@@ -642,7 +645,7 @@ export class PluginRegistry {
     const lines = (o.env ?? '').split('\n').map((l) => l.trim()).filter(Boolean)
     if (/^https?:\/\//i.test(text)) {
       let url: URL
-      try { url = new URL(text) } catch { return { ok: false, error: "That link doesn't look right." } }
+      try { url = new URL(text) } catch { return { ok: false, error: t("That link doesn't look right.") } }
       name ||= nameFromUrl(text)
       // headers ("Authorization: Bearer abc") are kept as secret settings and filled in when connecting
       const headers: Record<string, string> = {}
@@ -658,20 +661,20 @@ export class PluginRegistry {
       servers = { [slug(name) || 'app']: { url: url.toString(), ...(Object.keys(headers).length ? { headers } : {}) } }
     } else if (text.startsWith('{')) {
       let j: { mcpServers?: Record<string, McpServerConfig>; servers?: Record<string, McpServerConfig> }
-      try { j = JSON.parse(text) } catch { return { ok: false, error: "That config isn't valid JSON." } }
+      try { j = JSON.parse(text) } catch { return { ok: false, error: t("That config isn't valid JSON.") } }
       servers = j.mcpServers ?? j.servers ?? (j as Record<string, McpServerConfig>)
-      if (!Object.keys(servers).length) return { ok: false, error: 'No servers found in that config.' }
+      if (!Object.keys(servers).length) return { ok: false, error: t('No servers found in that config.') }
       name ||= Object.keys(servers)[0]
     } else {
       const [command, ...args] = parseCommandLine(text)
-      if (!command) return { ok: false, error: 'Enter the command that starts the connector.' }
+      if (!command) return { ok: false, error: t('Enter the command that starts the connector.') }
       secrets = Object.fromEntries(lines.filter((l) => l.indexOf('=') > 0).map((l) => [l.slice(0, l.indexOf('=')).trim(), l.slice(l.indexOf('=') + 1).trim()]))
       name ||= basename(args.at(-1) ?? command)
       servers = { [slug(name) || 'app']: { command, args } }
     }
     const id = slug(name)
-    if (!PLUGIN_ID.test(id)) return { ok: false, error: 'Give the connection a name with letters or numbers.' }
-    if (id === MY_SKILLS || this.get(id)) return { ok: false, error: `“${name}” is already added.` }
+    if (!PLUGIN_ID.test(id)) return { ok: false, error: t('Give the connection a name with letters or numbers.') }
+    if (id === MY_SKILLS || this.get(id)) return { ok: false, error: t('“{name}” is already added.', { name }) }
     // keys typed in the form are stored like any secret setting, never in plain text in the plugin folder
     const keys = Object.entries(secrets)
     const online = Object.values(servers).every((c) => c && typeof c === 'object' && ('url' in c || (c as { type?: string }).type === 'http'))

@@ -7,6 +7,7 @@ import { InsufficientMemoryError, type Engine } from './engine'
 import { loadSettings, updateSettings } from './settings'
 import type { ModelOption, ModelSummary, SetupState } from '../shared/types'
 import type { ModelRow } from '../shared/agent'
+import { t } from '../shared/i18n'
 
 export type SetupDeps = {
   engine: Engine
@@ -31,7 +32,7 @@ export const summarize = (c: Choice): ModelSummary => ({
 
 /** "Apple M3 Pro · 36 GB memory", "NVIDIA GeForce RTX 4070 (12 GB) · 32 GB memory" */
 export function computerName(hw: Hardware): string {
-  const ram = `${Math.round(hw.totalRamGB)} GB memory`
+  const ram = t('{gb} GB memory', { gb: Math.round(hw.totalRamGB) })
   if (hw.gpu.kind === 'discrete' && hw.gpu.name) return `${hw.gpu.name}${hw.gpu.vramGB ? ` (${Math.round(hw.gpu.vramGB)} GB)` : ''} · ${ram}`
   const chip = (hw.gpu.kind === 'unified' && hw.gpu.name ? hw.gpu.name : hw.cpuModel)
     .replace(/\((R|TM)\)/g, '').replace(/\s+CPU\b.*$/, '').replace(/\s+@.*$/, '').replace(/\s+/g, ' ').trim()
@@ -40,13 +41,13 @@ export function computerName(hw: Hardware): string {
 
 /** Plain-English message for anything that can go wrong during setup. */
 export function friendly(err: unknown): string {
-  if (err instanceof DiskSpaceError) return err.message
-  if (err instanceof ChecksumError) return 'The download was corrupted. Try again.'
+  if (err instanceof DiskSpaceError) return t('Not enough disk space. Free up {gb} GB and try again.', { gb: err.needGB })
+  if (err instanceof ChecksumError) return t('The download was corrupted. Try again.')
   const msg = err instanceof Error ? err.message : String(err)
   if (/fetch failed|ENOTFOUND|ECONN|ETIMEDOUT|EAI_AGAIN|network|socket/i.test(msg)) {
-    return 'Download interrupted. Check your connection and try again.'
+    return t('Download interrupted. Check your connection and try again.')
   }
-  return "Setup didn't finish. Try again."
+  return t("Setup didn't finish. Try again.")
 }
 
 /**
@@ -121,7 +122,7 @@ export class SetupController {
         this.hw = hw
         this.result = pick(hw, catalog.models)
         const r = this.result
-        if (!r.recommended) return this.set({ phase: 'error', message: 'Hob needs at least 8 GB of memory to run on this computer.' })
+        if (!r.recommended) return this.set({ phase: 'error', message: t('Hob needs at least 8 GB of memory to run on this computer.') })
 
         const settings = loadSettings(this.deps.settingsPath)
         const pending = this.choices().find((c) => c.model.id === settings.pendingModelId)
@@ -264,7 +265,7 @@ export class SetupController {
     this.pendingTarget = undefined
     updateSettings(this.deps.settingsPath, { pendingModelId: undefined })
     if (this.active) this.set({ phase: 'ready', model: summarize(this.active), liteMode: this.active.model.agentScore < LITE_AGENT_SCORE })
-    else this.set({ phase: 'error', message: 'Download stopped. Try again when you’re ready.' })
+    else this.set({ phase: 'error', message: t('Download stopped. Try again when you’re ready.') })
   }
 
   /** Download (or reuse) a verified model file, retrying transient failures. */
@@ -304,7 +305,7 @@ export class SetupController {
         if (i > 0 && !this.verified(c)) {
           await this.ensureStarterLoaded()
           onProgress = ({ fraction, etaSec }) =>
-            this.set({ phase: 'downloading', target: summarize(c), progress: fraction, etaSec, chatReady: this.starterActive, note: 'Switching to a lighter model…' })
+            this.set({ phase: 'downloading', target: summarize(c), progress: fraction, etaSec, chatReady: this.starterActive, note: t('Switching to a lighter model…') })
           onProgress({ fraction: 0, etaSec: 0 })
         }
         const p = await this.fetch(c, onProgress)
@@ -314,7 +315,7 @@ export class SetupController {
         updateSettings(this.deps.settingsPath, { activeModelId: c.model.id, pendingModelId: undefined })
         return this.set({
           phase: 'ready', model: summarize(c), liteMode: c.model.agentScore < LITE_AGENT_SCORE,
-          ...(i > 0 ? { note: 'Ready · lighter model' } : {}),
+          ...(i > 0 ? { note: t('Ready · lighter model') } : {}),
         })
       } catch (err) {
         if (!(err instanceof InsufficientMemoryError)) throw err
@@ -329,7 +330,7 @@ export class SetupController {
     const active = this.active
     if (s.phase !== 'ready' || !active) return
     return this.exclusive(async () => {
-      this.set({ ...s, note: 'Restarting…' })
+      this.set({ ...s, note: t('Restarting…') })
       try {
         await this.loadWithFallback(active)
       } catch (err) {

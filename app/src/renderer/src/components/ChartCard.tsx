@@ -3,6 +3,7 @@ import { Download } from 'lucide-react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts'
 import { validateChart, type ChartSpec } from '../../../shared/chart'
 import { hob } from '../api'
+import { language, t } from '../../../shared/i18n'
 
 const HEIGHT = 280
 const VARS = ['paper', 'surface', 'ink', 'ink-soft', 'muted', 'line', ...Array.from({ length: 8 }, (_, i) => `chart-${i + 1}`)] as const
@@ -28,7 +29,7 @@ const PREFIX = /^[€$£¥₹]$/
 /** 1234.5 → "1,234.5" with the unit where people expect it: "€1,234.5", "12 kg", "40%" */
 function format(n: unknown, unit?: string, compact = false): string {
   if (typeof n !== 'number') return String(n ?? '')
-  const s = new Intl.NumberFormat(undefined, compact ? { notation: 'compact', maximumFractionDigits: 1 } : { maximumFractionDigits: 2 }).format(n)
+  const s = new Intl.NumberFormat(language(), compact ? { notation: 'compact', maximumFractionDigits: 1 } : { maximumFractionDigits: 2 }).format(n)
   if (!unit) return s
   return PREFIX.test(unit) ? `${unit}${s}` : unit === '%' ? `${s}%` : `${s} ${unit}`
 }
@@ -43,7 +44,7 @@ function Tip({ active, payload, label, unit }: TipProps) {
         <p key={i} className="flex items-center gap-2 text-ink-soft">
           <span className="size-2 shrink-0 rounded-full" style={{ background: p.color ?? p.payload?.fill }} />
           {p.name}
-          <span className="ml-auto pl-4 font-medium tabular-nums text-ink">{format(p.value, unit)}</span>
+          <span className="ms-auto ps-4 font-medium tabular-nums text-ink">{format(p.value, unit)}</span>
         </p>
       ))}
     </div>
@@ -160,9 +161,9 @@ export function ChartCard({ path }: { path: string }) {
   useEffect(() => {
     fetch(hob.fileUrl(path)).then((r) => r.json()).then((j) => {
       const v = validateChart(j)
-      if ('error' in v) setError("This chart can't be shown.")
+      if ('error' in v) setError(t("This chart can't be shown."))
       else setSpec(v.spec)
-    }).catch(() => setError("This chart can't be found any more."))
+    }).catch(() => setError(t("This chart can't be found any more.")))
   }, [path])
   if (error) return <p className="px-3 py-2 text-ui text-muted">{error}</p>
   if (!spec) return <div style={{ height: HEIGHT + 56 }} />
@@ -180,7 +181,7 @@ export function ChartCard({ path }: { path: string }) {
       <div className="flex items-center gap-2">
         <p className="min-w-0 flex-1 truncate text-ui font-medium">{spec.title}</p>
         <button data-testid="chart-download" onClick={() => void download()} className="inline-flex shrink-0 items-center gap-1 rounded-control px-2 py-1 text-ui text-ink-soft hover:bg-line/70 hover:text-ink">
-          <Download size={14} />{saved ? `Saved ${saved}` : 'Download PNG'}
+          <Download size={14} />{saved ? t('Saved {name}', { name: saved }) : t('Download PNG')}
         </button>
       </div>
       {items.length > 0 && (

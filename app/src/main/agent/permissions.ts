@@ -2,6 +2,7 @@ import { existsSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, dirname, join, parse, relative, resolve, sep } from 'node:path'
 import { isInside, realish } from '../workspace'
+import { t } from '../../shared/i18n'
 
 export type Action =
   | { kind: 'read' | 'create' | 'change'; paths: string[] }
@@ -44,11 +45,11 @@ export function accessFolder(p: string, home = homedir(), appData?: string): str
 
 /** Why a folder the user picked for a project can't be used; undefined if it can. */
 export function folderProblem(p: string, home = homedir(), own: string[] = []): string | undefined {
-  if (isInside(p, home)) return 'Pick a folder inside your home folder, not the whole thing.'
+  if (isInside(p, home)) return t('Pick a folder inside your home folder, not the whole thing.')
   // Hob's settings and its chat files: a project there would reach every chat
-  if (own.some((o) => isInside(o, p) || isInside(p, o))) return "That's Hob's own folder."
-  if (!existsSync(p) || !statSync(p).isDirectory()) return "Can't find this folder."
-  if (accessFolder(p, home, own[0]) !== resolve(p)) return "Hob can't use that folder."
+  if (own.some((o) => isInside(o, p) || isInside(p, o))) return t("That's Hob's own folder.")
+  if (!existsSync(p) || !statSync(p).isDirectory()) return t("Can't find this folder.")
+  if (accessFolder(p, home, own[0]) !== resolve(p)) return t("Hob can't use that folder.")
   return undefined
 }
 

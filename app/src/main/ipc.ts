@@ -25,7 +25,9 @@ import { saveSkillTool, useSkillTool } from './plugins/skillTools'
 import type { NewSkill } from '../shared/plugins'
 import { AlreadyHereError, copyIn, isInside, isRunnable, nextChatDir, sizeOf, TooBigError, validFilesDir } from './workspace'
 import { isEffort } from '../shared/effort'
-import { effortOf, loadSettings, updateSettings, webAccessOn } from './settings'
+import { effortOf, loadSettings, localeOf, updateSettings, webAccessOn } from './settings'
+import { isLocale, setLanguage, t } from '../shared/i18n'
+import { systemLocale } from './locale'
 import { checkFolders, cleanProject, withMissing } from './projects'
 import type { SearchResult } from './search/searxng'
 
@@ -56,7 +58,11 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   const live = new LiveTurns((list) => send('chat:live', list))
   const approvals = new Approvals((req) => { live.approval(req); send('chat:approval', req) })
   const trash = (p: string) => shell.trashItem(p)
-  const userSettings = (): UserSettings => ({ webAccess: webAccessOn(loadSettings(d.paths.settings)), filesDir: d.filesDir(), theme: loadSettings(d.paths.settings).theme ?? 'system', effort: effortOf(loadSettings(d.paths.settings)) })
+  const userSettings = (): UserSettings => {
+    const s = loadSettings(d.paths.settings)
+    const system = systemLocale()
+    return { webAccess: webAccessOn(s), filesDir: d.filesDir(), theme: s.theme ?? 'system', effort: effortOf(s), language: isLocale(s.language) ? s.language : '', locale: localeOf(s, system), systemLocale: system }
+  }
   d.setup.onState((s) => send('setup:state', s))
   d.vision?.onState((s) => send('vision:state', s))
   ipcMain.handle('vision:getState', () => d.vision?.state() ?? { phase: 'off' })
@@ -147,7 +153,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     if (!m) return null
     const safe = `${String(name ?? 'Chart').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) || 'Chart'}.png`
     const win = d.win()
-    const opts = { defaultPath: join(app.getPath('downloads'), safe), filters: [{ name: 'PNG image', extensions: ['png'] }] }
+    const opts = { defaultPath: join(app.getPath('downloads'), safe), filters: [{ name: t('PNG image'), extensions: ['png'] }] }
     const r = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
     if (r.canceled || !r.filePath) return null
     writeFileSync(r.filePath, Buffer.from(m[1], 'base64'))
@@ -166,7 +172,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   })
   ipcMain.handle('projects:update', (_e, id: string, input: unknown) => {
     const cur = d.store.getProject(String(id))
-    if (!cur) return { error: 'This project was removed.' }
+    if (!cur) return { error: t('This project was removed.') }
     const p = cleanProject(input, homedir(), own(), cur.folders)
     if ('error' in p) return p
     d.store.updateProject(cur.id, p)
@@ -291,9 +297,12 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
       ...(patch.filesDir && validFilesDir(String(patch.filesDir)) ? { filesDir: String(patch.filesDir) } : {}),
       ...(patch.theme !== undefined ? { theme: patch.theme === 'light' || patch.theme === 'dark' ? patch.theme : undefined } : {}),
       ...(isEffort(patch.effort) ? { effort: patch.effort } : {}),
+      ...(patch.language !== undefined ? { language: isLocale(patch.language) ? patch.language : undefined } : {}),
     })
     // gpt-oss reads its reasoning level first: read the chat ahead again with the new one
     if (patch.effort !== undefined) void warm()
+    // Hob's own words (step names, dialogs) and the language it's told to answer in
+    if (patch.language !== undefined) { setLanguage(localeOf(loadSettings(d.paths.settings), systemLocale())); void warm() }
     // the whole app, system dialogs included, follows it
     if (patch.theme !== undefined) nativeTheme.themeSource = loadSettings(d.paths.settings).theme ?? 'system'
     // Web access is also the Web search plugin's switch
@@ -358,9 +367,9 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     if (ask && !d.fake && win) {
       const full = info.trust === 'full'
       const r = await dialog.showMessageBox(win, {
-        type: full ? 'warning' : 'question', buttons: ['Add', 'Cancel'], defaultId: 0, cancelId: 1,
-        message: `Add “${info.name}”?`,
-        detail: full ? 'It runs its own program with full access to your computer. Only add plugins you trust.' : 'It adds new skills or tools to Hob.',
+        type: full ? 'warning' : 'question', buttons: [t('Add'), t('Cancel')], defaultId: 0, cancelId: 1,
+        message: t('Add “{name}”?', { name: info.name }),
+        detail: full ? t('It runs its own program with full access to your computer. Only add plugins you trust.') : t('It adds new skills or tools to Hob.'),
       })
       if (r.response !== 0) return null
     }
@@ -371,14 +380,14 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     return res
   }
   ipcMain.handle('plugins:add', async () => {
-    const r = await dialog.showOpenDialog({ title: 'Add a plugin', buttonLabel: 'Add', properties: ['openFile', 'openDirectory'], filters: [{ name: 'Hob plugin or MCP bundle', extensions: PLUGIN_FILES }] })
+    const r = await dialog.showOpenDialog({ title: t('Add a plugin'), buttonLabel: t('Add'), properties: ['openFile', 'openDirectory'], filters: [{ name: t('Hob plugin or MCP bundle'), extensions: PLUGIN_FILES }] })
     if (r.canceled || !r.filePaths[0]) return null
     return addPlugin(r.filePaths[0], true)
   })
   // dropped on the Plugins screen
   ipcMain.handle('plugins:addFile', (_e, path: string) => addPlugin(String(path), true))
   ipcMain.handle('plugins:link', async () => {
-    const r = await dialog.showOpenDialog({ title: 'Link a plugin folder', buttonLabel: 'Link', properties: ['openDirectory'] })
+    const r = await dialog.showOpenDialog({ title: t('Link a plugin folder'), buttonLabel: t('Link'), properties: ['openDirectory'] })
     if (r.canceled || !r.filePaths[0]) return null
     const res = d.plugins.link(r.filePaths[0])
     pluginsChanged()

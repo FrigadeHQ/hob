@@ -1,3 +1,5 @@
+import { msg } from '../../shared/i18n'
+
 /** Past-tense claims that files on the computer were changed: "The files have been renamed." */
 const CLAIM = /\b(renamed|moved|deleted|trashed|reorgani[sz]ed|organi[sz]ed (?:them |the files |everything )?into|sorted (?:them |the files |everything )?into)\b/i
 /** plans, offers, questions and denials aren't claims */
@@ -12,7 +14,7 @@ export function claimsFileChanges(text: string): boolean {
 export const claimCheck = (ran: string[]) =>
   `[Note from Hob, not from the user: your reply says files were renamed, moved or deleted, but no file was changed in this reply. What actually ran: ${ran.length ? ran.join('; ') : 'nothing'}. Do the change now with the tools (move_files for renames and moves, delete_file to delete), then say what you did. If you can't, tell the user plainly that it isn't done and why. Don't claim it again unless a tool result shows it worked.]`
 
-export const NOTHING_CHANGED = "*Hob didn't change any files in this reply.*"
+export const NOTHING_CHANGED = msg("*Hob didn't change any files in this reply.*")
 
 /** "Let me know if you'd like me to proceed." The user already asked; small models stop here anyway. */
 const ASKS_TO_PROCEED = /\bplease (approve|confirm|allow)\b|\b(proceed|go ahead|carry on|continue|run it|do it|start|execute|rename them|move them)\b[^.!?\n]*\?|\b(let me know|tell me|just (reply|say))\b[^.!?\n]*\b(proceed|go ahead|continue|start|run|yes)\b|\b(shall|should) I\b[^.!?\n]*\?|\bwant me to\b[^.!?\n]*\?/i

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { shownTitle } from '../../../shared/replies'
 import { Folder, FolderPlus, MessageSquare, Puzzle, Settings, SquarePen, type LucideIcon } from 'lucide-react'
 import type { ChatSummary, Project } from '../../../shared/agent'
 import { hob } from '../api'
+import { language, t } from '../../../shared/i18n'
 
 export const MOD = hob.platform === 'darwin' ? '⌘' : 'Ctrl+'
 
@@ -36,11 +38,11 @@ export function CommandBar({ onClose, onOpenChat, onNew, onNewInProject, onNewPr
   }, [query])
 
   const actions: Action[] = useMemo(() => [
-    { id: 'new', label: 'New chat', icon: SquarePen, keys: `${MOD}N`, run: onNew },
-    { id: 'plugins', label: 'Skills, connectors and plugins', icon: Puzzle, run: onPlugins },
-    { id: 'project', label: 'New project', icon: FolderPlus, run: onNewProject },
-    { id: 'settings', label: 'Settings', icon: Settings, keys: `${MOD},`, run: onSettings },
-  ], [onNew, onNewProject, onPlugins, onSettings])
+    { id: 'new', label: t('New chat'), icon: SquarePen, keys: `${MOD}N`, run: onNew },
+    { id: 'plugins', label: t('Skills, connectors and plugins'), icon: Puzzle, run: onPlugins },
+    { id: 'project', label: t('New project'), icon: FolderPlus, run: onNewProject },
+    { id: 'settings', label: t('Settings'), icon: Settings, keys: `${MOD},`, run: onSettings },
+  ], [onNew, onNewProject, onPlugins, onSettings, language()]) // new labels in a newly picked language
 
   const items: Item[] = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -48,9 +50,9 @@ export function CommandBar({ onClose, onOpenChat, onNew, onNewInProject, onNewPr
     const acts = q ? actions.filter((a) => a.label.toLowerCase().includes(q)) : actions
     const projs = q ? projects.filter((p) => p.name.toLowerCase().includes(q)) : projects.slice(0, 5)
     return [
-      ...chats.map((c) => ({ key: `c:${c.id}`, section: q ? 'Chats' : 'Recent chats', label: c.title, icon: MessageSquare, snippet: c.snippet, run: () => onOpenChat(c.id) })),
-      ...projs.map((p) => ({ key: `p:${p.id}`, section: 'Projects', label: p.name, icon: Folder, hint: 'New chat', run: () => onNewInProject(p.id) })),
-      ...acts.map((a) => ({ key: `a:${a.id}`, section: 'Quick actions', label: a.label, icon: a.icon, hint: a.keys, run: a.run })),
+      ...chats.map((c) => ({ key: `c:${c.id}`, section: q ? t('Chats') : t('Recent chats'), label: shownTitle(c.title), icon: MessageSquare, snippet: c.snippet, run: () => onOpenChat(c.id) })),
+      ...projs.map((p) => ({ key: `p:${p.id}`, section: t('Projects'), label: p.name, icon: Folder, hint: t('New chat'), run: () => onNewInProject(p.id) })),
+      ...acts.map((a) => ({ key: `a:${a.id}`, section: t('Quick actions'), label: a.label, icon: a.icon, hint: a.keys, run: a.run })),
     ]
   }, [query, found, recent, projects, actions, onOpenChat, onNewInProject])
 
@@ -67,21 +69,21 @@ export function CommandBar({ onClose, onOpenChat, onNew, onNewInProject, onNewPr
 
   return (
     <div data-scrim className="scrim fade-in fixed inset-0 z-50 flex justify-center px-4 pt-[14vh]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div data-testid="command-bar" role="dialog" aria-label="Search" className="no-drag flex max-h-[60vh] w-full max-w-xl flex-col overflow-hidden rounded-[14px] border border-line bg-surface shadow-2xl">
+      <div data-testid="command-bar" role="dialog" aria-label={t('Search')} className="no-drag flex max-h-[60vh] w-full max-w-xl flex-col overflow-hidden rounded-[14px] border border-line bg-surface shadow-2xl">
         <input
           autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={onKey}
-          placeholder="Search chats and projects, or run a command" aria-label="Search chats and projects, or run a command"
+          placeholder={t('Search chats and projects, or run a command')} aria-label={t('Search chats and projects, or run a command')}
           className="w-full border-b border-line bg-transparent px-4 py-3 text-body outline-none placeholder:text-muted"
         />
         <div ref={list} className="overflow-y-auto p-1.5">
-          {items.length === 0 && <p className="px-3 py-6 text-center text-ui text-muted">Nothing found for “{query.trim()}”</p>}
+          {items.length === 0 && <p className="px-3 py-6 text-center text-ui text-muted">{t('Nothing found for “{query}”', { query: query.trim() })}</p>}
           {items.map((it, i) => (
             <div key={it.key}>
               {(i === 0 || items[i - 1].section !== it.section) && <p className="px-2.5 pb-1 pt-2.5 text-meta text-muted">{it.section}</p>}
               <button
                 type="button" data-testid="command-item" data-active={i === active}
                 onMouseMove={() => setActive(i)} onClick={() => pick(it)}
-                className={`flex w-full items-center gap-2.5 rounded-control px-2.5 py-1.5 text-left text-ui ${i === active ? 'bg-line/70 text-ink' : 'text-ink-soft'}`}
+                className={`flex w-full items-center gap-2.5 rounded-control px-2.5 py-1.5 text-start text-ui ${i === active ? 'bg-line/70 text-ink' : 'text-ink-soft'}`}
               >
                 {it.icon && <it.icon size={16} strokeWidth={1.75} className="shrink-0 text-ink-soft" />}
                 <span className="min-w-0 flex-1">

@@ -1,5 +1,5 @@
 import { _electron as electron, expect, test } from '@playwright/test'
-import { mkdtempSync } from 'node:fs'
+import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -77,5 +77,41 @@ test('a model download in Settings can be cancelled, and chat stays on the curre
   await expect(mine.getByTestId('model-progress')).toHaveCount(0)
   await expect(mine.getByTestId('model-use')).toHaveText('Download & use')
   await expect(page.getByTestId('status')).toHaveText(/^Ready$/)
+  await app.close()
+})
+
+test('Hob starts in the computer’s language, and the language can be changed in Settings', async () => {
+  const de = JSON.parse(readFileSync(join(import.meta.dirname, '../src/shared/locales/de.json'), 'utf8'))
+  const userData = mkdtempSync(join(tmpdir(), 'hob-e2e-'))
+  const launch = () => electron.launch({ args: [main], env: { ...process.env, HOB_FAKE: '1', HOB_SYSTEM_LANGUAGES: 'de-DE,en-US', HOB_USER_DATA: userData } })
+  let app = await launch()
+  let page = await app.firstWindow()
+  // German computer: German from the first screen
+  await expect(page.getByTestId('setup-download')).toHaveText(de['Download and start'])
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de')
+  await page.getByTestId('setup-download').click()
+  await page.getByTestId('open-settings').click()
+  await expect(page.getByTestId('settings-language')).toHaveValue('')
+  await expect(page.getByTestId('settings-language').locator('option').first()).toContainText('Deutsch')
+
+  // Arabic: right to left, straight away
+  await page.getByTestId('settings-language').selectOption('ar')
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
+
+  // English, and it stays English after a restart
+  await page.getByTestId('settings-language').selectOption('en')
+  await expect(page.locator('html')).toHaveAttribute('dir', 'ltr')
+  await expect(page.getByTestId('settings-nav-general')).toHaveText('General')
+  await app.close()
+  app = await launch()
+  page = await app.firstWindow()
+  await expect(page.getByTestId('open-settings')).toHaveAttribute('aria-label', 'Settings')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+  // back to the computer's: German again
+  await page.getByTestId('open-settings').click()
+  await page.getByTestId('settings-language').selectOption('')
+  await expect(page.getByTestId('settings-nav-general')).toHaveText(de['General'])
   await app.close()
 })

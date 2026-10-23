@@ -25,7 +25,9 @@ import { pickStarters } from '../starters'
 import { rehypeFadeWords } from '../fadeWords'
 import { ConnectApps, connected } from '../components/ConnectApps'
 import { skillOffer } from '../../../shared/skillOffer'
-import { FAILED, failedReply } from '../../../shared/replies'
+import { FAILED, failedReply, shownReply } from '../../../shared/replies'
+import { language, t } from '../../../shared/i18n'
+import { tx } from '../i18n'
 
 /** "/plan-trip Rome" shows the command as a label */
 function UserText({ text, skills }: { text: string; skills: SkillRef[] }) {
@@ -100,9 +102,9 @@ function EditMessage({ text, onSend, onCancel }: { text: string; onSend(text: st
         }}
         className="block w-full resize-none bg-transparent text-body outline-none" />
       <div className="mt-2 flex items-center justify-end gap-2">
-        <span className="mr-auto text-meta text-muted">Hob answers again from here.</span>
-        <button data-testid="edit-cancel" onClick={onCancel} className="rounded-control px-2.5 py-1 text-ui text-ink-soft hover:bg-line/70 hover:text-ink">Cancel</button>
-        <button data-testid="edit-send" disabled={!value.trim()} onClick={() => onSend(value.trim())} className="rounded-control bg-action px-2.5 py-1 text-ui text-on-action disabled:opacity-40">Send</button>
+        <span className="me-auto text-meta text-muted">{t('Hob answers again from here.')}</span>
+        <button data-testid="edit-cancel" onClick={onCancel} className="rounded-control px-2.5 py-1 text-ui text-ink-soft hover:bg-line/70 hover:text-ink">{t('Cancel')}</button>
+        <button data-testid="edit-send" disabled={!value.trim()} onClick={() => onSend(value.trim())} className="rounded-control bg-action px-2.5 py-1 text-ui text-on-action disabled:opacity-40">{t('Send')}</button>
       </div>
     </div>
   )
@@ -119,7 +121,7 @@ function Reply({ content, charts, live, thinking }: { content: string; charts: s
   return (
     <>
       <Charts paths={above} className="mb-3" />
-      <div data-testid="message-assistant" className="reply prose max-w-none [overflow-wrap:anywhere]">
+      <div data-testid="message-assistant" dir="auto" className="reply prose max-w-none [overflow-wrap:anywhere]">
         {thinking && <ThinkingIndicator thinking={thinking} />}
         {pieces.map((p, i) => (
           <Fragment key={i}>
@@ -286,12 +288,12 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       r = await hob.files.add(await ensureChat(), paths)
     } catch (err) {
       console.error(err)
-      setNotice({ text: "Couldn't add those files." })
+      setNotice({ text: t("Couldn't add those files.") })
       return
     }
     if ('error' in r) {
       setNotice(r.error === 'too-big'
-        ? { text: `That's ${r.gb.toFixed(1)} GB, too big to copy. Make a project for its folder instead, so Hob can use it where it is.`, folders: paths }
+        ? { text: t("That's {gb} GB, too big to copy. Make a project for its folder instead, so Hob can use it where it is.", { gb: new Intl.NumberFormat(language(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(r.gb) }), folders: paths }
         : { text: `${r.message}.` })
       return
     }
@@ -308,7 +310,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
     const id = await ensureChat()
     const added: Attachment[] = []
     for (const f of files) if (f.type.startsWith('image/')) added.push(...await hob.files.paste(id, new Uint8Array(await f.arrayBuffer()), f.type))
-    if (!added.length) { setNotice({ text: 'Hob can only take pasted images or files.' }); return }
+    if (!added.length) { setNotice({ text: t('Hob can only take pasted images or files.') }); return }
     setNotice(null)
     setPending((p) => [...p, ...added])
     inputRef.current?.focus()
@@ -357,10 +359,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       const r = await hob.task.undo(id)
       if (!r.done) return
       setMessages((ms) => ms.map((m) => (m.id === id ? { ...m, undone: true } : m)))
-      if (r.failed) setUndoNotes((n) => ({ ...n, [id]: `Undone, except ${r.failed} change${r.failed > 1 ? 's' : ''} that changed since or ${r.failed > 1 ? 'are' : 'is'} in the Trash` }))
+      if (r.failed) setUndoNotes((n) => ({ ...n, [id]: t('Undone, except {count} changes that changed since or are in the Trash', { count: r.failed }) }))
     } catch (err) {
       console.error(err)
-      setUndoNotes((n) => ({ ...n, [id]: "Couldn't undo these changes" }))
+      setUndoNotes((n) => ({ ...n, [id]: t("Couldn't undo these changes") }))
     }
   }
 
@@ -418,19 +420,19 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       {dictation.error && (
         <p data-testid="dictation-error" className="mb-2 text-ui text-ink-soft">
           {dictation.error.text}{' '}
-          {dictation.error.micSettings && <button onClick={() => void hob.speech.openMicSettings()} className="underline underline-offset-2 hover:text-ink">Open microphone settings</button>}
+          {dictation.error.micSettings && <button onClick={() => void hob.speech.openMicSettings()} className="underline underline-offset-2 hover:text-ink">{t('Open microphone settings')}</button>}
         </p>
       )}
       {notice && (
         <p data-testid="notice" className="mb-2 text-ui text-ink-soft">
-          {notice.text} {notice.folders && <button onClick={() => { onNewProject(notice.folders); setNotice(null) }} className="underline underline-offset-2 hover:text-ink">Make a project</button>}
+          {notice.text} {notice.folders && <button onClick={() => { onNewProject(notice.folders); setNotice(null) }} className="underline underline-offset-2 hover:text-ink">{t('Make a project')}</button>}
         </p>
       )}
       {queued && (
         <div data-testid="queued" className="fade-in mb-1.5 flex items-center gap-2 rounded-control bg-line/50 px-3 py-1.5 text-ui text-ink-soft">
           <Clock size={14} className="shrink-0 text-muted" />
-          <span className="min-w-0 flex-1 truncate">Sends when Hob is done: {queued}</span>
-          <button aria-label="Don't send" title="Don't send" onClick={() => { setInput(queued); setQueued(null) }} className="text-muted hover:text-ink"><X size={14} /></button>
+          <span className="min-w-0 flex-1 truncate">{t('Sends when Hob is done: {text}', { text: queued })}</span>
+          <button aria-label={t("Don't send")} title={t("Don't send")} onClick={() => { setInput(queued); setQueued(null) }} className="text-muted hover:text-ink"><X size={14} /></button>
         </div>
       )}
       <div className="mb-1.5 flex min-h-7 items-center">
@@ -457,7 +459,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
       {connectOpen && <ConnectApps onClose={() => { setConnectOpen(false); void hob.mac.access().then(setMacAccess) }} onTry={(p) => { setConnectOpen(false); void hob.mac.access().then(setMacAccess); void send(p) }} />}
       {dragging && (
         <div data-testid="drop-overlay" className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-composer border-2 border-dashed border-line-strong bg-paper/85 text-body font-medium">
-          Drop files to add them
+          {t('Drop files to add them')}
         </div>
       )}
       <div className="drag h-12 shrink-0" />
@@ -468,34 +470,33 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
               <div className="mb-[23px] flex justify-center"><Mascot size={48} alive playful /></div>
               {project
                 ? <>
-                    <h1 className="text-title font-semibold tracking-tight">What should we do in {project.name}?</h1>
+                    <h1 className="text-title font-semibold tracking-tight">{t('What should we do in {name}?', { name: project.name })}</h1>
                     {project.folders.length
                       ? (
                         <p data-testid="project-folders-line" className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-body text-ink-soft">
-                          Working in
+                          {t('Working in')}
                           {project.folders.map((f) => (
-                            <button key={f} title={`Open ${f}`} onClick={() => void hob.projects.open(project.id, f)} className="inline-flex items-center gap-1 rounded-control bg-line/60 px-2 py-0.5 text-ui text-ink hover:bg-line">
+                            <button key={f} title={t('Open {name}', { name: f })} onClick={() => void hob.projects.open(project.id, f)} className="inline-flex items-center gap-1 rounded-control bg-line/60 px-2 py-0.5 text-ui text-ink hover:bg-line">
                               <FolderOpen size={14} strokeWidth={1.75} className="text-ink-soft" />{folderName(f)}
                             </button>
                           ))}
                         </p>
                       )
-                      : <p className="mt-2 text-body text-ink-soft">Chats here follow this project's instructions.</p>}
+                      : <p className="mt-2 text-body text-ink-soft">{t("Chats here follow this project's instructions.")}</p>}
                   </>
                 : <>
-                    <h1 className="text-[clamp(24px,4vw,32px)] font-semibold leading-[1.2] tracking-[-.95px]">What are we working on?</h1>
+                    <h1 className="text-[clamp(24px,4vw,32px)] font-semibold leading-[1.2] tracking-[-.95px]">{t('What are we working on?')}</h1>
                     <p className="mt-2 text-[14px] leading-[22px] text-ink-soft">
-                      Private, on your computer. Drop in files, or{' '}
-                      <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">give Hob a folder to work in</button>.
+                      {tx('Private, on your computer. Drop in files, or {link}.', { link: <button data-testid="home-new-project" onClick={() => onNewProject()} className="underline underline-offset-2 hover:text-ink">{t('give Hob a folder to work in')}</button> })}
                     </p>
                   </>}
-              <div className="mt-6 text-left">{composer}</div>
-              <div className="mt-5 px-1 text-left">
+              <div className="mt-6 text-start">{composer}</div>
+              <div className="mt-5 px-1 text-start">
                 {pickStarters(starters, seed, { connect: showConnect }).map((s) => (
                   <button key={s.title} data-testid="suggestion" data-file={!!s.file} data-connect={!!s.connect} onClick={() => void (s.connect ? openConnect() : s.file ? startWithFile(s.prompt) : send(s.prompt))} className="group flex w-full items-center gap-3 rounded-control px-3 py-2.5 text-body text-muted transition-colors hover:bg-line/50 hover:text-ink">
                     <PluginIcon name={s.icon} className="shrink-0 text-muted transition-colors group-hover:text-ink-soft" />
-                    <span title={s.title} className="min-w-0 flex-1 truncate text-left">{s.title}</span>
-                    {s.file && <Paperclip size={14} strokeWidth={1.75} aria-label="Asks for a file" className="shrink-0 text-muted" />}
+                    <span title={s.title} className="min-w-0 flex-1 truncate text-start">{s.title}</span>
+                    {s.file && <Paperclip size={14} strokeWidth={1.75} aria-label={t('Asks for a file')} className="shrink-0 text-muted" />}
                   </button>
                 ))}
               </div>
@@ -513,10 +514,10 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                       // the edit button sits beside the bubble, shown on hover, so it takes no room of its own
                       <div className="flex max-w-[85%] items-center gap-1">
                         {!requestId && (
-                          <button data-testid="edit-message" aria-label="Edit message" title="Edit" onClick={() => setEditing(i)}
+                          <button data-testid="edit-message" aria-label={t('Edit message')} title={t('Edit')} onClick={() => setEditing(i)}
                             className="shrink-0 rounded-control p-1.5 text-muted opacity-0 transition-opacity hover:bg-line/70 hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"><Pencil size={14} /></button>
                         )}
-                        <div className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-selection px-4 py-2.5 text-body"><UserText text={m.content} skills={skills} /></div>
+                        <div dir="auto" className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-selection px-4 py-2.5 text-body"><UserText text={m.content} skills={skills} /></div>
                       </div>
                     )}
                 </div>
@@ -528,23 +529,23 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
                 {approval && i === messages.length - 1 && (
                   <ApprovalCard req={approval} onAnswer={(a) => { void hob.approval.answer(approval.id, a); setApproval(null) }} />
                 )}
-                <Reply content={m.content} charts={madeFiles(m.steps).filter(isChart)} live={live} thinking={live && !m.content && !m.steps.length ? thoughtBuf : undefined} />
+                <Reply content={shownReply(m.content)} charts={madeFiles(m.steps).filter(isChart)} live={live} thinking={live && !m.content && !m.steps.length ? thoughtBuf : undefined} />
                 <FileCards steps={m.steps} reply={m.content} />
                 {!live && (
-                  <div className="mt-1.5 -ml-1.5 flex items-center gap-1">
+                  <div className="mt-1.5 -ms-1.5 flex items-center gap-1">
                     {m.content && <CopyButton text={m.content.replace(/\n\n\*Stopped\.\*$/, '')} />}
                     {i === messages.length - 1 && !requestId && messages[i - 1]?.role === 'user' && failedReply(m.content) && (
-                      <button data-testid="retry" title="Write this reply again" onClick={() => void again(i - 1, messages[i - 1].content, messages[i - 1].attachments)}
-                        className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><RotateCcw size={14} />Retry</button>
+                      <button data-testid="retry" title={t('Write this reply again')} onClick={() => void again(i - 1, messages[i - 1].content, messages[i - 1].attachments)}
+                        className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><RotateCcw size={14} />{t('Retry')}</button>
                     )}
                     {typeof m.id === 'number' && m.undoable && (m.undone
-                      ? <span data-testid="undone" className="px-1.5 text-meta text-muted">{undoNotes[m.id as number] ?? 'Changes undone'}</span>
-                      : <button data-testid="undo" onClick={() => void undoTask(m.id as number)} className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><Undo2 size={14} />Undo changes</button>)}
+                      ? <span data-testid="undone" className="px-1.5 text-meta text-muted">{undoNotes[m.id as number] ?? t('Changes undone')}</span>
+                      : <button data-testid="undo" onClick={() => void undoTask(m.id as number)} className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><Undo2 size={14} />{t('Undo changes')}</button>)}
                     {i === offerAt && (
                       <span data-testid="skill-offer" className="inline-flex items-center">
                         <button data-testid="skill-offer-save" onClick={() => { closeOffer(); void send('Save what you just did as a skill, so I can run it again later.') }}
-                          className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><Sparkles size={14} />Save as a skill</button>
-                        <button data-testid="skill-offer-close" aria-label="Don't save as a skill" onClick={closeOffer} className="rounded-control p-1 text-muted hover:bg-line/70 hover:text-ink"><X size={12} /></button>
+                          className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"><Sparkles size={14} />{t('Save as a skill')}</button>
+                        <button data-testid="skill-offer-close" aria-label={t("Don't save as a skill")} onClick={closeOffer} className="rounded-control p-1 text-muted hover:bg-line/70 hover:text-ink"><X size={12} /></button>
                       </span>
                     )}
                   </div>
@@ -560,12 +561,12 @@ export function ChatView({ chatId: initialId, projectId: initialProject, onProje
           {/* text scrolls under a soft fade instead of being cut by the composer */}
           <div className="pointer-events-none absolute inset-x-0 -top-10 h-10 bg-gradient-to-b from-transparent to-paper" />
           {/* always rendered so it can fade in and out */}
-          <button data-testid="jump-latest" aria-label="Jump to latest" aria-hidden={!showJump} tabIndex={showJump ? 0 : -1} onClick={jumpToLatest}
+          <button data-testid="jump-latest" aria-label={t('Jump to latest')} aria-hidden={!showJump} tabIndex={showJump ? 0 : -1} onClick={jumpToLatest}
             className={`absolute -top-12 left-1/2 inline-flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-line-strong bg-surface text-ink-soft shadow-md transition-[opacity,transform] duration-200 ease-out hover:text-ink ${showJump ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'}`}>
             <ArrowDown size={16} strokeWidth={1.75} />
           </button>
           {composer}
-          <p className="mt-2 text-center text-meta text-muted">Hob can make mistakes.</p>
+          <p className="mt-2 text-center text-meta text-muted">{t('Hob can make mistakes.')}</p>
         </div>
       )}
     </main>

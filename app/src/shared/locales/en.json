@@ -1,0 +1,74 @@
+{
+  "About {count} hours left": {
+    "one": "About {count} hour left",
+    "other": "About {count} hours left"
+  },
+  "About {count} minutes left": {
+    "one": "About {count} minute left",
+    "other": "About {count} minutes left"
+  },
+  "Couldn't move {count} files: too many at once": {
+    "one": "Couldn't move {count} file: too many at once",
+    "other": "Couldn't move {count} files: too many at once"
+  },
+  "Couldn't move {count} files: {reason}": {
+    "one": "Couldn't move {count} file: {reason}",
+    "other": "Couldn't move {count} files: {reason}"
+  },
+  "Delete all {count} chats?": {
+    "one": "Delete all {count} chat?",
+    "other": "Delete all {count} chats?"
+  },
+  "Hide {count} models unavailable on this computer": {
+    "one": "Hide {count} model unavailable on this computer",
+    "other": "Hide {count} models unavailable on this computer"
+  },
+  "Move {count} files?": {
+    "one": "Move {count} file?",
+    "other": "Move {count} files?"
+  },
+  "Moved {count} files": {
+    "one": "Moved {count} file",
+    "other": "Moved {count} files"
+  },
+  "Rename {count} files in {folder}?": {
+    "one": "Rename {count} file in {folder}?",
+    "other": "Rename {count} files in {folder}?"
+  },
+  "Renamed {count} files in {folder}": {
+    "one": "Renamed {count} file in {folder}",
+    "other": "Renamed {count} files in {folder}"
+  },
+  "Show {count} models unavailable on this computer": {
+    "one": "Show {count} model unavailable on this computer",
+    "other": "Show {count} models unavailable on this computer"
+  },
+  "Undone, except {count} changes that changed since or are in the Trash": {
+    "one": "Undone, except {count} change that changed since or is in the Trash",
+    "other": "Undone, except {count} changes that changed since or are in the Trash"
+  },
+  "about {count} h left": {
+    "one": "about {count} h left",
+    "other": "about {count} h left"
+  },
+  "about {count} hours left": {
+    "one": "about {count} hour left",
+    "other": "about {count} hours left"
+  },
+  "about {count} min left": {
+    "one": "about {count} min left",
+    "other": "about {count} min left"
+  },
+  "about {count} minutes left": {
+    "one": "about {count} minute left",
+    "other": "about {count} minutes left"
+  },
+  "{count} problems": {
+    "one": "{count} problem",
+    "other": "{count} problems"
+  },
+  "{count} tries": {
+    "one": "{count} try",
+    "other": "{count} tries"
+  }
+}

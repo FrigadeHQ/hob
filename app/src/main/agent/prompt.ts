@@ -1,3 +1,4 @@
+import { language, LOCALES } from '../../shared/i18n'
 import { fileManager } from '../../shared/platform'
 
 export type PromptSkill = { name: string; description: string }
@@ -56,13 +57,17 @@ export function systemPrompt(o: {
   project?: PromptProject
   /** process.platform; names the file manager */
   platform?: string
+  /** the interface's language; the current one when left out */
+  language?: string
 }): string {
   const has = (t: string) => !o.tools || o.tools.includes(t)
   const skills = (o.skills ?? []).slice(0, MAX_SKILLS)
+  const lang = LOCALES.find((l) => l.id === (o.language ?? language()))
   const today = (o.now ?? new Date()).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   return [
     "You are Hob, a helpful assistant running privately on the user's computer. Be concise and friendly. Avoid jargon. Don't use emojis.",
     `Today is ${today}.`,
+    lang && lang.id !== 'en' ? `Hob's screens are in ${lang.english}. Reply in the language the user writes in; ${lang.english} when unsure.` : '',
     '',
     `You can work with files using tools. This chat's folder is ${q(o.chatDir)} (the current directory for code). Paths are in “quotes”; use them exactly, spaces included.`,
     o.files.length ? `It contains: ${o.files.slice(0, 50).join(', ')}${o.files.length > 50 ? ', …' : ''}.` : 'It is empty.',
@@ -118,7 +123,7 @@ const ABOUT_HOB = [
   '- Web access (Settings) lets Hob search the web, its code fetch data and install Python packages. Off = fully offline.',
   '- Hob can work with files (attach, drop or paste them; or a project folder), write and run Python, make charts, read and fill PDFs, and look at photos and screenshots.',
   '- Dictation: the mic button in the message box; the arrow next to it picks the microphone and language. Speech is turned into text on this computer.',
-  '- Settings (gear, bottom left, or ⌘,): General (theme: System, Light or Dark; chat font; text size; dictation language), Model, Privacy (Web access), Files & storage (where chat files go, deleting chats), and Skills, Connectors and Plugins.',
+  '- Settings (gear, bottom left, or ⌘,): General (language; theme: System, Light or Dark; chat font; text size; dictation language), Model, Privacy (Web access), Files & storage (where chat files go, deleting chats), and Skills, Connectors and Plugins.',
 ].join('\n')
 
 export const TITLE_PROMPT = 'You name chats for a sidebar.'

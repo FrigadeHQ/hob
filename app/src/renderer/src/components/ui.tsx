@@ -5,6 +5,7 @@ import {
   GraduationCap, Heart, Languages, Leaf, Lightbulb, ListChecks, Mail, Map, MessageCircle, Music, Newspaper, NotebookPen, Palette, PenLine, Plane, Plug,
   Presentation, Puzzle, ShoppingCart, Sparkles, Star, Sun, Wrench, X, Zap, type LucideIcon,
 } from 'lucide-react'
+import { t } from '../../../shared/i18n'
 
 /** Square icon-only button with an accessible label and a native tooltip. */
 export function IconButton({ icon: Icon, label, onClick, active, disabled, testId, size = 16, small }: {
@@ -33,7 +34,7 @@ export function Switch({ on, onChange, label, testId }: { on: boolean; onChange(
       type="button" role="switch" aria-checked={on} aria-label={label} data-testid={testId} onClick={(e) => { e.stopPropagation(); onChange(!on) }}
       className={`h-6 w-10 shrink-0 rounded-full p-0.5 transition-colors ${on ? 'bg-ink' : 'bg-line-strong'}`}
     >
-      <span className={`block size-5 rounded-full bg-paper shadow-sm transition-transform ${on ? 'translate-x-4' : 'translate-x-0'}`} />
+      <span className={`block size-5 rounded-full bg-paper shadow-sm transition-transform ${on ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0'}`} />
     </button>
   )
 }
@@ -73,7 +74,7 @@ export function Dialog({ title, onClose, children, testId, className = '' }: { t
       <div data-testid={testId} role="dialog" aria-modal="true" aria-label={title} className={`app-dialog pop w-full max-w-lg rounded-[16px] border border-line bg-surface p-5 shadow-xl ${className}`}>
         <div className="dialog-header mb-4 flex items-center justify-between">
           <h2 className="text-body font-semibold">{title}</h2>
-          <IconButton icon={X} label="Close" onClick={onClose} />
+          <IconButton icon={X} label={t('Close')} onClick={onClose} />
         </div>
         {children}
       </div>

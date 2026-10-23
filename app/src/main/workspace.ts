@@ -2,6 +2,7 @@ import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, re
 import { homedir } from 'node:os'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import type { Attachment } from '../shared/agent'
+import { t } from '../shared/i18n'
 
 export const MAX_COPY_BYTES = 1e9
 
@@ -76,7 +77,7 @@ export class TooBigError extends Error {
 
 export class AlreadyHereError extends Error {
   name = 'AlreadyHereError'
-  constructor(name: string) { super(`${name} is already in this chat`) }
+  constructor(name: string) { super(t('{name} is already in this chat', { name })) }
 }
 
 /** The files location must be a real, specific folder: not relative, not / or the home folder itself. */

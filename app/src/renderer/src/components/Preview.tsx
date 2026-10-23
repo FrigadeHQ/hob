@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { FolderOpen, SquareArrowOutUpRight, X } from 'lucide-react'
 import { hob } from '../api'
 import { fileManager } from '../../../shared/platform'
+import { t } from '../../../shared/i18n'
 import { PdfView } from './PdfView'
 
 /** what Hob shows itself; anything else opens in its own app */
@@ -34,9 +35,9 @@ export function PreviewHost() {
     <div data-testid="preview" className="fade-in fixed inset-0 z-50 flex flex-col bg-paper/95 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) setPath(null) }}>
       <div className={`drag flex h-12 shrink-0 items-center gap-2 border-b border-line pr-clear-controls ${hob.platform === 'darwin' ? 'pl-24' : 'pl-4'}`}>
         <span className="min-w-0 flex-1 truncate text-ui font-medium">{name(path)}</span>
-        <button className={`no-drag ${btn}`} onClick={() => void hob.files.open(path)}><SquareArrowOutUpRight size={14} />Open</button>
-        <button className={`no-drag ${btn}`} onClick={() => void hob.files.show(path)}><FolderOpen size={14} />Show in {fileManager(hob.platform)}</button>
-        <button data-testid="preview-close" aria-label="Close" title="Close (Esc)" className={`no-drag ${btn}`} onClick={() => setPath(null)}><X size={16} /></button>
+        <button className={`no-drag ${btn}`} onClick={() => void hob.files.open(path)}><SquareArrowOutUpRight size={14} />{t('Open')}</button>
+        <button className={`no-drag ${btn}`} onClick={() => void hob.files.show(path)}><FolderOpen size={14} />{t('Show in {app}', { app: fileManager(hob.platform) })}</button>
+        <button data-testid="preview-close" aria-label={t('Close')} title={t('Close (Esc)')} className={`no-drag ${btn}`} onClick={() => setPath(null)}><X size={16} /></button>
       </div>
       <div className="flex min-h-0 flex-1 items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setPath(null) }}>
         {PDF.test(path)

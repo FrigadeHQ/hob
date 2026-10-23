@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import { resolvePath, type Tool, type TurnCtx } from '../agent/tool'
 import { seeImage } from './vision'
+import { t } from '../../shared/i18n'
 
 /**
  * PDFs, including scanned ones: Hob's PDF helper (native/hob-pdf, Apple PDFKit + Vision) reads the text,
@@ -212,13 +213,13 @@ export const readPdf: Tool<{ path: string; pages?: string }> = {
     description: 'Read a PDF, including scanned ones (text is recognized on this computer). Returns the text of each page and, for forms, the blanks to fill with their ids, like [p2:date-of-birth] Date of birth. Use fill_pdf with those ids to fill it in. pages: e.g. "1-3,5" (default: all).',
     params: { type: 'object', properties: { path: { type: 'string' }, pages: { type: 'string', description: 'Which pages, e.g. "2" or "1-3,5"' } }, required: ['path'] },
   },
-  title: (a) => `Read ${basename(a.path)}`,
+  title: (a) => t('Read {name}', { name: basename(a.path) }),
   action: (a, ctx) => ({ kind: 'read', paths: [resolvePath(ctx, a.path)] }),
   async run(a, ctx) {
     const path = resolvePath(ctx, a.path)
     if (extname(path).toLowerCase() !== '.pdf') return { text: `${basename(path)} isn't a PDF. Use read_file for other files.`, failed: true }
     if (!existsSync(path)) return { text: `${basename(path)} doesn't exist.`, failed: true }
-    ctx.progress?.(`Reading ${basename(path)}…`)
+    ctx.progress?.(t('Reading {name}…', { name: basename(path) }))
     const d = await analyze(path, ctx.signal)
     const want = pagesWanted(a.pages, d.pageCount)
     const pages = d.pages.filter((p) => !want || want.has(p.n))
@@ -302,7 +303,7 @@ export const fillPdf: Tool<{ path: string; answers: Record<string, unknown>; sav
       },
     },
   },
-  title: (a) => `Filled in ${basename(a.path)}`,
+  title: (a) => t('Filled in {name}', { name: basename(a.path) }),
   action: (a, ctx) => ({ kind: 'create', paths: [outName(ctx, resolvePath(ctx, a.path), a.save_as)] }),
   async run(a, ctx) {
     const path = resolvePath(ctx, a.path)

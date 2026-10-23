@@ -3,6 +3,7 @@ import { Calendar, Check, Circle, Mail } from 'lucide-react'
 import type { AccountsState, MacAccess } from '../../../shared/types'
 import { hob } from '../api'
 import { button, Dialog } from './ui'
+import { t } from '../../../shared/i18n'
 
 export const connected = (a: MacAccess | null) => !!a && a.calendar === 'granted' && a.mail === 'granted'
 
@@ -45,9 +46,9 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
       <Icon size={16} strokeWidth={1.75} className="text-ink-soft" />
       <span className="flex-1">{label}</span>
       {status === 'granted'
-        ? <span className="inline-flex items-center gap-1 text-ink-soft"><Check size={14} />Connected</span>
-        : status === 'denied' ? <span className="text-accent">Not allowed</span>
-        : <span className="inline-flex items-center gap-1 text-muted"><Circle size={10} />Not yet</span>}
+        ? <span className="inline-flex items-center gap-1 text-ink-soft"><Check size={14} />{t('Connected')}</span>
+        : status === 'denied' ? <span className="text-accent">{t('Not allowed')}</span>
+        : <span className="inline-flex items-center gap-1 text-muted"><Circle size={10} />{t('Not yet')}</span>}
     </li>
   )
   const signInButtons = providers.length > 0 && !account && (
@@ -56,53 +57,53 @@ export function ConnectApps({ onClose, onTry }: { onClose(): void; onTry(prompt:
         <button key={p} data-testid={`account-signin-${p}`} disabled={!!signingIn} onClick={() => void signIn(p)}
           className="flex w-full items-center justify-center gap-2.5 rounded-control border border-line-strong bg-surface px-3 py-2 text-ui font-medium hover:bg-line/40 disabled:opacity-60">
           {p === 'google' ? <GoogleMark /> : <MicrosoftMark />}
-          {signingIn === p ? 'Finish signing in in your browser…' : `Continue with ${NAMES[p]}`}
+          {signingIn === p ? t('Finish signing in in your browser…') : t('Continue with {name}', { name: NAMES[p] })}
         </button>
       ))}
-      {signingIn && <button className="w-full text-meta text-muted underline underline-offset-2 hover:text-ink" onClick={() => void hob.accounts.cancel()}>Cancel</button>}
+      {signingIn && <button className="w-full text-meta text-muted underline underline-offset-2 hover:text-ink" onClick={() => void hob.accounts.cancel()}>{t('Cancel')}</button>}
     </div>
   )
   return (
-    <Dialog title="Connect your email and calendar" onClose={onClose} testId="connect-apps">
+    <Dialog title={t('Connect your email and calendar')} onClose={onClose} testId="connect-apps">
       {account ? (
         <div data-testid="account-connected" className="flex items-center gap-3 rounded-card border border-line px-4 py-3 text-ui">
           {account.provider === 'google' ? <GoogleMark /> : <MicrosoftMark />}
-          <span className="min-w-0 flex-1"><span className="block font-medium">Connected to {NAMES[account.provider]}</span><span className="block truncate text-meta text-ink-soft">{account.email}</span></span>
-          <button data-testid="account-signout" className="text-meta text-ink-soft underline underline-offset-2 hover:text-ink" onClick={() => void hob.accounts.signOut().then(setAccounts)}>Sign out</button>
+          <span className="min-w-0 flex-1"><span className="block font-medium">{t('Connected to {name}', { name: NAMES[account.provider] })}</span><span className="block truncate text-meta text-ink-soft">{account.email}</span></span>
+          <button data-testid="account-signout" className="text-meta text-ink-soft underline underline-offset-2 hover:text-ink" onClick={() => void hob.accounts.signOut().then(setAccounts)}>{t('Sign out')}</button>
         </div>
       ) : mac ? (
         <>
-          <p className="text-ui text-ink-soft">Hob can use the Calendar and Mail apps on this Mac, with every account you added there: iCloud, Google, Outlook and more.</p>
+          <p className="text-ui text-ink-soft">{t('Hob can use the Calendar and Mail apps on this Mac, with every account you added there: iCloud, Google, Outlook and more.')}</p>
           <ul className="mt-4 space-y-2.5 rounded-card border border-line px-4 py-3">
-            {row(Calendar, 'Calendar', access?.calendar)}
-            {row(Mail, 'Mail', access?.mail)}
+            {row(Calendar, t('Calendar'), access?.calendar)}
+            {row(Mail, t('Mail'), access?.mail)}
           </ul>
-          {denied && <p className="mt-3 text-ui text-ink-soft">To change it, allow Hob in System Settings → Privacy & Security → Calendars and → Automation.</p>}
+          {denied && <p className="mt-3 text-ui text-ink-soft">{t('To change it, allow Hob in System Settings → Privacy & Security → Calendars and → Automation.')}</p>}
           {providers.length > 0 && !connected(access) && (
             <>
-              <p className="mb-3 mt-5 text-ui text-ink-soft">Or sign in to your Google or Microsoft account instead:</p>
+              <p className="mb-3 mt-5 text-ui text-ink-soft">{t('Or sign in to your Google or Microsoft account instead:')}</p>
               {signInButtons}
             </>
           )}
         </>
       ) : providers.length > 0 ? (
         <>
-          <p className="mb-4 text-ui text-ink-soft">Sign in to the account with your email and calendar. Gmail and Google Calendar, or Outlook, Hotmail and Microsoft 365.</p>
+          <p className="mb-4 text-ui text-ink-soft">{t('Sign in to the account with your email and calendar. Gmail and Google Calendar, or Outlook, Hotmail and Microsoft 365.')}</p>
           {signInButtons}
         </>
       ) : (
-        <p className="text-ui text-ink-soft">Connecting email and calendar isn't available in this version of Hob yet.</p>
+        <p className="text-ui text-ink-soft">{t("Connecting email and calendar isn't available in this version of Hob yet.")}</p>
       )}
       {error && <p data-testid="account-error" className="mt-3 text-ui text-accent">{error}</p>}
       <p className="mt-4 text-meta text-muted">
-        {account || !mac ? 'Your email and calendar go straight from your account to this computer, never to anyone else. ' : 'Nothing leaves your computer. '}
-        Hob only writes email drafts: you send them.
+        {account || !mac ? t('Your email and calendar go straight from your account to this computer, never to anyone else.') : t('Nothing leaves your computer.')}{' '}
+        {t('Hob only writes email drafts: you send them.')}
       </p>
       <div className="mt-5 flex justify-end gap-2">
-        <button className={button.quiet} onClick={onClose}>{done ? 'Close' : 'Not now'}</button>
+        <button className={button.quiet} onClick={onClose}>{done ? t('Close') : t('Not now')}</button>
         {done
-          ? <button data-testid="connect-apps-try" className={button.primary} onClick={() => onTry("What's on my calendar this week?")}>Try “What’s on my calendar?”</button>
-          : mac && <button data-testid="connect-apps-allow" className={button.primary} disabled={asking} onClick={() => void ask()}>{asking ? 'Waiting for your Mac…' : 'Allow access'}</button>}
+          ? <button data-testid="connect-apps-try" className={button.primary} onClick={() => onTry("What's on my calendar this week?")}>{t('Try “What’s on my calendar?”')}</button>
+          : mac && <button data-testid="connect-apps-allow" className={button.primary} disabled={asking} onClick={() => void ask()}>{asking ? t('Waiting for your Mac…') : t('Allow access')}</button>}
       </div>
     </Dialog>
   )

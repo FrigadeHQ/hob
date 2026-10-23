@@ -5,6 +5,7 @@ import { runPython } from '../python/run'
 import { LAUNCH } from '../tools/python'
 import type { ManifestTool } from './manifest'
 import type { McpCallResult, McpTool } from './mcp'
+import { t } from '../../shared/i18n'
 
 /** what a tool needs to know about the plugin it belongs to */
 export type PluginRef = { id: string; name: string; dir: string; network: boolean; env: Record<string, string> }
@@ -32,16 +33,22 @@ const files = (dir: string) => {
   return m
 }
 
+// step titles and questions for the person (the tools below name their own parameter t)
+const usedTitle = (plugin: string) => t('Used {plugin}', { plugin })
+const usedToolTitle = (plugin: string, tool: string) => t('Used {plugin}: {tool}', { plugin, tool })
+const letDoAsk = (plugin: string, tool: string) => t('Let {plugin} do “{tool}”?', { plugin, tool })
+const settingUp = () => t('Setting up code tools…')
+
 /** A plugin's Python tool: args as JSON on stdin, result on stdout, in the same sandbox as run_python. */
 export function pythonTool(p: PluginRef, t: ManifestTool, name = t.name): Tool<Record<string, unknown>> {
   return {
     spec: { name, description: t.description, params: t.params },
-    title: (a) => (t.title ? fillTitle(t.title, a) : `Used ${p.name}`),
+    title: (a) => (t.title ? fillTitle(t.title, a) : usedTitle(p.name)),
     action: () => (p.network ? { kind: 'web' } : { kind: 'run' }),
     needsWeb: p.network,
     async run(a, ctx) {
       if (!ctx.python) throw new Error('Code tools are not available.')
-      if (!ctx.python.isReady()) ctx.progress?.('Setting up code tools…')
+      if (!ctx.python.isReady()) ctx.progress?.(settingUp())
       const python = await ctx.python.ensure()
       const before = files(ctx.chatDir)
       const r = await runPython({
@@ -104,7 +111,7 @@ export function mcpTool(p: PluginRef, t: McpTool, call: (name: string, args: unk
   const schema = t.inputSchema && t.inputSchema.type === 'object' ? t.inputSchema : { type: 'object', properties: {} }
   return {
     spec: { name, description: (t.description ?? label).slice(0, 1000), params: schema },
-    title: () => `Used ${p.name}: ${label}`,
+    title: () => usedToolTitle(p.name, label),
     // MCP's default for a tool without hints is "may change things": ask, unless it says it only reads.
     // After web or app content entered the task, anything that isn't read-only asks.
     action: (_a, ctx) => {
@@ -112,7 +119,7 @@ export function mcpTool(p: PluginRef, t: McpTool, call: (name: string, args: unk
       const harmless = readOnly || t.annotations?.destructiveHint === false
       return { kind: 'app', ask: readOnly ? false : !harmless || !!ctx?.untrusted }
     },
-    ask: () => `Let ${p.name} do “${label}”?`,
+    ask: () => letDoAsk(p.name, label),
     async run(a, ctx) {
       const r = await call(t.name, a, ctx.signal)
       // another program's output may carry instructions: treat it like web content

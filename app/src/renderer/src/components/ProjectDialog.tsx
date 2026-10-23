@@ -4,6 +4,7 @@ import type { FolderCheck, Project } from '../../../shared/agent'
 import { hob } from '../api'
 import { confirmAction } from './Confirm'
 import { button, Dialog, Field, field } from './ui'
+import { t } from '../../../shared/i18n'
 
 /** the last part of a path, on any OS */
 export const folderName = (p: string) => p.split(/[\\/]/).filter(Boolean).pop() ?? p
@@ -52,50 +53,50 @@ export function ProjectDialog({ project, folders: start, onClose, onDone }: Prop
     }
   }
   async function remove() {
-    if (!project || !await confirmAction({ title: `Remove “${project.name}”?`, body: 'Its chats move to your chat list. Your folders and files stay as they are.', ok: 'Remove project', danger: true })) return
+    if (!project || !await confirmAction({ title: t('Remove “{name}”?', { name: project.name }), body: t('Its chats move to your chat list. Your folders and files stay as they are.'), ok: t('Remove project'), danger: true })) return
     await hob.projects.remove(project.id)
     onDone(null)
   }
 
   return (
-    <Dialog title={project ? 'Edit project' : 'Create project'} onClose={onClose} testId="project-dialog">
+    <Dialog title={project ? t('Edit project') : t('Create project')} onClose={onClose} testId="project-dialog">
       <div className="space-y-4">
-        <Field label="Name">
-          <input data-testid="project-name" autoFocus className={field} value={name} placeholder="Project name"
+        <Field label={t('Name')}>
+          <input data-testid="project-name" autoFocus className={field} value={name} placeholder={t('Project name')}
             onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void save() }} />
         </Field>
         <div>
-          <p className="mb-1.5 text-ui font-medium">Folders</p>
+          <p className="mb-1.5 text-ui font-medium">{t('Folders')}</p>
           <div className="divide-y divide-line overflow-hidden rounded-control border border-line">
             {folders.map((f, i) => (
               <div key={f} data-testid="project-folder" title={f} className="flex items-center gap-2 px-3 py-2 text-ui">
                 <Folder size={16} strokeWidth={1.75} className="shrink-0 text-ink-soft" />
                 <span className="min-w-0 flex-1 truncate">{folderName(f)}</span>
                 {missing.has(f)
-                  ? <span className="shrink-0 text-meta text-muted">Can't find this folder</span>
-                  : i === 0 && folders.length > 1 && <span className="shrink-0 text-meta text-muted">New files go here</span>}
-                <button aria-label={`Remove ${folderName(f)}`} title="Remove" onClick={() => setFolders((cur) => cur.filter((x) => x !== f))} className="text-muted hover:text-ink"><X size={14} /></button>
+                  ? <span className="shrink-0 text-meta text-muted">{t("Can't find this folder")}</span>
+                  : i === 0 && folders.length > 1 && <span className="shrink-0 text-meta text-muted">{t('New files go here')}</span>}
+                <button aria-label={t('Remove {name}', { name: folderName(f) })} title={t('Remove')} onClick={() => setFolders((cur) => cur.filter((x) => x !== f))} className="text-muted hover:text-ink"><X size={14} /></button>
               </div>
             ))}
             <button data-testid="project-add-folder" onClick={() => void hob.projects.pickFolders().then(add)}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-ui text-ink-soft transition-colors hover:bg-line/40 hover:text-ink">
-              <FolderPlus size={16} strokeWidth={1.75} />Add folder
+              className="flex w-full items-center gap-2 px-3 py-2 text-start text-ui text-ink-soft transition-colors hover:bg-line/40 hover:text-ink">
+              <FolderPlus size={16} strokeWidth={1.75} />{t('Add folder')}
             </button>
           </div>
           {problem
             ? <p data-testid="project-folder-problem" className="mt-1.5 text-ui text-ink-soft">{problem}</p>
-            : !folders.length && <p className="mt-1.5 text-meta text-muted">Optional. Add folders Hob should work with, like a work folder or your photos. It can see the files in them and asks before changing any.</p>}
+            : !folders.length && <p className="mt-1.5 text-meta text-muted">{t('Optional. Add folders Hob should work with, like a work folder or your photos. It can see the files in them and asks before changing any.')}</p>}
         </div>
-        <Field label="Instructions (optional)">
+        <Field label={t('Instructions (optional)')}>
           <textarea data-testid="project-instructions" rows={3} className={`${field} resize-none`} value={instructions}
-            onChange={(e) => setInstructions(e.target.value)} placeholder="Anything Hob should know for every chat in this project" />
+            onChange={(e) => setInstructions(e.target.value)} placeholder={t('Anything Hob should know for every chat in this project')} />
         </Field>
         {error && <p className="text-ui text-danger">{error}</p>}
         <div className="flex items-center gap-2">
-          {project && <button data-testid="project-remove" onClick={() => void remove()} className={button.danger}>Remove project</button>}
+          {project && <button data-testid="project-remove" onClick={() => void remove()} className={button.danger}>{t('Remove project')}</button>}
           <span className="flex-1" />
-          <button onClick={onClose} className={button.quiet}>Cancel</button>
-          <button data-testid="project-save" disabled={!name.trim() || saving} onClick={() => void save()} className={button.primary}>{project ? 'Save' : 'Create project'}</button>
+          <button onClick={onClose} className={button.quiet}>{t('Cancel')}</button>
+          <button data-testid="project-save" disabled={!name.trim() || saving} onClick={() => void save()} className={button.primary}>{project ? t('Save') : t('Create project')}</button>
         </div>
       </div>
     </Dialog>

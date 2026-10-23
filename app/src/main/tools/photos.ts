@@ -3,6 +3,7 @@ import { basename } from 'node:path'
 import { runPython } from '../python/run'
 import { resolvePath, type Tool } from '../agent/tool'
 import { ensurePython } from './python'
+import { t } from '../../shared/i18n'
 
 const MAX_PHOTOS = 500
 
@@ -39,7 +40,7 @@ export const photoInfo: Tool<{ path: string }> = {
     description: "List the photos in a folder (or one photo) with the date each was taken, its size and camera, read from the photo's EXIF data. Use this for anything about when photos were taken; a file's modified date is not that.",
     params: { type: 'object', properties: { path: { type: 'string', description: 'A folder or an image file' } }, required: ['path'] },
   },
-  title: (a) => `Read photo dates in ${basename(a.path)}`,
+  title: (a) => t('Read photo dates in {name}', { name: basename(a.path) }),
   action: (a, ctx) => ({ kind: 'read', paths: [resolvePath(ctx, a.path)] }),
   async run(a, ctx) {
     const p = resolvePath(ctx, a.path)

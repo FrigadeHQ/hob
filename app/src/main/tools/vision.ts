@@ -4,6 +4,7 @@ import { basename, extname, join } from 'node:path'
 import { promisify } from 'node:util'
 import { resolvePath, type Tool, type TurnCtx } from '../agent/tool'
 import { runPython } from '../python/run'
+import { t } from '../../shared/i18n'
 
 /** what llama.cpp reads directly; other image types are converted to PNG first */
 const DIRECT: Record<string, string> = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.bmp': 'image/bmp' }
@@ -62,7 +63,7 @@ export const lookAtImage: Tool<{ path: string; question?: string }> = {
       question: { type: 'string', description: 'What to find out, e.g. "What is the total on this receipt?". Leave out to get a description.' },
     }, required: ['path'] },
   },
-  title: (a) => `Looked at ${basename(String(a.path ?? 'the image'))}`,
+  title: (a) => (a.path == null ? t('Looked at the image') : t('Looked at {name}', { name: basename(String(a.path)) })),
   action: (a, ctx) => ({ kind: 'read', paths: [resolvePath(ctx, String(a.path ?? ''))] }),
   async run(a, ctx) {
     const question = String(a.question ?? '').trim() || 'Describe this image in detail. Read out any text in it exactly.'
@@ -83,7 +84,7 @@ export async function seeImage(path: string, question: string, ctx: TurnCtx, max
   const ext = extname(path).toLowerCase()
   if (!DIRECT[ext] && !CONVERT.has(ext)) return { text: `${basename(path)} isn't an image Hob can look at (JPG, PNG, HEIC, WebP, GIF or TIFF).`, failed: true }
   if (statSync(path).size > MAX_BYTES) return { text: `${basename(path)} is too big to look at (over 30 MB).`, failed: true }
-  ctx.progress?.(`Looking at ${basename(path)}…`)
+  ctx.progress?.(t('Looking at {name}…', { name: basename(path) }))
   const file = await readable(path, ctx, maxSide)
   const mime = DIRECT[extname(file).toLowerCase()] ?? 'image/jpeg'
   const answer = await v.ask(`data:${mime};base64,${readFileSync(file).toString('base64')}`, question, ctx.signal)

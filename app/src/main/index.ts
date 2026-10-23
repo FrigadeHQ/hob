@@ -26,7 +26,9 @@ import { VisionServer } from './vision/server'
 import { pickVision, VISION_MODELS, visionFitsGpu, visionGB } from './vision/catalog'
 import type { VisionState } from '../shared/types'
 import os from 'node:os'
-import { loadSettings, updateSettings, webAccessOn } from './settings'
+import { loadSettings, localeOf, updateSettings, webAccessOn } from './settings'
+import { setLanguage } from '../shared/i18n'
+import { systemLocale } from './locale'
 import { PluginRegistry } from './plugins/registry'
 import { loginPath } from './plugins/shellPath'
 import { coreTools, nativeTools } from './tools'
@@ -116,6 +118,7 @@ app.whenReady().then(() => {
   const paths = makePaths(app.getPath('userData'))
   // the theme picked in Settings; the system's when none
   nativeTheme.themeSource = loadSettings(paths.settings).theme ?? 'system'
+  setLanguage(localeOf(loadSettings(paths.settings), systemLocale()))
   const engine = FAKE ? new FakeEngine() : new UtilityEngine(join(__dirname, 'engine.js'))
   /** the computer, as setup found it (the vision model's room is worked out from it) */
   let hardware: Hardware | undefined

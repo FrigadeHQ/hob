@@ -17,8 +17,9 @@ import { chatTitle, cleanTitle, expandCommand, systemPrompt, timeNote, titleRequ
 import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
 import { isInside } from '../workspace'
-import { FAILED, NO_ANSWER, REPEATING } from '../../shared/replies'
+import { FAILED, NO_ANSWER, REPEATING, STOPPED } from '../../shared/replies'
 import { DEFAULT_EFFORT, effortBudgets, type Effort } from '../../shared/effort'
+import { t } from '../../shared/i18n'
 
 const CHANGES = new Set(['write_file', 'move_file', 'move_files', 'delete_file'])
 /** what "renamed / moved / deleted" in a reply has to be backed by */
@@ -166,9 +167,9 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
         const home = d.home ?? homedir()
         const shown = folder.startsWith(home + sep) ? `~${folder.slice(home.length)}` : folder
         show({ ...step, status: 'waiting' })
-        const answer = await d.approve({ id: step.id, requestId: a.requestId, text: `Let Hob use your “${basename(folder)}” folder?`, detail: shown, access: true }, a.signal)
+        const answer = await d.approve({ id: step.id, requestId: a.requestId, text: t('Let Hob use your “{folder}” folder?', { folder: basename(folder) }), detail: shown, access: true }, a.signal)
         if (answer === 'deny') {
-          show({ ...step, status: 'denied', reason: 'You said not now.' })
+          show({ ...step, status: 'denied', reason: t('You said not now.') })
           return `The user didn't give Hob access to ${folder}. Don't try again. Tell them it isn't done, and that they can add the folder to a project (the + next to Projects in the sidebar).`
         }
         // for this chat only; folders Hob uses again and again belong in a project
@@ -180,11 +181,11 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
         decision = gate()
       }
       if (decision.verdict === 'deny') { show({ ...step, status: 'denied', reason: short(decision.reason) }); return decision.reason }
-      if (decision.verdict === 'grant') { show({ ...step, status: 'denied', reason: 'Hob has no access to that folder.' }); return 'Hob still has no access to that folder.' }
+      if (decision.verdict === 'grant') { show({ ...step, status: 'denied', reason: t('Hob has no access to that folder.') }); return 'Hob still has no access to that folder.' }
       if (decision.verdict === 'ask') {
         show({ ...step, status: 'waiting' })
-        const answer = await d.approve({ id: step.id, requestId: a.requestId, text: tool.ask?.(input) ?? `${step.title}?`, folder: decision.folder, ...(tool.askDetail ? { detail: tool.askDetail(input) } : {}) }, a.signal)
-        if (answer === 'deny') { show({ ...step, status: 'denied', reason: 'You said no.' }); return "The user said no. Don't retry; tell them what you would have done." }
+        const answer = await d.approve({ id: step.id, requestId: a.requestId, text: tool.ask?.(input) ?? t('{action}?', { action: step.title }), folder: decision.folder, ...(tool.askDetail ? { detail: tool.askDetail(input) } : {}) }, a.signal)
+        if (answer === 'deny') { show({ ...step, status: 'denied', reason: t('You said no.') }); return "The user said no. Don't retry; tell them what you would have done." }
         if (answer === 'always' && decision.folder) { d.store.addAlways(a.chatId, decision.folder); always.push(decision.folder) }
         show({ ...step, status: 'running' })
       }
@@ -271,12 +272,12 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
       streamed = ''
       const ran = steps.map((s) => `${s.title} (${s.status === 'done' ? 'worked' : s.status})`)
       final = await ask([...messages, { role: 'assistant', content: final }, { role: 'user', content: check === 'claim' ? claimCheck(ran) : check === 'unfinished' ? unfinishedCheck(ran) : check === 'missing' ? missingCheck(missing) : proceedCheck() }])
-      if (!a.signal.aborted && unbacked(final)) final = `${final}\n\n${NOTHING_CHANGED}`
+      if (!a.signal.aborted && unbacked(final)) final = `${final}\n\n${t(NOTHING_CHANGED)}`
     }
-    content = a.signal.aborted ? (final ? `${final}\n\n*Stopped.*` : '*Stopped.*') : final || NO_ANSWER
+    content = a.signal.aborted ? (final ? `${final}\n\n${STOPPED}` : STOPPED) : final || NO_ANSWER
   } catch (err) {
     console.error(err)
-    content = a.signal.aborted ? '*Stopped.*' : FAILED
+    content = a.signal.aborted ? STOPPED : FAILED
   }
   if (cut !== -1 && !a.signal.aborted) {
     content = `${streamed.slice(0, cut).trim()}\n\n${REPEATING}`

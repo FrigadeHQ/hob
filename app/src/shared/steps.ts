@@ -1,4 +1,5 @@
 import type { Step } from './agent'
+import { t } from './i18n'
 
 /** a row in the work log: one step, or several tries of the same step */
 export type StepRow = Omit<Step, 'status'> & { status: Step['status'] | 'retrying'; tries: number }
@@ -19,7 +20,7 @@ export function stepRows(steps: Step[], running: boolean): StepRow[] {
     const end = g.at(-1)!
     const status = end.status === 'error' && running && i === groups.length - 1 ? 'retrying' : end.status
     const details = g.filter((t) => t.detail)
-    const detail = g.length === 1 ? end.detail : details.length ? details.map((t) => `--- Try ${g.indexOf(t) + 1} ---\n${t.detail}`).join('\n\n') : undefined
+    const detail = g.length === 1 ? end.detail : details.length ? details.map((d) => `${t('--- Try {n} ---', { n: g.indexOf(d) + 1 })}\n${d.detail}`).join('\n\n') : undefined
     return { ...end, status, tries: g.length, ...(detail ? { detail } : {}) }
   })
   // hiccups on the way to a result aren't worth showing; when nothing worked, they explain why. While the reply

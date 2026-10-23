@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs'
 import type { Tool } from '../agent/tool'
 import type { NewSkill } from '../../shared/plugins'
 import { slug, skillNameOk, type Skill } from './skills'
+import { t } from '../../shared/i18n'
 
 const nameOf = (n: unknown) => { const s = String(n ?? ''); return skillNameOk(s) ? s : slug(s) }
 
@@ -21,7 +22,7 @@ export const useSkillTool = (src: SkillSource): Tool<{ name: string }> => ({
     description: 'Get the step-by-step instructions of one of your skills (listed in your instructions) before doing that kind of task.',
     params: { type: 'object', properties: { name: { type: 'string', description: 'The skill name, e.g. plan-trip' } }, required: ['name'] },
   },
-  title: (a) => `Used the ${String(a.name ?? '').replace(/-/g, ' ')} skill`,
+  title: (a) => t('Used the {name} skill', { name: String(a.name ?? '').replace(/-/g, ' ') }),
   action: () => ({ kind: 'run' }),
   async run(a) {
     const s = src.findSkill(String(a.name ?? '').replace(/^\//, ''))
@@ -64,19 +65,19 @@ export const saveSkillTool = (src: SkillSource): Tool<SaveArgs> => ({
       required: ['name', 'description', 'instructions'],
     },
   },
-  title: (a) => `Saved the “${nameOf(a.name)}” skill`,
+  title: (a) => t('Saved the “{name}” skill', { name: nameOf(a.name) }),
   // a web page read in this message could be steering the model; a skill would keep that going in later chats
   refuse: (_a, ctx) => (ctx.untrusted ? "Hob can't save skills after reading web pages in the same message. Tell the user to ask again in a new message." : undefined),
   action: () => ({ kind: 'app', ask: true }),
   ask: (a) => {
     const n = nameOf(a.name)
-    const what = a.replace && src.findSkill(n) ? `Replace the “${n}” skill?` : `Save a skill called “${n}”?`
-    return `${what} You can use it later by typing /${n}.${a.network ? ' Its scripts use the internet.' : ''}`
+    const what = a.replace && src.findSkill(n) ? t('Replace the “{name}” skill?', { name: n }) : t('Save a skill called “{name}”?', { name: n })
+    return `${what} ${t('You can use it later by typing /{name}.', { name: n })}${a.network ? ` ${t('Its scripts use the internet.')}` : ''}`
   },
   askDetail: (a) => {
     const files = filesOf(a)
     const pk = packagesOf(a)
-    return [`${String(a.description ?? '').trim()}`, '', String(a.instructions ?? '').trim(), ...(pk.length ? ['', `Packages: ${pk.join(', ')}`] : []),
+    return [`${String(a.description ?? '').trim()}`, '', String(a.instructions ?? '').trim(), ...(pk.length ? ['', t('Packages: {list}', { list: pk.join(', ') })] : []),
       ...Object.entries(files).map(([f, text]) => `\n--- ${f} ---\n${text.trim()}`)].join('\n')
   },
   async run(a, ctx) {
@@ -89,6 +90,6 @@ export const saveSkillTool = (src: SkillSource): Tool<SaveArgs> => ({
     const r = src.saveSkill({ name, description: String(a.description ?? ''), instructions: withRunLine(name, String(a.instructions ?? ''), files), files, network: a.network === true, ...(packages.length ? { packages } : {}) }, { replace: a.replace === true })
     if (!r.ok) return { text: r.error, failed: true }
     src.onSaved?.()
-    return { text: `Saved. The user can run it with /${r.name}, and you'll see it in your skills list.`, title: `Saved the “${r.name}” skill` }
+    return { text: `Saved. The user can run it with /${r.name}, and you'll see it in your skills list.`, title: t('Saved the “{name}” skill', { name: r.name }) }
   },
 })

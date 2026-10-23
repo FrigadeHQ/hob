@@ -3,6 +3,7 @@ import { dirname } from 'node:path'
 import type { FolderCheck, Project, ProjectInput } from '../shared/agent'
 import { folderProblem } from './agent/permissions'
 import type { ProjectRow } from './store'
+import { t } from '../shared/i18n'
 
 export const MAX_NAME = 80
 
@@ -25,7 +26,7 @@ export function checkFolders(paths: string[], home?: string, own: string[] = [])
 export function cleanProject(input: unknown, home?: string, own: string[] = [], keep: string[] = []): ProjectInput | { error: string } {
   const o = (input ?? {}) as Record<string, unknown>
   const name = String(o.name ?? '').trim().slice(0, MAX_NAME)
-  if (!name) return { error: 'Give the project a name.' }
+  if (!name) return { error: t('Give the project a name.') }
   const folders = checkFolders(Array.isArray(o.folders) ? o.folders.map(String) : [], home, own)
     .filter((f) => !f.problem || keep.includes(f.path))
     .map((f) => f.path)

@@ -5,6 +5,7 @@ import { microsoftCalMail } from './microsoft'
 import { PROVIDERS, type Provider, type ProviderId } from './providers'
 import { emailOf, signIn, tokenRequest, type Tokens } from './signin'
 import type { CalMail } from './types'
+import { t } from '../../shared/i18n'
 
 export type Account = { provider: ProviderId; email: string }
 type Saved = Account & { tokens: Tokens }
@@ -42,7 +43,7 @@ export class Accounts {
 
   async signIn(id: ProviderId): Promise<Account> {
     const p = this.providers[id]
-    if (!p?.clientId) throw new Error(`Signing in with ${p?.name ?? id} isn't available in this version of Hob.`)
+    if (!p?.clientId) throw new Error(t("Signing in with {name} isn't available in this version of Hob.", { name: p?.name ?? id }))
     this.signingIn?.abort()
     const ac = (this.signingIn = new AbortController())
     try {

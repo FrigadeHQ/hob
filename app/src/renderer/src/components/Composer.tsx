@@ -9,8 +9,9 @@ import { useThumbnail } from '../thumbnail'
 import type { Attachment } from '../../../shared/agent'
 import type { SkillRef } from '../../../shared/plugins'
 import { IconButton, PluginIcon } from './ui'
+import { language, t } from '../../../shared/i18n'
 
-const size = (b: number) => (b < 1e6 ? `${Math.max(1, Math.round(b / 1e3))} KB` : `${(b / 1e6).toFixed(1)} MB`)
+const size = (b: number) => (b < 1e6 ? t('{size} KB', { size: Math.max(1, Math.round(b / 1e3)) }) : t('{size} MB', { size: new Intl.NumberFormat(language(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(b / 1e6) }))
 
 /** the attachment card's photo, shrunk smoothly (see useThumbnail) */
 function PhotoThumb({ path }: { path: string }) {
@@ -25,8 +26,8 @@ export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () =
   const image = /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(a.name)
   const pdf = /\.pdf$/i.test(a.path)
   const remove = onRemove && (
-    <button aria-label={`Remove ${a.name}`} onClick={onRemove}
-      className="absolute -right-2 -top-2 z-10 grid h-6 w-6 place-items-center rounded-full bg-ink text-paper opacity-0 shadow transition-opacity focus-visible:opacity-100 group-hover:opacity-100">
+    <button aria-label={t('Remove {name}', { name: a.name })} onClick={onRemove}
+      className="absolute -end-2 -top-2 z-10 grid h-6 w-6 place-items-center rounded-full bg-ink text-paper opacity-0 shadow transition-opacity focus-visible:opacity-100 group-hover:opacity-100">
       <X size={13} strokeWidth={2.25} />
     </button>
   )
@@ -34,8 +35,8 @@ export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () =
   if (THUMB_IMAGE.test(a.path) || pdf) {
     return (
       <span data-testid="attachment-chip" className="group relative inline-block">
-        <button data-testid="attachment-open" title={`Preview ${a.name}`} onClick={() => previewFile(a.path)}
-          className={`relative flex h-[104px] w-32 flex-col rounded-card bg-surface text-left ${pdf ? 'overflow-hidden border border-line transition-colors hover:border-line-strong' : ''}`}>
+        <button data-testid="attachment-open" title={t('Preview {name}', { name: a.name })} onClick={() => previewFile(a.path)}
+          className={`relative flex h-[104px] w-32 flex-col rounded-card bg-surface text-start ${pdf ? 'overflow-hidden border border-line transition-colors hover:border-line-strong' : ''}`}>
           {pdf ? (
             <>
               <span className="block min-h-0 flex-1 overflow-hidden border-b border-line"><PdfThumb path={a.path} width={128} /></span>
@@ -61,7 +62,7 @@ export function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove?: () =
   return (
     <span data-testid="attachment-chip" className="group relative inline-flex items-center gap-1.5 rounded-control border border-line bg-surface px-2 py-1 text-ui">
       {/* click to look at it: photos and PDFs in Hob, anything else in its own app */}
-      <button data-testid="attachment-open" title={canPreview(a.path) ? 'Preview' : 'Open'} onClick={() => previewFile(a.path)} className="inline-flex min-w-0 items-center gap-1.5 hover:text-ink">
+      <button data-testid="attachment-open" title={canPreview(a.path) ? t('Preview') : t('Open')} onClick={() => previewFile(a.path)} className="inline-flex min-w-0 items-center gap-1.5 hover:text-ink">
         <Icon size={14} strokeWidth={1.75} className="shrink-0 text-ink-soft" />
         <span className="max-w-48 truncate underline-offset-2 hover:underline">{a.name}</span>
       </button>
@@ -100,12 +101,12 @@ function matches(value: string, skills: SkillRef[]): SkillRef[] | null {
 function SkillMenu({ items, active, onPick, onHover }: { items: SkillRef[]; active: number; onPick(s: SkillRef): void; onHover(i: number): void }) {
   return (
     <div data-testid="skill-menu" role="listbox" className="fade-in absolute inset-x-0 bottom-full z-30 mb-2 max-h-72 overflow-y-auto rounded-card border border-line bg-surface p-1 shadow-lg">
-      <p className="px-2.5 pt-1.5 pb-1 text-meta text-muted">Skills</p>
-      {items.length === 0 && <p className="px-2.5 py-2 text-ui text-muted">No skill with that name</p>}
+      <p className="px-2.5 pt-1.5 pb-1 text-meta text-muted">{t('Skills')}</p>
+      {items.length === 0 && <p className="px-2.5 py-2 text-ui text-muted">{t('No skill with that name')}</p>}
       {items.map((s, i) => (
         <button key={s.name} role="option" aria-selected={i === active} data-testid="skill-option"
           onMouseDown={(e) => { e.preventDefault(); onPick(s) }} onMouseEnter={() => onHover(i)}
-          className={`flex w-full items-center gap-2.5 rounded-control px-2.5 py-1.5 text-left ${i === active ? 'bg-line/70' : ''}`}>
+          className={`flex w-full items-center gap-2.5 rounded-control px-2.5 py-1.5 text-start ${i === active ? 'bg-line/70' : ''}`}>
           <PluginIcon name={s.icon} className="shrink-0 text-ink-soft" />
           <span className="shrink-0 text-ui font-medium">/{s.name}</span>
           <span className="min-w-0 flex-1 truncate text-ui text-muted">{s.description}</span>
@@ -186,23 +187,23 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
           onKeyDown={onKeyDown}
           // a pasted screenshot or copied file becomes an attachment; pasted text stays text
           onPaste={(e) => { const files = Array.from(e.clipboardData.files); if (files.length && onPasteFiles) { e.preventDefault(); onPasteFiles(files) } }}
-          placeholder={dictation?.hint ?? (running ? 'Hob is working. Type your next message, it sends when Hob is done' : skills.length ? 'Ask Hob anything, type / for skills' : 'Ask Hob anything, or drop files here')}
+          placeholder={dictation?.hint ?? (running ? t('Hob is working. Type your next message, it sends when Hob is done') : skills.length ? t('Ask Hob anything, type / for skills') : t('Ask Hob anything, or drop files here'))}
           rows={1}
           className={`block max-h-60 min-h-[48px] w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-body outline-none placeholder:text-muted [field-sizing:content] ${dictation?.hint ? 'placeholder:italic' : ''}`}
         />
         <div className="flex items-center gap-0.5 px-2 pb-2">
-          <IconButton icon={Plus} label="Add files" testId="attach" onClick={onAttach} />
+          <IconButton icon={Plus} label={t('Add files')} testId="attach" onClick={onAttach} />
           <div className="flex-1" />
           <EffortMenu />
           {/* same buttons while recording: the wave appears next to the mic, which turns blue */}
           {dictation?.listening && <Waveform level={dictation.level} />}
           {dictation?.busy && (
-            <span data-testid="dictate-busy" className="flex items-center gap-1 px-2" aria-label="Turning speech into text">
+            <span data-testid="dictate-busy" className="flex items-center gap-1 px-2" aria-label={t('Turning speech into text')}>
               {[0, 1, 2].map((i) => <span key={i} className="size-1.5 animate-pulse rounded-full bg-ink-soft" style={{ animationDelay: `${i * 160}ms` }} />)}
             </span>
           )}
           {dictation && (
-            <button type="button" data-testid="dictate" aria-label={dictation.listening ? 'Stop and add the text (Enter)' : 'Dictate'} title={dictation.listening ? 'Stop and add the text (Enter). Esc cancels.' : 'Dictate'}
+            <button type="button" data-testid="dictate" aria-label={dictation.listening ? t('Stop and add the text (Enter)') : t('Dictate')} title={dictation.listening ? t('Stop and add the text (Enter). Esc cancels.') : t('Dictate')}
               onClick={dictation.toggle} disabled={dictation.busy}
               className={`no-drag inline-flex size-8 items-center justify-center rounded-control transition-colors disabled:opacity-40 ${dictation.listening ? 'bg-rec text-rec-ink' : 'text-ink-soft hover:bg-line/70 hover:text-ink'}`}>
               <Mic size={16} strokeWidth={1.75} />
@@ -210,12 +211,12 @@ export function Composer({ value, onChange, onSend, onStop, onAttach, onPasteFil
           )}
           {dictation && <MicMenu disabled={dictation.listening || dictation.busy} />}
           {running ? (
-            <button data-testid="composer-stop" aria-label="Stop" title="Stop" onClick={onStop} className="inline-flex size-8 items-center justify-center rounded-full bg-ink text-paper hover:opacity-90">
+            <button data-testid="composer-stop" aria-label={t('Stop')} title={t('Stop')} onClick={onStop} className="inline-flex size-8 items-center justify-center rounded-full bg-ink text-paper hover:opacity-90">
               <Square size={12} fill="currentColor" />
             </button>
           ) : (
             <button
-              data-testid="composer-send" aria-label="Send (Enter)" title="Send (Enter)" onClick={onSend} disabled={!canSend}
+              data-testid="composer-send" aria-label={t('Send (Enter)')} title={t('Send (Enter)')} onClick={onSend} disabled={!canSend}
               className="inline-flex size-8 items-center justify-center rounded-control text-muted transition-colors enabled:bg-action enabled:text-on-action enabled:hover:opacity-90 disabled:opacity-60"
             >
               <CornerDownLeft size={16} strokeWidth={1.75} />

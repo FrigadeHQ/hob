@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import type { Provider } from './providers'
+import { t } from '../../shared/i18n'
 
 export type Tokens = { access_token: string; refresh_token?: string; expires_at?: number; id_token?: string }
 const SIGN_IN_MS = 5 * 60_000
@@ -13,7 +14,7 @@ export async function tokenRequest(fetchFn: typeof fetch, p: Provider, form: Rec
   const body = new URLSearchParams({ client_id: p.clientId, ...(p.clientSecret ? { client_secret: p.clientSecret } : {}), ...form })
   const r = await fetchFn(p.tokenUrl, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' }, body, signal: AbortSignal.timeout(20_000) })
   const j = (await r.json().catch(() => ({}))) as Tokens & { expires_in?: number; error?: string; error_description?: string }
-  if (!r.ok || !j.access_token) throw Object.assign(new Error(j.error_description || j.error || `Sign-in failed (${r.status})`), { code: j.error })
+  if (!r.ok || !j.access_token) throw Object.assign(new Error(j.error_description || j.error || t('Sign-in failed ({status})', { status: String(r.status) })), { code: j.error })
   return { access_token: j.access_token, refresh_token: j.refresh_token, id_token: j.id_token, ...(j.expires_in ? { expires_at: Date.now() + j.expires_in * 1000 } : {}) }
 }
 
@@ -41,8 +42,8 @@ export async function signIn(p: Provider, open: (url: string) => Promise<void>, 
     if (u.searchParams.get('state') !== state) { res.writeHead(400).end(); return }
     const error = u.searchParams.get('error') ?? undefined
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(error
-      ? PAGE('Not connected', 'Nothing was shared with Hob. You can close this tab.')
-      : PAGE('You’re connected', 'You can close this tab and go back to Hob.'))
+      ? PAGE(t('Not connected'), t('Nothing was shared with Hob. You can close this tab.'))
+      : PAGE(t('You’re connected'), t('You can close this tab and go back to Hob.')))
     done({ code: u.searchParams.get('code') ?? undefined, error })
   })
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
@@ -55,9 +56,9 @@ export async function signIn(p: Provider, open: (url: string) => Promise<void>, 
     for (const [k, v] of Object.entries({ client_id: p.clientId, redirect_uri: redirect, response_type: 'code', scope: p.scopes.join(' '), state, code_challenge: challenge, code_challenge_method: 'S256', ...p.extra })) url.searchParams.set(k, v)
     await open(url.toString())
     const r = await answer
-    if (r.error === 'timeout') throw new Error('Signing in took too long. Try again.')
-    if (r.error === 'cancelled') throw new Error('Sign-in cancelled.')
-    if (r.error || !r.code) throw new Error(`${p.name} didn't connect: ${r.error === 'access_denied' ? 'access was not allowed' : r.error ?? 'no answer'}.`)
+    if (r.error === 'timeout') throw new Error(t('Signing in took too long. Try again.'))
+    if (r.error === 'cancelled') throw new Error(t('Sign-in cancelled.'))
+    if (r.error || !r.code) throw new Error(r.error === 'access_denied' ? t("{name} didn't connect: access was not allowed.", { name: p.name }) : r.error ? t("{name} didn't connect: {error}.", { name: p.name, error: r.error }) : t("{name} didn't connect: no answer.", { name: p.name }))
     return await tokenRequest(fetchFn, p, { grant_type: 'authorization_code', code: r.code, code_verifier: verifier, redirect_uri: redirect })
   } finally {
     clearTimeout(timer)

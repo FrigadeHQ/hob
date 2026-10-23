@@ -3,6 +3,7 @@ import { homedir } from 'node:os'
 import { join, normalize, sep } from 'node:path'
 import type { Manifest, McpServerConfig, McpStdioConfig, PluginSetting, SettingKind } from './manifest'
 import { slug } from './skills'
+import { language, t } from '../../shared/i18n'
 
 /**
  * MCP Bundles (.mcpb, formerly .dxt): a zip with a manifest.json and a server inside, the format Claude Desktop installs.
@@ -36,7 +37,7 @@ export function fromMcpb(raw: Raw, dir: string, platform: string = process.platf
   const type = text(server.type) as McpStdioConfig['runtime']
   if (!type || !['node', 'python', 'uv', 'binary'].includes(type)) return { error: `manifest.json: server.type “${text(server.type)}” isn't supported` }
   const platforms = isObj(raw.compatibility) && Array.isArray(raw.compatibility.platforms) ? raw.compatibility.platforms.map(String) : undefined
-  if (platforms && !platforms.includes(platform)) return { error: `This bundle only works on ${platforms.map((p) => PLATFORM[p] ?? p).join(' and ')}.` }
+  if (platforms && !platforms.includes(platform)) { const names = platforms.map((p) => PLATFORM[p] ?? p); return { error: t('This bundle only works on {platforms}.', { platforms: language() === 'en' ? names.join(' and ') : new Intl.ListFormat(language(), { type: 'conjunction' }).format(names) }) } }
 
   const entry = text(server.entry_point)
   const cfg = isObj(server.mcp_config) ? server.mcp_config : undefined

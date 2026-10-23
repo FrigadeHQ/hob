@@ -7,6 +7,7 @@ import { htmlToText } from './web'
 import { fileManager } from '../../shared/platform'
 import { pythonPreview } from './python'
 import { readPdf } from './pdf'
+import { t } from '../../shared/i18n'
 
 /** a report's figures are dense and must not be cut mid-table */
 const REPORT_CHARS = 16000
@@ -44,7 +45,7 @@ export const listFiles: Tool<{ path?: string }> = {
   spec: { name: 'list_files', description: "List files in a folder. Defaults to the project's main folder in a project, otherwise the chat folder.", params: { type: 'object', properties: { path: { type: 'string', description: 'Folder path; omit for the project folder (or the chat folder outside projects)' } } } },
   // "what's in here?" in a project means the project's folder, not the (empty) chat folder
   prepare: (a, ctx) => (!a.path?.trim() && ctx.mainFolder && existsSync(ctx.mainFolder) ? { ...a, path: ctx.mainFolder } : a),
-  title: (a) => (a.path ? `Looked in ${basename(a.path)}` : 'Looked at your files'),
+  title: (a) => (a.path ? t('Looked in {name}', { name: basename(a.path) }) : t('Looked at your files')),
   action: (a, ctx) => ({ kind: 'read', paths: [resolvePath(ctx, a.path ?? '.')] }),
   async run(a, ctx) {
     const dir = resolvePath(ctx, a.path ?? '.')
@@ -60,7 +61,7 @@ export const listFiles: Tool<{ path?: string }> = {
 
 export const readFile: Tool<{ path: string }> = {
   spec: { name: 'read_file', description: 'Preview a file (text, CSV, Excel, PDF, Word, PowerPoint). Returns the start of the file and its full path; use run_python to work with all of it.', params: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
-  title: (a) => `Read ${basename(a.path)}`,
+  title: (a) => t('Read {name}', { name: basename(a.path) }),
   action: (a, ctx) => ({ kind: 'read', paths: [resolvePath(ctx, a.path)] }),
   async run(a, ctx) {
     const p = resolvePath(ctx, a.path)
@@ -94,9 +95,9 @@ export const readFile: Tool<{ path: string }> = {
 
 export const writeFile: Tool<{ path: string; content: string }> = {
   spec: { name: 'write_file', description: 'Write a text file (creates folders as needed). Paths are relative to the chat folder.', params: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] } },
-  title: (a) => `Wrote ${basename(a.path)}`,
+  title: (a) => t('Wrote {name}', { name: basename(a.path) }),
   action: (a, ctx) => { const p = resolvePath(ctx, a.path); return { kind: existsSync(p) ? 'change' : 'create', paths: [p] } },
-  ask: (a) => `Save ${basename(a.path)} in ${basename(dirname(a.path))}?`,
+  ask: (a) => t('Save {name} in {folder}?', { name: basename(a.path), folder: basename(dirname(a.path)) }),
   async run(a, ctx) {
     const p = resolvePath(ctx, a.path)
     // writing follows links; code can plant one, so never write through it
@@ -118,15 +119,15 @@ export const writeFile: Tool<{ path: string; content: string }> = {
 
 export const moveFile: Tool<{ from: string; to: string }> = {
   spec: { name: 'move_file', description: 'Move or rename a file or folder.', params: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' } }, required: ['from', 'to'] } },
-  title: (a) => `Moved ${basename(a.from)} → ${basename(dirname(a.to))}/${basename(a.to)}`,
+  title: (a) => t('Moved {name} → {path}', { name: basename(a.from), path: `${basename(dirname(a.to))}/${basename(a.to)}` }),
   action: (a, ctx) => { const m = { from: resolvePath(ctx, a.from), to: resolvePath(ctx, a.to) }; return { kind: moveKind(ctx, [m]), paths: [m.from, m.to] } },
-  ask: (a) => `Move ${basename(a.from)} to ${basename(dirname(a.to))}/${basename(a.to)}?`,
+  ask: (a) => t('Move {name} to {path}?', { name: basename(a.from), path: `${basename(dirname(a.to))}/${basename(a.to)}` }),
   async run(a, ctx) {
     const from = resolvePath(ctx, a.from); const to = resolvePath(ctx, a.to)
     const folder = basename(dirname(to))
     // models repeat moves they already did; say plainly that it's done so they move on
-    if (existsSync(to) && !lexists(from)) return { text: `${basename(to)} is already in ${folder}. Nothing to do; continue with the next file.`, title: `${basename(to)} is already in ${folder}` }
-    if (existsSync(to)) return { text: `Not moved: ${to} already exists. Pick another name.`, title: `Couldn't move ${basename(from)}: ${folder} already has one`, failed: true }
+    if (existsSync(to) && !lexists(from)) return { text: `${basename(to)} is already in ${folder}. Nothing to do; continue with the next file.`, title: t('{name} is already in {folder}', { name: basename(to), folder }) }
+    if (existsSync(to)) return { text: `Not moved: ${to} already exists. Pick another name.`, title: t("Couldn't move {name}: {folder} already has one", { name: basename(from), folder }), failed: true }
     makeDir(ctx, dirname(to))
     moveAcross(from, to)
     if (inGrant(ctx, from) || inGrant(ctx, to)) ctx.journal.moved(from, to)
@@ -163,9 +164,9 @@ function movesFromFile(file: string, ctx: TurnCtx): MoveArgs {
   return moves.length ? { moves, listFile: p } : fail('it has no {"from", "to"} pairs')
 }
 /** "Rename 20 files in hob-test" or "Move 3 files" */
-function describeMoves(moves: Move[]): { verb: 'Rename' | 'Move'; where: string } {
+function describeMoves(moves: Move[]): { verb: 'Rename' | 'Move'; folder?: string } {
   const dirs = new Set(moves.flatMap((m) => [dirname(m.from), dirname(m.to)]))
-  return dirs.size === 1 ? { verb: 'Rename', where: ` in ${basename([...dirs][0])}` } : { verb: 'Move', where: '' }
+  return dirs.size === 1 ? { verb: 'Rename', folder: basename([...dirs][0]) } : { verb: 'Move' }
 }
 const files = (n: number) => `${n} ${n === 1 ? 'file' : 'files'}`
 
@@ -186,28 +187,30 @@ export const moveFiles: Tool<MoveArgs> = {
     const f = listFile(a) ?? (!movesOf(a).length && existsSync(join(ctx.chatDir, 'moves.json')) ? 'moves.json' : undefined)
     return f ? movesFromFile(f, ctx) : a
   },
-  title: (a) => { const m = movesOf(a); const d = describeMoves(m); return `${d.verb === 'Rename' ? 'Renamed' : 'Moved'} ${files(m.length)}${d.where}` },
+  title: (a) => { const m = movesOf(a); const d = describeMoves(m); return d.verb === 'Rename' ? t('Renamed {count} files in {folder}', { count: m.length, folder: d.folder! }) : t('Moved {count} files', { count: m.length }) },
   action: (a, ctx) => { const ms = movesOf(a).map((m) => ({ from: resolvePath(ctx, m.from), to: resolvePath(ctx, m.to) })); return { kind: moveKind(ctx, ms), paths: ms.flatMap((m) => [m.from, m.to]) } },
-  ask: (a) => { const m = movesOf(a); const d = describeMoves(m); return `${d.verb} ${files(m.length)}${d.where}?` },
+  ask: (a) => { const m = movesOf(a); const d = describeMoves(m); return d.verb === 'Rename' ? t('Rename {count} files in {folder}?', { count: m.length, folder: d.folder! }) : t('Move {count} files?', { count: m.length }) },
   askDetail: (a) => movesOf(a).map((m) => `${basename(m.from)} → ${basename(m.to)}`).join('\n'),
   async run(a, ctx) {
-    if (a.fileError) return { text: a.fileError, failed: true, title: "Couldn't read the list of files" }
+    if (a.fileError) return { text: a.fileError, failed: true, title: t("Couldn't read the list of files") }
     const moves = movesOf(a).map((m) => ({ from: resolvePath(ctx, m.from), to: resolvePath(ctx, m.to) }))
-    if (!moves.length) return { text: 'No files given. Pass file: "moves.json" (a JSON list of {"from", "to"} full paths that run_python saved in the chat folder), or moves as a list of {"from", "to"} paths.', failed: true, title: "Couldn't move files: none given", detail: `Hob got: ${JSON.stringify(a).slice(0, 500)}` }
-    if (moves.length > MAX_MOVES) return { text: `Too many at once (${moves.length}). Do at most ${MAX_MOVES} per call.`, failed: true, title: `Couldn't move ${files(moves.length)}: too many at once` }
+    if (!moves.length) return { text: 'No files given. Pass file: "moves.json" (a JSON list of {"from", "to"} full paths that run_python saved in the chat folder), or moves as a list of {"from", "to"} paths.', failed: true, title: t("Couldn't move files: none given"), detail: t('Hob got: {args}', { args: JSON.stringify(a).slice(0, 500) }) }
+    if (moves.length > MAX_MOVES) return { text: `Too many at once (${moves.length}). Do at most ${MAX_MOVES} per call.`, failed: true, title: t("Couldn't move {count} files: too many at once", { count: moves.length }) }
     // check everything first, so a bad name doesn't leave the folder half renamed
     const done = moves.filter((m) => existsSync(m.to) && !lexists(m.from))
     const todo = moves.filter((m) => !done.includes(m))
     const problems: string[] = []
+    // the first problem in the person's words, for the step title
+    const shown: string[] = []
     const targets = new Set<string>()
     for (const m of todo) {
-      if (!lexists(m.from)) problems.push(`${m.from} doesn't exist`)
-      else if (existsSync(m.to)) problems.push(`${m.to} already exists`)
-      else if (targets.has(m.to)) problems.push(`two files would both be called ${basename(m.to)}`)
+      if (!lexists(m.from)) { problems.push(`${m.from} doesn't exist`); shown.push(t("{name} doesn't exist", { name: basename(m.from) })) }
+      else if (existsSync(m.to)) { problems.push(`${m.to} already exists`); shown.push(t('{name} already exists', { name: basename(m.to) })) }
+      else if (targets.has(m.to)) { problems.push(`two files would both be called ${basename(m.to)}`); shown.push(t('two files would both be called {name}', { name: basename(m.to) })) }
       targets.add(m.to)
     }
     if (problems.length) {
-      return { text: `Nothing was moved. Fix these and call move_files again:\n${problems.slice(0, 30).join('\n')}`, failed: true, title: `Couldn't move ${files(todo.length)}: ${problems.length === 1 ? problems[0].replace(/^.*[\\/]/, '') : `${problems.length} problems`}` }
+      return { text: `Nothing was moved. Fix these and call move_files again:\n${problems.slice(0, 30).join('\n')}`, failed: true, title: t("Couldn't move {count} files: {reason}", { count: todo.length, reason: problems.length === 1 ? shown[0] : t('{count} problems', { count: problems.length }) }) }
     }
     const moved: Move[] = []
     try {
@@ -234,9 +237,9 @@ export const moveFiles: Tool<MoveArgs> = {
 
 export const deleteFile: Tool<{ path: string }> = {
   spec: { name: 'delete_file', description: 'Move a file or folder to the Trash.', params: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
-  title: (a) => `Moved ${basename(a.path)} to the Trash`,
+  title: (a) => t('Moved {name} to the Trash', { name: basename(a.path) }),
   action: (a, ctx) => ({ kind: 'change', paths: [resolvePath(ctx, a.path)] }),
-  ask: (a) => `Move ${basename(a.path)} to the Trash?`,
+  ask: (a) => t('Move {name} to the Trash?', { name: basename(a.path) }),
   async run(a, ctx) {
     const p = resolvePath(ctx, a.path)
     if ([ctx.chatDir, ...ctx.grants].some((root) => isInside(p, root))) throw new Error("Won't delete the whole folder. Delete the files inside it instead.")
@@ -258,16 +261,16 @@ export const openFolder: Tool<{ path?: string }> = {
     description: `Open a folder on the user's screen (in ${fileManager(process.platform)}), or show a file inside its folder. Omit path for the project's main folder, or this chat's folder.`,
     params: { type: 'object', properties: { path: { type: 'string', description: 'Folder or file; omit for the main folder' } } },
   },
-  title: (a) => `Opened ${a.path ? basename(a.path) || a.path : 'the folder'}`,
+  title: (a) => (a.path ? t('Opened {name}', { name: basename(a.path) || a.path }) : t('Opened the folder')),
   action: (a, ctx) => ({ kind: 'read', paths: [mainMissing(a, ctx) ? ctx.chatDir : openTarget(a, ctx)] }),
   async run(a, ctx) {
     const p = openTarget(a, ctx)
-    if (mainMissing(a, ctx)) return { text: `Can't find ${p}. It may have been moved or renamed, or be on a drive that isn't plugged in. Tell the user.`, failed: true, title: `Couldn't find ${basename(p)}` }
+    if (mainMissing(a, ctx)) return { text: `Can't find ${p}. It may have been moved or renamed, or be on a drive that isn't plugged in. Tell the user.`, failed: true, title: t("Couldn't find {name}", { name: basename(p) }) }
     if (!ctx.reveal) return { text: "Opening folders isn't available here.", failed: true }
-    if (!existsSync(p)) return { text: `${p} doesn't exist.`, failed: true, title: `Couldn't find ${basename(p)}` }
+    if (!existsSync(p)) return { text: `${p} doesn't exist.`, failed: true, title: t("Couldn't find {name}", { name: basename(p) }) }
     const folder = statSync(p).isDirectory() && !isBundle(p)
     await ctx.reveal(p, folder)
     const app = fileManager(process.platform)
-    return folder ? { text: `Opened ${p} in ${app}.` } : { text: `Showed ${basename(p)} in its folder in ${app}.`, title: `Showed ${basename(p)} in its folder` }
+    return folder ? { text: `Opened ${p} in ${app}.` } : { text: `Showed ${basename(p)} in its folder in ${app}.`, title: t('Showed {name} in its folder', { name: basename(p) }) }
   },
 }

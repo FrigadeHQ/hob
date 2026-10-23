@@ -1,10 +1,12 @@
+import { msg } from './i18n'
+
 /** How long Hob thinks before it answers: picked beside the mic, kept in settings. */
 export type Effort = 'quick' | 'normal' | 'deep'
 
 export const EFFORTS: { id: Effort; label: string; description: string }[] = [
-  { id: 'quick', label: 'Quick', description: 'Answers fastest, thinks briefly' },
-  { id: 'normal', label: 'Normal', description: 'Thinks as long as most things need' },
-  { id: 'deep', label: 'Deep', description: 'Thinks longer on hard problems. Slower' },
+  { id: 'quick', label: msg('Quick'), description: msg('Answers fastest, thinks briefly') },
+  { id: 'normal', label: msg('Normal'), description: msg('Thinks as long as most things need') },
+  { id: 'deep', label: msg('Deep'), description: msg('Thinks longer on hard problems. Slower') },
 ]
 
 export const DEFAULT_EFFORT: Effort = 'normal'

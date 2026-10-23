@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 import { hob } from '../api'
+import { t } from '../../../shared/i18n'
 
 export function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -11,7 +12,7 @@ export function CopyButton({ text }: { text: string }) {
       className="inline-flex items-center gap-1.5 rounded-control px-1.5 py-1 text-meta text-muted hover:bg-line/70 hover:text-ink"
     >
       {copied ? <Check size={14} /> : <Copy size={14} />}
-      {copied ? 'Copied' : 'Copy'}
+      {copied ? t('Copied') : t('Copy')}
     </button>
   )
 }
