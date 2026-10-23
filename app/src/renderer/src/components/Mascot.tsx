@@ -1,10 +1,9 @@
-import { useEffect, useId, useRef, useState } from 'react'
-import { faceRects, tintMatrix, type Expression, type Rect } from '../../../shared/mascot'
-import bodyUrl from '../assets/hob-body.png'
+import { useEffect, useRef, useState } from 'react'
+import { faceRects, type Expression, type Rect } from '../../../shared/mascot'
+import bodyUrl from '../assets/hob-body.svg'
 
 const neutral = faceRects('neutral')
 const smile = faceRects('smile').slice(2)
-const tint = tintMatrix()
 const rect = (r: Rect, i: number) => <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill} />
 const glances = [{ x: -3, y: 0 }, { x: 3, y: 0 }, { x: 0, y: 0 }, { x: -2, y: 1 }, { x: 2, y: 1 }, { x: 0, y: -2 }]
 const greetings: Partial<Record<Expression, string>> = { content: 'Hob smiles.', wink: 'Hob winks.', laugh: 'Hob laughs.', skeptical: 'Hob raises an eyebrow.' }
@@ -83,15 +82,12 @@ function usePlayfulFace(on: boolean) {
 /** The sidebar rests with a small smile; setup and the greeting also respond to a hello. */
 export function Mascot({ size = 96, alive = false, working = false, playful = false }: { size?: number; alive?: boolean; working?: boolean; playful?: boolean }) {
   const face = usePlayfulFace(alive && playful)
-  const filter = `hob-tint-${useId().replace(/:/g, '')}`
   const artwork = (
     <svg ref={face.ref} data-testid="mascot" data-expression={playful ? face.expression : working ? 'working' : 'smile'} width={size} height={size} viewBox="0 0 60 60" shapeRendering="crispEdges" role="img" aria-label="Hob" aria-hidden={playful || undefined}
       className={`hob-mascot overflow-visible shrink-0 ${alive && !playful ? 'hob-alive' : ''} ${working ? 'hob-working' : ''}`}>
-      {/* Hob's colour: the grey body art tinted */}
-      <defs><filter id={filter} colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values={tint} /></filter></defs>
       <ellipse cx="30" cy="62" rx="16" ry="2" fill="currentColor" opacity="0.08" />
       <svg width="60" height="60" viewBox="158 155.5 937 937">
-        <image href={bodyUrl} width="1254" height="1254" filter={`url(#${filter})`} />
+        <image href={bodyUrl} width="1254" height="1254" />
       </svg>
       <g className="hob-face">
         {playful ? <g data-testid="mascot-eyes">{faceRects(face.expression, face.gaze.x, face.gaze.y).map(rect)}</g> : <>

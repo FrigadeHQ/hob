@@ -271,9 +271,15 @@ test('clicking an attached photo or PDF previews it inside Hob', async () => {
 test('the mic menu lists microphones and keeps the dictation language', async () => {
   const { app, page } = await launch()
   await ready(page)
+  // CI audio hardware can be absent or stall enumeration; this checks the menu and preferences.
+  await page.evaluate(() => {
+    navigator.mediaDevices.enumerateDevices = async () => [{
+      deviceId: 'default', groupId: 'test', kind: 'audioinput', label: 'Test microphone', toJSON: () => ({}),
+    }]
+  })
   await page.getByTestId('mic-menu').click()
   await expect(page.getByTestId('mic-options')).toContainText('Dictation settings')
-  await expect(page.getByTestId('mic-option').first()).toBeVisible()
+  await expect(page.getByTestId('mic-option')).toHaveText('Test microphone')
   await page.getByTestId('dictation-language').click()
   await page.getByTestId('language-option').filter({ hasText: 'Danish' }).click()
   await expect(page.getByTestId('dictation-language')).toContainText('Danish')

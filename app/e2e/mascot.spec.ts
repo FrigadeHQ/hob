@@ -15,8 +15,9 @@ test('Hob follows the cursor in the greeting and settles in the sidebar', async 
     const sidebarMascot = page.getByTestId('sidebar').getByTestId('mascot')
     await expect(mascot).toHaveCount(1)
     await expect(mascot).toHaveAttribute('width', '48')
-    // Hob has a colour, not the art's grey
-    await expect(mascot.locator('feColorMatrix')).toHaveCount(1)
+    // The approved Iris artwork keeps its own vector shading and colours.
+    await expect(mascot.locator('image')).toHaveAttribute('href', /hob-body-.*\.svg$/)
+    await expect(mascot.locator('filter')).toHaveCount(0)
     await expect(sidebarMascot).toBeHidden()
     await page.evaluate(() => document.fonts.ready)
     expect(await page.evaluate(() => document.fonts.check('16px "Hanken Grotesk"'))).toBe(true)

@@ -2,6 +2,8 @@
 
 This is an expression study outside the shipped app. It reuses the app's body artwork and Hanken font. The app now uses the warm smile, blink, neutral face, raised eyebrow, content smile, wink, and laugh; the other expressions remain here for review.
 
+The body is the approved website's crisp Iris SVG, copied unchanged from `hob-chat/assets/hob-body.svg`. Its original gradient, outline, and bottom-edge dithering are preserved. The app, this study, app icon, README logo, and repository website use this artwork; `sh app/scripts/make-icons.sh` regenerates the exports from the app's SVG.
+
 From the repository root:
 
 ```sh

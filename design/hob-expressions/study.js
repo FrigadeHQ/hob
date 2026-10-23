@@ -1,5 +1,5 @@
 /* The app uses smile, neutral, blink, eyebrow, content, wink, and laugh; the other faces remain exploratory. */
-const body = '../../app/src/renderer/src/assets/hob-body.png';
+const body = '../../app/src/renderer/src/assets/hob-body.svg';
 const openEyes = [[15,27,5,5],[40,27,5,5]];
 const closedEyes = [[15,29,5,2],[40,29,5,2]];
 const smile = [[25,35,10,2],[23,33,2,2],[35,33,2,2]];
@@ -22,7 +22,7 @@ const faces = [
   { id:'sad', name:'Downcast', kind:'Exploration', note:'A softer frown. Worth comparing, rather than assuming we need it.', eyes:[[15,28,5,4],[40,28,5,4]], mouth:[[25,33,10,2],[23,35,2,2],[35,35,2,2]] },
   { id:'sleepy', name:'Sleepy', kind:'Exploration', note:'Heavy eyelids and a tiny mouth. Resting, not absent.', eyes:[[15,30,5,2],[40,30,5,2]], mouth:[[27,35,6,2]] },
 ];
-const rectangles = (rs) => rs.map(([x,y,w,h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#1c1b22"/>`).join('');
+const rectangles = (rs) => rs.map(([x,y,w,h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#292929"/>`).join('');
 function artwork(face, size) {
   return `<svg class="hob" width="${size}" height="${size}" viewBox="0 0 60 60" shape-rendering="crispEdges" role="img" aria-label="Hob: ${face.name}"><ellipse cx="30" cy="62" rx="16" ry="2" fill="currentColor" opacity=".07"/><svg width="60" height="60" viewBox="158 155.5 937 937"><image href="${body}" width="1254" height="1254"/></svg><g class="eyes">${rectangles(face.eyes)}${rectangles(face.brow || [])}</g><g class="mouth">${rectangles(face.mouth)}</g></svg>`;
 }
