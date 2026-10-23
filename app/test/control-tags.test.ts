@@ -36,3 +36,27 @@ describe('streamCleaner: tags are held back and removed while streaming', () => 
     expect(run(['a <', ' b and <b>x</b>'])).toBe('a < b and <b>x</b>')
   })
 })
+
+// long chats: Gemma opens its thinking with a made-up tag, as text, and the thought became the reply
+const LEAKED = '<thought\n> I need to look at the folder first.\n\nThe user\'s project is "Notes".\n\nPlan:\n1. List files.'
+describe('a reply that opens with a thinking tag is thinking', () => {
+  it('to the end of the thought, or all of it when the thought never ends', () => {
+    expect(cleanAnswer(LEAKED)).toBe('')
+    expect(cleanAnswer('<thought>\nList the folder.\n</thought>\nHere are your notes.')).toBe('Here are your notes.')
+    expect(cleanAnswer('<|channel|>thought\nhm<channel|>Done.')).toBe('Done.')
+    expect(cleanAnswer('  <think>\nhm</think>Done.')).toBe('Done.')
+  })
+  it('only at the start, and only as a tag', () => {
+    expect(cleanAnswer('Your <thought> tags are fine.')).toBe('Your <thought> tags are fine.')
+    expect(cleanAnswer('<thoughtful> is not a tag')).toBe('<thoughtful> is not a tag')
+  })
+  it('while streaming, the thought goes to the thinking, not the reply', () => {
+    const thought: string[] = []
+    const c = streamCleaner((t) => thought.push(t))
+    const out = ['<tho', 'ught\n> I need', ' to look.', '</thought>', '\nHere you go.'].map((x) => c.push(x)).join('') + c.end()
+    expect(out).toBe('Here you go.')
+    expect(thought.join('')).toContain('I need to look.')
+    const c2 = streamCleaner()
+    expect(['<thoughtful', ' idea'].map((x) => c2.push(x)).join('') + c2.end()).toBe('<thoughtful idea')
+  })
+})

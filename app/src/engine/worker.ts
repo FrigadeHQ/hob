@@ -110,7 +110,8 @@ async function chat(id: number, req: { messages: ChatMessage[]; tools: ToolSpec[
     if (req.thoughtBudgetWithTools) budgets.thoughtTokens = Math.max(budgets.thoughtTokens, req.thoughtBudgetWithTools)
     return callMain(id, name, args, ac.signal)
   }
-  const clean = streamCleaner()
+  // a thought the model opened with a made-up tag streams as thinking, like a real one
+  const clean = streamCleaner((text) => { thought += text; send({ id, type: 'token', text, thought: true }) })
   try {
     const response = await session.prompt(last.content, {
       ...samplingFor((req.side && side ? side.model : model)?.fileInfo.metadata.general.architecture),
