@@ -33,7 +33,7 @@ function DownloadDetails({ state, onClose }: { state: Extract<SetupState, { phas
 
 /** First launch: the final line stays until the computer checks finish. */
 const FIRST_RUN = ['Starting Hob…', 'Checking your computer…', 'Reviewing available AI models…', 'Finding the best fit for your computer…']
-const EVERYDAY_START = ['Stoking the fire…', 'Waking up the model…', 'Warming up…', 'Putting the kettle on…', 'Gathering your chats…', 'Fluffing the cushions…', 'Almost there…']
+const EVERYDAY_START = ['Waking up…', 'Getting ready…', 'Finding my focus…', 'Just a moment…']
 function ProbingLine({ firstRun }: { firstRun: boolean }) {
   const lines = firstRun ? FIRST_RUN : EVERYDAY_START
   const [i, setI] = useState(() => (firstRun ? 0 : Math.floor(Math.random() * lines.length)))
