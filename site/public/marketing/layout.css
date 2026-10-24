@@ -19,7 +19,8 @@
 .hero-pixels { position:absolute; z-index:-1; width:max(1400px,calc(100vw + 240px)); max-width:none; left:50%; top:22%; height:520px; transform:translateX(-50%); pointer-events:none; }
 .layout-v2 .demo-stage { aspect-ratio:8/5; box-shadow:0 0 0 1px #00000020,0 3px 8px #0000000a,0 24px 65px -14px #00000035; }
 .hero-app { display:block; position:absolute; inset:0; width:1280px; height:800px; border:0; transform-origin:top left; pointer-events:none; }
-.layout-v2 .benefits { width:min(800px,calc(100% - 64px)); text-align:center; padding:72px 0 64px; border:0; gap:30px; }
+.layout-v2 .benefits { width:min(1040px,calc(100% - 64px)); grid-template-columns:repeat(4,1fr); text-align:center; padding:72px 0 64px; border:0; gap:30px; }
+.layout-v2 .benefits a { text-decoration:underline; text-underline-offset:3px; }
 .layout-v2 .benefits h2 { font-size:24px; letter-spacing:-.6px; }
 .layout-v2 .benefits p { font-size:14px; margin-top:9px; line-height:1.6; }
 .section-heading { max-width:700px; margin:0 auto; text-align:center; }
@@ -65,6 +66,7 @@
 .layout-review { position:fixed; right:15px; bottom:15px; z-index:30; display:flex; align-items:center; gap:14px; background:#fffffff5; border:1px solid #e7e7e7; padding:9px 13px; border-radius:7px; font-size:11px; box-shadow:0 3px 14px #00000009; }
 .layout-review strong { font-size:10px; color:#9b92ab; }
 @media(max-width:900px) {
+ .layout-v2 .benefits { grid-template-columns:repeat(2,1fr); row-gap:36px; }
  .layout-v2 .hero h1 { font-size:48px; }
  .layout-v2 .section-heading h2,.layout-v2 .work-comparison .section-heading h2 { font-size:34px; }
 }
