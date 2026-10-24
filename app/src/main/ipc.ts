@@ -216,15 +216,16 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
 
   // Read ahead what the user is looking at (a chat, or the new chat about to start), so the model has already
   // read the instructions, tools and history when they press Enter: the first word comes in well under a second
-  let viewing: { chatId: string | null; projectId: string | null } = { chatId: null, projectId: null }
+  let viewing: { chatId: string | null; projectId: string | null; pending?: string[] } = { chatId: null, projectId: null }
   const warm = async () => {
     if (d.setup.state.phase !== 'ready' || running.size > 0) return
     const chat = viewing.chatId ? d.store.getChat(viewing.chatId) : undefined
-    const target = chat ? { id: chat.id, dir: chat.dir, projectId: chat.projectId } : { dir: reservedDir(), projectId: viewing.projectId }
+    const target = { ...(chat ? { id: chat.id, dir: chat.dir, projectId: chat.projectId } : { dir: reservedDir(), projectId: viewing.projectId }), pending: viewing.pending }
     await readAhead({ ...promptDeps, engine: d.setup.engine, tools: await turnTools(0) }, target).catch(() => {})
   }
-  ipcMain.handle('chat:warm', (_e, chatId: string | null, projectId: string | null) => {
-    viewing = { chatId: chatId ? String(chatId) : null, projectId: projectId ? String(projectId) : null }
+  // pending: names of files attached in the message box, so the folder is read ahead as it will be when sent
+  ipcMain.handle('chat:warm', (_e, chatId: string | null, projectId: string | null, pending?: string[]) => {
+    viewing = { chatId: chatId ? String(chatId) : null, projectId: projectId ? String(projectId) : null, pending: Array.isArray(pending) ? pending.map(String) : [] }
     void warm()
   })
   // a model just loaded (start-up, or a switch): read ahead at once, before the first message

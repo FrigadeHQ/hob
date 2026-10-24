@@ -292,10 +292,12 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   return { id, role: 'assistant', content, attachments: [], steps, taskId, undoable, undone: false, workedMs }
 }
 
-const listDir = (dir: string) => { try { return readdirSync(dir).filter((n) => !n.startsWith('.')) } catch { return [] } }
+// sorted: a folder read ahead and the same folder after files arrive list the same way on every system
+const listDir = (dir: string) => { try { return readdirSync(dir).filter((n) => !n.startsWith('.')).sort() } catch { return [] } }
 
 type PromptDeps = Pick<TurnDeps, 'store' | 'skills' | 'prompts' | 'home'>
-type ChatRef = { id?: string; dir: string; projectId: string | null }
+/** pending: files attached in the message box, not yet in the folder (they arrive with the message) */
+type ChatRef = { id?: string; dir: string; projectId: string | null; pending?: string[] }
 
 /**
  * The conversation as the model reads it, before the new message: the system prompt and the history.
@@ -317,7 +319,7 @@ export function conversation(d: PromptDeps, chat: ChatRef, history: StoredMessag
   // "save that as a skill": the model only sees earlier replies' words, so give it the code that worked
   const lastReply = /\bskill/i.test(text) && !command.skill ? history.map((m) => m.role).lastIndexOf('assistant') : -1
   return [
-    { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: listDir(chat.dir), grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing, files: mainFolder ? listDir(mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
+    { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: [...new Set([...listDir(chat.dir), ...chat.pending ?? []])].sort(), grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing, files: mainFolder ? listDir(mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
     ...fitHistory(history.map((m, i) => ({ role: m.role, content: withFiles(expand(m.content, i), m.attachments) + (i === lastReply ? codeThatWorked(m.steps) : '') }))),
   ]
 }

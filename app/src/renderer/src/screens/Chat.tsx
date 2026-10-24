@@ -177,7 +177,7 @@ export function ChatView({ chatId: initialId, projectId: initialProject, initial
   // a project made from this new chat (chip, too-big notice): use it here, keeping what was typed
   useEffect(() => { if (!created) { projectRef.current = initialProject; setProjectId(initialProject) } }, [initialProject])
   // let the model read this chat ahead (or the new chat about to start), so the reply starts right away
-  useEffect(() => { void hob.chat.warm(chatIdRef.current, projectId) }, [projectId, pending.length])
+  useEffect(() => { void hob.chat.warm(chatIdRef.current, projectId, pending.map((f) => f.name)) }, [projectId, pending.length])
   const pickProject = (id: string | null) => { projectRef.current = id; setProjectId(id); onProjectChange(id) }
   const [dragging, setDragging] = useState(false)
   const [requestId, setRequestId] = useState<string | null>(null)

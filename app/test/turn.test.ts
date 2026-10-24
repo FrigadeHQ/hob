@@ -565,3 +565,15 @@ it('a new chat read ahead in its future folder matches its first message', async
   await runTurn(w.deps, { chatId: 'n', requestId: 'r2', text: 'hej', attachments: [], signal: new AbortController().signal })
   expect(w.engine.lastRequest?.messages.slice(0, -1)).toEqual(readAheadMsgs)
 })
+
+it('a new chat read ahead with files attached but not yet sent matches its first message', async () => {
+  const w = world('allow', { grant: false })
+  const dir = join(w.root, 'next chat')
+  // attached in the message box: the files reach the chat's folder only when the message is sent
+  await readAhead(w.deps, { dir, projectId: null, pending: ['q3-sales.xlsx', 'notes.txt'] })
+  const readAheadMsgs = w.engine.lastPreload
+  mkdirSync(dir); w.store.createChat('n', dir)
+  writeFileSync(join(dir, 'notes.txt'), 'x'); writeFileSync(join(dir, 'q3-sales.xlsx'), 'x')
+  await runTurn(w.deps, { chatId: 'n', requestId: 'r2', text: 'draw a graph based on this', attachments: [{ name: 'q3-sales.xlsx', path: join(dir, 'q3-sales.xlsx'), sizeBytes: 1 }], signal: new AbortController().signal })
+  expect(w.engine.lastRequest?.messages.slice(0, -1)).toEqual(readAheadMsgs)
+})

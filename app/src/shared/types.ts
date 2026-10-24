@@ -96,7 +96,7 @@ export interface HobApi {
   chat: {
     send(chatId: string, requestId: string, text: string, attachments: Attachment[]): Promise<StoredMessage>
     /** the user is looking at this chat (null: a new one): let the model read it ahead */
-    warm(chatId: string | null, projectId: string | null): Promise<void>
+    warm(chatId: string | null, projectId: string | null, pending?: string[]): Promise<void>
     stop(requestId: string): Promise<void>
     /** thought = the model's hidden reasoning, shown only as a live preview */
     onToken(cb: (requestId: string, text: string, thought: boolean) => void): () => void
