@@ -13,7 +13,7 @@ assert(og && fs.existsSync(path.join('public', og)), 'og:image must point at a f
 assert(html.includes('name="twitter:card" content="summary_large_image"'))
 const files = new Set()
 for (const [, url] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
-  if (/^(https?:|#|data:)/.test(url)) continue
+  if (/^(https?:|#|data:|mailto:)/.test(url)) continue
   assert(url.startsWith('/'), 'production assets must use root-relative URLs: ' + url)
   const file = path.join('public', url.split('?')[0])
   assert(fs.existsSync(file), 'missing asset: ' + file)
