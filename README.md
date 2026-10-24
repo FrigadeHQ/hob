@@ -5,8 +5,8 @@
 <h1 align="center">Hob</h1>
 
 <p align="center">
-  A free, open-source AI assistant that runs on your computer.<br>
-  Thoughtfully designed, easy to get started, and built with privacy in mind.
+  An easier way to use AI on your own computer.<br>
+  A free, open-source alternative to Claude and ChatGPT.
 </p>
 
 <p align="center">
@@ -17,14 +17,14 @@
 <br>
 
 <p align="center">
-  <img src="docs/assets/screenshot.png" width="900" alt="Hob reading a sales spreadsheet in a project, charting revenue by region and summing up what stands out">
+  <img src="docs/assets/screenshot.png" width="980" alt="Hob reading a sales spreadsheet in a project, charting revenue by region and summing up what stands out">
 </p>
 
 <br>
 
 <p align="center">
-  Ask questions, work with documents, and make sense of spreadsheets.<br>
-  Hob chooses and downloads a model that fits your computer, so you can get straight to using it.
+  Fill out PDFs, work through documents, and much more. Free, private, and works offline.<br>
+  Hob picks the best frontier open-weight model that fits your computer and sets everything up for you.
 </p>
 <p></p>
 <p align="center">

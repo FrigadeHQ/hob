@@ -18,6 +18,7 @@ pnpm -C app e2e       # end-to-end tests (hidden window, stand-in model)
 - Keep each pull request to one change, with a test that shows it working.
 - Run the unit and end-to-end tests before opening it. CI runs them on Mac, Windows and Linux.
 - Write interface text in plain words for people who aren't technical.
+- Hob comes in 32 languages. Wrap new interface text in `t('…')` (blanks as `{name}`, never a template string) and add it to every table in `app/src/shared/locales/`; `node app/scripts/i18n-keys.mjs` lists all text, and the unit tests fail on a missing translation.
 
 ## Plugins
 
