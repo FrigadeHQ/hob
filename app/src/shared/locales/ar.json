@@ -805,5 +805,7 @@
   "{s}s": "{s} ث",
   "“{name}” comes with Hob already.": "«{name}» مضمّن في Hob بالفعل.",
   "“{name}” is already added.": "تمت إضافة «{name}» بالفعل.",
-  "“{name}” is linked from a folder. Unlink it first.": "«{name}» مرتبط من مجلد. ألغِ ربطه أولًا."
+  "“{name}” is linked from a folder. Unlink it first.": "«{name}» مرتبط من مجلد. ألغِ ربطه أولًا.",
+  "Hob {version} is ready": "Hob {version} جاهز",
+  "It installs the next time you quit Hob.": "سيُثبَّت في المرة القادمة التي تُغلق فيها Hob."
 }

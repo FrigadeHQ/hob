@@ -733,5 +733,7 @@
   "{s}s": "{s} δ.",
   "“{name}” comes with Hob already.": "Το «{name}» περιλαμβάνεται ήδη στο Hob.",
   "“{name}” is already added.": "Το «{name}» έχει ήδη προστεθεί.",
-  "“{name}” is linked from a folder. Unlink it first.": "Το «{name}» είναι συνδεδεμένο από φάκελο. Καταργήστε πρώτα τη σύνδεση."
+  "“{name}” is linked from a folder. Unlink it first.": "Το «{name}» είναι συνδεδεμένο από φάκελο. Καταργήστε πρώτα τη σύνδεση.",
+  "Hob {version} is ready": "Το Hob {version} είναι έτοιμο",
+  "It installs the next time you quit Hob.": "Θα εγκατασταθεί την επόμενη φορά που θα κλείσεις το Hob."
 }

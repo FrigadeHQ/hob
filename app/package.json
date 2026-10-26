@@ -16,6 +16,7 @@
   "dependencies": {
     "@hob/picker": "workspace:^",
     "@mozilla/readability": "0.6.0",
+    "electron-updater": "6.8.10",
     "katex": "0.16.47",
     "linkedom": "0.18.13",
     "node-llama-cpp": "3.22.1",

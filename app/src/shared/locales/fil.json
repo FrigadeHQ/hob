@@ -733,5 +733,7 @@
   "{s}s": "{s}s",
   "“{name}” comes with Hob already.": "Kasama na sa Hob ang “{name}”.",
   "“{name}” is already added.": "Naidagdag na ang “{name}”.",
-  "“{name}” is linked from a folder. Unlink it first.": "Naka-link ang “{name}” mula sa isang folder. I-unlink muna ito."
+  "“{name}” is linked from a folder. Unlink it first.": "Naka-link ang “{name}” mula sa isang folder. I-unlink muna ito.",
+  "Hob {version} is ready": "Handa na ang Hob {version}",
+  "It installs the next time you quit Hob.": "Mai-install ito sa susunod na isara mo ang Hob."
 }

@@ -1,5 +1,7 @@
-# Push a tag like v0.2.0 (matching app/package.json "version") to build Hob for Mac, Windows and Linux
-# and publish them as a GitHub release. The download links in README.md always point at the newest one.
+# A release: `sh scripts/release.sh 0.2.0` sets the version, tags v0.2.0 and pushes; this builds Hob for Mac,
+# Windows and Linux and publishes one GitHub release with all three, once every build has worked.
+# The download links (README, hob.chat) point at releases/latest/download/<file>, and installed copies
+# update themselves from the same release (latest*.yml).
 # Running it by hand (Actions → Release → Run workflow) only builds: the installers are attached to the run, nothing is published.
 #
 # Mac signing and notarization use these repository secrets (without them, the Mac build is unsigned):
@@ -36,6 +38,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: The tag matches the app's version
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: test "v$(node -p "require('./app/package.json').version")" = "${{ github.ref_name }}"
       # the unit tests include Mac-only parts (sandbox, PDFKit), so they run on the Mac build
       - name: Test
         if: runner.os == 'macOS'
@@ -46,10 +52,9 @@ jobs:
           mkdir -p app/resources/bin
           pnpm -C app run native
           pnpm -C app exec electron-vite build
-      - name: Package and publish
+      - name: Package
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
           CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -60,15 +65,45 @@ jobs:
           if [ "${{ matrix.platform }}" = "--mac" ]; then
             if [ -n "$CSC_LINK" ]; then [ -n "$APPLE_ID" ] && extra="-c.mac.notarize=true"; else export CSC_IDENTITY_AUTO_DISCOVERY=false; unset CSC_LINK CSC_KEY_PASSWORD; extra="-c.dmg.sign=false"; fi
           fi
-          publish=never; [ "${{ github.ref_type }}" = "tag" ] && publish=always
-          cd app && pnpm exec electron-builder ${{ matrix.platform }} --publish $publish $extra
-      - name: Keep the installer (test runs)
-        if: github.ref_type != 'tag'
-        uses: actions/upload-artifact@v4
+          cd app && pnpm exec electron-builder ${{ matrix.platform }} --publish never $extra
+      # the app inside is notarized by electron-builder; the disk image is checked when downloaded too
+      - name: Notarize the disk image
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          [ -n "$APPLE_ID" ] || exit 0
+          xcrun notarytool submit app/dist/Hob-mac-arm64.dmg --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple app/dist/Hob-mac-arm64.dmg
+          spctl -a -t open --context context:primary-signature -v app/dist/Hob-mac-arm64.dmg
+      - uses: actions/upload-artifact@v4
         with:
           name: hob-${{ runner.os }}
           path: |
             app/dist/*.dmg
+            app/dist/*.zip
             app/dist/*.exe
             app/dist/*.AppImage
+            app/dist/*.blockmap
+            app/dist/latest*.yml
           if-no-files-found: error
+
+  # one release with every installer, so the latest release never lacks one
+  publish:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: files
+          merge-multiple: true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la files
+          gh release create "${{ github.ref_name }}" files/* --repo "${{ github.repository }}" --title "Hob ${GITHUB_REF_NAME#v}" --generate-notes --latest

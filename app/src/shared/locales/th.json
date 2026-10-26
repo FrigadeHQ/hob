@@ -679,5 +679,7 @@
   "{s}s": "{s} วินาที",
   "“{name}” comes with Hob already.": "“{name}” มากับ Hob อยู่แล้ว",
   "“{name}” is already added.": "เพิ่ม “{name}” ไว้แล้ว",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}” ลิงก์มาจากโฟลเดอร์ ยกเลิกลิงก์ก่อน"
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}” ลิงก์มาจากโฟลเดอร์ ยกเลิกลิงก์ก่อน",
+  "Hob {version} is ready": "Hob {version} พร้อมแล้ว",
+  "It installs the next time you quit Hob.": "จะติดตั้งเมื่อคุณปิด Hob ครั้งถัดไป"
 }

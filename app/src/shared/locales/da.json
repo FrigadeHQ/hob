@@ -733,5 +733,7 @@
   "{s}s": "{s} s",
   "“{name}” comes with Hob already.": "“{name}” følger allerede med Hob.",
   "“{name}” is already added.": "“{name}” er allerede tilføjet.",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}” er tilknyttet fra en mappe. Fjern tilknytningen først."
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}” er tilknyttet fra en mappe. Fjern tilknytningen først.",
+  "Hob {version} is ready": "Hob {version} er klar",
+  "It installs the next time you quit Hob.": "Den installeres, næste gang du lukker Hob."
 }

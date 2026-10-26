@@ -679,5 +679,7 @@
   "{s}s": "{s}초",
   "“{name}” comes with Hob already.": "“{name}”은(는) Hob에 이미 들어 있어요.",
   "“{name}” is already added.": "“{name}”은(는) 이미 추가되어 있어요.",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}”은(는) 폴더에서 링크되어 있어요. 먼저 링크를 해제하세요."
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}”은(는) 폴더에서 링크되어 있어요. 먼저 링크를 해제하세요.",
+  "Hob {version} is ready": "Hob {version} 준비 완료",
+  "It installs the next time you quit Hob.": "다음에 Hob을 종료하면 설치됩니다."
 }

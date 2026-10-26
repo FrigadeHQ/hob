@@ -769,5 +769,7 @@
   "{s}s": "{s} с",
   "“{name}” comes with Hob already.": "«{name}» уже входит в Hob.",
   "“{name}” is already added.": "«{name}» уже добавлен.",
-  "“{name}” is linked from a folder. Unlink it first.": "«{name}» связан из папки. Сначала отвяжите его."
+  "“{name}” is linked from a folder. Unlink it first.": "«{name}» связан из папки. Сначала отвяжите его.",
+  "Hob {version} is ready": "Hob {version} готов",
+  "It installs the next time you quit Hob.": "Обновление установится, когда вы в следующий раз закроете Hob."
 }

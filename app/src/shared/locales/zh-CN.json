@@ -679,5 +679,7 @@
   "{s}s": "{s} 秒",
   "“{name}” comes with Hob already.": "“{name}”已是 Hob 自带的。",
   "“{name}” is already added.": "“{name}”已经添加过了。",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}”是从文件夹链接的。请先取消链接。"
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}”是从文件夹链接的。请先取消链接。",
+  "Hob {version} is ready": "Hob {version} 已准备就绪",
+  "It installs the next time you quit Hob.": "下次退出 Hob 时将自动安装。"
 }

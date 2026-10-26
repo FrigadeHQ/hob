@@ -4,11 +4,15 @@ electronVersion: 44.7.2
 copyright: Copyright © 2026 Frigade
 # GitHub Releases: every v* tag builds Mac, Windows and Linux (.github/workflows/release.yml).
 # Fixed file names, so releases/latest/download/<name> always points at the newest one.
+# Installed copies update from the same release (latest*.yml, src/main/updates.ts).
 publish:
   provider: github
   owner: FrigadeHQ
   repo: hob
   releaseType: release
+# the Windows install folder is named after this (the package name, @hob/app, would make it "@hobapp")
+extraMetadata:
+  name: hob
 directories:
   output: dist
   buildResources: build
@@ -53,6 +57,9 @@ mac:
   artifactName: Hob-mac-${arch}.${ext}
   target:
     - target: dmg
+      arch: [arm64]
+    # what an installed Hob downloads to update itself (src/main/updates.ts)
+    - target: zip
       arch: [arm64]
   icon: build/icon.icns
   category: public.app-category.productivity

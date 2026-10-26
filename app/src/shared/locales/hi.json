@@ -733,5 +733,7 @@
   "{s}s": "{s} से.",
   "“{name}” comes with Hob already.": "“{name}” Hob के साथ पहले से आता है।",
   "“{name}” is already added.": "“{name}” पहले से जोड़ा हुआ है।",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}” एक फ़ोल्डर से लिंक है। पहले उसे अनलिंक करें।"
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}” एक फ़ोल्डर से लिंक है। पहले उसे अनलिंक करें।",
+  "Hob {version} is ready": "Hob {version} तैयार है",
+  "It installs the next time you quit Hob.": "अगली बार Hob बंद करने पर यह इंस्टॉल हो जाएगा।"
 }

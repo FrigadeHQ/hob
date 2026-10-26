@@ -733,5 +733,7 @@
   "{s}s": "{s} sn",
   "“{name}” comes with Hob already.": "“{name}” zaten Hob ile birlikte gelir.",
   "“{name}” is already added.": "“{name}” zaten eklenmiş.",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}” bir klasörden bağlı. Önce bağlantısını kaldırın."
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}” bir klasörden bağlı. Önce bağlantısını kaldırın.",
+  "Hob {version} is ready": "Hob {version} hazır",
+  "It installs the next time you quit Hob.": "Hob’dan bir sonraki çıkışınızda yüklenecek."
 }

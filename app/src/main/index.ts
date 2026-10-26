@@ -27,6 +27,7 @@ import { pickVision, VISION_MODELS, visionFitsGpu, visionGB } from './vision/cat
 import type { VisionState } from '../shared/types'
 import os from 'node:os'
 import { loadSettings, localeOf, updateSettings, webAccessOn } from './settings'
+import { startUpdates, updatesOn } from './updates'
 import { setLanguage } from '../shared/i18n'
 import { systemLocale } from './locale'
 import { PluginRegistry } from './plugins/registry'
@@ -119,6 +120,9 @@ app.whenReady().then(() => {
   // the theme picked in Settings; the system's when none
   nativeTheme.themeSource = loadSettings(paths.settings).theme ?? 'system'
   setLanguage(localeOf(loadSettings(paths.settings), systemLocale()))
+  if (updatesOn({ packaged: app.isPackaged, fake: FAKE, profile: !!process.env.HOB_USER_DATA, platform: process.platform, appImage: !!process.env.APPIMAGE })) {
+    startUpdates().catch((err) => console.warn("couldn't start looking for new versions", err))
+  }
   const engine = FAKE ? new FakeEngine() : new UtilityEngine(join(__dirname, 'engine.js'))
   /** the computer, as setup found it (the vision model's room is worked out from it) */
   let hardware: Hardware | undefined
@@ -130,7 +134,8 @@ app.whenReady().then(() => {
     sha256Override: FAKE ? 'FAKE' : undefined,
     getHardware: FAKE
       ? async () => ({ os: 'darwin' as const, arch: 'arm64', cpuModel: 'Apple M1 Max', totalRamGB: 32, freeDiskGB: Number(process.env.HOB_FAKE_FREE_GB) || 500, gpu: { kind: 'unified' as const, name: 'Apple M1 Max', vramGB: 24 } })
-      : async () => (hardware = toHardware(await engine.probe(), await readSysInfo(paths.models))),
+      // a second try runs without the graphics card if the first one crashed the engine
+      : async () => (hardware = toHardware(await engine.probe().catch(() => engine.probe()), await readSysInfo(paths.models))),
     // HOB_LOCAL_CATALOG=1: only the catalog in this build (to try models before they're published)
     getCatalog: () => loadCatalog({ url: CATALOG_URL, cachePath: paths.catalogCache, bundled: bundledCatalog, licenses, fetchFn: FAKE || process.env.HOB_LOCAL_CATALOG ? (async () => { throw new Error('offline') }) as unknown as typeof fetch : undefined }),
   })

@@ -59,7 +59,7 @@ pnpm -C app e2e       # end-to-end tests (hidden window, stand-in model)
 pnpm -C app dist      # installer for this computer
 ```
 
-To release, bump `version` in `app/package.json` and push a matching tag (`v0.2.0`). [GitHub Actions](../.github/workflows/release.yml) builds and publishes Mac, Windows and Linux.
+To release, run `sh app/scripts/release.sh 0.2.0`. It sets the version, tags `v0.2.0` and pushes; [GitHub Actions](../.github/workflows/release.yml) builds Mac, Windows and Linux and publishes them as one release. Installed copies download the new version and install it when they quit.
 
 ## License
 

@@ -751,5 +751,7 @@
   "{s}s": "{s} s",
   "“{name}” comes with Hob already.": "“{name}” ya viene con Hob.",
   "“{name}” is already added.": "“{name}” ya está añadido.",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}” está vinculado desde una carpeta. Desvincúlalo primero."
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}” está vinculado desde una carpeta. Desvincúlalo primero.",
+  "Hob {version} is ready": "Hob {version} está listo",
+  "It installs the next time you quit Hob.": "Se instalará la próxima vez que cierres Hob."
 }

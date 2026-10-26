@@ -679,5 +679,7 @@
   "{s}s": "{s} giây",
   "“{name}” comes with Hob already.": "“{name}” đã có sẵn trong Hob.",
   "“{name}” is already added.": "“{name}” đã được thêm.",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}” được liên kết từ một thư mục. Hãy hủy liên kết trước."
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}” được liên kết từ một thư mục. Hãy hủy liên kết trước.",
+  "Hob {version} is ready": "Hob {version} đã sẵn sàng",
+  "It installs the next time you quit Hob.": "Bản cập nhật sẽ được cài khi bạn thoát Hob lần tới."
 }

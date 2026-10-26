@@ -733,5 +733,7 @@
   "{s}s": "{s} s",
   "“{name}” comes with Hob already.": "„{name}“ ist schon in Hob enthalten.",
   "“{name}” is already added.": "„{name}“ ist schon hinzugefügt.",
-  "“{name}” is linked from a folder. Unlink it first.": "„{name}“ ist aus einem Ordner verknüpft. Löse zuerst die Verknüpfung."
+  "“{name}” is linked from a folder. Unlink it first.": "„{name}“ ist aus einem Ordner verknüpft. Löse zuerst die Verknüpfung.",
+  "Hob {version} is ready": "Hob {version} ist bereit",
+  "It installs the next time you quit Hob.": "Wird installiert, wenn du Hob das nächste Mal beendest."
 }

@@ -751,5 +751,7 @@
   "{s}s": "{s} שנ׳",
   "“{name}” comes with Hob already.": "“{name}” כבר מגיע עם Hob.",
   "“{name}” is already added.": "“{name}” כבר נוסף.",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}” מקושר מתיקייה. צריך לבטל את הקישור קודם."
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}” מקושר מתיקייה. צריך לבטל את הקישור קודם.",
+  "Hob {version} is ready": "Hob {version} מוכן",
+  "It installs the next time you quit Hob.": "הוא יותקן בפעם הבאה שתצא מ-Hob."
 }

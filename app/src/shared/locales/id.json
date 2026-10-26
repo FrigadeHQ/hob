@@ -679,5 +679,7 @@
   "{s}s": "{s}d",
   "“{name}” comes with Hob already.": "“{name}” sudah tersedia di Hob.",
   "“{name}” is already added.": "“{name}” sudah ditambahkan.",
-  "“{name}” is linked from a folder. Unlink it first.": "“{name}” ditautkan dari folder. Lepas tautannya dulu."
+  "“{name}” is linked from a folder. Unlink it first.": "“{name}” ditautkan dari folder. Lepas tautannya dulu.",
+  "Hob {version} is ready": "Hob {version} sudah siap",
+  "It installs the next time you quit Hob.": "Akan dipasang saat Anda menutup Hob berikutnya."
 }

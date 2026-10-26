@@ -769,5 +769,7 @@
   "{s}s": "{s} s",
   "“{name}” comes with Hob already.": "„{name}“ už je součástí Hoba.",
   "“{name}” is already added.": "„{name}“ už je přidané.",
-  "“{name}” is linked from a folder. Unlink it first.": "„{name}“ je propojené ze složky. Nejdřív zrušte propojení."
+  "“{name}” is linked from a folder. Unlink it first.": "„{name}“ je propojené ze složky. Nejdřív zrušte propojení.",
+  "Hob {version} is ready": "Hob {version} je připraven",
+  "It installs the next time you quit Hob.": "Nainstaluje se, až příště Hob ukončíte."
 }
