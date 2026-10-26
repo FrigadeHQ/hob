@@ -45,7 +45,8 @@ function callMain(id: number, name: string, args: unknown, signal: AbortSignal):
     send({ id, type: 'tool-call', callId, name, args })
   })
 }
-const getL = async () => (llama ??= await getLlama())
+// HOB_ENGINE_GPU=off: the graphics card crashed the engine before (src/main/engine.ts)
+const getL = async () => (llama ??= await getLlama(process.env.HOB_ENGINE_GPU === 'off' ? { gpu: false } : undefined))
 
 async function probe(): Promise<GpuProbe> {
   const l = await getL()

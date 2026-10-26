@@ -30,7 +30,8 @@ export interface Engine {
   dispose(): void
 }
 
-type Pending = { resolve(v: unknown): void; reject(e: Error): void; h?: ChatHandlers }
+/** load: checking the computer or loading a model, where a graphics driver can crash the engine */
+type Pending = { resolve(v: unknown): void; reject(e: Error): void; h?: ChatHandlers; load?: boolean; model?: boolean }
 type Req = EngineRequest extends infer R ? (R extends { id: number } ? Omit<R, 'id'> : never) : never
 
 export class UtilityEngine implements Engine {
@@ -39,12 +40,20 @@ export class UtilityEngine implements Engine {
   private pending = new Map<number, Pending>()
   private exitListeners: (() => void)[] = []
   private disposed = false
+  /**
+   * Some graphics drivers (seen on Windows) crash the engine as it checks the card or loads a model. After a crash
+   * like that, the engine starts without the graphics card: slower, but it works.
+   */
+  private cpuOnly = false
+  /** a model loaded fine in this process, so a later crash isn't the graphics card failing to start */
+  private loaded = false
 
   constructor(private workerPath: string) {}
 
   private ensure(): UtilityProcess {
     if (this.proc) return this.proc
-    const proc = utilityProcess.fork(this.workerPath, [], { serviceName: 'Hob Engine' })
+    const proc = utilityProcess.fork(this.workerPath, [], { serviceName: 'Hob Engine', env: { ...process.env, ...(this.cpuOnly ? { HOB_ENGINE_GPU: 'off' } : {}) } })
+    this.loaded = false
     proc.on('message', (e: EngineEvent) => {
       const p = this.pending.get(e.id)
       if (!p) return
@@ -57,11 +66,15 @@ export class UtilityEngine implements Engine {
         return
       }
       this.pending.delete(e.id)
+      if (e.type === 'result' && p.model) this.loaded = true
       if (e.type === 'result') p.resolve(e.data)
       else p.reject(e.code === 'OOM' ? new InsufficientMemoryError(e.message) : new Error(e.message))
     })
-    proc.on('exit', () => {
+    proc.on('exit', (code: number) => {
       this.proc = undefined
+      const starting = !this.loaded && [...this.pending.values()].some((p) => p.load)
+      console.error(`engine stopped (code ${code})${starting && !this.cpuOnly ? '; starting it again without the graphics card' : ''}`)
+      if (starting) this.cpuOnly = true
       for (const p of this.pending.values()) p.reject(new InsufficientMemoryError('Engine stopped unexpectedly'))
       this.pending.clear()
       if (!this.disposed) for (const cb of this.exitListeners) cb()
@@ -71,7 +84,8 @@ export class UtilityEngine implements Engine {
 
   private call<T>(req: Req, h?: ChatHandlers): { id: number; done: Promise<T> } {
     const id = this.nextId++
-    const done = new Promise<T>((resolve, reject) => this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, h }))
+    const model = req.type === 'load' || req.type === 'loadSide'
+    const done = new Promise<T>((resolve, reject) => this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, h, load: model || req.type === 'probe', model }))
     this.ensure().postMessage({ ...req, id })
     return { id, done }
   }
