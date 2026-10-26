@@ -1,3 +1,2 @@
-# built files and design studies, not source: keep them out of GitHub's language stats
+# the site's built files, not source: keep them out of GitHub's language stats
 site/public/** linguist-generated
-design/** linguist-documentation
