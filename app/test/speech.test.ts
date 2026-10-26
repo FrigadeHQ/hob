@@ -27,6 +27,22 @@ it('downloads every pinned Whisper file once, verified, into its own folder', as
   expect(got).toHaveLength(WHISPER.files.length)
 })
 
+it('a download that started in the background shows its progress to dictation started meanwhile', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'hob-speech-'))
+  const m = new SpeechModel(root, {
+    async fetchFile(_url, _sha, _gb, dir, onProgress, name) {
+      await new Promise((r) => setTimeout(r, 1))
+      mkdirSync(dir, { recursive: true }); writeFileSync(join(dir, name!), 'x'); onProgress(1)
+      return join(dir, name!)
+    },
+  })
+  const background = m.ensure()
+  const seen: number[] = []
+  await Promise.all([background, m.ensure((f) => seen.push(f))])
+  expect(seen.length).toBeGreaterThan(0)
+  expect(seen.at(-1)).toBe(1)
+})
+
 it('asks the system for the mic only when it has never been asked', async () => {
   const { micAccess } = await import('../src/main/speech')
   let asked = 0

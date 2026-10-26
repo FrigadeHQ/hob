@@ -19,9 +19,11 @@ export const WHISPER = {
 const TOTAL = WHISPER.files.reduce((s, f) => s + f.bytes, 0)
 const MARKER = 'ready.json'
 
-/** The dictation model, downloaded once into app data on first use. */
+/** The dictation model, downloaded once into app data after the main model (or when dictation is first used). */
 export class SpeechModel {
   private installing: Promise<void> | undefined
+  /** everyone waiting for the download: it may have started in the background before dictation was clicked */
+  private watchers = new Set<(fraction: number) => void>()
   constructor(private root: string, private deps: Pick<RuntimeDeps, 'fetchFile'>) {}
 
   /** folder transformers.js loads `${id}/${file}` from */
@@ -33,10 +35,13 @@ export class SpeechModel {
 
   ensure(onProgress: (fraction: number) => void = () => {}): Promise<void> {
     if (this.isReady()) return Promise.resolve()
-    return (this.installing ??= this.install(onProgress).finally(() => { this.installing = undefined }))
+    this.watchers.add(onProgress)
+    this.installing ??= this.install().finally(() => { this.installing = undefined; this.watchers.clear() })
+    return this.installing
   }
 
-  private async install(onProgress: (fraction: number) => void) {
+  private async install() {
+    const onProgress = (f: number) => { for (const w of this.watchers) w(f) }
     let done = 0
     for (const f of WHISPER.files) {
       const dest = join(this.root, WHISPER.id, f.path)

@@ -227,6 +227,14 @@ app.whenReady().then(() => {
       : JSON.stringify({ subject: 'Your flight to Lisbon', from: 'TAP Air', date: '2026-10-20T08:00:00Z', to: ['me@example.com'], content: `Booking ${args[0]}: departs 24 Oct 07:15.` })),
   })
   setup.onState((s) => { if ((s.phase === 'downloading' && s.chatReady) || s.phase === 'ready') vision.start() })
+  // dictation's model too, as soon as chat works, so the mic is ready the first time it's clicked
+  // (once: setup reports download progress many times a second; again after a failed try, e.g. offline)
+  let fetchingSpeech = false
+  if (!FAKE) setup.onState((s) => {
+    if (fetchingSpeech || !((s.phase === 'downloading' && s.chatReady) || s.phase === 'ready')) return
+    fetchingSpeech = true
+    speech.ensure().catch((err) => { fetchingSpeech = false; console.warn("couldn't download the dictation model yet", err) })
+  })
   app.on('before-quit', () => vision.stop())
   // a Google or Microsoft account for calendar and email; on a Mac, the Calendar and Mail apps otherwise
   const accounts = FAKE ? fakeAccounts() : new Accounts({
