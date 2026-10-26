@@ -1,4 +1,6 @@
-type Msg = { role: 'user' | 'assistant'; content: string }
+/** files: what was in the files attached to it, kept even when the message itself is folded into the recap */
+type Msg = { role: 'user' | 'assistant'; content: string; files?: string }
+const withFiles = <M extends Msg>({ files, ...m }: M) => ({ ...m, content: files ? `${m.content}\n${files}` : m.content }) as Omit<M, 'files'>
 
 /** ~4 characters per token. 32k-token context: room for the prompt, tools, this turn's work and the answer. */
 export const HISTORY_CHARS = 40_000
@@ -10,9 +12,9 @@ const line = (s: string, n: number) => { const t = s.replace(/\s+/g, ' ').trim()
  * Long chats would overflow the model's memory, and the engine would then silently drop the oldest
  * messages mid-answer. Instead keep the newest messages whole and fold older ones into a short recap.
  */
-export function fitHistory<M extends Msg>(history: M[], budget = HISTORY_CHARS): M[] {
-  const size = (ms: Msg[]) => ms.reduce((n, m) => n + m.content.length, 0)
-  if (size(history) <= budget) return history
+export function fitHistory<M extends Msg>(history: M[], budget = HISTORY_CHARS): Omit<M, 'files'>[] {
+  const size = (ms: Msg[]) => ms.reduce((n, m) => n + m.content.length + (m.files?.length ?? 0), 0)
+  if (size(history) <= budget) return history.map(withFiles)
   // keep whole user→assistant pairs from the end; the last pair always stays
   let start = history.length
   while (start > 0) {
@@ -22,15 +24,22 @@ export function fitHistory<M extends Msg>(history: M[], budget = HISTORY_CHARS):
   }
   // the kept part must start with the user (an unanswered message can shift the pairs)
   while (start < history.length - 2 && history[start].role !== 'user') start++
-  if (start === 0) return history
+  if (start === 0) return history.map(withFiles)
   const older = history.slice(0, start)
   const recap = older.map((m) => (m.role === 'user' ? `- The user asked: ${line(m.content, 160)}` : `- You answered: ${line(m.content, 120)}`))
   const text = ['[Earlier in this chat, shortened to save memory]', ...recap].join('\n').slice(0, Math.floor(budget * 0.2))
-  const proto = older[0]
+  // files shared earlier ("the menu") are what follow-ups ask about: keep them, the newest first, while they fit
+  const files: string[] = []
+  let room = Math.floor(budget * 0.4)
+  for (const f of older.map((m) => m.files).filter((f): f is string => !!f).reverse()) {
+    if (f.length > room) break
+    files.unshift(f); room -= f.length
+  }
+  const proto = withFiles(older[0])
   return [
-    { ...proto, role: 'user', content: text } as M,
-    { ...proto, role: 'assistant', content: 'Got it, I have that context.' } as M,
-    ...history.slice(start),
+    { ...proto, role: 'user', content: [text, ...files].join('\n') },
+    { ...proto, role: 'assistant', content: 'Got it, I have that context.' },
+    ...history.slice(start).map(withFiles),
   ]
 }
 

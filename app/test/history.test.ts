@@ -44,3 +44,16 @@ it('folding keeps user/assistant alternation when a reply is missing', () => {
   for (let i = 1; i < out.length; i++) if (out[i].role === 'assistant') expect(out[i - 1].role).toBe('user')
   expect(out.at(-1)!.content).toBe('e')
 })
+
+it('what was in an attached file stays when its turn is folded into the recap, so a long chat about a menu still knows the menu', () => {
+  const h = [
+    { role: 'user' as const, content: 'What goes with steak?', files: '[What\'s in wine-menu.pdf, read by Hob:\nBarolo 2019, $84]' }, msg('assistant', 'x'.repeat(500)),
+    msg('user', 'Something cheaper?'), msg('assistant', 'y'.repeat(500)),
+    msg('user', 'And a white?'), msg('assistant', 'The Sancerre.'),
+  ]
+  const out = fitHistory(h, 700)
+  expect(out[0].content).toContain('Barolo 2019, $84')
+  expect(out.at(-1)).toEqual(msg('assistant', 'The Sancerre.'))
+  // kept turns carry their files in their own text
+  expect(fitHistory(h, 100_000)[0].content).toBe('What goes with steak?\n[What\'s in wine-menu.pdf, read by Hob:\nBarolo 2019, $84]')
+})

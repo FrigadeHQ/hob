@@ -34,7 +34,8 @@ export class FakeEngine implements Engine {
     if (first.startsWith('__tools__ ')) {
       const results: string[] = []
       // "__tools__ [...]\n---\nreply": the reply to give after the tools, when a test needs a particular one
-      const body = said.slice(said.indexOf('__tools__ ') + '__tools__ '.length)
+      // what Hob read from attached files comes after the message and has --- lines of its own
+      const body = said.slice(said.indexOf('__tools__ ') + '__tools__ '.length).split('\n\n[Attached: ')[0]
       const [calls, given] = body.includes('\n---\n') ? body.split('\n---\n') : [first.slice('__tools__ '.length), undefined]
       for (const [name, args] of JSON.parse(calls) as [string, unknown][]) {
         if (signal?.aborted) break

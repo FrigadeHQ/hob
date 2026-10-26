@@ -540,6 +540,22 @@ it.runIf(process.platform === 'darwin')('reads attached PDFs before answering, l
   expect(w.store.messages('c')[0].attachments[0].seen).toContain('| U | 2,1')
 })
 
+it('reads other attached documents before answering too, and follow-ups still have what was in them without reading again', async () => {
+  const w = world('allow', { grant: false })
+  const menu = join(w.chatDir, 'wine-menu.txt'); writeFileSync(menu, 'Barolo 2019, Piedmont, $84\nSancerre 2022, Loire, $58\n')
+  const reply = await w.turn('What goes with steak?', [{ name: 'wine-menu.txt', path: menu, sizeBytes: 1 }])
+  expect(reply.steps.map((s) => [s.title, s.status])).toEqual([['Read wine-menu.txt', 'done']])
+  expect(w.engine.lastRequest?.messages.at(-1)?.content).toContain('Barolo 2019')
+  expect(w.store.messages('c')[0].attachments[0].seen).toContain('Sancerre 2022')
+  const next = await w.turn('and something cheaper?')
+  expect(next.steps).toEqual([])
+  expect(w.engine.lastRequest?.messages.at(-3)?.content).toContain('Sancerre 2022, Loire, $58')
+  // a model that opens it again anyway gets pointed at what it already has
+  const again = await w.turn('__tools__ [["read_file",{"path":"wine-menu.txt"}]]')
+  expect(again.steps).toEqual([])
+  expect(again.content).toContain('already in this conversation')
+})
+
 it("doesn't try to look at photos when this computer has no image support", async () => {
   const w = world('allow', { grant: false })
   const photo = join(w.chatDir, 'a.png'); writeFileSync(photo, PNG)

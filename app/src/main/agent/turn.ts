@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, readdirSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { basename, isAbsolute, join, sep } from 'node:path'
+import { basename, isAbsolute, join, resolve, sep } from 'node:path'
 import type { ApprovalAnswer, ApprovalRequest, Attachment, Step, StoredMessage, ToolSpec } from '../../shared/agent'
 import type { ChatMessage } from '../../shared/types'
 import type { Engine } from '../engine'
@@ -68,16 +68,19 @@ export type TurnDeps = {
 }
 export type TurnArgs = { chatId: string; requestId: string; text: string; attachments: Attachment[]; signal: AbortSignal }
 
-const withFiles = (content: string, attachments: Attachment[]) => {
-  if (!attachments.length) return content
-  const seen = attachments.filter((f) => f.seen).map((f) => PDF.test(f.name) ? `[What's in ${f.name}, read by Hob:\n${f.seen}]` : `[What's in ${f.name}, seen by Hob's image model: ${f.seen}]`)
-  return [`${content}\n\n[Attached: ${attachments.map((f) => f.name).join(', ')}]`, ...seen].join('\n')
-}
+const attached = (content: string, attachments: Attachment[]) => attachments.length ? `${content}\n\n[Attached: ${attachments.map((f) => f.name).join(', ')}]` : content
+/** what was in the attached files, kept with the message so follow-ups ("something cheaper?") don't read them again */
+const filesSeen = (attachments: Attachment[]) =>
+  attachments.filter((f) => f.seen).map((f) => PHOTO.test(f.name) ? `[What's in ${f.name}, seen by Hob's image model: ${f.seen}]` : `[What's in ${f.name}, read by Hob:\n${f.seen}]`).join('\n')
+const withFiles = (content: string, attachments: Attachment[]) => [attached(content, attachments), filesSeen(attachments)].filter(Boolean).join('\n')
 /** photos the image model can look at */
 const PHOTO = /\.(jpe?g|png|gif|bmp|webp|heic|heif|tiff?|avif)$/i
 const PDF = /\.pdf$/i
-/** what's kept of an attached PDF for the reply and follow-ups; read_pdf with pages reads more */
-const PDF_SEEN_CHARS = 12_000
+/** documents read_file can show as text */
+const DOCUMENT = /\.(pdf|txt|md|csv|tsv|json|html?|docx|xlsx|xlsm|pptx)$/i
+/** what's kept of an attached document for the reply and follow-ups; reading it again shows more */
+const SEEN_CHARS = 12_000
+const keep = (said: string) => said.length > SEEN_CHARS ? `${said.slice(0, SEEN_CHARS)}… (more: read it again with pages or run_python)` : said
 
 /** One user message → model + tools → stored assistant reply. */
 export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> {
@@ -117,6 +120,8 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   /** changes already made this turn: models sometimes re-issue them; don't redo or re-show */
   const changesDone = new Set<string>()
   const results = new Map<string, string>()
+  /** attached files Hob has read (this message or earlier ones): what's in them is already in the conversation */
+  const alreadyRead = new Map<string, string>()
   const budget = new ToolBudget()
   /** a move, rename or delete actually happened this turn */
   let moved = false
@@ -144,6 +149,9 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     const tool = d.tools.find((t) => t.spec.name === name)
     if (!tool) return `There is no tool called ${name}.`
     const raw = (args ?? {}) as Record<string, unknown>
+    // models open an attached file again anyway; reading it twice costs time and shows the same step twice
+    const again = (name === 'read_file' || (name === 'read_pdf' && !raw.pages)) && typeof raw.path === 'string' && alreadyRead.get(resolve(chat!.dir, raw.path))
+    if (again) return `What's in ${again} is already in this conversation, after the message it was attached to. Use that. For more of it, use run_python${name === 'read_pdf' ? ' or read_pdf with pages' : ''}.`
     let input = raw
     try { input = tool.prepare ? tool.prepare(raw, ctx) : raw } catch { /* the tool reports bad arguments itself */ }
     const key = `${name}:${JSON.stringify(input)}`
@@ -227,11 +235,25 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     for (const f of a.attachments) {
       if (!PDF.test(f.name) || f.seen || a.signal.aborted) continue
       const said = await onTool('read_pdf', { path: f.path })
-      if (steps.at(-1)?.status === 'done') f.seen = said.length > PDF_SEEN_CHARS ? `${said.slice(0, PDF_SEEN_CHARS)}… (more: read_pdf with pages)` : said
+      if (steps.at(-1)?.status === 'done') f.seen = keep(said)
       else lookNotes.push(`[Couldn't read ${f.name}: ${said}]`)
     }
     d.store.setAttachments(userMessage, a.attachments)
   }
+  // other documents (and PDFs where there's no PDF reader): read once, kept for follow-ups
+  const readsFiles = d.tools.some((t) => t.spec.name === 'read_file')
+  const unread = (f: Attachment) => DOCUMENT.test(f.name) && !f.seen && !(readsPdfs && PDF.test(f.name))
+  if (readsFiles && a.attachments.some(unread)) {
+    for (const f of a.attachments) {
+      if (!unread(f) || a.signal.aborted) continue
+      const said = await onTool('read_file', { path: f.path })
+      if (steps.at(-1)?.status === 'done') f.seen = keep(said)
+      else lookNotes.push(`[Couldn't read ${f.name}: ${said}]`)
+    }
+    d.store.setAttachments(userMessage, a.attachments)
+  }
+
+  for (const f of [...history.flatMap((m) => m.attachments), ...a.attachments]) if (f.seen && !PHOTO.test(f.name)) alreadyRead.set(resolve(f.path), f.name)
 
   const listing = listDir(chat.dir)
   const specs = specsFor(d.tools, ctx.webAccess)
@@ -320,7 +342,7 @@ export function conversation(d: PromptDeps, chat: ChatRef, history: StoredMessag
   const lastReply = /\bskill/i.test(text) && !command.skill ? history.map((m) => m.role).lastIndexOf('assistant') : -1
   return [
     { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: [...new Set([...listDir(chat.dir), ...chat.pending ?? []])].sort(), grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing, files: mainFolder ? listDir(mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
-    ...fitHistory(history.map((m, i) => ({ role: m.role, content: withFiles(expand(m.content, i), m.attachments) + (i === lastReply ? codeThatWorked(m.steps) : '') }))),
+    ...fitHistory(history.map((m, i) => ({ role: m.role, content: attached(expand(m.content, i), m.attachments) + (i === lastReply ? codeThatWorked(m.steps) : ''), files: filesSeen(m.attachments) }))),
   ]
 }
 
