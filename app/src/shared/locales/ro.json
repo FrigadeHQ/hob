@@ -753,5 +753,6 @@
   "“{name}” is already added.": "„{name}” este deja adăugat.",
   "“{name}” is linked from a folder. Unlink it first.": "„{name}” este legat dintr-un dosar. Dezlegați-l întâi.",
   "Hob {version} is ready": "Hob {version} este gata",
-  "It installs the next time you quit Hob.": "Se instalează data viitoare când închizi Hob."
+  "It installs the next time you quit Hob.": "Se instalează data viitoare când închizi Hob.",
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob nu a făcut un grafic în acest răspuns. Cere din nou ca să mai încerce o dată.*"
 }

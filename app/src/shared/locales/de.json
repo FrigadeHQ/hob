@@ -735,5 +735,6 @@
   "“{name}” is already added.": "„{name}“ ist schon hinzugefügt.",
   "“{name}” is linked from a folder. Unlink it first.": "„{name}“ ist aus einem Ordner verknüpft. Löse zuerst die Verknüpfung.",
   "Hob {version} is ready": "Hob {version} ist bereit",
-  "It installs the next time you quit Hob.": "Wird installiert, wenn du Hob das nächste Mal beendest."
+  "It installs the next time you quit Hob.": "Wird installiert, wenn du Hob das nächste Mal beendest.",
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob hat in dieser Antwort kein Diagramm erstellt. Frag noch einmal, um es erneut zu versuchen.*"
 }

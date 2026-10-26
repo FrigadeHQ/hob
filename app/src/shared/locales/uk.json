@@ -771,5 +771,6 @@
   "“{name}” is already added.": "«{name}» уже додано.",
   "“{name}” is linked from a folder. Unlink it first.": "«{name}» зв’язано з папки. Спершу від’єднайте.",
   "Hob {version} is ready": "Hob {version} готовий",
-  "It installs the next time you quit Hob.": "Оновлення встановиться, коли ви наступного разу закриєте Hob."
+  "It installs the next time you quit Hob.": "Оновлення встановиться, коли ви наступного разу закриєте Hob.",
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob не створив діаграму в цій відповіді. Попросіть ще раз, щоб спробувати знову.*"
 }

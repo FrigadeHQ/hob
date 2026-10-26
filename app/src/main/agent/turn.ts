@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, isAbsolute, join, resolve, sep } from 'node:path'
 import type { ApprovalAnswer, ApprovalRequest, Attachment, Step, StoredMessage, ToolSpec } from '../../shared/agent'
 import type { ChatMessage } from '../../shared/types'
+import type { ChartSpec } from '../../shared/chart'
 import type { Engine } from '../engine'
 import type { PythonRuntime } from '../python/runtime'
 import type { Store } from '../store'
@@ -12,7 +13,7 @@ import { specsFor } from '../tools'
 import { Journal } from './journal'
 import { fitHistory, ToolBudget } from './history'
 import { decide } from './permissions'
-import { asksToProceed, claimCheck, claimsFileChanges, missingCheck, NOTHING_CHANGED, unbackedFiles, proceedCheck, unfinishedCheck } from './claims'
+import { asksToProceed, chartCheck, NO_CHART, claimCheck, claimsFileChanges, mentionsChart, missingCheck, NOTHING_CHANGED, unbackedFiles, proceedCheck, unfinishedCheck } from './claims'
 import { chatTitle, cleanTitle, expandCommand, systemPrompt, timeNote, titleRequest, type PromptSkill } from './prompt'
 import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
@@ -271,7 +272,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     { messages: msgs, tools: specs, ...effortBudgets(d.effort?.() ?? DEFAULT_EFFORT, usesFiles) },
     { onToken, onTool },
     AbortSignal.any([a.signal, loop.signal]),
-  ).then((t) => t.trim())
+  ).then((t) => withoutToolsNote(t.trim()))
   /** the task is about the user's own files: a tool looked outside the chat folder, or a folder was named */
   const aboutTheirFiles = (reply: string) => {
     const names = grants.map((g) => basename(g))
@@ -281,6 +282,9 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   const unbacked = (reply: string) => !moved && claimsFileChanges(reply) && aboutTheirFiles(reply)
   /** a file name that's in the chat folder (or one below it), the user's folders, or the request itself */
   const onDisk = (name: string) => a.text.includes(name) || [chat.dir, ...grants].some((dir) => existsSync(join(dir, name)) || listDir(dir).some((sub) => existsSync(join(dir, sub, name))))
+  /** a chat about charts (asked for now, or made earlier) whose reply mentions one, but none was made */
+  const chartTalk = specs.some((s) => s.name === 'make_chart') && (mentionsChart(a.text) || history.some((m) => m.steps.some((s) => s.tool === 'make_chart')))
+  const noChart = (reply: string) => chartTalk && mentionsChart(reply) && !steps.some((s) => s.tool === 'make_chart' && s.status === 'done')
   try {
     let final = await ask(messages)
     // one more go when the reply says it changed files but didn't, or stops to ask "shall I go ahead?" on a task about the user's files
@@ -288,13 +292,15 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
     const check = unbacked(final) ? 'claim'
       : !final && steps.length > 0 ? 'unfinished'
       : missing.length ? 'missing'
-      : !moved && aboutTheirFiles(final) && !steps.some((s) => s.status === 'denied') && asksToProceed(final) ? 'proceed' : undefined
+      : !moved && aboutTheirFiles(final) && !steps.some((s) => s.status === 'denied') && asksToProceed(final) ? 'proceed'
+      : noChart(final) ? 'chart' : undefined
     if (!a.signal.aborted && cut === -1 && check) {
       d.emit.reset?.(a.requestId)
       streamed = ''
       const ran = steps.map((s) => `${s.title} (${s.status === 'done' ? 'worked' : s.status})`)
-      final = await ask([...messages, { role: 'assistant', content: final }, { role: 'user', content: check === 'claim' ? claimCheck(ran) : check === 'unfinished' ? unfinishedCheck(ran) : check === 'missing' ? missingCheck(missing) : proceedCheck() }])
+      final = await ask([...messages, { role: 'assistant', content: final }, { role: 'user', content: check === 'claim' ? claimCheck(ran) : check === 'unfinished' ? unfinishedCheck(ran) : check === 'missing' ? missingCheck(missing) : check === 'chart' ? chartCheck(lastChart([...history.flatMap((m) => m.steps), ...steps])) : proceedCheck() }])
       if (!a.signal.aborted && unbacked(final)) final = `${final}\n\n${t(NOTHING_CHANGED)}`
+      if (!a.signal.aborted && check === 'chart' && noChart(final)) final = `${final}\n\n${t(NO_CHART)}`
     }
     content = a.signal.aborted ? (final ? `${final}\n\n${STOPPED}` : STOPPED) : final || NO_ANSWER
   } catch (err) {
@@ -342,7 +348,7 @@ export function conversation(d: PromptDeps, chat: ChatRef, history: StoredMessag
   const lastReply = /\bskill/i.test(text) && !command.skill ? history.map((m) => m.role).lastIndexOf('assistant') : -1
   return [
     { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: [...new Set([...listDir(chat.dir), ...chat.pending ?? []])].sort(), grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing, files: mainFolder ? listDir(mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
-    ...fitHistory(history.map((m, i) => ({ role: m.role, content: attached(expand(m.content, i), m.attachments) + (i === lastReply ? codeThatWorked(m.steps) : ''), files: filesSeen(m.attachments) }))),
+    ...fitHistory(history.map((m, i) => ({ role: m.role, content: attached(expand(m.content, i), m.attachments) + toolsUsed(m.steps) + (i === lastReply ? codeThatWorked(m.steps) : ''), files: filesSeen(m.attachments) }))),
   ]
 }
 
@@ -384,6 +390,29 @@ export function skillScript(ref: string, skills: TurnDeps['skills']): { path: st
   const s = skills?.list().find((x) => x.dir && isInside(x.dir, ref))
   return s?.dir ? { path: ref, dir: s.dir, network: !!s.network, ...(s.packages ? { packages: s.packages } : {}) } : undefined
 }
+
+/**
+ * Earlier replies are kept as text only. "Here is the chart" without a word of how it was made teaches the model to
+ * answer the next "now as bars" with words alone, and say the chart is above. Naming the tools keeps it calling them.
+ */
+const toolsUsed = (steps: Step[]) => {
+  const names = [...new Set(steps.filter((s) => s.status === 'done' && s.tool).map((s) => s.tool!))]
+  return names.length ? `\n\n${TOOLS_NOTE}${names.join(', ')}]` : ''
+}
+const TOOLS_NOTE = '[Tools Hob used for this reply: '
+/** a model copies the note from earlier replies into its own now and then */
+const withoutToolsNote = (reply: string) => reply.split('\n').filter((l) => !l.trim().startsWith(TOOLS_NOTE)).join('\n').trim()
+
+/** the arguments of the chat's latest chart, short enough to hand back to the model */
+function lastChart(steps: Step[]): string | undefined {
+  const file = steps.filter((s) => s.tool === 'make_chart' && s.status === 'done').at(-1)?.files?.[0]
+  try {
+    const spec = JSON.parse(readFileSync(file!, 'utf8')) as ChartSpec
+    const args = JSON.stringify({ type: spec.type, title: spec.title, x: spec.x, series: spec.series.map((s) => s.key), data: spec.data, ...(spec.unit ? { unit: spec.unit } : {}) })
+    return args.length <= CHART_ARGS_CHARS ? args : undefined
+  } catch { return undefined }
+}
+const CHART_ARGS_CHARS = 4000
 
 const CODE_CHARS = 8000
 /** the code of the steps that worked, for saving it as a skill's script */

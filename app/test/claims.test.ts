@@ -72,3 +72,11 @@ it('only a reply that made no files is held to the names it mentions, and names 
   // made nothing, and the file isn't anywhere: that's the claim to check
   expect(unbackedFiles('Jeg har gemt filen indkob.txt.', { made: [], exists: () => false })).toEqual(['indkob.txt'])
 })
+
+it('spots a chart mentioned in many languages', async () => {
+  const { mentionsChart } = await import('../src/main/agent/claims')
+  for (const s of ['Here is the bar chart.', 'Her er søjlediagrammet ovenfor.', 'Voici le graphique.', 'Aquí está el gráfico.', 'Hier ist das Diagramm.', 'これがグラフです。', '这是图表。', '여기 차트가 있습니다.', 'Вот график.', 'Oto wykres.'])
+    expect(mentionsChart(s), s).toBe(true)
+  expect(mentionsChart('Here is a short paragraph about your photograph.')).toBe(false)
+  expect(mentionsChart('The total is 5,961,249.')).toBe(false)
+})

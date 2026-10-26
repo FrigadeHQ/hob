@@ -735,5 +735,6 @@
   "“{name}” is already added.": "“{name}” पहले से जोड़ा हुआ है।",
   "“{name}” is linked from a folder. Unlink it first.": "“{name}” एक फ़ोल्डर से लिंक है। पहले उसे अनलिंक करें।",
   "Hob {version} is ready": "Hob {version} तैयार है",
-  "It installs the next time you quit Hob.": "अगली बार Hob बंद करने पर यह इंस्टॉल हो जाएगा।"
+  "It installs the next time you quit Hob.": "अगली बार Hob बंद करने पर यह इंस्टॉल हो जाएगा।",
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob ने इस जवाब में चार्ट नहीं बनाया। फिर से कोशिश करने के लिए दोबारा पूछें।*"
 }

@@ -735,5 +735,6 @@
   "“{name}” is already added.": "“{name}” zaten eklenmiş.",
   "“{name}” is linked from a folder. Unlink it first.": "“{name}” bir klasörden bağlı. Önce bağlantısını kaldırın.",
   "Hob {version} is ready": "Hob {version} hazır",
-  "It installs the next time you quit Hob.": "Hob’dan bir sonraki çıkışınızda yüklenecek."
+  "It installs the next time you quit Hob.": "Hob’dan bir sonraki çıkışınızda yüklenecek.",
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob bu yanıtta grafik oluşturmadı. Bir kez daha denemesi için yeniden isteyin.*"
 }

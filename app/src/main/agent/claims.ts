@@ -15,6 +15,7 @@ export const claimCheck = (ran: string[]) =>
   `[Note from Hob, not from the user: your reply says files were renamed, moved or deleted, but no file was changed in this reply. What actually ran: ${ran.length ? ran.join('; ') : 'nothing'}. Do the change now with the tools (move_files for renames and moves, delete_file to delete), then say what you did. If you can't, tell the user plainly that it isn't done and why. Don't claim it again unless a tool result shows it worked.]`
 
 export const NOTHING_CHANGED = msg("*Hob didn't change any files in this reply.*")
+export const NO_CHART = msg("*Hob didn't make a chart in this reply. Ask again to try once more.*")
 
 /** "Let me know if you'd like me to proceed." The user already asked; small models stop here anyway. */
 const ASKS_TO_PROCEED = /\bplease (approve|confirm|allow)\b|\b(proceed|go ahead|carry on|continue|run it|do it|start|execute|rename them|move them)\b[^.!?\n]*\?|\b(let me know|tell me|just (reply|say))\b[^.!?\n]*\b(proceed|go ahead|continue|start|run|yes)\b|\b(shall|should) I\b[^.!?\n]*\?|\bwant me to\b[^.!?\n]*\?/i
@@ -60,3 +61,14 @@ export function unbackedFiles(reply: string, o: { made: string[]; exists: (fileN
 
 export const missingCheck = (names: string[]) =>
   `[Note from Hob, not from the user: your reply names ${names.join(', ')}, but that file doesn't exist. If you meant to make it, make it now with the tools (write_file for text, run_python for PDFs, spreadsheets and images), then say what you did. If you only mentioned the name, give your answer again without saying it was saved.]`
+
+/** "chart", "graph", "diagram" in the languages Hob speaks ("paragraph" and "photograph" aren't charts) */
+const CHART = /chart|(?<!para|photo|tele|auto|calli|bio|geo|mono|holo)graph|diagra|plot\b|gráfic|grafic|graphique|wykres|kaavio|grafiek|kuvaaja|\bgraf|график|диаграм|графік|діаграм|γράφημα|διάγραμμα|grafik|gráf|biểu đồ|แผนภูมิ|กราฟ|グラフ|チャート|图表|圖表|차트|그래프|גרף|תרשים|مخطط|رسم بياني|चार्ट|ग्राफ|চার্ট|গ্রাফ|tsart|bagan/i
+
+export function mentionsChart(text: string): boolean {
+  return CHART.test(text.replace(/```[\s\S]*?```/g, ' '))
+}
+
+/** "Here is the bar chart above" with no chart made: small models answer a follow-up with words alone */
+export const chartCheck = (earlier?: string) =>
+  `[Note from Hob, not from the user: your reply talks about a chart, but no chart was made in this reply, so the user sees none. If a chart is wanted, call make_chart now with the data, then say briefly what it shows.${earlier ? ` The chart made earlier in this chat was make_chart(${earlier}); for the same data drawn another way, call make_chart with those arguments and the new type.` : ''} If no chart is wanted, give your answer again without saying a chart is shown.]`

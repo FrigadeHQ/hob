@@ -681,5 +681,6 @@
   "“{name}” is already added.": "「{name}」はすでに追加されています。",
   "“{name}” is linked from a folder. Unlink it first.": "「{name}」はフォルダからリンクされています。先にリンクを解除してください。",
   "Hob {version} is ready": "Hob {version} の準備ができました",
-  "It installs the next time you quit Hob.": "次に Hob を終了したときにインストールされます。"
+  "It installs the next time you quit Hob.": "次に Hob を終了したときにインストールされます。",
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*この返信では Hob はグラフを作成しませんでした。もう一度頼むと再試行します。*"
 }

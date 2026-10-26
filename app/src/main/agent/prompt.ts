@@ -136,6 +136,9 @@ export const titleRequest = (user: string, reply: string) => [
 export function cleanTitle(raw: string): string {
   const line = raw.split('\n').map((l) => l.trim()).find(Boolean) ?? ''
   let t = line.replace(/^(title|chat title)\s*:\s*/i, '').replace(/[*#`]/g, '').replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').replace(/[.!?:;,]+$/, '').trim()
+  // the model thinking out loud ("The user wants me to…"; it thinks in English whatever the chat's language):
+  // the first line stays the title
+  if (/^(the user|user (wants|is|asks)|okay\b|ok,|let me\b|i (need|should|will|must|have to)\b|we need\b|so,? the user)/i.test(t)) return ''
   if (t) t = t[0].toLocaleUpperCase() + t.slice(1)
   return t.length > 48 ? `${t.slice(0, 47).trimEnd()}…` : t
 }

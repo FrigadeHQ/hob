@@ -238,6 +238,22 @@ it('the model names the chat after the first reply; later turns keep the name', 
   expect(w.store.getChat('c')?.title).toBe('Title for: can u help me')
 })
 
+it("a title that is the model thinking out loud isn't used", async () => {
+  const { cleanTitle } = await import('../src/main/agent/prompt')
+  expect(cleanTitle('The user wants me to provide a title for this chat')).toBe('')
+  expect(cleanTitle('Okay, the user is asking about charts')).toBe('')
+  expect(cleanTitle('I need to write a short title')).toBe('')
+  expect(cleanTitle('Befolkning i Danmark')).toBe('Befolkning i Danmark')
+})
+
+it('earlier replies say which tools made them, so a follow-up ("now as bars") calls the tool instead of only saying it did', async () => {
+  const w = world('allow', { grant: false })
+  writeFileSync(join(w.chatDir, 'data.csv'), 'year,people\n2020,5800000\n')
+  await w.turn('__tools__ [["read_file",{"path":"data.csv"}]]')
+  await w.turn('and as bars?')
+  expect(w.engine.lastRequest?.messages.at(-2)?.content).toContain('[Tools Hob used for this reply: read_file]')
+})
+
 it('cleanTitle tidies what the model wrote', async () => {
   const { cleanTitle } = await import('../src/main/agent/prompt')
   expect(cleanTitle('Title: "Dinosaur birthday party."')).toBe('Dinosaur birthday party')
@@ -303,6 +319,24 @@ it('says files were renamed when nothing was: Hob catches it and the model owns 
   // the model was told what really happened
   expect(w.engine.lastRequest?.messages.at(-1)?.content).toContain('no file was changed')
   expect(w.engine.lastRequest?.messages.at(-2)).toMatchObject({ role: 'assistant', content: expect.stringContaining('have been renamed') })
+})
+
+it('says a chart is shown when none was made: Hob sends it back once to make it', async () => {
+  const w = world('allow', { grant: false })
+  const resets: string[] = []
+  w.deps.emit.reset = (r) => resets.push(r)
+  await w.turn('__tools__ []\n---\nHer er søjlediagrammet ovenfor.')
+  expect(resets).toEqual(['r'])
+  expect(w.engine.lastRequest?.messages.at(-1)?.content).toContain('make_chart')
+  // still none after that: the reply says so plainly
+  expect(w.store.messages('c').at(-1)?.content).toContain("Hob didn't make a chart in this reply.")
+  // a chart that was made isn't questioned
+  const made = await w.turn('__tools__ [["make_chart",{"type":"bar","title":"Folk","data":[{"x":"2020","y":1}],"x":"x","series":["y"]}]]\n---\nHer er søjlediagrammet.')
+  expect(made.steps.some((s) => s.tool === 'make_chart' && s.status === 'done')).toBe(true)
+  expect(resets).toEqual(['r'])
+  // the next time, the chart made earlier is handed over, so "the same data as bars" is one call away
+  await w.turn('__tools__ []\n---\nHer er søjlediagrammet over samme data.')
+  expect(w.engine.lastRequest?.messages.at(-1)?.content).toContain('"title":"Folk"')
 })
 
 it('says it saved a file that does not exist: Hob sends it back once to make the file', async () => {
@@ -590,6 +624,6 @@ it('a new chat read ahead with files attached but not yet sent matches its first
   const readAheadMsgs = w.engine.lastPreload
   mkdirSync(dir); w.store.createChat('n', dir)
   writeFileSync(join(dir, 'notes.txt'), 'x'); writeFileSync(join(dir, 'q3-sales.xlsx'), 'x')
-  await runTurn(w.deps, { chatId: 'n', requestId: 'r2', text: 'draw a graph based on this', attachments: [{ name: 'q3-sales.xlsx', path: join(dir, 'q3-sales.xlsx'), sizeBytes: 1 }], signal: new AbortController().signal })
+  await runTurn(w.deps, { chatId: 'n', requestId: 'r2', text: 'sum up this', attachments: [{ name: 'q3-sales.xlsx', path: join(dir, 'q3-sales.xlsx'), sizeBytes: 1 }], signal: new AbortController().signal })
   expect(w.engine.lastRequest?.messages.slice(0, -1)).toEqual(readAheadMsgs)
 })

@@ -94,6 +94,8 @@ export class FakeEngine implements Engine {
     }
     if (said.startsWith('[Note from Hob') && said.includes("don't ask whether to go ahead")) return 'Renamed them.'
     if (said.startsWith('[Note from Hob') && said.includes('you stopped before finishing')) return 'Finished it.'
+    // a small model that still only says it: the reply gets an honest note
+    if (said.startsWith('[Note from Hob') && said.includes('talks about a chart')) return 'Her er diagrammet.'
     // does a step, then stops without a word
     if (said === '__quit__') { if (h.onTool) await h.onTool('list_files', {}); return '' }
     if (first.startsWith('__claim__')) return 'The files have been renamed. All new names are in ~/Desktop/hob-test.'

@@ -735,5 +735,6 @@
   "“{name}” is already added.": "„{name}” már hozzá van adva.",
   "“{name}” is linked from a folder. Unlink it first.": "„{name}” egy mappából van csatolva. Előbb válaszd le.",
   "Hob {version} is ready": "A Hob {version} készen áll",
-  "It installs the next time you quit Hob.": "A Hob következő bezárásakor települ."
+  "It installs the next time you quit Hob.": "A Hob következő bezárásakor települ.",
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*A Hob nem készített diagramot ebben a válaszban. Kérd újra, és megpróbálja még egyszer.*"
 }

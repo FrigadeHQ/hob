@@ -681,5 +681,6 @@
   "“{name}” is already added.": "เพิ่ม “{name}” ไว้แล้ว",
   "“{name}” is linked from a folder. Unlink it first.": "“{name}” ลิงก์มาจากโฟลเดอร์ ยกเลิกลิงก์ก่อน",
   "Hob {version} is ready": "Hob {version} พร้อมแล้ว",
-  "It installs the next time you quit Hob.": "จะติดตั้งเมื่อคุณปิด Hob ครั้งถัดไป"
+  "It installs the next time you quit Hob.": "จะติดตั้งเมื่อคุณปิด Hob ครั้งถัดไป",
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob ไม่ได้สร้างแผนภูมิในคำตอบนี้ ลองขออีกครั้งเพื่อให้ลองใหม่*"
 }
