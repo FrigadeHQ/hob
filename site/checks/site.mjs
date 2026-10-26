@@ -14,6 +14,8 @@ assert(html.includes('name="twitter:card" content="summary_large_image"'))
 const files = new Set()
 for (const [, url] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
   if (/^(https?:|#|data:|mailto:)/.test(url)) continue
+  // served by Vercel itself, not from public/
+  if (url.startsWith('/_vercel/')) continue
   assert(url.startsWith('/'), 'production assets must use root-relative URLs: ' + url)
   const file = path.join('public', url.split('?')[0])
   assert(fs.existsSync(file), 'missing asset: ' + file)
