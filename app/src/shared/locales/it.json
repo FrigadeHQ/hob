@@ -754,5 +754,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "“{name}” è collegato da una cartella. Scollegalo prima.",
   "Hob {version} is ready": "Hob {version} è pronto",
   "It installs the next time you quit Hob.": "Verrà installato la prossima volta che chiudi Hob.",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob non ha creato un grafico in questa risposta. Chiedi di nuovo per riprovare.*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob non ha creato un grafico in questa risposta. Chiedi di nuovo per riprovare.*",
+  "Hob finished replying.": "Hob ha finito di rispondere.",
+  "Hob needs your OK to keep going.": "Hob ha bisogno del tuo OK per andare avanti."
 }

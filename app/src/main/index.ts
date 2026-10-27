@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeTheme, protocol, safeStorage, session, shell } from 'electron'
+import { app, BrowserWindow, nativeTheme, Notification, protocol, safeStorage, session, shell } from 'electron'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { readFile } from 'node:fs/promises'
@@ -13,6 +13,7 @@ import { readSysInfo, toHardware } from './hardware'
 import type { Hardware } from '@hob/picker'
 import { SetupController } from './setup'
 import { registerIpc } from './ipc'
+import { Notices, type Notice } from './notify'
 import { Store } from './store'
 import { migrateFilesDir, migrateProfile } from './migrate'
 import { TITLE_BAR_HEIGHT, titleBarColors } from './titleBar'
@@ -38,6 +39,8 @@ import { SearxngServer, type SearchResult } from './search/searxng'
 import { SpeechModel } from './speech'
 
 const FAKE = process.env.HOB_FAKE === '1'
+// Windows shows notifications only for an app with this id (the installer's shortcut carries the same one)
+if (process.platform === 'win32') app.setAppUserModelId('com.frigade.hob')
 /** with HOB_FAKE: the stand-in model, but the real tools (Python, web search, the image model), for the smoke test */
 const REAL_TOOLS = FAKE && process.env.HOB_REAL_TOOLS === '1'
 // One profile folder however Hob is started (dev, packaged, tests): ~/Library/Application Support/Hob etc.
@@ -105,6 +108,20 @@ function createWindow() {
   else win.loadFile(join(__dirname, '../renderer/index.html'))
   win.on('closed', () => { win = undefined })
 }
+
+// shown notifications are kept until clicked or closed: one that's garbage-collected loses its click
+const showing = new Set<Notification>()
+function showNotice(n: Notice) {
+  if (!Notification.isSupported()) return
+  const note = new Notification({ title: n.title, body: n.body })
+  showing.add(note)
+  note.on('click', () => { showing.delete(note); n.onClick() })
+  note.on('close', () => showing.delete(note))
+  note.show()
+}
+/** test runs: notifications are recorded, never shown; e2e tests click them through here */
+const fakeNotices: Notice[] = []
+if (FAKE) (globalThis as { hobNotices?: Notice[] }).hobNotices = fakeNotices
 
 // .mcpb bundles and plugin zips opened from Finder (this can arrive before the app is ready)
 let openPluginFile: ((path: string) => Promise<void>) | undefined
@@ -244,7 +261,21 @@ app.whenReady().then(() => {
     open: (url) => shell.openExternal(url),
   })
   setCalMailSource(() => accounts.calMail() ?? (process.platform === 'darwin' ? macCalMail : undefined))
-  const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, accounts, fake: FAKE })
+  const notices = new Notices({
+    focused: () => !!win && win.isVisible() && !win.isMinimized() && win.isFocused(),
+    show: (n) => (FAKE ? fakeNotices.push(n) : showNotice(n)),
+    title: (id) => store.getChat(id)?.title,
+    open: (id) => {
+      if (!win) createWindow()
+      const w = win!
+      if (w.isMinimized()) w.restore()
+      w.show(); w.focus()
+      if (process.platform === 'darwin') app.focus({ steal: true })
+      const go = () => w.webContents.send('chat:open', id)
+      if (w.webContents.isLoading()) w.webContents.once('did-finish-load', go); else go()
+    },
+  })
+  const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, accounts, notices, fake: FAKE })
   // install code tools quietly once a model is ready, so they're there before the first file task
   let codeToolsStarted = false
   setup.onState((s) => {

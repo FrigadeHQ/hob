@@ -147,6 +147,10 @@ export function App() {
     window.addEventListener('keydown', k)
     return () => window.removeEventListener('keydown', k)
   }, [])
+  // a notification was clicked: that chat, in front of anything else
+  const openFromNotice = useRef<(id: string) => void>(() => {})
+  openFromNotice.current = (id) => { setSettingsAt(null); setPalette(false); open(id) }
+  useEffect(() => hob.chat.onOpen((id) => openFromNotice.current(id)), [])
 
   const chatReady = canChat(state)
   if (!chatReady) return <Onboarding state={state} />

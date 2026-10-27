@@ -772,5 +772,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "«{name}» связан из папки. Сначала отвяжите его.",
   "Hob {version} is ready": "Hob {version} готов",
   "It installs the next time you quit Hob.": "Обновление установится, когда вы в следующий раз закроете Hob.",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob не создал диаграмму в этом ответе. Попросите ещё раз, чтобы попробовать снова.*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob не создал диаграмму в этом ответе. Попросите ещё раз, чтобы попробовать снова.*",
+  "Hob finished replying.": "Hob закончил отвечать.",
+  "Hob needs your OK to keep going.": "Чтобы продолжить, Hob нужно твоё разрешение."
 }

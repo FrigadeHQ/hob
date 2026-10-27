@@ -736,5 +736,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "”{name}” on linkitetty kansiosta. Poista linkitys ensin.",
   "Hob {version} is ready": "Hob {version} on valmis",
   "It installs the next time you quit Hob.": "Se asennetaan, kun suljet Hobin seuraavan kerran.",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob ei tehnyt tähän vastaukseen kaaviota. Kysy uudelleen, niin se yrittää vielä kerran.*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob ei tehnyt tähän vastaukseen kaaviota. Kysy uudelleen, niin se yrittää vielä kerran.*",
+  "Hob finished replying.": "Hob vastasi.",
+  "Hob needs your OK to keep going.": "Hob tarvitsee lupasi jatkaakseen."
 }

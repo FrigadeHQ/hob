@@ -682,5 +682,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "“{name}” ditautkan dari folder. Lepas tautannya dulu.",
   "Hob {version} is ready": "Hob {version} sudah siap",
   "It installs the next time you quit Hob.": "Akan dipasang saat Anda menutup Hob berikutnya.",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob tidak membuat grafik di balasan ini. Minta lagi untuk mencoba sekali lagi.*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob tidak membuat grafik di balasan ini. Minta lagi untuk mencoba sekali lagi.*",
+  "Hob finished replying.": "Hob sudah selesai menjawab.",
+  "Hob needs your OK to keep going.": "Hob perlu persetujuanmu untuk lanjut."
 }

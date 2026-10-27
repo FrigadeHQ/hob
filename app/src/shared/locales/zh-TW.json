@@ -682,5 +682,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "「{name}」是從資料夾連結的。請先取消連結。",
   "Hob {version} is ready": "Hob {version} 已準備就緒",
   "It installs the next time you quit Hob.": "下次結束 Hob 時會自動安裝。",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob 在這則回覆中沒有產生圖表。再問一次即可重試。*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob 在這則回覆中沒有產生圖表。再問一次即可重試。*",
+  "Hob finished replying.": "Hob 已回覆完畢。",
+  "Hob needs your OK to keep going.": "Hob 需要你的同意才能繼續。"
 }

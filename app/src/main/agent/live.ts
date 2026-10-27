@@ -32,6 +32,7 @@ export class LiveTurns {
     if (c && this.byChat.get(c)?.requestId === requestId) this.byChat.delete(c)
     this.notify()
   }
+  chatFor(requestId: string): string | undefined { return this.chatOf.get(requestId) }
   get(chatId: string): LiveTurn | undefined { return this.byChat.get(chatId) }
   list(): LiveSummary[] { return [...this.byChat].map(([chatId, t]) => ({ chatId, waiting: !!t.approval })) }
 }

@@ -736,5 +736,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "“{name}” bir klasörden bağlı. Önce bağlantısını kaldırın.",
   "Hob {version} is ready": "Hob {version} hazır",
   "It installs the next time you quit Hob.": "Hob’dan bir sonraki çıkışınızda yüklenecek.",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob bu yanıtta grafik oluşturmadı. Bir kez daha denemesi için yeniden isteyin.*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob bu yanıtta grafik oluşturmadı. Bir kez daha denemesi için yeniden isteyin.*",
+  "Hob finished replying.": "Hob yanıtını bitirdi.",
+  "Hob needs your OK to keep going.": "Hob devam etmek için onayına ihtiyaç duyuyor."
 }

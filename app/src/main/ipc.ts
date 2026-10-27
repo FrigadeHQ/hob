@@ -14,6 +14,7 @@ import { renderPage } from './render'
 import { readAhead, runTurn } from './agent/turn'
 import { Approvals } from './agent/approvals'
 import { LiveTurns } from './agent/live'
+import type { Notices } from './notify'
 import { askMacAccess, macAccess } from './tools/mac'
 import type { AccountsLike } from './accounts'
 import type { ProviderId } from './accounts/providers'
@@ -48,6 +49,8 @@ export type IpcDeps = {
   /** the Google or Microsoft account for calendar and email */
   accounts: AccountsLike
   vision?: { state(): VisionState; onState(cb: (s: VisionState) => void): void; ask(image: string, question: string, signal?: AbortSignal): Promise<string>; retry(): void }
+  /** a reply finished or Hob is waiting, while the person is in another app */
+  notices?: Notices
   fake?: boolean
 }
 
@@ -56,7 +59,11 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   const send = (channel: string, ...args: unknown[]) => d.win()?.webContents.send(channel, ...args)
   // replies keep going when the user opens another chat; this holds their progress meanwhile
   const live = new LiveTurns((list) => send('chat:live', list))
-  const approvals = new Approvals((req) => { live.approval(req); send('chat:approval', req) })
+  const approvals = new Approvals((req) => {
+    live.approval(req); send('chat:approval', req)
+    const chatId = live.chatFor(req.requestId)
+    if (chatId) d.notices?.waiting(chatId)
+  })
   const trash = (p: string) => shell.trashItem(p)
   const userSettings = (): UserSettings => {
     const s = loadSettings(d.paths.settings)
@@ -269,6 +276,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
       })
       send('chat:done', requestId, reply)
       send('chats:changed')
+      if (!ac.signal.aborted) d.notices?.replied(chatId)
       return reply
     } catch (err) {
       send('chat:done', requestId, null)

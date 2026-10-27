@@ -736,5 +736,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "“{name}” एक फ़ोल्डर से लिंक है। पहले उसे अनलिंक करें।",
   "Hob {version} is ready": "Hob {version} तैयार है",
   "It installs the next time you quit Hob.": "अगली बार Hob बंद करने पर यह इंस्टॉल हो जाएगा।",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob ने इस जवाब में चार्ट नहीं बनाया। फिर से कोशिश करने के लिए दोबारा पूछें।*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob ने इस जवाब में चार्ट नहीं बनाया। फिर से कोशिश करने के लिए दोबारा पूछें।*",
+  "Hob finished replying.": "Hob ने जवाब दे दिया है।",
+  "Hob needs your OK to keep going.": "आगे बढ़ने के लिए Hob को आपकी मंज़ूरी चाहिए।"
 }

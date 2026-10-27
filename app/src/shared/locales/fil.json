@@ -736,5 +736,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "Naka-link ang “{name}” mula sa isang folder. I-unlink muna ito.",
   "Hob {version} is ready": "Handa na ang Hob {version}",
   "It installs the next time you quit Hob.": "Mai-install ito sa susunod na isara mo ang Hob.",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hindi gumawa ng chart si Hob sa sagot na ito. Magtanong ulit para subukan muli.*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hindi gumawa ng chart si Hob sa sagot na ito. Magtanong ulit para subukan muli.*",
+  "Hob finished replying.": "Tapos nang sumagot si Hob.",
+  "Hob needs your OK to keep going.": "Kailangan ni Hob ang OK mo para magpatuloy."
 }

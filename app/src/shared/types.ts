@@ -109,6 +109,8 @@ export interface HobApi {
     /** chats with a reply being written */
     live(): Promise<LiveSummary[]>
     onLive(cb: (list: LiveSummary[]) => void): () => void
+    /** a notification was clicked: show this chat */
+    onOpen(cb: (chatId: string) => void): () => void
   }
   approval: { answer(id: string, answer: ApprovalAnswer): Promise<void> }
   /** Calendar & Mail through the Mac's own apps; null on other systems */

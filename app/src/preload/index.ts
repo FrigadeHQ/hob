@@ -36,6 +36,7 @@ const api: HobApi = {
     onDone: (cb) => listen<[string, StoredMessage | null]>('chat:done', cb),
     live: invoke('chat:live'),
     onLive: (cb) => listen<[LiveSummary[]]>('chat:live', cb),
+    onOpen: (cb) => listen<[string]>('chat:open', cb),
   },
   approval: { answer: invoke('approval:answer') },
   mac: { access: invoke('mac:access'), ask: invoke('mac:ask'), openAccounts: invoke('mac:openAccounts'), onChanged: (cb) => listen<[MacAccess | null]>('mac:access', cb) },

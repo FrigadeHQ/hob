@@ -682,5 +682,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "“{name}”은(는) 폴더에서 링크되어 있어요. 먼저 링크를 해제하세요.",
   "Hob {version} is ready": "Hob {version} 준비 완료",
   "It installs the next time you quit Hob.": "다음에 Hob을 종료하면 설치됩니다.",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob이 이 답변에서 차트를 만들지 않았습니다. 다시 요청하면 한 번 더 시도합니다.*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob이 이 답변에서 차트를 만들지 않았습니다. 다시 요청하면 한 번 더 시도합니다.*",
+  "Hob finished replying.": "Hob이 답변을 마쳤어요.",
+  "Hob needs your OK to keep going.": "계속하려면 Hob에게 허락이 필요해요."
 }

@@ -736,5 +736,7 @@
   "“{name}” is linked from a folder. Unlink it first.": "Το «{name}» είναι συνδεδεμένο από φάκελο. Καταργήστε πρώτα τη σύνδεση.",
   "Hob {version} is ready": "Το Hob {version} είναι έτοιμο",
   "It installs the next time you quit Hob.": "Θα εγκατασταθεί την επόμενη φορά που θα κλείσεις το Hob.",
-  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Το Hob δεν έφτιαξε γράφημα σε αυτή την απάντηση. Ρώτησε ξανά για να προσπαθήσει άλλη μία φορά.*"
+  "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Το Hob δεν έφτιαξε γράφημα σε αυτή την απάντηση. Ρώτησε ξανά για να προσπαθήσει άλλη μία φορά.*",
+  "Hob finished replying.": "Το Hob ολοκλήρωσε την απάντηση.",
+  "Hob needs your OK to keep going.": "Το Hob χρειάζεται την έγκρισή σου για να συνεχίσει."
 }
