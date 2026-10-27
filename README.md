@@ -17,7 +17,7 @@
 <br>
 
 <p align="center">
-  <img src="docs/assets/screenshot.png" width="993" alt="Hob reading a sales spreadsheet in a project, charting revenue by region and summing up what stands out">
+  <img src="docs/assets/screenshot.png" width="1020" alt="Hob reading a sales spreadsheet in a project, charting revenue by region and summing up what stands out">
 </p>
 
 <br>
