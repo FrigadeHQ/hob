@@ -129,6 +129,9 @@ export class SetupController {
         if (pending) return await this.install(pending)
         const savedChoice = this.choices().find((c) => c.model.id === settings.activeModelId)
         if (savedChoice && this.verified(savedChoice)) return await this.loadWithFallback(savedChoice)
+        // first launch with a model already in place (copied over from another computer): use it
+        const copied = !settings.activeModelId && this.choices().find((c) => this.verified(c))
+        if (copied) return await this.loadWithFallback(copied)
 
         this.set({
           phase: 'choose', recommended: summarize(r.recommended), models: this.modelOptions(), liteMode: r.liteMode, needsDiskGB: r.recommended.needsDiskGB,

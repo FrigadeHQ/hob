@@ -213,6 +213,16 @@ describe('SetupController', () => {
     expect(c.state).toMatchObject({ phase: 'ready' })
     expect(downloads).toBe(0)
   })
+  it('a model copied over from another computer is used on first launch, no download', async () => {
+    const { deps, root } = setup()
+    const url = catalog.models.find((m) => m.id === 'gpt-oss-20b')!.builds[0].url
+    writeFileSync(join(root, fileNameFor(url)), 'x'); writeFileSync(join(root, fileNameFor(url) + '.ok'), 'FAKE')
+    let downloads = 0
+    const c = new SetupController({ ...deps, download: { ...deps.download, download: async () => { downloads++ } } })
+    await c.start()
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gpt-oss-20b' } })
+    expect(downloads).toBe(0)
+  })
   it('not enough disk → choose shows needsDiskGB, confirm → error', async () => {
     const { c } = setup({ getHardware: async () => ({ ...m1max, freeDiskGB: 20 }), download: fakeDownloadDeps({ freeDiskGB: 20 }) })
     await c.start()
