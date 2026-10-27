@@ -127,6 +127,8 @@ body {
   --tw-prose-code: var(--color-ink);
   --tw-prose-th-borders: var(--color-line-strong);
   --tw-prose-td-borders: var(--color-line);
+  --tw-prose-quotes: var(--color-ink);
+  --tw-prose-quote-borders: var(--color-line-strong);
   /* section breaks (---): Hob's soft divider, not the prose default (too bright in dark mode) */
   --tw-prose-hr: var(--color-line);
 }
