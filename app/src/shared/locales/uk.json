@@ -774,5 +774,9 @@
   "It installs the next time you quit Hob.": "Оновлення встановиться, коли ви наступного разу закриєте Hob.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob не створив діаграму в цій відповіді. Попросіть ще раз, щоб спробувати знову.*",
   "Hob finished replying.": "Hob закінчив відповідати.",
-  "Hob needs your OK to keep going.": "Щоб продовжити, Hob потрібен твій дозвіл."
+  "Hob needs your OK to keep going.": "Щоб продовжити, Hob потрібен твій дозвіл.",
+  "Remove Hob": "Видалити Hob",
+  "Remove Hob?": "Видалити Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Видаляє Hob, його моделі, ваші чати й налаштування. Файли, створені в чатах, залишаться у вашій папці з файлами.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, його моделі, ваші чати й налаштування буде видалено, а Hob закриється. Файли, створені в чатах, залишаться у вашій папці з файлами."
 }

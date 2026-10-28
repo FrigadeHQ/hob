@@ -738,5 +738,9 @@
   "It installs the next time you quit Hob.": "Se asennetaan, kun suljet Hobin seuraavan kerran.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob ei tehnyt tähän vastaukseen kaaviota. Kysy uudelleen, niin se yrittää vielä kerran.*",
   "Hob finished replying.": "Hob vastasi.",
-  "Hob needs your OK to keep going.": "Hob tarvitsee lupasi jatkaakseen."
+  "Hob needs your OK to keep going.": "Hob tarvitsee lupasi jatkaakseen.",
+  "Remove Hob": "Poista Hob",
+  "Remove Hob?": "Poistetaanko Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Poistaa Hobin, sen mallit sekä keskustelusi ja asetuksesi. Keskusteluissa tehdyt tiedostot jäävät tiedostokansioosi.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, sen mallit sekä keskustelusi ja asetuksesi poistetaan, ja Hob sulkeutuu. Keskusteluissa tehdyt tiedostot jäävät tiedostokansioosi."
 }

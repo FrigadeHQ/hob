@@ -684,5 +684,9 @@
   "It installs the next time you quit Hob.": "下次結束 Hob 時會自動安裝。",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob 在這則回覆中沒有產生圖表。再問一次即可重試。*",
   "Hob finished replying.": "Hob 已回覆完畢。",
-  "Hob needs your OK to keep going.": "Hob 需要你的同意才能繼續。"
+  "Hob needs your OK to keep going.": "Hob 需要你的同意才能繼續。",
+  "Remove Hob": "移除 Hob",
+  "Remove Hob?": "要移除 Hob 嗎？",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "刪除 Hob、它的模型、你的聊天和設定。聊天中產生的檔案會保留在你的檔案資料夾中。",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob、它的模型、你的聊天和設定將被刪除，Hob 會關閉。聊天中產生的檔案會保留在你的檔案資料夾中。"
 }

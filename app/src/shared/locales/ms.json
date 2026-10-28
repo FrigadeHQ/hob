@@ -684,5 +684,9 @@
   "It installs the next time you quit Hob.": "Ia akan dipasang apabila anda keluar dari Hob nanti.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob tidak membuat carta dalam balasan ini. Minta sekali lagi untuk mencuba semula.*",
   "Hob finished replying.": "Hob sudah selesai menjawab.",
-  "Hob needs your OK to keep going.": "Hob perlukan kebenaran anda untuk teruskan."
+  "Hob needs your OK to keep going.": "Hob perlukan kebenaran anda untuk teruskan.",
+  "Remove Hob": "Buang Hob",
+  "Remove Hob?": "Buang Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Memadam Hob, modelnya, serta sembang dan tetapan anda. Fail yang dibuat dalam sembang kekal dalam folder fail anda.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, modelnya, serta sembang dan tetapan anda akan dipadam, dan Hob akan ditutup. Fail yang dibuat dalam sembang kekal dalam folder fail anda."
 }

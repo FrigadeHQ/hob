@@ -756,5 +756,9 @@
   "It installs the next time you quit Hob.": "Il s’installera la prochaine fois que vous quitterez Hob.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob n’a pas créé de graphique dans cette réponse. Redemandez pour réessayer.*",
   "Hob finished replying.": "Hob a fini de répondre.",
-  "Hob needs your OK to keep going.": "Hob a besoin de ton accord pour continuer."
+  "Hob needs your OK to keep going.": "Hob a besoin de ton accord pour continuer.",
+  "Remove Hob": "Supprimer Hob",
+  "Remove Hob?": "Supprimer Hob ?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Supprime Hob, ses modèles, vos discussions et vos réglages. Les fichiers créés dans vos discussions restent dans votre dossier de fichiers.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, ses modèles, vos discussions et vos réglages seront supprimés, et Hob se fermera. Les fichiers créés dans vos discussions restent dans votre dossier de fichiers."
 }

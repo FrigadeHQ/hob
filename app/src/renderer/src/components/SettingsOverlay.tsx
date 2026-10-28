@@ -17,7 +17,7 @@ const NAV: { group: string; items: { id: Section; label: string; icon: typeof Co
     { id: 'general', label: msg('General'), icon: Cog, words: 'language appearance theme dark light text size dictation voice' },
     { id: 'model', label: msg('Model'), icon: Cpu, words: 'ai model download smarter images vision' },
     { id: 'privacy', label: msg('Privacy'), icon: Shield, words: 'web access internet offline search' },
-    { id: 'files', label: msg('Files & storage'), icon: FolderOpen, words: 'folder storage space delete chats' },
+    { id: 'files', label: msg('Files & storage'), icon: FolderOpen, words: 'folder storage space delete chats remove uninstall' },
   ] },
   { group: msg('Customize'), items: [
     { id: 'skills', label: msg('Skills'), icon: Sparkles, words: 'skills how-to slash commands' },

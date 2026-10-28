@@ -51,6 +51,8 @@ export type IpcDeps = {
   vision?: { state(): VisionState; onState(cb: (s: VisionState) => void): void; ask(image: string, question: string, signal?: AbortSignal): Promise<string>; retry(): void }
   /** a reply finished or Hob is waiting, while the person is in another app */
   notices?: Notices
+  /** Settings → Remove Hob */
+  removeHob(): Promise<void>
   fake?: boolean
 }
 
@@ -364,6 +366,8 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     const voiceModelsGB = sizeOf(d.paths.speech) / 1e9
     return { modelsGB: chatModelsGB + imageSupportGB + voiceModelsGB, chatModelsGB, imageSupportGB, voiceModelsGB, filesGB: sizeOf(d.filesDir()) / 1e9, codeToolsGB: sizeOf(d.paths.python) / 1e9 }
   })
+
+  ipcMain.handle('storage:removeHob', () => d.removeHob())
 
   ipcMain.handle('plugins:list', () => d.plugins.list())
   ipcMain.handle('plugins:setEnabled', (_e, id: string, on: boolean) => { d.plugins.setEnabled(String(id), !!on); pluginsChanged() })

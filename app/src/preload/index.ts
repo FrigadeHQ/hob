@@ -45,7 +45,7 @@ const api: HobApi = {
   task: { undo: invoke('task:undo') },
   settings: { get: invoke('settings:get'), set: invoke('settings:set'), pickFilesDir: invoke('settings:pickFilesDir') },
   models: { list: invoke('models:list'), use: invoke('models:use'), remove: invoke('models:remove'), cancel: invoke('models:cancel') },
-  storage: { get: invoke('storage:get') },
+  storage: { get: invoke('storage:get'), removeHob: invoke('storage:removeHob') },
   plugins: {
     list: invoke('plugins:list'), setEnabled: invoke('plugins:setEnabled'), add: invoke('plugins:add'), link: invoke('plugins:link'),
     remove: invoke('plugins:remove'), show: invoke('plugins:show'), setSetting: invoke('plugins:setSetting'),

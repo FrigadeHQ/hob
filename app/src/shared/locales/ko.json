@@ -684,5 +684,9 @@
   "It installs the next time you quit Hob.": "다음에 Hob을 종료하면 설치됩니다.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob이 이 답변에서 차트를 만들지 않았습니다. 다시 요청하면 한 번 더 시도합니다.*",
   "Hob finished replying.": "Hob이 답변을 마쳤어요.",
-  "Hob needs your OK to keep going.": "계속하려면 Hob에게 허락이 필요해요."
+  "Hob needs your OK to keep going.": "계속하려면 Hob에게 허락이 필요해요.",
+  "Remove Hob": "Hob 제거",
+  "Remove Hob?": "Hob을 제거할까요?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Hob과 모델, 채팅, 설정을 삭제합니다. 채팅에서 만든 파일은 파일 폴더에 그대로 남아요.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob과 모델, 채팅, 설정이 삭제되고 Hob이 종료됩니다. 채팅에서 만든 파일은 파일 폴더에 그대로 남아요."
 }

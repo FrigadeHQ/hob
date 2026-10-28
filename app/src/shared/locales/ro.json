@@ -756,5 +756,9 @@
   "It installs the next time you quit Hob.": "Se instalează data viitoare când închizi Hob.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob nu a făcut un grafic în acest răspuns. Cere din nou ca să mai încerce o dată.*",
   "Hob finished replying.": "Hob a terminat de răspuns.",
-  "Hob needs your OK to keep going.": "Hob are nevoie de acordul tău ca să continue."
+  "Hob needs your OK to keep going.": "Hob are nevoie de acordul tău ca să continue.",
+  "Remove Hob": "Elimină Hob",
+  "Remove Hob?": "Elimini Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Șterge Hob, modelele lui, conversațiile și setările tale. Fișierele create în conversații rămân în folderul tău de fișiere.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, modelele lui, conversațiile și setările tale vor fi șterse, iar Hob se va închide. Fișierele create în conversații rămân în folderul tău de fișiere."
 }

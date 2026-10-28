@@ -810,5 +810,9 @@
   "It installs the next time you quit Hob.": "سيُثبَّت في المرة القادمة التي تُغلق فيها Hob.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*لم يُنشئ Hob مخططًا في هذا الرد. اطلب مرة أخرى للمحاولة من جديد.*",
   "Hob finished replying.": "أنهى Hob الرد.",
-  "Hob needs your OK to keep going.": "يحتاج Hob إلى موافقتك ليكمل."
+  "Hob needs your OK to keep going.": "يحتاج Hob إلى موافقتك ليكمل.",
+  "Remove Hob": "إزالة Hob",
+  "Remove Hob?": "إزالة Hob؟",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "يحذف Hob ونماذجه ومحادثاتك وإعداداتك. تبقى الملفات التي أنشأتها محادثاتك في مجلد ملفاتك.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "سيتم حذف Hob ونماذجه ومحادثاتك وإعداداتك، وسيُغلق Hob. تبقى الملفات التي أنشأتها محادثاتك في مجلد ملفاتك."
 }

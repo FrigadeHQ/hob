@@ -738,5 +738,9 @@
   "It installs the next time you quit Hob.": "পরের বার Hob বন্ধ করলে এটি ইনস্টল হবে।",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*এই উত্তরে Hob কোনো চার্ট বানায়নি। আরেকবার চেষ্টা করতে আবার বলুন।*",
   "Hob finished replying.": "Hob উত্তর দেওয়া শেষ করেছে।",
-  "Hob needs your OK to keep going.": "চালিয়ে যেতে Hob-এর তোমার অনুমতি দরকার।"
+  "Hob needs your OK to keep going.": "চালিয়ে যেতে Hob-এর তোমার অনুমতি দরকার।",
+  "Remove Hob": "Hob সরান",
+  "Remove Hob?": "Hob সরাবেন?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Hob, এর মডেল, আপনার চ্যাট ও সেটিংস মুছে দেয়। আপনার চ্যাটে তৈরি ফাইলগুলো আপনার ফাইল ফোল্ডারেই থাকে।",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, এর মডেল, আপনার চ্যাট ও সেটিংস মুছে যাবে, আর Hob বন্ধ হয়ে যাবে। আপনার চ্যাটে তৈরি ফাইলগুলো আপনার ফাইল ফোল্ডারেই থাকবে।"
 }

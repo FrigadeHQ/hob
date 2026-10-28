@@ -92,6 +92,8 @@ win:
 nsis:
   oneClick: true
   perMachine: false
+  # uninstalling takes the models and chats too (gigabytes); updates keep them
+  deleteAppDataOnUninstall: true
 linux:
   # the default comes from the package name (@hob/app), which isn't a valid file name
   executableName: hob

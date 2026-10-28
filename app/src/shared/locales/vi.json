@@ -684,5 +684,9 @@
   "It installs the next time you quit Hob.": "Bản cập nhật sẽ được cài khi bạn thoát Hob lần tới.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob chưa tạo biểu đồ trong câu trả lời này. Hãy hỏi lại để thử thêm lần nữa.*",
   "Hob finished replying.": "Hob đã trả lời xong.",
-  "Hob needs your OK to keep going.": "Hob cần bạn đồng ý để tiếp tục."
+  "Hob needs your OK to keep going.": "Hob cần bạn đồng ý để tiếp tục.",
+  "Remove Hob": "Gỡ Hob",
+  "Remove Hob?": "Gỡ Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Xóa Hob, các mô hình của Hob, cuộc trò chuyện và cài đặt của bạn. Các tệp được tạo trong cuộc trò chuyện vẫn nằm trong thư mục tệp của bạn.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, các mô hình của Hob, cuộc trò chuyện và cài đặt của bạn sẽ bị xóa, và Hob sẽ đóng lại. Các tệp được tạo trong cuộc trò chuyện vẫn nằm trong thư mục tệp của bạn."
 }

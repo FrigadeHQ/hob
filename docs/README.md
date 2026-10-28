@@ -39,6 +39,13 @@ Hob picks from a curated list of open models: Google's Gemma 4 for most computer
 | Dictation | Speech to text, on your computer |
 | Plugins | Skills, Python tools and MCP connectors |
 
+## Removing Hob
+
+Go to Settings → Files & storage → Remove Hob. That deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder (Documents/Hob unless you changed it).
+
+- **Windows:** uninstalling Hob from Settings → Apps does the same.
+- **Mac and Linux:** dragging Hob to the Trash (or deleting the AppImage) leaves its models behind. Use Remove Hob, or delete Hob's folder yourself: `~/Library/Application Support/Hob` on a Mac, `~/.config/Hob` on Linux.
+
 ## Plugins
 
 A plugin is a folder with a `hob-plugin.json`. It can add [skills](plugins/skills.md) in the open [Agent Skills](https://agentskills.io) format, [Python tools](plugins/python-tools.md), and [connectors](plugins/connectors.md) to any MCP server, including `.mcpb` bundles. Hob's own web search, code and PDF features are plugins too, in [`app/plugins/`](../app/plugins).

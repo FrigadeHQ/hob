@@ -139,7 +139,11 @@ export interface HobApi {
     /** stop the model download in progress; false when there's none */
     cancel(): Promise<boolean>
   }
-  storage: { get(): Promise<StorageUsage> }
+  storage: {
+    get(): Promise<StorageUsage>
+    /** models, chats and settings deleted, the app too where it can be, then Hob quits */
+    removeHob(): Promise<void>
+  }
   plugins: {
     list(): Promise<PluginInfo[]>
     setEnabled(id: string, on: boolean): Promise<void>

@@ -1,5 +1,6 @@
 import { app, BrowserWindow, nativeTheme, Notification, protocol, safeStorage, session, shell } from 'electron'
 import { join } from 'node:path'
+import { spawn } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import bundledCatalog from '../../../catalog/catalog.json'
@@ -14,6 +15,7 @@ import type { Hardware } from '@hob/picker'
 import { SetupController } from './setup'
 import { registerIpc } from './ipc'
 import { Notices, type Notice } from './notify'
+import { deleteAfterExit, removalPlan } from './uninstall'
 import { Store } from './store'
 import { migrateFilesDir, migrateProfile } from './migrate'
 import { TITLE_BAR_HEIGHT, titleBarColors } from './titleBar'
@@ -275,7 +277,15 @@ app.whenReady().then(() => {
       if (w.webContents.isLoading()) w.webContents.once('did-finish-load', go); else go()
     },
   })
-  const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, accounts, notices, fake: FAKE })
+  const removeHob = async () => {
+    const plan = removalPlan({ platform: process.platform, packaged: app.isPackaged, profile: !!process.env.HOB_USER_DATA, execPath: process.execPath, appImage: process.env.APPIMAGE, data: app.getPath('userData') })
+    // Windows: Hob's uninstaller closes Hob, then removes the app and its data
+    if (plan.uninstaller) spawn(plan.uninstaller, ['/S', '--delete-app-data'], { detached: true, stdio: 'ignore' }).unref()
+    if (plan.data) deleteAfterExit(plan.data)
+    if (plan.app) await shell.trashItem(plan.app).catch((err) => console.warn('could not move Hob to the Trash', err))
+    app.quit()
+  }
+  const ipc = registerIpc({ win: () => win, setup, store, python, paths, filesDir, allowed, search, speech: FAKE ? undefined : speech, plugins, vision, accounts, notices, removeHob, fake: FAKE })
   // install code tools quietly once a model is ready, so they're there before the first file task
   let codeToolsStarted = false
   setup.onState((s) => {

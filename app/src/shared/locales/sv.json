@@ -738,5 +738,9 @@
   "It installs the next time you quit Hob.": "Den installeras nästa gång du avslutar Hob.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob gjorde inget diagram i det här svaret. Fråga igen för att försöka en gång till.*",
   "Hob finished replying.": "Hob har svarat klart.",
-  "Hob needs your OK to keep going.": "Hob behöver ditt OK för att fortsätta."
+  "Hob needs your OK to keep going.": "Hob behöver ditt OK för att fortsätta.",
+  "Remove Hob": "Ta bort Hob",
+  "Remove Hob?": "Ta bort Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Raderar Hob, dess modeller, dina chattar och inställningar. Filer som dina chattar har skapat ligger kvar i din filmapp.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, dess modeller, dina chattar och inställningar raderas, och Hob stängs. Filer som dina chattar har skapat ligger kvar i din filmapp."
 }

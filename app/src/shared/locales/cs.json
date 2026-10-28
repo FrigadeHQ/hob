@@ -774,5 +774,9 @@
   "It installs the next time you quit Hob.": "Nainstaluje se, až příště Hob ukončíte.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob v této odpovědi nevytvořil graf. Zeptejte se znovu a zkusí to ještě jednou.*",
   "Hob finished replying.": "Hob dokončil odpověď.",
-  "Hob needs your OK to keep going.": "Hob potřebuje tvůj souhlas, aby mohl pokračovat."
+  "Hob needs your OK to keep going.": "Hob potřebuje tvůj souhlas, aby mohl pokračovat.",
+  "Remove Hob": "Odebrat Hob",
+  "Remove Hob?": "Odebrat Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Smaže Hob, jeho modely, vaše chaty a nastavení. Soubory vytvořené v chatech zůstanou ve vaší složce souborů.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, jeho modely, vaše chaty a nastavení budou smazány a Hob se zavře. Soubory vytvořené v chatech zůstanou ve vaší složce souborů."
 }

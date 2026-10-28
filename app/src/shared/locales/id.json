@@ -684,5 +684,9 @@
   "It installs the next time you quit Hob.": "Akan dipasang saat Anda menutup Hob berikutnya.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob tidak membuat grafik di balasan ini. Minta lagi untuk mencoba sekali lagi.*",
   "Hob finished replying.": "Hob sudah selesai menjawab.",
-  "Hob needs your OK to keep going.": "Hob perlu persetujuanmu untuk lanjut."
+  "Hob needs your OK to keep going.": "Hob perlu persetujuanmu untuk lanjut.",
+  "Remove Hob": "Hapus Hob",
+  "Remove Hob?": "Hapus Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Menghapus Hob, modelnya, serta chat dan pengaturanmu. File yang dibuat di chat tetap ada di folder filemu.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, modelnya, serta chat dan pengaturanmu akan dihapus, lalu Hob akan ditutup. File yang dibuat di chat tetap ada di folder filemu."
 }

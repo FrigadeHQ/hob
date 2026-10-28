@@ -684,5 +684,9 @@
   "It installs the next time you quit Hob.": "จะติดตั้งเมื่อคุณปิด Hob ครั้งถัดไป",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob ไม่ได้สร้างแผนภูมิในคำตอบนี้ ลองขออีกครั้งเพื่อให้ลองใหม่*",
   "Hob finished replying.": "Hob ตอบเสร็จแล้ว",
-  "Hob needs your OK to keep going.": "Hob ต้องการการอนุญาตจากคุณเพื่อทำต่อ"
+  "Hob needs your OK to keep going.": "Hob ต้องการการอนุญาตจากคุณเพื่อทำต่อ",
+  "Remove Hob": "ลบ Hob",
+  "Remove Hob?": "ลบ Hob ไหม",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "ลบ Hob โมเดลของ Hob แชตและการตั้งค่าของคุณ ไฟล์ที่สร้างในแชตจะยังอยู่ในโฟลเดอร์ไฟล์ของคุณ",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob โมเดลของ Hob แชตและการตั้งค่าของคุณจะถูกลบ และ Hob จะปิดลง ไฟล์ที่สร้างในแชตจะยังอยู่ในโฟลเดอร์ไฟล์ของคุณ"
 }

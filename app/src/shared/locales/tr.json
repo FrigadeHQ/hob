@@ -738,5 +738,9 @@
   "It installs the next time you quit Hob.": "Hob’dan bir sonraki çıkışınızda yüklenecek.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob bu yanıtta grafik oluşturmadı. Bir kez daha denemesi için yeniden isteyin.*",
   "Hob finished replying.": "Hob yanıtını bitirdi.",
-  "Hob needs your OK to keep going.": "Hob devam etmek için onayına ihtiyaç duyuyor."
+  "Hob needs your OK to keep going.": "Hob devam etmek için onayına ihtiyaç duyuyor.",
+  "Remove Hob": "Hob’u kaldır",
+  "Remove Hob?": "Hob kaldırılsın mı?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Hob’u, modellerini, sohbetlerini ve ayarlarını siler. Sohbetlerinde oluşturulan dosyalar dosya klasöründe kalır.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, modelleri, sohbetlerin ve ayarların silinecek ve Hob kapanacak. Sohbetlerinde oluşturulan dosyalar dosya klasöründe kalır."
 }

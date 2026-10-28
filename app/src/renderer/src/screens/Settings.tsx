@@ -154,11 +154,12 @@ export function PrivacySettings() {
   )
 }
 
-/** where chat files go, how much space Hob uses, and deleting every chat */
+/** where chat files go, how much space Hob uses, deleting every chat, and removing Hob */
 export function FilesSettings({ onAllChatsDeleted }: { onAllChatsDeleted(): void }) {
   const [s, setS] = useState<UserSettings | null>(null)
   const [storage, setStorage] = useState<StorageUsage | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmRemove, setConfirmRemove] = useState(false)
   const [chatCount, setChatCount] = useState(0)
   const reload = () => void hob.storage.get().then(setStorage)
   useEffect(() => { reload(); void hob.settings.get().then(setS) }, [])
@@ -196,6 +197,17 @@ export function FilesSettings({ onAllChatsDeleted }: { onAllChatsDeleted(): void
               {t('Delete all chats')}
             </button>
           </div>
+          {/* dragging Hob to the Trash leaves its models behind, gigabytes of them */}
+          <div className="mt-3 flex items-center justify-between gap-6 rounded-card border border-danger/30 px-4 py-3">
+            <div>
+              <p className="font-medium">{t('Remove Hob')}</p>
+              <p className="text-ui text-muted">{t('Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.')}</p>
+            </div>
+            <button data-testid="remove-hob" onClick={() => setConfirmRemove(true)}
+              className="shrink-0 rounded-control border border-danger/40 px-3 py-1.5 text-ui font-medium text-danger transition-colors hover:bg-danger/10">
+              {t('Remove Hob')}
+            </button>
+          </div>
         </section>
       </div>
       {confirmDelete && (
@@ -207,6 +219,19 @@ export function FilesSettings({ onAllChatsDeleted }: { onAllChatsDeleted(): void
             <button data-testid="confirm-delete-all-yes" onClick={() => { setConfirmDelete(false); void hob.chats.removeAll().then(() => { onAllChatsDeleted(); reload() }) }}
               className="inline-flex items-center rounded-control bg-danger px-3 py-1.5 text-ui font-medium text-white transition-opacity hover:opacity-90">
               {t('Delete all chats')}
+            </button>
+          </div>
+        </Dialog>
+      )}
+      {confirmRemove && (
+        <Dialog title={t('Remove Hob?')} testId="confirm-remove-hob" onClose={() => setConfirmRemove(false)}>
+          <p className="text-ui text-ink-soft">{t('Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.')}</p>
+          <p className="mt-2 text-ui font-medium">{t('This can’t be undone.')}</p>
+          <div className="mt-5 flex justify-end gap-2">
+            <button autoFocus onClick={() => setConfirmRemove(false)} className={button.secondary}>{t('Cancel')}</button>
+            <button data-testid="confirm-remove-hob-yes" onClick={() => void hob.storage.removeHob()}
+              className="inline-flex items-center rounded-control bg-danger px-3 py-1.5 text-ui font-medium text-white transition-opacity hover:opacity-90">
+              {t('Remove Hob')}
             </button>
           </div>
         </Dialog>

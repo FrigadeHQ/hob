@@ -738,5 +738,9 @@
   "It installs the next time you quit Hob.": "Wordt geïnstalleerd zodra je Hob de volgende keer afsluit.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob heeft in dit antwoord geen grafiek gemaakt. Vraag het opnieuw om het nog eens te proberen.*",
   "Hob finished replying.": "Hob is klaar met antwoorden.",
-  "Hob needs your OK to keep going.": "Hob heeft je OK nodig om verder te gaan."
+  "Hob needs your OK to keep going.": "Hob heeft je OK nodig om verder te gaan.",
+  "Remove Hob": "Hob verwijderen",
+  "Remove Hob?": "Hob verwijderen?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Verwijdert Hob, de modellen, je chats en je instellingen. Bestanden die in je chats zijn gemaakt, blijven in je bestandenmap.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, de modellen, je chats en je instellingen worden verwijderd en Hob sluit af. Bestanden die in je chats zijn gemaakt, blijven in je bestandenmap."
 }

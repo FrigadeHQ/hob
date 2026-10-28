@@ -774,5 +774,9 @@
   "It installs the next time you quit Hob.": "Zainstaluje się, gdy następnym razem zamkniesz Hob.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Hob nie utworzył wykresu w tej odpowiedzi. Poproś ponownie, aby spróbować jeszcze raz.*",
   "Hob finished replying.": "Hob skończył odpowiadać.",
-  "Hob needs your OK to keep going.": "Hob potrzebuje Twojej zgody, żeby kontynuować."
+  "Hob needs your OK to keep going.": "Hob potrzebuje Twojej zgody, żeby kontynuować.",
+  "Remove Hob": "Usuń Hob",
+  "Remove Hob?": "Usunąć Hob?",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Usuwa Hob, jego modele, Twoje czaty i ustawienia. Pliki utworzone w czatach zostają w Twoim folderze plików.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, jego modele, Twoje czaty i ustawienia zostaną usunięte, a Hob się zamknie. Pliki utworzone w czatach zostają w Twoim folderze plików."
 }

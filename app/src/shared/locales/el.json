@@ -738,5 +738,9 @@
   "It installs the next time you quit Hob.": "Θα εγκατασταθεί την επόμενη φορά που θα κλείσεις το Hob.",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*Το Hob δεν έφτιαξε γράφημα σε αυτή την απάντηση. Ρώτησε ξανά για να προσπαθήσει άλλη μία φορά.*",
   "Hob finished replying.": "Το Hob ολοκλήρωσε την απάντηση.",
-  "Hob needs your OK to keep going.": "Το Hob χρειάζεται την έγκρισή σου για να συνεχίσει."
+  "Hob needs your OK to keep going.": "Το Hob χρειάζεται την έγκρισή σου για να συνεχίσει.",
+  "Remove Hob": "Αφαίρεση του Hob",
+  "Remove Hob?": "Αφαίρεση του Hob;",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Διαγράφει το Hob, τα μοντέλα του, τις συνομιλίες και τις ρυθμίσεις σου. Τα αρχεία που δημιούργησαν οι συνομιλίες σου μένουν στον φάκελο αρχείων σου.",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Το Hob, τα μοντέλα του, οι συνομιλίες και οι ρυθμίσεις σου θα διαγραφούν και το Hob θα κλείσει. Τα αρχεία που δημιούργησαν οι συνομιλίες σου μένουν στον φάκελο αρχείων σου."
 }

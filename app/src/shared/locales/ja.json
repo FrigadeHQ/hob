@@ -684,5 +684,9 @@
   "It installs the next time you quit Hob.": "次に Hob を終了したときにインストールされます。",
   "*Hob didn't make a chart in this reply. Ask again to try once more.*": "*この返信では Hob はグラフを作成しませんでした。もう一度頼むと再試行します。*",
   "Hob finished replying.": "Hob が返信を終えました。",
-  "Hob needs your OK to keep going.": "続けるには Hob にあなたの許可が必要です。"
+  "Hob needs your OK to keep going.": "続けるには Hob にあなたの許可が必要です。",
+  "Remove Hob": "Hob を削除",
+  "Remove Hob?": "Hob を削除しますか？",
+  "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Hob とそのモデル、チャット、設定を削除します。チャットで作成したファイルは、ファイルのフォルダに残ります。",
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob とそのモデル、チャット、設定が削除され、Hob は終了します。チャットで作成したファイルは、ファイルのフォルダに残ります。"
 }
