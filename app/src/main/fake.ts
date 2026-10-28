@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { DownloadDeps } from './downloader'
-import { TIME_NOTE, TITLE_PROMPT } from './agent/prompt'
+import { CHAT_NOTE, TIME_NOTE, TITLE_PROMPT } from './agent/prompt'
 import { InsufficientMemoryError, type ChatHandlers, type ChatRequest, type Engine, type GpuProbe } from './engine'
 
 /** Used when HOB_FAKE=1 (E2E tests) and in unit tests. */
@@ -32,7 +32,7 @@ export class FakeEngine implements Engine {
     if (req.messages[0]?.content.startsWith(TITLE_PROMPT)) this.lastTitleRequest = req
     else this.lastRequest = req
     const onToken = h.onToken
-    const said = (req.messages.at(-1)?.content ?? '').replace(TIME_NOTE, '')
+    const said = (req.messages.at(-1)?.content ?? '').replace(TIME_NOTE, '').replace(CHAT_NOTE, '')
     const first = said.split('\n')[0]
     if (first.startsWith('__tools__ ')) {
       const results: string[] = []

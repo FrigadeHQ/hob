@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { basename, isAbsolute, join, resolve, sep } from 'node:path'
+import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import type { ApprovalAnswer, ApprovalRequest, Attachment, Step, StoredMessage, ToolSpec } from '../../shared/agent'
 import type { ChatMessage } from '../../shared/types'
 import type { ChartSpec } from '../../shared/chart'
@@ -14,7 +14,7 @@ import { Journal } from './journal'
 import { fitHistory, ToolBudget } from './history'
 import { decide } from './permissions'
 import { asksToProceed, chartCheck, NO_CHART, claimCheck, claimsFileChanges, mentionsChart, missingCheck, NOTHING_CHANGED, unbackedFiles, proceedCheck, unfinishedCheck } from './claims'
-import { chatTitle, cleanTitle, expandCommand, systemPrompt, timeNote, titleRequest, type PromptSkill } from './prompt'
+import { chatNote, chatTitle, cleanTitle, expandCommand, systemPrompt, timeNote, titleRequest, type PromptSkill } from './prompt'
 import { repeatCut } from './repeat'
 import type { Tool, TurnCtx } from './tool'
 import { isInside } from '../workspace'
@@ -261,7 +261,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   const command = expandCommand(a.text, (n) => d.skills?.find(n))
   const messages: ChatMessage[] = [
     ...conversation(d, chat, history, specs, a.text),
-    { role: 'user', content: [withFiles(command.text, a.attachments), ...lookNotes, timeNote()].join('\n') },
+    { role: 'user', content: [withFiles(command.text, a.attachments), ...lookNotes, noteFor(d, chat), timeNote()].join('\n') },
   ]
   // file work from the start: signals that don't depend on the language the user writes in. Anything else
   // starts with a short think and gets the long one as soon as the model calls a tool
@@ -341,8 +341,6 @@ type ChatRef = { id?: string; dir: string; projectId: string | null; pending?: s
 export function conversation(d: PromptDeps, chat: ChatRef, history: StoredMessage[], specs: ToolSpec[], text = ''): ChatMessage[] {
   const project = chat.projectId ? d.store.getProject(chat.projectId) : undefined
   const missing = (project?.folders ?? []).filter((f) => !existsSync(f))
-  const chatGrants = chat.id ? d.store.chatGrants(chat.id) : []
-  const mainFolder = project?.folders[0]
   const find = (n: string) => d.skills?.find(n)
   const command = expandCommand(text, find)
   // the latest earlier /command keeps its instructions, so follow-ups ("make it shorter") still know them;
@@ -353,9 +351,19 @@ export function conversation(d: PromptDeps, chat: ChatRef, history: StoredMessag
   // "save that as a skill": the model only sees earlier replies' words, so give it the code that worked
   const lastReply = /\bskill/i.test(text) && !command.skill ? history.map((m) => m.role).lastIndexOf('assistant') : -1
   return [
-    { role: 'system', content: systemPrompt({ chatDir: chat.dir, files: [...new Set([...listDir(chat.dir), ...chat.pending ?? []])].sort(), grants: chatGrants, project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing, files: mainFolder ? listDir(mainFolder) : [] }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
+    { role: 'system', content: systemPrompt({ chatsDir: dirname(chat.dir), project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing }, home: d.home ?? homedir(), tools: d.skills ? specs.map((s) => s.name) : undefined, skills: d.skills?.list(), extra: d.prompts?.(specs.map((s) => s.name)) }) },
     ...fitHistory(history.map((m, i) => ({ role: m.role, content: attached(expand(m.content, i), m.attachments) + toolsUsed(m.steps) + (i === lastReply ? codeThatWorked(m.steps) : ''), files: filesSeen(m.attachments) }))),
   ]
+}
+
+/** what goes with the new message: this chat's folder and files, the folders allowed in it (chatNote) */
+export function noteFor(d: PromptDeps, chat: ChatRef): string {
+  const project = chat.projectId ? d.store.getProject(chat.projectId) : undefined
+  const main = project?.folders[0]
+  return chatNote({
+    files: [...new Set([...listDir(chat.dir), ...chat.pending ?? []])].sort(), grants: chat.id ? d.store.chatGrants(chat.id) : [],
+    project: project && { name: project.name, instructions: project.instructions, folders: project.folders, missing: project.folders.filter((f) => !existsSync(f)), files: main ? listDir(main) : [] },
+  })
 }
 
 /** Read a chat ahead (or a new chat that will use this folder), so its next message starts at once. */

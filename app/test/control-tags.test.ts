@@ -46,6 +46,12 @@ describe('a reply that opens with a thinking tag is thinking', () => {
     expect(cleanAnswer('<|channel|>thought\nhm<channel|>Done.')).toBe('Done.')
     expect(cleanAnswer('  <think>\nhm</think>Done.')).toBe('Done.')
   })
+  it('also right after an end-of-thinking tag (seen after a tool call: the thought became the reply)', () => {
+    expect(cleanAnswer("<channel|><thought The file has been renamed. I will tell the user. </thought>I've renamed groceries.txt to shopping.txt.")).toBe("I've renamed groceries.txt to shopping.txt.")
+    expect(cleanAnswer('<channel|><thought The file has been renamed.')).toBe('')
+    const c = streamCleaner()
+    expect(['<channel|>', '<thought The file', ' is renamed.</thought>', 'Done.'].map((x) => c.push(x)).join('') + c.end()).toBe('Done.')
+  })
   it('only at the start, and only as a tag', () => {
     expect(cleanAnswer('Your <thought> tags are fine.')).toBe('Your <thought> tags are fine.')
     expect(cleanAnswer('<thoughtful> is not a tag')).toBe('<thoughtful> is not a tag')

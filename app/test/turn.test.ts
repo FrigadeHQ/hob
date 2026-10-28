@@ -6,7 +6,7 @@ import { FakeEngine } from '../src/main/fake'
 import { Store } from '../src/main/store'
 import { allTools } from '../src/main/tools'
 import { AGENT_BUDGET, readAhead, runTurn, type TurnDeps } from '../src/main/agent/turn'
-import { TIME_NOTE, systemPrompt } from '../src/main/agent/prompt'
+import { CHAT_NOTE, TIME_NOTE, chatNote, systemPrompt } from '../src/main/agent/prompt'
 import type { ApprovalAnswer, ApprovalRequest, Attachment, Step } from '../src/shared/agent'
 import { ensurePdfHelper } from './pdfHelper'
 
@@ -134,7 +134,7 @@ it('a tool that reports failure shows as a failed step, and the model still gets
 })
 
 it('the prompt sends granted-folder changes through the file tools', () => {
-  const p = systemPrompt({ chatDir: '/c', files: [], grants: ['/Users/me/Downloads'] })
+  const p = chatNote({ files: [], grants: ['/Users/me/Downloads'] })
   expect(p).toMatch(/move_file/)
   expect(p).toMatch(/run_python [^.]*can only save in this chat's folder/)
   expect(p).toMatch(/don't ask (the user )?(to confirm|for permission) in (the )?chat/i)
@@ -189,13 +189,13 @@ it('an identical tool call later in the same turn returns the earlier result wit
 })
 
 it("tells the model today's date (so web searches use the right year)", () => {
-  const p = systemPrompt({ chatDir: '/c', files: [], grants: [], now: new Date(2026, 9, 15) })
+  const p = systemPrompt({ now: new Date(2026, 9, 15) })
   expect(p).toContain('Today is Thursday, 15 October 2026')
 })
 
 it("answers in the app's language unless the user writes in another", () => {
-  expect(systemPrompt({ chatDir: '/c', files: [], grants: [], language: 'de' })).toContain("Hob's screens are in German. Reply in the language the user writes in; German when unsure.")
-  expect(systemPrompt({ chatDir: '/c', files: [], grants: [], language: 'en' })).not.toContain("Hob's screens are in")
+  expect(systemPrompt({ language: 'de' })).toContain("Hob's screens are in German. Reply in the language the user writes in; German when unsure.")
+  expect(systemPrompt({ language: 'en' })).not.toContain("Hob's screens are in")
 })
 
 it('a reply that starts repeating itself is stopped and trimmed', async () => {
@@ -214,13 +214,13 @@ it('/skill sends the skill instructions with the message, and the prompt lists s
   const req = w.engine.lastRequest!
   expect(req.messages[0].content).toContain('- plan-trip: Plan trips day by day')
   expect(req.messages[0].content).toContain('use convert_currency')
-  expect(req.messages.at(-1)!.content).toMatch(/^Rome in May\n\n\[The user picked the skill “plan-trip”[\s\S]*Make a day-by-day plan\.\n\[Sent [^\]]*\]$/)
+  expect(req.messages.at(-1)!.content).toMatch(/^Rome in May\n\n\[The user picked the skill “plan-trip”[\s\S]*Make a day-by-day plan\.\n\[This chat's folder [^\]]*\]\n\[Sent [^\]]*\]$/)
   expect(w.store.messages('c')[0].content).toBe('/plan-trip Rome in May') // the chat shows what the user typed
   // a follow-up still carries the instructions; an unknown /word is left alone
   await w.turn('shorter please')
   expect(w.engine.lastRequest!.messages.at(-3)!.content).toContain('Make a day-by-day plan.')
   await w.turn('/nope hi')
-  expect(w.engine.lastRequest!.messages.at(-1)!.content.replace(TIME_NOTE, '')).toBe('/nope hi')
+  expect(w.engine.lastRequest!.messages.at(-1)!.content.replace(TIME_NOTE, '').replace(CHAT_NOTE, '')).toBe('/nope hi')
 })
 
 it('the model names the chat after the first reply; later turns keep the name', async () => {
@@ -364,7 +364,7 @@ it('a real rename is not second-guessed', async () => {
 })
 
 it('the prompt points photo work at Pillow and EXIF, not modified dates', () => {
-  const p = systemPrompt({ chatDir: '/c', files: [], grants: ['/Users/eric/Desktop/hob-test'], home: '/Users/eric' })
+  const p = systemPrompt({ home: '/Users/eric' })
   expect(p).toContain('Pillow')
   expect(p).toContain('DateTimeOriginal')
   expect(p).toContain('move_files')
@@ -422,7 +422,7 @@ it('in a project: new files go in without asking, changes still ask, and the pro
   expect(sys).toContain(`The main folder is “${w.grant}”`)
   expect(sys).toContain('Project instructions from the user:\nName photos by date')
   // "rename the photos" with no folder named means the project's files: don't ask where they are
-  expect(sys).toContain(`“${w.grant}” contains: a.txt`)
+  expect(w.engine.lastRequest!.messages.at(-1)!.content).toContain(`“${w.grant}” contains: a.txt`)
   expect(sys).toMatch(/without saying where, they mean the project folders/)
 })
 
@@ -446,7 +446,7 @@ it('open_folder with no path opens the project main folder, without asking', asy
 })
 
 it('long project instructions are cut; the prompt says how to open folders', () => {
-  const p = systemPrompt({ chatDir: '/c', files: [], grants: [], platform: 'win32', project: { name: 'P', instructions: 'x'.repeat(5000), folders: ['/a'] } })
+  const p = systemPrompt({ platform: 'win32', project: { name: 'P', instructions: 'x'.repeat(5000), folders: ['/a'] } })
   expect(p).toContain(`${'x'.repeat(4000)}\n(The rest was cut: too long.)`)
   expect(p).not.toContain('x'.repeat(4001))
   expect(p).toMatch(/open_folder[^\n]*File Explorer/)
@@ -463,7 +463,7 @@ it('stops with nothing to say after doing some work: Hob sends it back once to f
 })
 
 it('charts are drawn by Hob (make_chart); Python images only for what it cannot draw', () => {
-  const p = systemPrompt({ chatDir: '/c', files: [], grants: [] })
+  const p = systemPrompt({})
   expect(p).toMatch(/charts?[^\n]*make_chart/i)
   expect(p).toMatch(/matplotlib only for/i)
   expect(allTools().map((t) => t.spec.name)).toContain('make_chart')
@@ -513,8 +513,8 @@ it("skill scripts are found by skill-name/file.py or by full path, only for skil
 })
 
 it('folder paths in the prompt are quoted, so names with spaces stay whole; the web is never searched for their files', () => {
-  const p = systemPrompt({ chatDir: '/c', files: [], grants: ['/Users/eric/My Photos'], home: '/Users/eric',
-    project: { name: 'Test', instructions: '', folders: ['/Users/eric/Desktop/untitled folder'], files: ['a.txt'] } })
+  const project = { name: 'Test', instructions: '', folders: ['/Users/eric/Desktop/untitled folder'], files: ['a.txt'] }
+  const p = `${systemPrompt({ home: '/Users/eric', project })}\n${chatNote({ files: [], grants: ['/Users/eric/My Photos'], project })}`
   expect(p).toContain('“/Users/eric/Desktop/untitled folder”')
   expect(p).toContain('“/Users/eric/My Photos”')
   expect(p).not.toMatch(/untitled folder[^”]/)
@@ -539,7 +539,7 @@ it('in a project, listing files with no folder named lists the project folder, n
 })
 
 it('Hob knows its own features, so "how do I connect Google Calendar?" gets a real answer', () => {
-  const p = systemPrompt({ chatDir: '/c', files: [], grants: [] })
+  const p = systemPrompt({})
   expect(p).toContain('About Hob')
   expect(p).toMatch(/made by the team behind Frigade/i)
   expect(p).toMatch(/Settings → Connectors → Add connector/)
@@ -604,6 +604,19 @@ it('a web address given to read_file is read as a web page, not looked for on di
   w.deps.fetch = (async () => new Response('<html><body><h1>Top stories</h1><p>' + 'Story one is about databases. '.repeat(20) + '</p></body></html>', { headers: { 'content-type': 'text/html' } })) as never
   const reply = await w.turn('__tools__ [["read_file",{"path":"https://orangebot.ai/hacker-news-top-stories"}]]')
   expect(reply.steps.map((s) => [s.title, s.status])).toEqual([['Read orangebot.ai', 'done']])
+})
+
+it('the system prompt is the same in every chat, so switching chats reads only the new message', async () => {
+  const w = world('allow', { grant: false })
+  await w.turn('hi')
+  const first = w.engine.lastRequest!.messages[0].content
+  const dir = join(w.root, 'other chat')
+  mkdirSync(dir); writeFileSync(join(dir, 'budget.xlsx'), 'x'); w.store.createChat('n', dir)
+  await runTurn(w.deps, { chatId: 'n', requestId: 'r2', text: 'hej', attachments: [], signal: new AbortController().signal })
+  expect(w.engine.lastRequest!.messages[0].content).toBe(first)
+  // the chat's own folder and files come with the message
+  expect(first).not.toContain(dir)
+  expect(w.engine.lastRequest!.messages.at(-1)!.content).toContain("[This chat's folder contains: budget.xlsx.")
 })
 
 it('a new chat read ahead in its future folder matches its first message', async () => {

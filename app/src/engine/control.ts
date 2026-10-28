@@ -52,7 +52,9 @@ export function cleanAnswer(text: string): string {
     const after = t.slice(i + END_OF_THOUGHT.length)
     t = after.replace(ANY_TAG, '').trim() ? after : t.slice(0, i)
   }
-  return t.replace(ANY_TAG, '').trim()
+  const out = t.replace(ANY_TAG, '').trim()
+  // what follows the end of thinking starts like a new reply, and can open with a made-up thinking tag too
+  return out !== text && opener(out, true) ? cleanAnswer(out) : out
 }
 
 /** the same while streaming: a `<` that could start a tag is held back until it's clear; a thought goes to onThought */
@@ -97,7 +99,8 @@ export function streamCleaner(onThought: (text: string) => void = () => {}) {
       if (i === -1) { out += buf; buf = ''; return out }
       out += buf.slice(0, i); buf = buf.slice(i)
       const tag = TAGS.find((t) => buf.startsWith(t))
-      if (tag) { buf = buf.slice(tag.length); continue }
+      // after the end of thinking, a new reply starts (it can open with a made-up thinking tag)
+      if (tag) { buf = buf.slice(tag.length); if (tag === END_OF_THOUGHT) state = 'start'; continue }
       if (buf.startsWith(RESPONSE_OPEN)) { buf = buf.slice(RESPONSE_OPEN.length); inResult = true; continue }
       if ([...TAGS, RESPONSE_OPEN].some((t) => t.startsWith(buf))) return out
       out += '<'; buf = buf.slice(1)

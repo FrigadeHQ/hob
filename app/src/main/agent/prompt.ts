@@ -21,8 +21,6 @@ function projectLines(p: PromptProject): string {
     lines.push(`The main folder ${q(main)} can't be found right now (moved, renamed, or on a drive that isn't plugged in). Don't save anything there; save in this chat's folder and tell the user.`)
   } else if (main) {
     lines.push(`The main folder is ${q(main)}: save new files there, with full paths (that needs no approval). Changing or deleting files that are already there asks the user first. run_python can read the project folders but saves only in this chat's folder: save results there, then move them into ${q(main)} with move_files.`)
-    const files = p.files ?? []
-    lines.push(files.length ? `${q(main)} contains: ${files.slice(0, 50).join(', ')}${files.length > 50 ? `, … (${files.length} in all)` : ''}.` : `${q(main)} is empty.`)
   }
   if (found.length) {
     lines.push(`Project folders: ${qs(found)}.`)
@@ -45,8 +43,33 @@ export function timeNote(now = new Date()): string {
 }
 export const TIME_NOTE = /\n*\[Sent [^\]\n]*\]$/
 
+/**
+ * This chat's folder, what's in it, and the folders the user allowed: with the new message, not in the system
+ * prompt. The system prompt and the tools (~5,000 tokens) then start the same in every chat and are read once; a
+ * different chat or a new file only changes this note. Switching chats re-read all of it: 7.5 s on Gemma 4 26B.
+ */
+export function chatNote(o: { files: string[]; grants: string[]; project?: PromptProject }): string {
+  const main = o.project?.folders[0]
+  const projectFiles = o.project?.files ?? []
+  return `[${[
+    // no path: right next to the request, a full path made the model type it out in every call (slower, and a
+    // stray space broke one); plain names work, as the folder is the current directory
+    o.files.length ? `This chat's folder contains: ${o.files.slice(0, 50).join(', ')}${o.files.length > 50 ? ', …' : ''}.` : "This chat's folder is empty.",
+    o.grants.length
+      ? `In this chat the user also gave you access to: ${qs(o.grants)}. To change files there, use move_files (many renames or moves in one go), move_file, write_file and delete_file. Hob shows the user an approval card for the change, so don't ask for permission in the chat; just call the tools. run_python can read those folders but can only save in this chat's folder, so it can't rename or move files there.`
+      : '',
+    main && !o.project?.missing?.includes(main)
+      ? projectFiles.length ? `${q(main)} contains: ${projectFiles.slice(0, 50).join(', ')}${projectFiles.length > 50 ? `, … (${projectFiles.length} in all)` : ''}.` : `${q(main)} is empty.`
+      : '',
+  ].filter(Boolean).join('\n')}]`
+}
+/** the chat note at the end of a message (before the time), for code that wants what the user wrote */
+export const CHAT_NOTE = /\n*\[This chat's folder [\s\S]*\]$/
+
 export function systemPrompt(o: {
-  chatDir: string; files: string[]; grants: string[]; now?: Date
+  /** where chats keep their files: each chat has a folder in it */
+  chatsDir?: string
+  now?: Date
   /** the user's home folder, so "my Desktop" and "~/Desktop" become real paths */
   home?: string
   /** tools offered this turn; omitted = all of Hob's own */
@@ -69,11 +92,7 @@ export function systemPrompt(o: {
     `Today is ${today}.`,
     lang && lang.id !== 'en' ? `Hob's screens are in ${lang.english}. Reply in the language the user writes in; ${lang.english} when unsure.` : '',
     '',
-    `You can work with files using tools. This chat's folder is ${q(o.chatDir)} (the current directory for code). Paths are in “quotes”; use them exactly, spaces included.`,
-    o.files.length ? `It contains: ${o.files.slice(0, 50).join(', ')}${o.files.length > 50 ? ', …' : ''}.` : 'It is empty.',
-    o.grants.length
-      ? `In this chat the user also gave you access to: ${qs(o.grants)}. To change files there, use move_files (many renames or moves in one go), move_file, write_file and delete_file. Hob shows the user an approval card for the change, so don't ask for permission in the chat; just call the tools. run_python can read those folders but can only save in this chat's folder, so it can't rename or move files there.`
-      : '',
+    `You can work with files using tools. Each chat has a folder of its own${o.chatsDir ? ` in ${q(o.chatsDir)}` : ''}: the current directory for code and file tools, so use plain file names for the files in it. The user's newest message ends with a note on what's in it. Paths are in “quotes”; use them exactly, spaces included.`,
     o.project ? projectLines(o.project) : '',
     o.home ? `The user's home folder is ${o.home} (their Desktop is ${o.home}/Desktop). Always use full paths for their files, in tools and in code.` : '',
     has('open_folder') ? `When the user asks to open or show a folder or file, call open_folder: it opens it in ${fileManager(o.platform ?? process.platform)}. Don't just list the files.` : '',
