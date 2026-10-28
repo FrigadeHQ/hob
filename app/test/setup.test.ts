@@ -4,10 +4,11 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { Catalog } from '@hob/picker'
 import bundled from '../../catalog/catalog.json'
-import { computerName, SetupController, type SetupDeps } from '../src/main/setup'
+import { computerName, friendly, SetupController, type SetupDeps } from '../src/main/setup'
 import { FakeEngine, fakeDownloadDeps } from '../src/main/fake'
 import { fileNameFor } from '../src/main/downloader'
 import { saveSettings } from '../src/main/settings'
+import { InsufficientMemoryError } from '../src/main/engine'
 import type { SetupState } from '../src/shared/types'
 
 const catalog = bundled as Catalog
@@ -380,5 +381,98 @@ describe('SetupController disk re-check', () => {
     free = 200
     await c.retry()
     expect(c.state).toMatchObject({ phase: 'choose', needsDiskGB: 0 })
+  })
+})
+
+describe('Hardware preflight and self-healing UI (Issue #13)', () => {
+  it('hardware pre-flight check automatically skips 26B model on low total RAM (<24GB) and falls back to lighter model with warning', async () => {
+    const win16GB = {
+      os: 'win32' as const,
+      arch: 'x64',
+      cpuModel: '12th Gen Intel Core i7-12700H',
+      totalRamGB: 16,
+      freeDiskGB: 200,
+      gpu: { kind: 'discrete' as const, name: 'NVIDIA GeForce RTX 4070 Laptop GPU', vramGB: 12 },
+    }
+    const { c, engine } = setup({
+      getHardware: async () => win16GB,
+      getAvailableMemoryGB: async () => 10,
+    })
+    await c.start()
+    await c.confirm()
+    expect(c.state).toMatchObject({
+      phase: 'ready',
+      model: { id: 'gemma-4-e4b' },
+      note: 'Your system has limited memory. We are preparing the optimized Edge model to ensure stability.',
+    })
+    expect(engine.loaded).toContain('gemma-4-E4B')
+    expect(engine.loaded).not.toContain('26B')
+  })
+
+  it('hardware pre-flight check skips 26B model when available memory is <16GB even if total RAM is high', async () => {
+    const { c, engine } = setup({
+      getHardware: async () => ({ ...m1max, totalRamGB: 32 }),
+      getAvailableMemoryGB: async () => 8,
+    })
+    await c.start()
+    await c.confirm()
+    expect(c.state).toMatchObject({
+      phase: 'ready',
+      model: { id: 'gemma-4-e4b' },
+      note: 'Your system has limited memory. We are preparing the optimized Edge model to ensure stability.',
+    })
+    expect(engine.loaded).toContain('gemma-4-E4B')
+  })
+
+  it('increments crash_count on failure; on second consecutive failure invalidates models and offers Safe Mode', async () => {
+    const { c, engine, deps, root } = setup()
+    // Cause load to fail for all models
+    engine.failLoadFor.add('gemma-4')
+    engine.failLoadFor.add('qwen')
+
+    await c.start()
+    await c.confirm('gemma-4-e2b')
+
+    // First failure
+    expect(c.state.phase).toBe('error')
+    expect((c.state as { safeMode?: boolean }).safeMode).toBeFalsy()
+    const settingsAfterFirst = JSON.parse(readFileSync(deps.settingsPath, 'utf8'))
+    expect(settingsAfterFirst.crash_count).toBe(1)
+
+    // Put a dummy model file and .ok marker to verify they get cleaned up on 2nd failure
+    const dummyFile = join(root, 'dummy-model.gguf')
+    writeFileSync(dummyFile, 'dummy')
+    writeFileSync(`${dummyFile}.ok`, 'FAKE')
+
+    // Second failure via retry
+    await c.retry()
+    expect(c.state.phase).toBe('error')
+    expect((c.state as { safeMode?: boolean }).safeMode).toBe(true)
+    const settingsAfterSecond = JSON.parse(readFileSync(deps.settingsPath, 'utf8'))
+    expect(settingsAfterSecond.crash_count).toBe(2)
+    expect(settingsAfterSecond.pendingModelId).toBeUndefined()
+
+    // Test booting into Safe Mode
+    await c.startSafeMode()
+    expect(c.state).toMatchObject({
+      phase: 'ready',
+      model: { id: 'safe-mode' },
+      note: 'Safe Mode · Model loading skipped',
+    })
+  })
+
+  it('resets crash_count to 0 upon successful model load', async () => {
+    const { c, deps } = setup()
+    saveSettings(deps.settingsPath, { crash_count: 1 })
+    await c.start()
+    await c.confirm('gemma-4-e2b')
+    expect(c.state.phase).toBe('ready')
+    const saved = JSON.parse(readFileSync(deps.settingsPath, 'utf8'))
+    expect(saved.crash_count).toBe(0)
+  })
+
+  it('friendly error formats out of memory and engine crashes with advice to try a lighter model', () => {
+    const msg = friendly(new InsufficientMemoryError('Engine stopped unexpectedly (code 3221225477)'))
+    expect(msg).toMatch(/out of memory|lighter model/i)
   })
 })

@@ -81,6 +81,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   ipcMain.handle('setup:getState', () => d.setup.state)
   ipcMain.handle('setup:confirm', (_e, modelId?: string) => { void d.setup.confirm(modelId) })
   ipcMain.handle('setup:retry', () => { void d.setup.retry() })
+  ipcMain.handle('setup:startSafeMode', () => { void d.setup.startSafeMode() })
   ipcMain.handle('setup:pickDownloads', async () => {
     const win = d.win()
     const opts: OpenDialogOptions = { title: t('Where should Hob save its downloads?'), properties: ['openDirectory', 'createDirectory'] }

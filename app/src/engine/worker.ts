@@ -171,6 +171,12 @@ async function handle(req: EngineRequest): Promise<unknown> {
   if (req.type === 'unload') return unload()
 }
 
+function isMemoryError(err: unknown): boolean {
+  if (err instanceof InsufficientMemoryError) return true
+  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase()
+  return msg.includes('out of memory') || msg.includes('bad_alloc') || msg.includes('failed to allocate') || msg.includes('insufficient memory') || msg.includes('not enough memory')
+}
+
 process.parentPort.on('message', async ({ data }: { data: EngineRequest }) => {
   const req = data
   if (req.type === 'tool-result') { toolWaits.get(req.callId)?.(req.result); toolWaits.delete(req.callId); return }
@@ -178,7 +184,7 @@ process.parentPort.on('message', async ({ data }: { data: EngineRequest }) => {
     const result = req.type === 'abort' ? aborts.get(req.targetId)?.abort() : await run(() => handle(req))
     send({ id: req.id, type: 'result', data: result ?? null })
   } catch (err) {
-    const oom = err instanceof InsufficientMemoryError
+    const oom = isMemoryError(err)
     send({ id: req.id, type: 'error', message: err instanceof Error ? err.message : String(err), code: oom ? 'OOM' : undefined })
   }
 })
