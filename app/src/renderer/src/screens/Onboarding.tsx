@@ -107,7 +107,21 @@ export function Onboarding({ state }: { state: SetupState }) {
                 </div>
                 <button className="setup-text-button" aria-haspopup="dialog" onClick={() => setDialog('details')}>{t('Download details')} <ChevronRight size={13} className="rtl:-scale-x-100" /></button>
               </>}
-              {state.phase === 'error' && <><p data-testid="setup-error" className="text-body text-ink-soft">{state.message}</p><button className="setup-primary" onClick={() => void hob.setup.retry()}>{t('Try again')}</button></>}
+              {state.phase === 'error' && (
+                <>
+                  <p data-testid="setup-error" className="text-body text-ink-soft">{state.message}</p>
+                  <button className="setup-primary" onClick={() => void hob.setup.retry()}>{t('Try again')}</button>
+                  {state.safeMode && (
+                    <button
+                      data-testid="setup-safe-mode"
+                      className="setup-text-button mt-3"
+                      onClick={() => void hob.setup.startSafeMode()}
+                    >
+                      {t('Start in Safe Mode')}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

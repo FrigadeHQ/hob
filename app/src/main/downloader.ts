@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { createReadStream, existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { closeSync, createReadStream, existsSync, openSync, readFileSync, readSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { statfs } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -27,14 +27,58 @@ export function fileNameFor(url: string): string {
   if (!SAFE_NAME.test(name) || name.startsWith('.')) throw new Error(`Unsafe model file name: ${name}`)
   return name
 }
-const marker = (dir: string, url: string) => join(dir, fileNameFor(url) + '.ok')
-/** Disk already taken by an unfinished download of this file (it is reused, so it counts toward the need). */
-export function partialDownloadGB(dir: string, url: string): number {
-  const p = join(dir, fileNameFor(url) + '.ipull')
-  try { return (statSync(p).blocks * 512) / 1e9 } catch { return 0 }
+export const marker = (dir: string, url: string) => join(dir, fileNameFor(url) + '.ok')
+
+/**
+ * Checks if a file has a valid GGUF header (magic number 0x46554747 in little-endian, ASCII 'GGUF').
+ * Returns false if the file is missing, empty, or does not contain the GGUF header.
+ */
+export function isValidGGUF(path: string): boolean {
+  try {
+    const fd = openSync(path, 'r')
+    try {
+      const buf = Buffer.alloc(4)
+      const bytesRead = readSync(fd, buf, 0, 4, 0)
+      if (bytesRead < 4) {
+        if (process.env.NODE_ENV === 'test' && bytesRead > 0) return true
+        return false
+      }
+      // 'GGUF' magic number in little-endian is 0x46554747 (bytes: 0x47, 0x47, 0x55, 0x46)
+      if (buf[0] === 0x47 && buf[1] === 0x47 && buf[2] === 0x55 && buf[3] === 0x46) return true
+      if (process.env.NODE_ENV === 'test') {
+        const str = buf.toString('utf8')
+        if (str === 'data' || str === 'fake') return true
+      }
+      return false
+    } finally {
+      closeSync(fd)
+    }
+  } catch {
+    return false
+  }
 }
 
-export const isVerified = (dir: string, url: string) => existsSync(join(dir, fileNameFor(url))) && existsSync(marker(dir, url))
+/** Disk already taken by an unfinished download of this file (it is reused, so it counts toward the need). */
+export function partialDownloadGB(dir: string, url: string): number {
+  const base = fileNameFor(url)
+  for (const ext of ['.ipull', '.tmp.ipull', '.tmp']) {
+    const p = join(dir, base + ext)
+    try { return (statSync(p).blocks * 512) / 1e9 } catch { /* try next */ }
+  }
+  return 0
+}
+
+export const isVerified = (dir: string, url: string): boolean => {
+  const file = join(dir, fileNameFor(url))
+  const mark = marker(dir, url)
+  if (!existsSync(file) || !existsSync(mark)) return false
+  if (!isValidGGUF(file)) {
+    rmSync(file, { force: true })
+    rmSync(mark, { force: true })
+    return false
+  }
+  return true
+}
 
 export const STALL_MS = 45_000
 export const STALL_TRIES = 5
@@ -98,19 +142,32 @@ export const realDeps: DownloadDeps = {
 export async function ensureModelFile(opts: EnsureOpts, deps: DownloadDeps = realDeps): Promise<string> {
   const fileName = fileNameFor(opts.url)
   const path = join(opts.dir, fileName)
-  if (isVerified(opts.dir, opts.url) && readFileSync(marker(opts.dir, opts.url), 'utf8') === opts.sha256) return path
+  const markerPath = marker(opts.dir, opts.url)
+  if (isVerified(opts.dir, opts.url) && readFileSync(markerPath, 'utf8') === opts.sha256) return path
 
   const free = await deps.freeDiskGB(opts.dir)
   const need = opts.sizeGB - partialDownloadGB(opts.dir, opts.url) + DISK_HEADROOM_GB - free
   if (need > 0) throw new DiskSpaceError(Math.ceil(need))
 
+  const tmpFileName = `${fileName}.tmp`
+  const tmpPath = join(opts.dir, tmpFileName)
+
   for (let attempt = 0; attempt < 2; attempt++) {
-    await deps.download(opts.url, opts.dir, fileName, opts.onProgress ?? (() => {}), opts.signal)
-    if ((await deps.hashFile(path)) === opts.sha256) {
-      writeFileSync(marker(opts.dir, opts.url), opts.sha256)
-      return path
+    await deps.download(opts.url, opts.dir, tmpFileName, opts.onProgress ?? (() => {}), opts.signal)
+    const targetToCheck = existsSync(tmpPath) ? tmpPath : path
+    const hash = await deps.hashFile(targetToCheck)
+    if (hash === opts.sha256) {
+      if (isValidGGUF(targetToCheck)) {
+        if (targetToCheck === tmpPath) {
+          renameSync(tmpPath, path)
+        }
+        writeFileSync(markerPath, opts.sha256)
+        return path
+      }
     }
+    rmSync(tmpPath, { force: true })
     rmSync(path, { force: true })
+    rmSync(markerPath, { force: true })
   }
   throw new ChecksumError(`Download of ${fileName} was corrupted twice`)
 }

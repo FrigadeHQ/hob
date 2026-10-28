@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { ChecksumError, ensureModelFile, partialDownloadGB, fileNameFor, isVerified, type DownloadDeps } from '../src/main/downloader'
+import { ChecksumError, ensureModelFile, partialDownloadGB, fileNameFor, isValidGGUF, isVerified, type DownloadDeps } from '../src/main/downloader'
 
 const URL = 'https://huggingface.co/x/y/resolve/main/model-Q4.gguf'
 const dir = () => mkdtempSync(join(tmpdir(), 'hob-dl-'))
@@ -70,6 +70,62 @@ describe('fileNameFor safety (I7)', () => {
   })
   it('rejects non-gguf files', () => {
     expect(() => fileNameFor('https://huggingface.co/x/y/notes.txt')).toThrow()
+  })
+})
+
+describe('GGUF validation and atomic operations', () => {
+  it('isValidGGUF recognizes valid GGUF header magic bytes (0x46554747)', () => {
+    const d = dir()
+    const validPath = join(d, 'valid.gguf')
+    // 'G', 'G', 'U', 'F' = 0x47, 0x47, 0x55, 0x46
+    writeFileSync(validPath, Buffer.from([0x47, 0x47, 0x55, 0x46, 0x01, 0x00, 0x00, 0x00]))
+    expect(isValidGGUF(validPath)).toBe(true)
+
+    const invalidPath = join(d, 'invalid.gguf')
+    writeFileSync(invalidPath, Buffer.from([0x00, 0x00, 0x00, 0x00]))
+    expect(isValidGGUF(invalidPath)).toBe(false)
+
+    const emptyPath = join(d, 'empty.gguf')
+    writeFileSync(emptyPath, Buffer.alloc(0))
+    expect(isValidGGUF(emptyPath)).toBe(false)
+  })
+
+  it('isVerified invalidates and deletes corrupted files with missing GGUF headers', () => {
+    const d = dir()
+    const modelPath = join(d, 'model-Q4.gguf')
+    const markerPath = join(d, 'model-Q4.gguf.ok')
+    // Corrupted file (missing GGUF header)
+    writeFileSync(modelPath, Buffer.from([0x01, 0x02, 0x03, 0x04]))
+    writeFileSync(markerPath, 'good')
+    expect(existsSync(modelPath)).toBe(true)
+    expect(existsSync(markerPath)).toBe(true)
+
+    // isVerified should detect corrupted GGUF, purge the file and marker, and return false
+    expect(isVerified(d, URL)).toBe(false)
+    expect(existsSync(modelPath)).toBe(false)
+    expect(existsSync(markerPath)).toBe(false)
+  })
+
+  it('ensureModelFile downloads to .tmp first and atomically promotes on success', async () => {
+    const d = dir()
+    let downloadTarget = ''
+    const dp: DownloadDeps = {
+      download: vi.fn(async (_u, dirPath, fileName, onProgress) => {
+        downloadTarget = fileName
+        onProgress({ fraction: 1, etaSec: 0 })
+        // write valid GGUF bytes
+        writeFileSync(join(dirPath, fileName), Buffer.from([0x47, 0x47, 0x55, 0x46, 0x00]))
+      }),
+      hashFile: vi.fn(async () => 'good'),
+      freeDiskGB: vi.fn(async () => 500),
+    }
+
+    const p = await ensureModelFile({ url: URL, sha256: 'good', sizeGB: 1, dir: d }, dp)
+    expect(downloadTarget).toBe('model-Q4.gguf.tmp')
+    expect(p).toBe(join(d, 'model-Q4.gguf'))
+    expect(existsSync(join(d, 'model-Q4.gguf'))).toBe(true)
+    expect(existsSync(join(d, 'model-Q4.gguf.tmp'))).toBe(false)
+    expect(isVerified(d, URL)).toBe(true)
   })
 })
 

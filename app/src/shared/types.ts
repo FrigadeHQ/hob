@@ -38,7 +38,7 @@ export type SetupState =
   /** starter: set while the small model downloads. initialUpgrade: the first full model is downloading while chat runs on the starter */
   | { phase: 'downloading'; target: ModelSummary; progress: number; etaSec: number; chatReady: boolean; note?: string; starter?: ModelSummary; initialUpgrade?: boolean }
   | { phase: 'ready'; model: ModelSummary; liteMode: boolean; note?: string; canRetry?: boolean }
-  | { phase: 'error'; message: string }
+  | { phase: 'error'; message: string; safeMode?: boolean }
 
 export interface HobApi {
   platform: string
@@ -55,6 +55,8 @@ export interface HobApi {
     retry(): Promise<void>
     /** choose screen, Windows and Linux: pick the folder downloads go to */
     pickDownloads(): Promise<void>
+    /** starts the app without loading a model to allow accessing settings */
+    startSafeMode(): Promise<void>
     onState(cb: (s: SetupState) => void): () => void
   }
   chats: {

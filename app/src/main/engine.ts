@@ -68,14 +68,17 @@ export class UtilityEngine implements Engine {
       this.pending.delete(e.id)
       if (e.type === 'result' && p.model) this.loaded = true
       if (e.type === 'result') p.resolve(e.data)
-      else p.reject(e.code === 'OOM' ? new InsufficientMemoryError(e.message) : new Error(e.message))
+      else {
+        const isMem = e.code === 'OOM' || /memory|alloc|oom/i.test(e.message)
+        p.reject(isMem ? new InsufficientMemoryError(e.message) : new Error(e.message))
+      }
     })
     proc.on('exit', (code: number) => {
       this.proc = undefined
       const starting = !this.loaded && [...this.pending.values()].some((p) => p.load)
       console.error(`engine stopped (code ${code})${starting && !this.cpuOnly ? '; starting it again without the graphics card' : ''}`)
       if (starting) this.cpuOnly = true
-      for (const p of this.pending.values()) p.reject(new InsufficientMemoryError('Engine stopped unexpectedly'))
+      for (const p of this.pending.values()) p.reject(new InsufficientMemoryError(`Engine stopped unexpectedly (code ${code})`))
       this.pending.clear()
       if (!this.disposed) for (const cb of this.exitListeners) cb()
     })
