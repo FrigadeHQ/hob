@@ -3,6 +3,7 @@ import { finalAnswer } from './answer'
 import { cleanAnswer, streamCleaner } from './control'
 import { samplingFor } from './sampling'
 import { serial } from './serial'
+import { describeTiming, replyTiming } from './timing'
 import { toolFunctions } from './tools'
 import type { ToolSpec } from '../shared/agent'
 import type { EngineEvent, EngineRequest, GpuProbe } from '../shared/engine-protocol'
@@ -104,12 +105,14 @@ async function chat(id: number, req: { messages: ChatMessage[]; tools: ToolSpec[
   const ac = new AbortController()
   aborts.set(id, ac)
   let thought = ''
+  const timing = replyTiming(() => sequence.tokenMeter.getState())
   // read again after every tool call: a quick question thinks briefly; once it turns into a task (a tool was
   // called, in whatever language it was asked) it gets the longer budget for the rest of the reply
   const budgets = { thoughtTokens: req.thoughtBudget }
   const onTool = (name: string, args: unknown) => {
     if (req.thoughtBudgetWithTools) budgets.thoughtTokens = Math.max(budgets.thoughtTokens, req.thoughtBudgetWithTools)
-    return callMain(id, name, args, ac.signal)
+    timing.tool(name)
+    return callMain(id, name, args, ac.signal).finally(() => timing.toolDone())
   }
   // a thought the model opened with a made-up tag streams as thinking, like a real one
   const clean = streamCleaner((text) => { thought += text; send({ id, type: 'token', text, thought: true }) })
@@ -119,14 +122,17 @@ async function chat(id: number, req: { messages: ChatMessage[]; tools: ToolSpec[
       signal: ac.signal, stopOnAbortSignal: true, budgets, ...(maxTokens ? { maxTokens } : {}),
       functions: tools.length ? (toolFunctions(tools, onTool) as unknown as ChatSessionModelFunctions) : undefined,
       onTextChunk: (chunk) => { const text = clean.push(chunk); if (text) send({ id, type: 'token', text }) },
+      onToken: () => timing.token(),
       onResponseChunk: (c) => {
-        if (c.type === 'segment' && c.segmentType === 'thought') { thought += c.text; send({ id, type: 'token', text: c.text, thought: true }) }
+        if (c.type === 'segment' && c.segmentType === 'thought') { thought += c.text; send({ id, type: 'token', text: c.text, thought: true }); timing.chunk('think', c.tokens.length) }
+        else if (c.type === undefined) timing.chunk('write', c.tokens.length)
       },
     })
     const rest = clean.end()
     if (rest) send({ id, type: 'token', text: rest })
     return cleanAnswer(finalAnswer(response, thought))
   } finally {
+    send({ id, type: 'timing', text: `${req.side ? 'side ' : ''}${describeTiming(timing.end())}` })
     aborts.delete(id)
     // the sequence stays: it holds what was just read, for the next message
     session.dispose({ disposeSequence: false })
@@ -143,13 +149,15 @@ function wrapperFor(m: LlamaModel | undefined, reasoning?: 'low' | 'high'): 'aut
 }
 
 /** read the conversation so far (and the start of the next user turn) into `main`, answering nothing */
-async function preload(messages: ChatMessage[], tools: ToolSpec[], reasoning?: 'low' | 'high') {
+async function preload(id: number, messages: ChatMessage[], tools: ToolSpec[], reasoning?: 'low' | 'high') {
   if (!main) return
   const session = new LlamaChatSession({ contextSequence: main, chatWrapper: wrapperFor(model, reasoning) })
   session.setChatHistory(toHistory(messages))
+  const t0 = performance.now(), read = main.tokenMeter.usedInputTokens
   try {
     await session.preloadPrompt('', { functions: tools.length ? (toolFunctions(tools, async () => '') as unknown as ChatSessionModelFunctions) : undefined })
   } finally {
+    send({ id, type: 'timing', text: `read ahead ${(main.tokenMeter.usedInputTokens - read).toLocaleString('en-US')} tok ${((performance.now() - t0) / 1000).toFixed(1)} s` })
     session.dispose({ disposeSequence: false })
   }
 }
@@ -158,7 +166,7 @@ async function handle(req: EngineRequest): Promise<unknown> {
   if (req.type === 'probe') return probe()
   if (req.type === 'load') return load(req.modelPath, req.contextSize)
   if (req.type === 'chat') return chat(req.id, { ...req, tools: req.tools ?? [], thoughtBudget: req.thoughtBudget ?? CHAT_THOUGHT_BUDGET })
-  if (req.type === 'preload') return preload(req.messages, req.tools ?? [], req.reasoning)
+  if (req.type === 'preload') return preload(req.id, req.messages, req.tools ?? [], req.reasoning)
   if (req.type === 'loadSide') return loadSide(req.modelPath, req.contextSize)
   if (req.type === 'unload') return unload()
 }

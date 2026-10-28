@@ -268,11 +268,16 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   const namesPath = /~[\\/]|\/Users\/|\/home\/|[A-Z]:\\/.test(a.text)
   const usesFiles = listing.length > 0 || grants.length > 0 || a.attachments.length > 0 || command.skill !== undefined || namesPath
   let content: string
-  const ask = (msgs: ChatMessage[]) => d.engine.chat(
-    { messages: msgs, tools: specs, ...effortBudgets(d.effort?.() ?? DEFAULT_EFFORT, usesFiles) },
-    { onToken, onTool },
-    AbortSignal.any([a.signal, loop.signal]),
-  ).then((t) => withoutToolsNote(t.trim()))
+  // for the log: when the model first got the message (attachments are read before), and how many times it was asked
+  let asked = 0, firstAsk = 0
+  const ask = (msgs: ChatMessage[]) => {
+    if (asked++ === 0) firstAsk = Date.now()
+    return d.engine.chat(
+      { messages: msgs, tools: specs, ...effortBudgets(d.effort?.() ?? DEFAULT_EFFORT, usesFiles) },
+      { onToken, onTool },
+      AbortSignal.any([a.signal, loop.signal]),
+    ).then((t) => withoutToolsNote(t.trim()))
+  }
   /** the task is about the user's own files: a tool looked outside the chat folder, or a folder was named */
   const aboutTheirFiles = (reply: string) => {
     const names = grants.map((g) => basename(g))
@@ -313,6 +318,7 @@ export async function runTurn(d: TurnDeps, a: TurnArgs): Promise<StoredMessage> 
   for (const s of steps) if (s.status === 'running' || s.status === 'waiting') s.status = 'error'
   const undoable = journal.count > 0
   const workedMs = Date.now() - started
+  if (asked) console.info('TIMING', `turn ${(workedMs / 1000).toFixed(1)} s, model asked ${asked}x from ${((firstAsk - started) / 1000).toFixed(1)} s`)
   const id = d.store.addMessage(a.chatId, { role: 'assistant', content, steps, taskId, undoable, workedMs })
   const naming = firstTurn && !a.signal.aborted && cut === -1 && content !== FAILED ? nameChat(d, a.chatId, placeholder, a.text, content) : Promise.resolve()
   // the model is free again (naming done too): time to read ahead whatever the user looks at now

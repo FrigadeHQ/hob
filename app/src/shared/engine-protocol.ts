@@ -22,4 +22,6 @@ export type EngineEvent =
   | { id: number; type: 'result'; data: unknown }
   | { id: number; type: 'token'; text: string; thought?: boolean }
   | { id: number; type: 'tool-call'; callId: number; name: string; args: unknown }
+  /** where a reply's time went (engine/timing.ts), for the log */
+  | { id: number; type: 'timing'; text: string }
   | { id: number; type: 'error'; message: string; code?: 'OOM' }

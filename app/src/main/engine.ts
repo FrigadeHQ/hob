@@ -58,6 +58,7 @@ export class UtilityEngine implements Engine {
       const p = this.pending.get(e.id)
       if (!p) return
       if (e.type === 'token') return p.h?.onToken(e.text, e.thought)
+      if (e.type === 'timing') return console.info('TIMING', e.text)
       if (e.type === 'tool-call') {
         const run = p.h?.onTool ? p.h.onTool(e.name, e.args) : Promise.resolve('Tools are not available.')
         void run

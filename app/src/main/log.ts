@@ -18,11 +18,11 @@ export function writeLog(file: string, line: string, cap = 2_000_000) {
 }
 
 /**
- * Warnings and errors also go to a file in the profile (logs/main.log), so a problem on someone's computer can be
- * looked at afterwards; nothing leaves the computer.
+ * Warnings, errors and info (where a reply's time went) also go to a file in the profile (logs/main.log), so a problem
+ * on someone's computer can be looked at afterwards; nothing leaves the computer.
  */
 export function logToFile(file: string) {
-  for (const level of ['warn', 'error'] as const) {
+  for (const level of ['info', 'warn', 'error'] as const) {
     const original = console[level].bind(console)
     console[level] = (...args: unknown[]) => {
       original(...args)
