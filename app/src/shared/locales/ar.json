@@ -814,5 +814,8 @@
   "Remove Hob": "إزالة Hob",
   "Remove Hob?": "إزالة Hob؟",
   "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "يحذف Hob ونماذجه ومحادثاتك وإعداداتك. تبقى الملفات التي أنشأتها محادثاتك في مجلد ملفاتك.",
-  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "سيتم حذف Hob ونماذجه ومحادثاتك وإعداداتك، وسيُغلق Hob. تبقى الملفات التي أنشأتها محادثاتك في مجلد ملفاتك."
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "سيتم حذف Hob ونماذجه ومحادثاتك وإعداداتك، وسيُغلق Hob. تبقى الملفات التي أنشأتها محادثاتك في مجلد ملفاتك.",
+  "Saves to {folder}": "يُحفظ في {folder}",
+  "Where should Hob save its downloads?": "أين يحفظ Hob ما ينزّله؟",
+  "Free up {size} GB of disk space, or save to another drive.": "وفّر {size} غيغابايت من مساحة القرص، أو احفظ على قرص آخر."
 }

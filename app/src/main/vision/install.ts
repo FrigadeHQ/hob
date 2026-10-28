@@ -30,10 +30,13 @@ export class VisionInstaller {
   /** the one installed (or being installed) */
   private chosen: VisionModel | undefined
 
-  constructor(private root: string, private deps: VisionDeps, private onState: (s: VisionState) => void = () => {}) {
+  /** root: a function when the folder can still change (a drive picked during setup) */
+  constructor(private rootOf: string | (() => string), private deps: VisionDeps, private onState: (s: VisionState) => void = () => {}) {
     this.chosen = this.installed()
     this._state = this.chosen ? this.ready() : { phase: 'off' }
   }
+
+  private get root() { return typeof this.rootOf === 'string' ? this.rootOf : this.rootOf() }
 
   get model(): VisionModel {
     if (!this.chosen) throw new Error("Hob's image support isn't set up yet.")

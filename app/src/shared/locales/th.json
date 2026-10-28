@@ -688,5 +688,8 @@
   "Remove Hob": "ลบ Hob",
   "Remove Hob?": "ลบ Hob ไหม",
   "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "ลบ Hob โมเดลของ Hob แชตและการตั้งค่าของคุณ ไฟล์ที่สร้างในแชตจะยังอยู่ในโฟลเดอร์ไฟล์ของคุณ",
-  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob โมเดลของ Hob แชตและการตั้งค่าของคุณจะถูกลบ และ Hob จะปิดลง ไฟล์ที่สร้างในแชตจะยังอยู่ในโฟลเดอร์ไฟล์ของคุณ"
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob โมเดลของ Hob แชตและการตั้งค่าของคุณจะถูกลบ และ Hob จะปิดลง ไฟล์ที่สร้างในแชตจะยังอยู่ในโฟลเดอร์ไฟล์ของคุณ",
+  "Saves to {folder}": "บันทึกไว้ที่ {folder}",
+  "Where should Hob save its downloads?": "จะให้ Hob บันทึกไฟล์ที่ดาวน์โหลดไว้ที่ไหน",
+  "Free up {size} GB of disk space, or save to another drive.": "เพิ่มพื้นที่ดิสก์ว่าง {size} GB หรือบันทึกลงไดรฟ์อื่น"
 }

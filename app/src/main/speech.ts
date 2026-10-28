@@ -24,7 +24,9 @@ export class SpeechModel {
   private installing: Promise<void> | undefined
   /** everyone waiting for the download: it may have started in the background before dictation was clicked */
   private watchers = new Set<(fraction: number) => void>()
-  constructor(private root: string, private deps: Pick<RuntimeDeps, 'fetchFile'>) {}
+  /** root: a function when the folder can still change (a drive picked during setup) */
+  constructor(private rootOf: string | (() => string), private deps: Pick<RuntimeDeps, 'fetchFile'>) {}
+  private get root() { return typeof this.rootOf === 'string' ? this.rootOf : this.rootOf() }
 
   /** folder transformers.js loads `${id}/${file}` from */
   get dir() { return this.root }

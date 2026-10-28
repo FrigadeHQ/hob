@@ -742,5 +742,8 @@
   "Remove Hob": "Hob eltávolítása",
   "Remove Hob?": "Eltávolítod a Hobot?",
   "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Törli a Hobot, a modelljeit, a csevegéseidet és a beállításaidat. A csevegésekben készült fájlok a fájlmappádban maradnak.",
-  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "A Hob, a modelljei, a csevegéseid és a beállításaid törlődnek, a Hob pedig bezárul. A csevegésekben készült fájlok a fájlmappádban maradnak."
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "A Hob, a modelljei, a csevegéseid és a beállításaid törlődnek, a Hob pedig bezárul. A csevegésekben készült fájlok a fájlmappádban maradnak.",
+  "Saves to {folder}": "Mentés helye: {folder}",
+  "Where should Hob save its downloads?": "Hová mentse a Hob a letöltéseit?",
+  "Free up {size} GB of disk space, or save to another drive.": "Szabadíts fel {size} GB lemezterületet, vagy ments egy másik meghajtóra."
 }

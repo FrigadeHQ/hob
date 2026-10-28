@@ -14,6 +14,8 @@ export type SetupDeps = {
   getHardware(): Promise<Hardware>
   getCatalog(): Promise<Catalog>
   modelsDir: string
+  /** Windows and Linux: where downloads go, which can change before the first one (a drive with more room) */
+  downloads?: { dir(): string; move(dir: string): void }
   settingsPath: string
   download: DownloadDeps
   /** fake mode only: treat every file as having this hash */
@@ -136,6 +138,7 @@ export class SetupController {
         this.set({
           phase: 'choose', recommended: summarize(r.recommended), models: this.modelOptions(), liteMode: r.liteMode, needsDiskGB: r.recommended.needsDiskGB,
           computer: computerName(hw), ...(r.starter && r.starter.model.id !== r.recommended.model.id ? { starter: summarize(r.starter) } : {}),
+          ...(this.deps.downloads ? { downloadsDir: this.deps.downloads.dir() } : {}),
         })
       } catch (err) {
         this.set({ phase: 'error', message: friendly(err) })
@@ -157,6 +160,13 @@ export class SetupController {
     const r = this.result!
     const target = (modelId && this.choices().find((c) => c.model.id === modelId)) || r.recommended!
     return this.exclusive(() => this.install(target))
+  }
+
+  /** The choose screen → Change: downloads go to a Hob folder in `dir`; free space (and models already there) are checked again */
+  pickDownloads(dir: string) {
+    if (this._state.phase !== 'choose' || !this.deps.downloads) return Promise.resolve()
+    this.deps.downloads.move(dir)
+    return this.start()
   }
 
   /** Settings → Models */
@@ -296,13 +306,20 @@ export class SetupController {
     this.active = starter
   }
 
-  /** Load `first`; on out-of-memory, fall back to smaller models (downloading if needed). */
+  /**
+   * Load `first`; on out-of-memory, fall back to smaller models (downloading if needed). When it fails for another
+   * reason (a graphics driver, seen on Windows), a smaller model may not fare better: only ones already downloaded.
+   */
   private async loadWithFallback(first: Choice) {
     const pool = [...(this.result?.all ?? []), ...(this.starter ? [this.starter] : [])]
     const smaller = pool
       .filter((c, i, a) => a.findIndex((x) => x.model.id === c.model.id) === i && c.model.id !== first.model.id && c.build.sizeGB < first.build.sizeGB)
       .sort((a, b) => b.build.sizeGB - a.build.sizeGB)
+    let failure: unknown
     for (const [i, c] of [first, ...smaller].entries()) {
+      if (failure && !this.verified(c)) continue
+      // a failed download is an error to show; a failed load means trying another model
+      let loading = false
       try {
         let onProgress: ((p: Progress) => void) | undefined
         if (i > 0 && !this.verified(c)) {
@@ -313,6 +330,7 @@ export class SetupController {
         }
         const p = await this.fetch(c, onProgress)
         this.active = undefined
+        loading = true
         await this.deps.engine.load(p, c.contextSize)
         this.active = c
         updateSettings(this.deps.settingsPath, { activeModelId: c.model.id, pendingModelId: undefined })
@@ -321,10 +339,13 @@ export class SetupController {
           ...(i > 0 ? { note: t('Ready · lighter model') } : {}),
         })
       } catch (err) {
-        if (!(err instanceof InsufficientMemoryError)) throw err
+        if (err instanceof InsufficientMemoryError) continue
+        if (!loading) throw err
+        console.error(`${c.model.id} did not load`, err)
+        failure ??= err
       }
     }
-    throw new Error('No model could be loaded on this computer')
+    throw failure ?? new Error('No model could be loaded on this computer')
   }
 
   /** The engine process died: bring the active model back. */

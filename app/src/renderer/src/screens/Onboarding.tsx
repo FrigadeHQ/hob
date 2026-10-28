@@ -90,7 +90,11 @@ export function Onboarding({ state }: { state: SetupState }) {
                 </div>
                 <button data-testid="setup-download" disabled={selected.needsDiskGB > 0} className="setup-primary" onClick={() => void hob.setup.confirm(selected.id)}>{t('Download and start')}</button>
                 <p data-testid="setup-download-size" className="setup-small-print">{t('{size} download', { size: gb(selected.sizeGB + (starter?.sizeGB ?? 0)) })}</p>
-                {selected.needsDiskGB > 0 && <div className="setup-notice" role="status"><p>{t('Free up {size} GB of disk space to continue.', { size: Math.ceil(selected.needsDiskGB) })}</p><button className="setup-text-button" onClick={() => void hob.setup.retry()}>{t('Check again')}</button></div>}
+                {state.downloadsDir && <p data-testid="setup-downloads" className="setup-small-print setup-folder">
+                  <span title={state.downloadsDir}>{t('Saves to {folder}', { folder: state.downloadsDir })}</span>
+                  <button className="setup-text-button" data-testid="setup-downloads-change" onClick={() => void hob.setup.pickDownloads()}>{t('Change…')}</button>
+                </p>}
+                {selected.needsDiskGB > 0 && <div className="setup-notice" role="status"><p>{state.downloadsDir ? t('Free up {size} GB of disk space, or save to another drive.', { size: Math.ceil(selected.needsDiskGB) }) : t('Free up {size} GB of disk space to continue.', { size: Math.ceil(selected.needsDiskGB) })}</p><button className="setup-text-button" onClick={() => void hob.setup.retry()}>{t('Check again')}</button></div>}
                 {state.liteMode && <p className="setup-small-print">{t('A smaller model for this computer. Answers may be simpler.')}</p>}
               </>}
               {downloading && <>

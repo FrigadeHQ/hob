@@ -760,5 +760,8 @@
   "Remove Hob": "Rimuovi Hob",
   "Remove Hob?": "Rimuovere Hob?",
   "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Elimina Hob, i suoi modelli, le tue chat e le impostazioni. I file creati nelle chat restano nella tua cartella dei file.",
-  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, i suoi modelli, le tue chat e le impostazioni verranno eliminati e Hob si chiuderà. I file creati nelle chat restano nella tua cartella dei file."
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, i suoi modelli, le tue chat e le impostazioni verranno eliminati e Hob si chiuderà. I file creati nelle chat restano nella tua cartella dei file.",
+  "Saves to {folder}": "Salva in {folder}",
+  "Where should Hob save its downloads?": "Dove deve salvare Hob i suoi download?",
+  "Free up {size} GB of disk space, or save to another drive.": "Libera {size} GB di spazio su disco, oppure salva su un’altra unità."
 }

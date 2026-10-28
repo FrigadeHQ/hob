@@ -778,5 +778,8 @@
   "Remove Hob": "Видалити Hob",
   "Remove Hob?": "Видалити Hob?",
   "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Видаляє Hob, його моделі, ваші чати й налаштування. Файли, створені в чатах, залишаться у вашій папці з файлами.",
-  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, його моделі, ваші чати й налаштування буде видалено, а Hob закриється. Файли, створені в чатах, залишаться у вашій папці з файлами."
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, його моделі, ваші чати й налаштування буде видалено, а Hob закриється. Файли, створені в чатах, залишаться у вашій папці з файлами.",
+  "Saves to {folder}": "Зберігається в {folder}",
+  "Where should Hob save its downloads?": "Куди Hob зберігати завантаження?",
+  "Free up {size} GB of disk space, or save to another drive.": "Звільніть {size} ГБ на диску або зберігайте на інший диск."
 }

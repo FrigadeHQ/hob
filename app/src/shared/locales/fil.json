@@ -742,5 +742,8 @@
   "Remove Hob": "Alisin ang Hob",
   "Remove Hob?": "Alisin ang Hob?",
   "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Binubura ang Hob, ang mga model nito, ang iyong mga chat at setting. Mananatili sa iyong files folder ang mga file na ginawa ng iyong mga chat.",
-  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Mabubura ang Hob, ang mga model nito, ang iyong mga chat at setting, at magsasara ang Hob. Mananatili sa iyong files folder ang mga file na ginawa ng iyong mga chat."
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Mabubura ang Hob, ang mga model nito, ang iyong mga chat at setting, at magsasara ang Hob. Mananatili sa iyong files folder ang mga file na ginawa ng iyong mga chat.",
+  "Saves to {folder}": "Mase-save sa {folder}",
+  "Where should Hob save its downloads?": "Saan ise-save ng Hob ang mga download nito?",
+  "Free up {size} GB of disk space, or save to another drive.": "Magbakante ng {size} GB na disk space, o mag-save sa ibang drive."
 }

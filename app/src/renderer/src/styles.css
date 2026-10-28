@@ -206,6 +206,10 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .setup-primary:disabled { opacity: .35; cursor: not-allowed; }
 .setup-stage > .setup-primary { width: 240px; max-width: 100%; margin-top: 24px; }
 .setup-small-print { font-size: 11px; color: var(--color-muted); line-height: 1.7; margin-top: 10px; }
+/* a long folder path shortens; Change stays visible */
+.setup-folder { display: flex; justify-content: center; align-items: baseline; gap: 8px; margin-top: 2px; max-width: 100%; }
+.setup-folder > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.setup-folder > .setup-text-button { font-size: 11px; padding: 0; }
 .setup-text-button { font-size: 12px; color: var(--color-muted); display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 3px 0; white-space: nowrap; }
 .setup-stage > .setup-text-button { margin-top: 24px; }
 .setup-progress-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; gap: 12px; color: var(--color-ink-soft); }

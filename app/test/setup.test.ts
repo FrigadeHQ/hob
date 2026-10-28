@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -19,8 +19,10 @@ function setup(over: Partial<SetupDeps> = {}) {
   const deps: SetupDeps = {
     engine, modelsDir: root, settingsPath: join(root, 'settings.json'),
     getHardware: async () => m1max, getCatalog: async () => catalog,
-    download: fakeDownloadDeps(), sha256Override: 'FAKE', ...over,
+    download: fakeDownloadDeps(), sha256Override: 'FAKE',
   }
+  // keeps getters (a models folder that moves) as getters
+  Object.defineProperties(deps, Object.getOwnPropertyDescriptors(over))
   const c = new SetupController(deps)
   const states: SetupState[] = []
   c.onState((s) => states.push(s))
@@ -238,6 +240,13 @@ describe('SetupController', () => {
     expect(c.state).toMatchObject({ phase: 'ready', note: 'Ready · lighter model' })
     expect((c.state as { model: { id: string } }).model.id).not.toBe('gemma-4-26b-a4b')
   })
+  it('the main model fails to load for another reason (a graphics driver) → chat on a model already downloaded, nothing new downloaded', async () => {
+    const { c, engine, states } = setup()
+    engine.brokenLoadFor.add('gemma-4-26B_q4_0')
+    await c.start(); await c.confirm()
+    expect(c.state).toMatchObject({ phase: 'ready', model: { id: 'gemma-4-e4b' }, note: 'Ready · lighter model' })
+    expect(states.some((s) => s.phase === 'downloading' && s.note === 'Switching to a lighter model…')).toBe(false)
+  })
   it('nothing fits → friendly error', async () => {
     const { c } = setup({ getHardware: async () => ({ ...m1max, totalRamGB: 2, gpu: { kind: 'none', name: '', vramGB: 0 } }) })
     await c.start()
@@ -341,6 +350,28 @@ describe('SetupController review fixes', () => {
 })
 
 describe('SetupController disk re-check', () => {
+  it('downloads can go to another drive before the first download, and the space there is what counts', async () => {
+    const data = mkdtempSync(join(tmpdir(), 'hob-data-'))
+    const drive = mkdtempSync(join(tmpdir(), 'hob-drive-'))
+    let dir = data
+    const { c } = setup({
+      get modelsDir() { return join(dir, 'models') },
+      downloads: { dir: () => dir, move: (d) => { dir = join(d, 'Hob'); mkdirSync(join(dir, 'models'), { recursive: true }) } },
+      // C: is nearly full, the other drive has room
+      getHardware: async () => ({ ...m1max, freeDiskGB: dir === data ? 5 : 500 }),
+    })
+    await c.start()
+    expect(c.state).toMatchObject({ phase: 'choose', downloadsDir: data, needsDiskGB: expect.any(Number) })
+    expect((c.state as { needsDiskGB: number }).needsDiskGB).toBeGreaterThan(0)
+    await c.pickDownloads(drive)
+    expect(c.state).toMatchObject({ phase: 'choose', downloadsDir: join(drive, 'Hob'), needsDiskGB: 0 })
+    await c.confirm()
+    expect(c.state.phase).toBe('ready')
+    expect(readdirSync(join(drive, 'Hob', 'models')).some((f) => f.endsWith('.gguf'))).toBe(true)
+    // only before the first download
+    await c.pickDownloads(data)
+    expect(dir).toBe(join(drive, 'Hob'))
+  })
   it('retry on the choose screen re-checks disk after the user frees space', async () => {
     let free = 20
     const { c } = setup({ getHardware: async () => ({ ...m1max, freeDiskGB: free }) })

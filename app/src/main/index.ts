@@ -1,6 +1,5 @@
 import { app, BrowserWindow, nativeTheme, Notification, protocol, safeStorage, session, shell } from 'electron'
 import { join } from 'node:path'
-import { spawn } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import bundledCatalog from '../../../catalog/catalog.json'
@@ -15,7 +14,7 @@ import type { Hardware } from '@hob/picker'
 import { SetupController } from './setup'
 import { registerIpc } from './ipc'
 import { Notices, type Notice } from './notify'
-import { deleteAfterExit, removalPlan } from './uninstall'
+import { removalPlan, removeAfterExit } from './uninstall'
 import { Store } from './store'
 import { migrateFilesDir, migrateProfile } from './migrate'
 import { TITLE_BAR_HEIGHT, titleBarColors } from './titleBar'
@@ -147,7 +146,9 @@ app.whenReady().then(() => {
   let hardware: Hardware | undefined
   const setup = new SetupController({
     engine,
-    modelsDir: paths.models,
+    get modelsDir() { return paths.models },
+    // Macs have one drive as a rule; Windows and Linux PCs often have a second with more room
+    ...(process.platform !== 'darwin' || process.env.HOB_PICK_DOWNLOADS ? { downloads: { dir: () => paths.downloads, move: (dir: string) => paths.setDownloads(dir) } } : {}),
     settingsPath: paths.settings,
     download: FAKE ? fakeDownloadDeps({ stepMs: Number(process.env.HOB_FAKE_STEP_MS) || undefined, freeDiskGB: Number(process.env.HOB_FAKE_FREE_GB) || undefined }) : realDeps,
     sha256Override: FAKE ? 'FAKE' : undefined,
@@ -175,7 +176,7 @@ app.whenReady().then(() => {
     }
   }
   const filesDir = () => loadSettings(paths.settings).filesDir ?? (process.env.HOB_USER_DATA ? join(paths.root, 'Files') : join(app.getPath('documents'), 'Hob'))
-  const speech = new SpeechModel(paths.speech, realRuntimeDeps)
+  const speech = new SpeechModel(() => paths.speech, realRuntimeDeps)
   const allowed = (p: string) => isInside(filesDir(), p) || isInside(paths.speech, p) || store.listChats().some((c) => isInside(c.dir, p)) || store.knownFolders().some((g) => isInside(g, p))
   protocol.handle('hob-file', async (req) => {
     const p = decodeURIComponent(new URL(req.url).pathname.slice(1))
@@ -234,7 +235,7 @@ app.whenReady().then(() => {
     const hw = hardware
     return { totalRamGB: os.totalmem() / 1e9, unified: hw ? hw.gpu.kind !== 'discrete' : process.platform === 'darwin', vramGB: hw?.gpu.vramGB, mainModelGB }
   }
-  const vision = FAKE && !REAL_TOOLS ? fakeVision() : realVision(paths.vision, room)
+  const vision = FAKE && !REAL_TOOLS ? fakeVision() : realVision(() => paths.vision, room)
   // fake mode: a calendar and an inbox to talk to
   if (FAKE) setMacDeps({
     helper: async (args) => (args[0] === 'events'
@@ -278,10 +279,9 @@ app.whenReady().then(() => {
     },
   })
   const removeHob = async () => {
-    const plan = removalPlan({ platform: process.platform, packaged: app.isPackaged, profile: !!process.env.HOB_USER_DATA, execPath: process.execPath, appImage: process.env.APPIMAGE, data: app.getPath('userData') })
-    // Windows: Hob's uninstaller closes Hob, then removes the app and its data
-    if (plan.uninstaller) spawn(plan.uninstaller, ['/S', '--delete-app-data'], { detached: true, stdio: 'ignore' }).unref()
-    if (plan.data) deleteAfterExit(plan.data)
+    const plan = removalPlan({ platform: process.platform, packaged: app.isPackaged, profile: !!process.env.HOB_USER_DATA, execPath: process.execPath, appImage: process.env.APPIMAGE, data: app.getPath('userData'), downloads: paths.downloads })
+    // Windows: Hob's uninstaller removes the app and its data
+    removeAfterExit(plan.folders, plan.uninstaller)
     if (plan.app) await shell.trashItem(plan.app).catch((err) => console.warn('could not move Hob to the Trash', err))
     app.quit()
   }
@@ -318,7 +318,7 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
 
 /** the real vision model and server; downloads once, in the background */
-function realVision(root: string, room: () => Promise<{ totalRamGB: number; unified: boolean; vramGB?: number; mainModelGB: number }>) {
+function realVision(root: () => string, room: () => Promise<{ totalRamGB: number; unified: boolean; vramGB?: number; mainModelGB: number }>) {
   const listeners = new Set<(s: VisionState) => void>()
   const installer = new VisionInstaller(root, {
     // the smoke test runs on CI machines without a graphics card: the small model, on the CPU

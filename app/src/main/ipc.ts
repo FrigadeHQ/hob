@@ -1,4 +1,4 @@
-import { app, clipboard, dialog, ipcMain, nativeTheme, net, shell, systemPreferences, type BrowserWindow } from 'electron'
+import { app, clipboard, dialog, ipcMain, nativeTheme, net, shell, systemPreferences, type BrowserWindow, type OpenDialogOptions } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -81,6 +81,12 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
   ipcMain.handle('setup:getState', () => d.setup.state)
   ipcMain.handle('setup:confirm', (_e, modelId?: string) => { void d.setup.confirm(modelId) })
   ipcMain.handle('setup:retry', () => { void d.setup.retry() })
+  ipcMain.handle('setup:pickDownloads', async () => {
+    const win = d.win()
+    const opts: OpenDialogOptions = { title: t('Where should Hob save its downloads?'), properties: ['openDirectory', 'createDirectory'] }
+    const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    if (!r.canceled && r.filePaths[0]) await d.setup.pickDownloads(r.filePaths[0])
+  })
 
   ipcMain.handle('chats:list', () => d.store.listChats())
   ipcMain.handle('chats:search', (_e, q: string) => d.store.searchChats(String(q)))
@@ -169,7 +175,7 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     return r.filePath
   })
 
-  const own = () => [d.paths.root, d.filesDir()]
+  const own = () => [d.paths.root, d.paths.downloads, d.filesDir()]
   const check = (paths: string[]) => checkFolders(paths, homedir(), own())
   ipcMain.handle('projects:list', () => d.store.listProjects().map(withMissing))
   ipcMain.handle('projects:create', (_e, input: unknown) => {

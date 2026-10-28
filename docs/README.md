@@ -39,11 +39,15 @@ Hob picks from a curated list of open models: Google's Gemma 4 for most computer
 | Dictation | Speech to text, on your computer |
 | Plugins | Skills, Python tools and MCP connectors |
 
+## Where models go
+
+Models take several gigabytes. On a Mac they go in Hob's app data folder. On Windows and Linux you can pick another drive on the first screen (Saves to … → Change…), and Hob puts everything it downloads in a Hob folder there.
+
 ## Removing Hob
 
 Go to Settings → Files & storage → Remove Hob. That deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder (Documents/Hob unless you changed it).
 
-- **Windows:** uninstalling Hob from Settings → Apps does the same.
+- **Windows:** uninstalling Hob from Settings → Apps does the same, except for models saved to another drive during setup (a Hob folder there, which you can delete).
 - **Mac and Linux:** dragging Hob to the Trash (or deleting the AppImage) leaves its models behind. Use Remove Hob, or delete Hob's folder yourself: `~/Library/Application Support/Hob` on a Mac, `~/.config/Hob` on Linux.
 
 ## Plugins

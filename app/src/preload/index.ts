@@ -20,6 +20,7 @@ const api: HobApi = {
     getState: invoke('setup:getState'),
     confirm: invoke('setup:confirm'),
     retry: invoke('setup:retry'),
+    pickDownloads: invoke('setup:pickDownloads'),
     onState: (cb) => listen<[SetupState]>('setup:state', cb),
   },
   chats: { list: invoke('chats:list'), search: invoke('chats:search'), get: invoke('chats:get'), create: invoke('chats:create'), remove: invoke('chats:remove'), keep: invoke('chats:keep'), removeAll: invoke('chats:removeAll'), onChanged: (cb) => listen<[]>('chats:changed', cb) },

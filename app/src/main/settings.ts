@@ -2,9 +2,9 @@ import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { DEFAULT_EFFORT, isEffort, type Effort } from '../shared/effort'
 import { isLocale } from '../shared/i18n'
 
-/** pendingModelId: a model download that was still in progress when Hob last ran */
+/** pendingModelId: a model download that was still in progress when Hob last ran. downloadsDir: where models go, when not in app data */
 /** theme: light or dark regardless of the system; follows the system when left out. effort: how long Hob thinks. language: the interface's, the computer's when left out */
-export type Settings = { activeModelId?: string; pendingModelId?: string; webAccess?: boolean; filesDir?: string; theme?: 'light' | 'dark'; effort?: Effort; language?: string }
+export type Settings = { activeModelId?: string; pendingModelId?: string; webAccess?: boolean; filesDir?: string; downloadsDir?: string; theme?: 'light' | 'dark'; effort?: Effort; language?: string }
 
 export function loadSettings(path: string): Settings {
   try { return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {} } catch { return {} }

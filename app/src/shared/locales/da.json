@@ -742,5 +742,8 @@
   "Remove Hob": "Fjern Hob",
   "Remove Hob?": "Fjern Hob?",
   "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Sletter Hob, dens modeller, dine chats og indstillinger. Filer, som dine chats har lavet, bliver i din filmappe.",
-  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, dens modeller, dine chats og indstillinger slettes, og Hob lukker. Filer, som dine chats har lavet, bliver i din filmappe."
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, dens modeller, dine chats og indstillinger slettes, og Hob lukker. Filer, som dine chats har lavet, bliver i din filmappe.",
+  "Saves to {folder}": "Gemmes i {folder}",
+  "Where should Hob save its downloads?": "Hvor skal Hob gemme sine downloads?",
+  "Free up {size} GB of disk space, or save to another drive.": "Frigør {size} GB diskplads, eller gem på et andet drev."
 }

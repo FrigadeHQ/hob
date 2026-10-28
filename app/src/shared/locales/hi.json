@@ -742,5 +742,8 @@
   "Remove Hob": "Hob हटाएँ",
   "Remove Hob?": "Hob हटाएँ?",
   "Deletes Hob, its models, your chats and settings. Files your chats made stay in your files folder.": "Hob, उसके मॉडल, आपकी चैट और सेटिंग्स मिटा देता है। आपकी चैट में बनी फ़ाइलें आपके फ़ाइल फ़ोल्डर में रहती हैं।",
-  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, उसके मॉडल, आपकी चैट और सेटिंग्स मिट जाएँगी, और Hob बंद हो जाएगा। आपकी चैट में बनी फ़ाइलें आपके फ़ाइल फ़ोल्डर में रहेंगी।"
+  "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, उसके मॉडल, आपकी चैट और सेटिंग्स मिट जाएँगी, और Hob बंद हो जाएगा। आपकी चैट में बनी फ़ाइलें आपके फ़ाइल फ़ोल्डर में रहेंगी।",
+  "Saves to {folder}": "{folder} में सेव होगा",
+  "Where should Hob save its downloads?": "Hob अपने डाउनलोड कहाँ सेव करे?",
+  "Free up {size} GB of disk space, or save to another drive.": "{size} GB डिस्क स्पेस खाली करें, या किसी दूसरी ड्राइव पर सेव करें।"
 }

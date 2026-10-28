@@ -33,7 +33,8 @@ export type SetupState =
   /** firstRun: no model set up yet, so this is onboarding (not a normal start); unknown until the app has asked */
   | { phase: 'probing'; firstRun?: boolean }
   /** computer: what the pick is based on, e.g. "Apple M3 Pro · 36 GB memory". starter: a small model fetched first so chat opens in minutes */
-  | { phase: 'choose'; recommended: ModelSummary; models: ModelOption[]; liteMode: boolean; needsDiskGB: number; computer: string; starter?: ModelSummary }
+  /** downloadsDir: where downloads go, when it can be changed (Windows, Linux) */
+  | { phase: 'choose'; recommended: ModelSummary; models: ModelOption[]; liteMode: boolean; needsDiskGB: number; computer: string; starter?: ModelSummary; downloadsDir?: string }
   /** starter: set while the small model downloads. initialUpgrade: the first full model is downloading while chat runs on the starter */
   | { phase: 'downloading'; target: ModelSummary; progress: number; etaSec: number; chatReady: boolean; note?: string; starter?: ModelSummary; initialUpgrade?: boolean }
   | { phase: 'ready'; model: ModelSummary; liteMode: boolean; note?: string; canRetry?: boolean }
@@ -52,6 +53,8 @@ export interface HobApi {
     getState(): Promise<SetupState>
     confirm(modelId?: string): Promise<void>
     retry(): Promise<void>
+    /** choose screen, Windows and Linux: pick the folder downloads go to */
+    pickDownloads(): Promise<void>
     onState(cb: (s: SetupState) => void): () => void
   }
   chats: {

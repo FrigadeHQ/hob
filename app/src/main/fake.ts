@@ -8,11 +8,14 @@ import { InsufficientMemoryError, type ChatHandlers, type ChatRequest, type Engi
 export class FakeEngine implements Engine {
   loaded: string | undefined
   failLoadFor = new Set<string>()
+  /** fails to load, and not for lack of memory (a graphics driver, say) */
+  brokenLoadFor = new Set<string>()
   flaked = false
   constructor(public gpu: GpuProbe = { gpuType: 'metal', vramTotalGB: 24, unifiedGB: 24, gpuNames: ['Apple M1 Max'] }) {}
   async probe() { return this.gpu }
   async load(modelPath: string) {
     if ([...this.failLoadFor].some((f) => modelPath.includes(f))) throw new InsufficientMemoryError('fake OOM')
+    if ([...this.brokenLoadFor].some((f) => modelPath.includes(f))) throw new Error('Failed to load model')
     this.loaded = modelPath
   }
   /** what was read ahead last (system prompt + history) */
