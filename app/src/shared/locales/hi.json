@@ -745,5 +745,9 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, उसके मॉडल, आपकी चैट और सेटिंग्स मिट जाएँगी, और Hob बंद हो जाएगा। आपकी चैट में बनी फ़ाइलें आपके फ़ाइल फ़ोल्डर में रहेंगी।",
   "Saves to {folder}": "{folder} में सेव होगा",
   "Where should Hob save its downloads?": "Hob अपने डाउनलोड कहाँ सेव करे?",
-  "Free up {size} GB of disk space, or save to another drive.": "{size} GB डिस्क स्पेस खाली करें, या किसी दूसरी ड्राइव पर सेव करें।"
+  "Free up {size} GB of disk space, or save to another drive.": "{size} GB डिस्क स्पेस खाली करें, या किसी दूसरी ड्राइव पर सेव करें।",
+  "Save chat": "चैट सेव करें",
+  "Markdown": "Markdown",
+  "You": "आप",
+  "Attached {names}": "संलग्न {names}"
 }

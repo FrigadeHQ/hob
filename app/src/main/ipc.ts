@@ -28,6 +28,7 @@ import { AlreadyHereError, copyIn, isInside, isRunnable, nextChatDir, sizeOf, To
 import { isEffort } from '../shared/effort'
 import { effortOf, loadSettings, localeOf, updateSettings, webAccessOn } from './settings'
 import { isLocale, setLanguage, t } from '../shared/i18n'
+import { chatFileName, chatMarkdown } from '../shared/chatExport'
 import { systemLocale } from './locale'
 import { checkFolders, cleanProject, withMissing } from './projects'
 import type { SearchResult } from './search/searxng'
@@ -115,6 +116,22 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     pruneUndo(d.paths.undo, { taskIds: d.store.messages(id).flatMap((m) => (m.taskId ? [m.taskId] : [])) })
     d.store.deleteChat(id)
   }
+  ipcMain.handle('chats:save', async (_e, id: string) => {
+    const chat = d.store.getChat(String(id))
+    if (!chat) return null
+    const messages = [...d.store.messages(id)]
+    const turn = live.get(id)
+    if (turn && (turn.content || turn.steps.length)) {
+      messages.push({ id: 0, role: 'assistant', content: turn.content, attachments: [], steps: turn.steps, undoable: false, undone: false })
+    }
+    const title = chat.title === 'New chat' ? t('New chat') : chat.title
+    const win = d.win()
+    const opts = { defaultPath: join(app.getPath('downloads'), chatFileName(title)), filters: [{ name: t('Markdown'), extensions: ['md'] }] }
+    const r = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (r.canceled || !r.filePath) return null
+    writeFileSync(r.filePath, chatMarkdown({ title }, messages, { you: t('You'), attached: (names) => t('Attached {names}', { names }) }))
+    return r.filePath
+  })
   ipcMain.handle('chats:remove', (_e, id: string) => removeChat(id))
   // editing a sent message or trying a reply again: the chat goes back to its first n messages (never mid-reply)
   ipcMain.handle('chats:keep', (_e, id: string, n: number) => {

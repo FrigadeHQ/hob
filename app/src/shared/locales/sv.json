@@ -745,5 +745,9 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, dess modeller, dina chattar och inställningar raderas, och Hob stängs. Filer som dina chattar har skapat ligger kvar i din filmapp.",
   "Saves to {folder}": "Sparas i {folder}",
   "Where should Hob save its downloads?": "Var ska Hob spara sina nedladdningar?",
-  "Free up {size} GB of disk space, or save to another drive.": "Frigör {size} GB diskutrymme, eller spara på en annan enhet."
+  "Free up {size} GB of disk space, or save to another drive.": "Frigör {size} GB diskutrymme, eller spara på en annan enhet.",
+  "Save chat": "Spara chatt",
+  "Markdown": "Markdown",
+  "You": "Du",
+  "Attached {names}": "Bilaga {names}"
 }

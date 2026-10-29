@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { shownTitle } from '../../../shared/replies'
-import { ExternalLink, Folder, FolderOpen, FolderPlus, Hand, LoaderCircle, Pencil, Plus, Puzzle, Settings, SquarePen, X } from 'lucide-react'
+import { Download, ExternalLink, Folder, FolderOpen, FolderPlus, Hand, LoaderCircle, Pencil, Plus, Puzzle, Settings, SquarePen, X } from 'lucide-react'
 import type { ChatSummary, LiveSummary, Project } from '../../../shared/agent'
 import { fileManager } from '../../../shared/platform'
 import type { SetupState } from '../../../shared/types'
@@ -89,7 +89,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
 
   const fm = fileManager(hob.platform)
   const chatRow = (c: ChatSummary, inProject: boolean) => (
-    <div key={c.id} className={`${row} ${inProject ? 'ps-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
+    <div key={c.id} data-testid="chat-row" className={`${row} ${inProject ? 'ps-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
       <button data-testid="chat-item" onClick={() => onSelect(c.id)} className="min-w-0 flex-1 truncate text-start">{shownTitle(c.title)}</button>
       {(() => {
         const l = live.find((x) => x.chatId === c.id)
@@ -98,6 +98,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
           ? <span data-testid="chat-waiting" title={t('Waiting for your OK')} className="text-accent"><Hand size={14} /></span>
           : <span data-testid="chat-working" title={t('Working')} className="text-muted"><LoaderCircle size={14} className="animate-spin" /></span>
       })()}
+      <button data-testid="save-chat" aria-label={t('Save chat')} title={t('Save chat')} onClick={() => void hob.chats.save(c.id)} className="text-muted opacity-0 hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"><Download size={14} /></button>
       <button aria-label={t('Delete chat')} title={t('Delete chat')} onClick={() => void remove(c)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><X size={14} /></button>
     </div>
   )

@@ -225,6 +225,17 @@ export function ChatView({ chatId: initialId, projectId: initialProject, initial
   // leaving this chat (New chat, another chat) doesn't stop its reply: it keeps going and is saved
   // set on mount too: in development React mounts twice, and the first unmount would leave it false
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
+  // ⌘S / Ctrl+S: save this chat as a Markdown file
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(hob.platform === 'darwin' ? e.metaKey : e.ctrlKey) || e.altKey || e.shiftKey) return
+      if (e.key.toLowerCase() !== 's') return
+      e.preventDefault()
+      if (chatIdRef.current) void hob.chats.save(chatIdRef.current)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
   useEffect(() => hob.chat.onDone((rid, reply) => {
     if (rid !== currentId.current) return
     currentId.current = null

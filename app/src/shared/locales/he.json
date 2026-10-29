@@ -763,5 +763,9 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, המודלים שלו, הצ׳אטים וההגדרות שלך יימחקו, ו-Hob ייסגר. קבצים שנוצרו בצ׳אטים נשארים בתיקיית הקבצים שלך.",
   "Saves to {folder}": "נשמר ב-{folder}",
   "Where should Hob save its downloads?": "איפה Hob ישמור את ההורדות שלו?",
-  "Free up {size} GB of disk space, or save to another drive.": "פנו {size} GB של שטח בדיסק, או שמרו בכונן אחר."
+  "Free up {size} GB of disk space, or save to another drive.": "פנו {size} GB של שטח בדיסק, או שמרו בכונן אחר.",
+  "Save chat": "שמירת הצ'אט",
+  "Markdown": "Markdown",
+  "You": "אתה",
+  "Attached {names}": "מצורף {names}"
 }

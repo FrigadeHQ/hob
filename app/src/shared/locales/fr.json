@@ -763,5 +763,9 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, ses modèles, vos discussions et vos réglages seront supprimés, et Hob se fermera. Les fichiers créés dans vos discussions restent dans votre dossier de fichiers.",
   "Saves to {folder}": "Enregistré dans {folder}",
   "Where should Hob save its downloads?": "Où Hob doit-il enregistrer ses téléchargements ?",
-  "Free up {size} GB of disk space, or save to another drive.": "Libérez {size} Go d’espace disque, ou enregistrez sur un autre disque."
+  "Free up {size} GB of disk space, or save to another drive.": "Libérez {size} Go d’espace disque, ou enregistrez sur un autre disque.",
+  "Save chat": "Enregistrer la discussion",
+  "Markdown": "Markdown",
+  "You": "Vous",
+  "Attached {names}": "Joint : {names}"
 }

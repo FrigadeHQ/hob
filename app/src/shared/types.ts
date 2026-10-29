@@ -65,6 +65,8 @@ export interface HobApi {
     get(id: string): Promise<{ chat: ChatSummary; messages: StoredMessage[]; live?: LiveTurn } | null>
     /** projectId: start it in that project */
     create(projectId?: string | null): Promise<ChatSummary>
+    /** save as a Markdown file the person picks; null if they cancel */
+    save(id: string): Promise<string | null>
     remove(id: string): Promise<void>
     /** keep the chat's first n messages, removing the rest; false while a reply is being written */
     keep(id: string, n: number): Promise<boolean>

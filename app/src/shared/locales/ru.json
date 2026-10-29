@@ -781,5 +781,9 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, его модели, ваши чаты и настройки будут удалены, а Hob закроется. Файлы, созданные в чатах, останутся в вашей папке с файлами.",
   "Saves to {folder}": "Сохраняется в {folder}",
   "Where should Hob save its downloads?": "Куда Hob сохранять загрузки?",
-  "Free up {size} GB of disk space, or save to another drive.": "Освободите {size} ГБ на диске или сохраняйте на другой диск."
+  "Free up {size} GB of disk space, or save to another drive.": "Освободите {size} ГБ на диске или сохраняйте на другой диск.",
+  "Save chat": "Сохранить чат",
+  "Markdown": "Markdown",
+  "You": "Вы",
+  "Attached {names}": "Вложено {names}"
 }
