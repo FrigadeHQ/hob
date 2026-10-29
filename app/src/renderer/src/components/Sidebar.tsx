@@ -87,18 +87,58 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
     reload()
   }
 
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
+  const cancelRename = useRef(false)
+  function startRename(c: ChatSummary) {
+    cancelRename.current = false
+    setRenaming(c.id)
+    setDraft(shownTitle(c.title))
+  }
+  function onRenameBlur(c: ChatSummary, value: string) {
+    const cancel = cancelRename.current
+    cancelRename.current = false
+    setRenaming(null)
+    if (cancel) return
+    const typed = value.replace(/\s+/g, ' ').trim()
+    if (!typed || typed === shownTitle(c.title)) return
+    void hob.chats.rename(c.id, typed)
+  }
+
   const fm = fileManager(hob.platform)
   const chatRow = (c: ChatSummary, inProject: boolean) => (
-    <div key={c.id} className={`${row} ${inProject ? 'ps-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
-      <button data-testid="chat-item" onClick={() => onSelect(c.id)} className="min-w-0 flex-1 truncate text-start">{shownTitle(c.title)}</button>
-      {(() => {
+    <div key={c.id} data-testid="chat-row" className={`${row} ${inProject ? 'ps-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
+      {renaming === c.id ? (
+        <input
+          data-testid="rename-chat-input"
+          aria-label={t('Rename chat')}
+          value={draft}
+          autoFocus
+          onFocus={(e) => e.currentTarget.select()}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={(e) => onRenameBlur(c, e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur() }
+            if (e.key === 'Escape') { e.preventDefault(); cancelRename.current = true; e.currentTarget.blur() }
+          }}
+          className="min-w-0 flex-1 rounded-control border border-line-strong bg-paper px-1.5 py-0.5 text-ui outline-none"
+        />
+      ) : (
+        <button data-testid="chat-item" onClick={() => onSelect(c.id)} onDoubleClick={(e) => { e.preventDefault(); startRename(c) }} className="min-w-0 flex-1 truncate text-start">{shownTitle(c.title)}</button>
+      )}
+      {renaming !== c.id && (() => {
         const l = live.find((x) => x.chatId === c.id)
         if (!l) return null
         return l.waiting
           ? <span data-testid="chat-waiting" title={t('Waiting for your OK')} className="text-accent"><Hand size={14} /></span>
           : <span data-testid="chat-working" title={t('Working')} className="text-muted"><LoaderCircle size={14} className="animate-spin" /></span>
       })()}
-      <button aria-label={t('Delete chat')} title={t('Delete chat')} onClick={() => void remove(c)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><X size={14} /></button>
+      {renaming !== c.id && (
+        <>
+          <button data-testid="rename-chat" aria-label={t('Rename chat')} title={t('Rename chat')} onClick={() => startRename(c)} className="text-muted opacity-0 hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"><Pencil size={14} /></button>
+          <button aria-label={t('Delete chat')} title={t('Delete chat')} onClick={() => void remove(c)} className="text-muted opacity-0 hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"><X size={14} /></button>
+        </>
+      )}
     </div>
   )
 

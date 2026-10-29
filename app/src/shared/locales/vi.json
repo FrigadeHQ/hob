@@ -691,5 +691,6 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, các mô hình của Hob, cuộc trò chuyện và cài đặt của bạn sẽ bị xóa, và Hob sẽ đóng lại. Các tệp được tạo trong cuộc trò chuyện vẫn nằm trong thư mục tệp của bạn.",
   "Saves to {folder}": "Lưu vào {folder}",
   "Where should Hob save its downloads?": "Hob nên lưu các tệp tải xuống ở đâu?",
-  "Free up {size} GB of disk space, or save to another drive.": "Giải phóng {size} GB dung lượng ổ đĩa, hoặc lưu vào ổ khác."
+  "Free up {size} GB of disk space, or save to another drive.": "Giải phóng {size} GB dung lượng ổ đĩa, hoặc lưu vào ổ khác.",
+  "Rename chat": "Đổi tên đoạn chat"
 }

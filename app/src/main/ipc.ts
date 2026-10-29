@@ -28,6 +28,7 @@ import { AlreadyHereError, copyIn, isInside, isRunnable, nextChatDir, sizeOf, To
 import { isEffort } from '../shared/effort'
 import { effortOf, loadSettings, localeOf, updateSettings, webAccessOn } from './settings'
 import { isLocale, setLanguage, t } from '../shared/i18n'
+import { tidyTitle } from '../shared/replies'
 import { systemLocale } from './locale'
 import { checkFolders, cleanProject, withMissing } from './projects'
 import type { SearchResult } from './search/searxng'
@@ -115,6 +116,14 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     pruneUndo(d.paths.undo, { taskIds: d.store.messages(id).flatMap((m) => (m.taskId ? [m.taskId] : [])) })
     d.store.deleteChat(id)
   }
+  ipcMain.handle('chats:rename', (_e, id: string, title: string) => {
+    const chat = d.store.getChat(String(id))
+    const next = tidyTitle(title)
+    if (!chat || !next) return null
+    d.store.renameChat(chat.id, next)
+    send('chats:changed')
+    return d.store.getChat(chat.id)!
+  })
   ipcMain.handle('chats:remove', (_e, id: string) => removeChat(id))
   // editing a sent message or trying a reply again: the chat goes back to its first n messages (never mid-reply)
   ipcMain.handle('chats:keep', (_e, id: string, n: number) => {

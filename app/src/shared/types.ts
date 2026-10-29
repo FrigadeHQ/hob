@@ -65,6 +65,8 @@ export interface HobApi {
     get(id: string): Promise<{ chat: ChatSummary; messages: StoredMessage[]; live?: LiveTurn } | null>
     /** projectId: start it in that project */
     create(projectId?: string | null): Promise<ChatSummary>
+    /** keep the name the person typed; null if the chat is gone or the name is blank */
+    rename(id: string, title: string): Promise<ChatSummary | null>
     remove(id: string): Promise<void>
     /** keep the chat's first n messages, removing the rest; false while a reply is being written */
     keep(id: string, n: number): Promise<boolean>

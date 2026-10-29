@@ -46,6 +46,14 @@ it('stores both messages and names the chat after the first message', async () =
   expect(w.engine.lastRequest?.tools?.map((t) => t.name)).not.toContain('web_search')
 })
 
+it('keeps a title the person already set, instead of replacing it after the first reply', async () => {
+  const w = world('allow', { grant: false })
+  w.store.renameChat('c', 'Trip notes')
+  await w.turn('hello there')
+  expect(w.store.getChat('c')?.title).toBe('Trip notes')
+  expect(w.engine.lastTitleRequest).toBeUndefined()
+})
+
 it('the effort picked beside the mic sets how long it thinks, and how much gpt-oss reasons', async () => {
   const w = world('allow', { grant: false })
   w.deps.effort = () => 'deep'

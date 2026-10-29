@@ -31,6 +31,7 @@ Hob picks from a curated list of open models: Google's Gemma 4 for most computer
 | Feature | What Hob does |
 |---|---|
 | Files and projects | Work on attached files, or on folders grouped into projects with their own instructions |
+| Chats | Rename them from the sidebar, with the pencil or by double-clicking the name |
 | Code | Python with pandas, numpy, openpyxl, python-docx, pypdf and Pillow, plus any package from PyPI it needs; sandboxed to the chat's folder |
 | Images | Looks at photos and screenshots (paste them in): reads receipts, charts and error messages, describes what's there. A small [Qwen3-VL](https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct-GGUF) model, downloaded after the main one |
 | Charts | Interactive charts in the chat, downloadable as PNG |

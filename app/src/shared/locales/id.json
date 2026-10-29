@@ -691,5 +691,6 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, modelnya, serta chat dan pengaturanmu akan dihapus, lalu Hob akan ditutup. File yang dibuat di chat tetap ada di folder filemu.",
   "Saves to {folder}": "Disimpan di {folder}",
   "Where should Hob save its downloads?": "Di mana Hob harus menyimpan unduhannya?",
-  "Free up {size} GB of disk space, or save to another drive.": "Kosongkan {size} GB ruang disk, atau simpan ke drive lain."
+  "Free up {size} GB of disk space, or save to another drive.": "Kosongkan {size} GB ruang disk, atau simpan ke drive lain.",
+  "Rename chat": "Ubah nama chat"
 }

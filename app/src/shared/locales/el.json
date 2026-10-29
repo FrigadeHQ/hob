@@ -745,5 +745,6 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Το Hob, τα μοντέλα του, οι συνομιλίες και οι ρυθμίσεις σου θα διαγραφούν και το Hob θα κλείσει. Τα αρχεία που δημιούργησαν οι συνομιλίες σου μένουν στον φάκελο αρχείων σου.",
   "Saves to {folder}": "Αποθηκεύεται στο {folder}",
   "Where should Hob save its downloads?": "Πού να αποθηκεύει το Hob όσα κατεβάζει;",
-  "Free up {size} GB of disk space, or save to another drive.": "Ελευθέρωσε {size} GB χώρου στον δίσκο ή αποθήκευσε σε άλλη μονάδα."
+  "Free up {size} GB of disk space, or save to another drive.": "Ελευθέρωσε {size} GB χώρου στον δίσκο ή αποθήκευσε σε άλλη μονάδα.",
+  "Rename chat": "Μετονομασία συνομιλίας"
 }

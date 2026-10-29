@@ -763,5 +763,6 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "O Hob, os modelos dele, suas conversas e configurações serão apagados, e o Hob será fechado. Os arquivos criados nas suas conversas ficam na sua pasta de arquivos.",
   "Saves to {folder}": "Salva em {folder}",
   "Where should Hob save its downloads?": "Onde o Hob deve salvar os downloads?",
-  "Free up {size} GB of disk space, or save to another drive.": "Libere {size} GB de espaço em disco ou salve em outra unidade."
+  "Free up {size} GB of disk space, or save to another drive.": "Libere {size} GB de espaço em disco ou salve em outra unidade.",
+  "Rename chat": "Renomear conversa"
 }

@@ -781,5 +781,6 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, jeho modely, vaše chaty a nastavení budou smazány a Hob se zavře. Soubory vytvořené v chatech zůstanou ve vaší složce souborů.",
   "Saves to {folder}": "Ukládá se do {folder}",
   "Where should Hob save its downloads?": "Kam má Hob ukládat stažené soubory?",
-  "Free up {size} GB of disk space, or save to another drive.": "Uvolněte {size} GB místa na disku, nebo ukládejte na jiný disk."
+  "Free up {size} GB of disk space, or save to another drive.": "Uvolněte {size} GB místa na disku, nebo ukládejte na jiný disk.",
+  "Rename chat": "Přejmenovat chat"
 }

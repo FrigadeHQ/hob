@@ -745,5 +745,6 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, modelleri, sohbetlerin ve ayarların silinecek ve Hob kapanacak. Sohbetlerinde oluşturulan dosyalar dosya klasöründe kalır.",
   "Saves to {folder}": "Kaydedileceği yer: {folder}",
   "Where should Hob save its downloads?": "Hob indirdiklerini nereye kaydetsin?",
-  "Free up {size} GB of disk space, or save to another drive.": "{size} GB disk alanı boşalt ya da başka bir sürücüye kaydet."
+  "Free up {size} GB of disk space, or save to another drive.": "{size} GB disk alanı boşalt ya da başka bir sürücüye kaydet.",
+  "Rename chat": "Sohbeti yeniden adlandır"
 }
