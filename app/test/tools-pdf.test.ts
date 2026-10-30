@@ -94,7 +94,11 @@ describe.runIf(mac)('read_pdf and fill_pdf with the PDF helper', () => {
     const ctx = ctxFor()
     copyFileSync(join(fixtures, 'form-scanned.pdf'), join(ctx.chatDir, 'form.pdf'))
     const listed = (await readPdf.run({ path: 'form.pdf' }, ctx)).text
-    const id = (label: string) => listed.match(new RegExp(`\\[(p1:[a-z0-9-]+)\\] ${label.replace(/[/()]/g, '\\$&')}`))![1]
+    const id = (label: string) => {
+      const m = listed.match(new RegExp(`\\[(p1:[a-z0-9-]+)\\] ${label.replace(/[/()]/g, '\\$&')}`))
+      if (!m) throw new Error(`no blank called "${label}" in:\n${listed}`)
+      return m[1]
+    }
     const out = await fillPdf.run({ path: 'form.pdf', answers: { [id('Name / Last name')]: 'Lovelace', [id('Name / First name')]: 'Ada', [id('I agree to the terms (checkbox)')]: 'yes' } }, ctx)
     expect(out.failed).toBeFalsy()
     expect(out.files).toEqual([join(ctx.chatDir, 'form (filled).pdf')])
