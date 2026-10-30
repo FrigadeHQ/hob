@@ -745,5 +745,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, sen mallit sekä keskustelusi ja asetuksesi poistetaan, ja Hob sulkeutuu. Keskusteluissa tehdyt tiedostot jäävät tiedostokansioosi.",
   "Saves to {folder}": "Tallennetaan kansioon {folder}",
   "Where should Hob save its downloads?": "Minne Hob tallentaa lataukset?",
-  "Free up {size} GB of disk space, or save to another drive.": "Vapauta {size} Gt levytilaa tai tallenna toiselle asemalle."
+  "Free up {size} GB of disk space, or save to another drive.": "Vapauta {size} Gt levytilaa tai tallenna toiselle asemalle.",
+  "Added {names}": "Lisätty: {names}",
+  "Delete": "Poista",
+  "More": "Lisää",
+  "More for “{title}”": "Lisää: ”{title}”",
+  "Pin": "Kiinnitä",
+  "Pinned": "Kiinnitetyt",
+  "Rename": "Nimeä uudelleen",
+  "Rename chat": "Nimeä keskustelu uudelleen",
+  "Save as Markdown": "Tallenna Markdownina",
+  "Unpin": "Irrota",
+  "You": "Sinä"
 }

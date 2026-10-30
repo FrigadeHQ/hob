@@ -20,3 +20,9 @@ export function shownReply(content: string): string {
 
 /** A chat keeps the English placeholder title until it's named; shown in the interface's language */
 export const shownTitle = (title: string) => (title === 'New chat' ? t('New chat') : title)
+
+/** A name the person typed: one line, trimmed; empty when there's nothing left to keep */
+export function tidyTitle(raw: string, max = 80): string {
+  const next = String(raw).replace(/\s+/g, ' ').trim()
+  return next.length > max ? `${next.slice(0, max - 1).trimEnd()}…` : next
+}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { shownTitle } from '../../../shared/replies'
-import { ExternalLink, Folder, FolderOpen, FolderPlus, Hand, LoaderCircle, Pencil, Plus, Puzzle, Settings, SquarePen, X } from 'lucide-react'
+import { ExternalLink, Folder, FolderOpen, FolderPlus, Hand, LoaderCircle, Pencil, Plus, Settings, SquarePen } from 'lucide-react'
 import type { ChatSummary, LiveSummary, Project } from '../../../shared/agent'
 import { fileManager } from '../../../shared/platform'
 import type { SetupState } from '../../../shared/types'
@@ -9,6 +9,7 @@ import { hob } from '../api'
 import { Status } from './Status'
 import { confirmAction } from './Confirm'
 import { IconButton } from './ui'
+import { ChatMenu, RenameDialog } from './ChatMenu'
 import { msg, t } from '../../../shared/i18n'
 
 const DAY = 86_400_000
@@ -87,9 +88,12 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
     reload()
   }
 
+  // pinned chats outside a project; in a project they lead its list
+  const pinned = chats.filter((c) => c.pinned && !c.projectId)
+  const [renaming, setRenaming] = useState<ChatSummary | null>(null)
   const fm = fileManager(hob.platform)
   const chatRow = (c: ChatSummary, inProject: boolean) => (
-    <div key={c.id} className={`${row} ${inProject ? 'ps-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
+    <div key={c.id} data-testid="chat-row" className={`${row} ${inProject ? 'ps-8' : ''} ${c.id === selected && screen === 'chat' ? 'bg-selection text-ink' : 'text-ink-soft hover:bg-line/60 hover:text-ink'}`}>
       <button data-testid="chat-item" onClick={() => onSelect(c.id)} className="min-w-0 flex-1 truncate text-start">{shownTitle(c.title)}</button>
       {(() => {
         const l = live.find((x) => x.chatId === c.id)
@@ -98,7 +102,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
           ? <span data-testid="chat-waiting" title={t('Waiting for your OK')} className="text-accent"><Hand size={14} /></span>
           : <span data-testid="chat-working" title={t('Working')} className="text-muted"><LoaderCircle size={14} className="animate-spin" /></span>
       })()}
-      <button aria-label={t('Delete chat')} title={t('Delete chat')} onClick={() => void remove(c)} className="text-muted opacity-0 hover:text-ink group-hover:opacity-100"><X size={14} /></button>
+      <ChatMenu chat={c} onPin={() => void hob.chats.pin(c.id, !c.pinned)} onRename={() => setRenaming(c)} onSave={() => void hob.chats.save(c.id)} onDelete={() => void remove(c)} />
     </div>
   )
 
@@ -111,6 +115,12 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
         </button>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 pb-2">
+        {pinned.length > 0 && (
+          <div data-testid="pinned">
+            <p className={label}>{t('Pinned')}</p>
+            {pinned.map((c) => chatRow(c, false))}
+          </div>
+        )}
         <div className="group/head flex items-center justify-between">
           <p className={label}>{t('Projects')}</p>
           <button data-testid="new-project" aria-label={t('New project')} title={t('New project')} onClick={() => onEditProject(null)} className={headAction}><Plus size={14} /></button>
@@ -121,7 +131,8 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
           </button>
         )}
         {projects.map((p) => {
-          const list = chats.filter((c) => c.projectId === p.id)
+          // pinned ones first
+          const list = chats.filter((c) => c.projectId === p.id).sort((a, b) => Number(b.pinned) - Number(a.pinned))
           const open = !collapsed.includes(p.id)
           const here = screen === 'chat' && selected === null && draftProject === p.id
           return (
@@ -140,7 +151,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
             </div>
           )
         })}
-        {group(chats.filter((c) => !c.projectId)).map(([name, list], i) => (
+        {group(chats.filter((c) => !c.projectId && !c.pinned)).map(([name, list], i) => (
           <div key={name}>
             {i === 0
               ? (
@@ -158,6 +169,7 @@ export function Sidebar({ state, selected, refreshKey, screen, draftProject, onS
         <Status state={state} working={live.some((c) => c.chatId === selected && !c.waiting)} />
         <IconButton icon={Settings} label={t('Settings')} testId="open-settings" onClick={onSettings} />
       </div>
+      {renaming && <RenameDialog chat={renaming} onClose={() => setRenaming(null)} />}
       {/* drag the edge to resize; double-click puts it back. Last in the sidebar so it wins over the window-drag strip */}
       <div
         data-testid="sidebar-resize" role="separator" aria-orientation="vertical" aria-label={t('Resize sidebar')} title={t('Drag to resize')}

@@ -28,6 +28,8 @@ import { AlreadyHereError, copyIn, isInside, isRunnable, nextChatDir, sizeOf, To
 import { isEffort } from '../shared/effort'
 import { effortOf, loadSettings, localeOf, updateSettings, webAccessOn } from './settings'
 import { isLocale, setLanguage, t } from '../shared/i18n'
+import { shownTitle, tidyTitle } from '../shared/replies'
+import { chatFileName, chatMarkdown } from '../shared/chatExport'
 import { systemLocale } from './locale'
 import { checkFolders, cleanProject, withMissing } from './projects'
 import type { SearchResult } from './search/searxng'
@@ -116,6 +118,31 @@ export function registerIpc(d: IpcDeps): { openPluginFile(path: string): Promise
     d.store.deleteChat(id)
   }
   ipcMain.handle('chats:remove', (_e, id: string) => removeChat(id))
+  ipcMain.handle('chats:rename', (_e, id: string, title: string) => {
+    const name = tidyTitle(String(title))
+    if (!name || !d.store.getChat(String(id))) return
+    d.store.renameChat(String(id), name)
+    send('chats:changed')
+  })
+  ipcMain.handle('chats:pin', (_e, id: string, pinned: boolean) => {
+    d.store.pinChat(String(id), Boolean(pinned))
+    send('chats:changed')
+  })
+  // a reply still being written goes in as far as it got
+  ipcMain.handle('chats:save', async (_e, id: string) => {
+    const chat = d.store.getChat(String(id))
+    if (!chat) return null
+    const messages = d.store.messages(chat.id)
+    const turn = live.get(chat.id)
+    if (turn?.content) messages.push({ id: 0, role: 'assistant', content: turn.content, attachments: [], steps: turn.steps, undoable: false, undone: false })
+    const title = shownTitle(chat.title)
+    const opts = { defaultPath: join(app.getPath('downloads'), chatFileName(title)), filters: [{ name: 'Markdown', extensions: ['md'] }] }
+    const win = d.win()
+    const r = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (r.canceled || !r.filePath) return null
+    writeFileSync(r.filePath, chatMarkdown({ title }, messages, { you: t('You'), attached: (names) => t('Added {names}', { names }) }))
+    return r.filePath
+  })
   // editing a sent message or trying a reply again: the chat goes back to its first n messages (never mid-reply)
   ipcMain.handle('chats:keep', (_e, id: string, n: number) => {
     if (live.get(String(id))) return false

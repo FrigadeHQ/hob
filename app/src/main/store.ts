@@ -4,7 +4,7 @@ import type { Attachment, ChatSummary, Project, ProjectInput, Step, StoredMessag
 type Row = Record<string, unknown>
 type NewMessage = { role: 'user' | 'assistant'; content: string; attachments?: Attachment[]; steps?: Step[]; taskId?: string; undoable?: boolean; workedMs?: number }
 
-const toChat = (r: Row): ChatSummary => ({ id: String(r.id), title: String(r.title), dir: String(r.dir), updatedAt: Number(r.updated_at), projectId: r.project_id == null ? null : String(r.project_id) })
+const toChat = (r: Row): ChatSummary => ({ id: String(r.id), title: String(r.title), dir: String(r.dir), updatedAt: Number(r.updated_at), projectId: r.project_id == null ? null : String(r.project_id), pinned: r.pinned_at != null })
 export type ProjectRow = Omit<Project, 'missing'>
 const toMessage = (r: Row): StoredMessage & { chatId: string } => ({
   id: Number(r.id), chatId: String(r.chat_id), role: r.role as 'user' | 'assistant', content: String(r.content),
@@ -50,6 +50,7 @@ export class Store {
     if (!cols.includes('worked_ms')) this.db.exec('ALTER TABLE messages ADD COLUMN worked_ms INTEGER')
     const chatCols = (this.db.prepare('PRAGMA table_info(chats)').all() as Row[]).map((r) => String(r.name))
     if (!chatCols.includes('project_id')) this.db.exec('ALTER TABLE chats ADD COLUMN project_id TEXT')
+    if (!chatCols.includes('pinned_at')) this.db.exec('ALTER TABLE chats ADD COLUMN pinned_at INTEGER')
   }
   close() { this.db.close() }
 
@@ -77,6 +78,7 @@ export class Store {
     return [...titled, ...found].slice(0, limit)
   }
   renameChat(id: string, title: string) { this.db.prepare('UPDATE chats SET title = ? WHERE id = ?').run(title, id) }
+  pinChat(id: string, pinned: boolean, now = Date.now()) { this.db.prepare('UPDATE chats SET pinned_at = ? WHERE id = ?').run(pinned ? now : null, id) }
   deleteChat(id: string) { this.db.prepare('DELETE FROM chats WHERE id = ?').run(id) }
 
   addMessage(chatId: string, m: NewMessage, now = Date.now()): number {

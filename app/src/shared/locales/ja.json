@@ -691,5 +691,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob とそのモデル、チャット、設定が削除され、Hob は終了します。チャットで作成したファイルは、ファイルのフォルダに残ります。",
   "Saves to {folder}": "保存先: {folder}",
   "Where should Hob save its downloads?": "Hob のダウンロードをどこに保存しますか？",
-  "Free up {size} GB of disk space, or save to another drive.": "ディスクの空き容量を {size} GB 増やすか、別のドライブに保存してください。"
+  "Free up {size} GB of disk space, or save to another drive.": "ディスクの空き容量を {size} GB 増やすか、別のドライブに保存してください。",
+  "Added {names}": "追加したファイル: {names}",
+  "Delete": "削除",
+  "More": "その他",
+  "More for “{title}”": "「{title}」のその他の操作",
+  "Pin": "ピン留め",
+  "Pinned": "ピン留め",
+  "Rename": "名前を変更",
+  "Rename chat": "チャットの名前を変更",
+  "Save as Markdown": "Markdown として保存",
+  "Unpin": "ピン留めを外す",
+  "You": "あなた"
 }

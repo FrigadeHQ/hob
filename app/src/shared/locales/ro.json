@@ -763,5 +763,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, modelele lui, conversațiile și setările tale vor fi șterse, iar Hob se va închide. Fișierele create în conversații rămân în folderul tău de fișiere.",
   "Saves to {folder}": "Se salvează în {folder}",
   "Where should Hob save its downloads?": "Unde să salveze Hob descărcările?",
-  "Free up {size} GB of disk space, or save to another drive.": "Eliberează {size} GB de spațiu pe disc sau salvează pe altă unitate."
+  "Free up {size} GB of disk space, or save to another drive.": "Eliberează {size} GB de spațiu pe disc sau salvează pe altă unitate.",
+  "Added {names}": "Adăugat: {names}",
+  "Delete": "Șterge",
+  "More": "Mai mult",
+  "More for “{title}”": "Mai mult pentru „{title}”",
+  "Pin": "Fixează",
+  "Pinned": "Fixate",
+  "Rename": "Redenumește",
+  "Rename chat": "Redenumește chatul",
+  "Save as Markdown": "Salvează ca Markdown",
+  "Unpin": "Anulează fixarea",
+  "You": "Tu"
 }
