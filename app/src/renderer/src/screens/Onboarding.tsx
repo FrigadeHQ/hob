@@ -80,7 +80,8 @@ export function Onboarding({ state }: { state: SetupState }) {
               <h1>{state.phase === 'error' ? t('Something went wrong') : downloading ? t('Getting Hob ready') : t('Welcome to Hob')}</h1>
               <p className="setup-subtitle">{state.phase === 'error' ? t('Let’s try that again.') : downloading ? t('Chat will open automatically.') : hob.platform === 'darwin' ? t('Your private AI, right on your Mac.') : t('Your private AI, right on your computer.')}</p>
             </div>
-            <div className="setup-stage">
+            {/* Windows and Linux show where downloads go: room for that line in every phase, so the card doesn't jump when the download starts */}
+            <div className={`setup-stage ${hob.platform === 'darwin' ? '' : 'setup-stage-folder'}`}>
               {state.phase === 'choose' && selected && <>
                 <div className="setup-card" data-testid="setup-recommended">
                   <p className="setup-hardware" title={state.computer}>{selected.recommended ? t('Picked for your {computer}', { computer: state.computer }) : t('Your {computer}', { computer: state.computer })}</p>

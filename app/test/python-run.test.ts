@@ -55,7 +55,7 @@ describe.skipIf(!python)('runPython', () => {
     expect(r.output).toContain('blocked-write')
     if (process.platform === 'darwin' || landlock >= 4) expect(r.output).toContain('blocked-net')
     expect(existsSync(outside)).toBe(false)
-  })
+  }, 30_000) // the first run on Windows makes the low-integrity copy of Python
   it.runIf(process.platform === 'darwin' || landlock > 0 || process.platform === 'win32')('sandbox: SQLite works in the chat folder and temp (it looks up each parent folder); files beside them stay unreadable', async () => {
     const b = base()
     const secret = join(dirname(b.cwd), `hob-secret-${Date.now()}.txt`)
