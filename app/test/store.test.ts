@@ -108,3 +108,14 @@ it('a chat can be cut back to its first messages (to edit a message or try a rep
   s.keepMessages('c', 0)
   expect(s.messages('c')).toEqual([])
 })
+
+it('pins and unpins a chat', () => {
+  const s = new Store(':memory:')
+  s.createChat('c1', '/w/c1', 1000)
+  expect(s.getChat('c1')?.pinned).toBe(false)
+  s.pinChat('c1', true)
+  expect(s.getChat('c1')?.pinned).toBe(true)
+  expect(s.listChats()[0].pinned).toBe(true)
+  s.pinChat('c1', false)
+  expect(s.getChat('c1')?.pinned).toBe(false)
+})

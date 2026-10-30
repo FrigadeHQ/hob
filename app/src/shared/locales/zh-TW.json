@@ -691,5 +691,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob、它的模型、你的聊天和設定將被刪除，Hob 會關閉。聊天中產生的檔案會保留在你的檔案資料夾中。",
   "Saves to {folder}": "儲存到 {folder}",
   "Where should Hob save its downloads?": "Hob 的下載內容要儲存在哪裡？",
-  "Free up {size} GB of disk space, or save to another drive.": "請釋放 {size} GB 磁碟空間，或儲存到其他磁碟機。"
+  "Free up {size} GB of disk space, or save to another drive.": "請釋放 {size} GB 磁碟空間，或儲存到其他磁碟機。",
+  "Added {names}": "已新增：{names}",
+  "Delete": "刪除",
+  "More": "更多",
+  "More for “{title}”": "「{title}」的更多操作",
+  "Pin": "釘選",
+  "Pinned": "已釘選",
+  "Rename": "重新命名",
+  "Rename chat": "重新命名聊天",
+  "Save as Markdown": "另存為 Markdown",
+  "Unpin": "取消釘選",
+  "You": "你"
 }

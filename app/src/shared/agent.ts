@@ -20,7 +20,7 @@ export type ApprovalRequest = { id: string; requestId: string; text: string; fol
 export type ApprovalAnswer = 'allow' | 'always' | 'deny'
 
 /** projectId: the project the chat is in; null for chats outside any project */
-export type ChatSummary = { id: string; title: string; dir: string; updatedAt: number; projectId: string | null }
+export type ChatSummary = { id: string; title: string; dir: string; updatedAt: number; projectId: string | null; pinned: boolean }
 /** folders[0] is the main folder: new files go there. missing: folders that can't be found right now */
 export type Project = { id: string; name: string; instructions: string; folders: string[]; missing: string[] }
 export type ProjectInput = { name: string; instructions: string; folders: string[] }

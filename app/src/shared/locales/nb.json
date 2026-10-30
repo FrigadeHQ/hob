@@ -745,5 +745,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, modellene, chattene og innstillingene dine blir slettet, og Hob lukkes. Filer som chattene dine har laget, blir værende i filmappen din.",
   "Saves to {folder}": "Lagres i {folder}",
   "Where should Hob save its downloads?": "Hvor skal Hob lagre nedlastingene sine?",
-  "Free up {size} GB of disk space, or save to another drive.": "Frigjør {size} GB diskplass, eller lagre på en annen disk."
+  "Free up {size} GB of disk space, or save to another drive.": "Frigjør {size} GB diskplass, eller lagre på en annen disk.",
+  "Added {names}": "Lagt til: {names}",
+  "Delete": "Slett",
+  "More": "Mer",
+  "More for “{title}”": "Mer for «{title}»",
+  "Pin": "Fest",
+  "Pinned": "Festet",
+  "Rename": "Gi nytt navn",
+  "Rename chat": "Gi chatten nytt navn",
+  "Save as Markdown": "Lagre som Markdown",
+  "Unpin": "Løsne",
+  "You": "Du"
 }

@@ -23,7 +23,7 @@ const api: HobApi = {
     pickDownloads: invoke('setup:pickDownloads'),
     onState: (cb) => listen<[SetupState]>('setup:state', cb),
   },
-  chats: { list: invoke('chats:list'), search: invoke('chats:search'), get: invoke('chats:get'), create: invoke('chats:create'), remove: invoke('chats:remove'), keep: invoke('chats:keep'), removeAll: invoke('chats:removeAll'), onChanged: (cb) => listen<[]>('chats:changed', cb) },
+  chats: { list: invoke('chats:list'), search: invoke('chats:search'), get: invoke('chats:get'), create: invoke('chats:create'), rename: invoke('chats:rename'), pin: invoke('chats:pin'), save: invoke('chats:save'), remove: invoke('chats:remove'), keep: invoke('chats:keep'), removeAll: invoke('chats:removeAll'), onChanged: (cb) => listen<[]>('chats:changed', cb) },
   files: { add: invoke('files:add'), paste: invoke('files:paste'), pick: invoke('files:pick'), open: invoke('files:open'), show: invoke('files:show'), saveImage: invoke('files:saveImage') },
   projects: { list: invoke('projects:list'), create: invoke('projects:create'), update: invoke('projects:update'), remove: invoke('projects:remove'), pickFolders: invoke('projects:pickFolders'), checkFolders: invoke('projects:checkFolders'), open: invoke('projects:open') },
   chat: {

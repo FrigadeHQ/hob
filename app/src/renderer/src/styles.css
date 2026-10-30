@@ -198,6 +198,7 @@ html[data-text-size="large"] { --reply-step: 2px; }
 .setup-heading h1 { font-size: 28px; font-weight: 550; letter-spacing: -.8px; line-height: 1.2; white-space: nowrap; }
 .setup-subtitle { font-size: 14px; color: var(--color-ink-soft); margin-top: 10px; line-height: 1.7; white-space: nowrap; }
 .setup-stage { width: 380px; max-width: 100%; min-height: 192px; margin: 26px auto 0; }
+.setup-stage-folder { min-height: 213px; }
 .setup-card { height: 96px; padding: 16px 17px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-surface); text-align: start; }
 .setup-hardware { font-size: 11px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .setup-model-line { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 10px; }

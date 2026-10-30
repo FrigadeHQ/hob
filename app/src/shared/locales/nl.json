@@ -745,5 +745,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, de modellen, je chats en je instellingen worden verwijderd en Hob sluit af. Bestanden die in je chats zijn gemaakt, blijven in je bestandenmap.",
   "Saves to {folder}": "Opslaan in {folder}",
   "Where should Hob save its downloads?": "Waar moet Hob zijn downloads opslaan?",
-  "Free up {size} GB of disk space, or save to another drive.": "Maak {size} GB schijfruimte vrij of sla op een andere schijf op."
+  "Free up {size} GB of disk space, or save to another drive.": "Maak {size} GB schijfruimte vrij of sla op een andere schijf op.",
+  "Added {names}": "Toegevoegd: {names}",
+  "Delete": "Verwijderen",
+  "More": "Meer",
+  "More for “{title}”": "Meer voor ‘{title}’",
+  "Pin": "Vastzetten",
+  "Pinned": "Vastgezet",
+  "Rename": "Naam wijzigen",
+  "Rename chat": "Chat hernoemen",
+  "Save as Markdown": "Opslaan als Markdown",
+  "Unpin": "Losmaken",
+  "You": "Jij"
 }

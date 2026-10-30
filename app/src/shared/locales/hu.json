@@ -745,5 +745,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "A Hob, a modelljei, a csevegéseid és a beállításaid törlődnek, a Hob pedig bezárul. A csevegésekben készült fájlok a fájlmappádban maradnak.",
   "Saves to {folder}": "Mentés helye: {folder}",
   "Where should Hob save its downloads?": "Hová mentse a Hob a letöltéseit?",
-  "Free up {size} GB of disk space, or save to another drive.": "Szabadíts fel {size} GB lemezterületet, vagy ments egy másik meghajtóra."
+  "Free up {size} GB of disk space, or save to another drive.": "Szabadíts fel {size} GB lemezterületet, vagy ments egy másik meghajtóra.",
+  "Added {names}": "Hozzáadva: {names}",
+  "Delete": "Törlés",
+  "More": "Továbbiak",
+  "More for “{title}”": "Továbbiak: „{title}”",
+  "Pin": "Kitűzés",
+  "Pinned": "Kitűzve",
+  "Rename": "Átnevezés",
+  "Rename chat": "Csevegés átnevezése",
+  "Save as Markdown": "Mentés Markdownként",
+  "Unpin": "Kitűzés megszüntetése",
+  "You": "Te"
 }

@@ -781,5 +781,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob, його моделі, ваші чати й налаштування буде видалено, а Hob закриється. Файли, створені в чатах, залишаться у вашій папці з файлами.",
   "Saves to {folder}": "Зберігається в {folder}",
   "Where should Hob save its downloads?": "Куди Hob зберігати завантаження?",
-  "Free up {size} GB of disk space, or save to another drive.": "Звільніть {size} ГБ на диску або зберігайте на інший диск."
+  "Free up {size} GB of disk space, or save to another drive.": "Звільніть {size} ГБ на диску або зберігайте на інший диск.",
+  "Added {names}": "Додано: {names}",
+  "Delete": "Видалити",
+  "More": "Більше",
+  "More for “{title}”": "Більше для «{title}»",
+  "Pin": "Закріпити",
+  "Pinned": "Закріплені",
+  "Rename": "Перейменувати",
+  "Rename chat": "Перейменувати чат",
+  "Save as Markdown": "Зберегти як Markdown",
+  "Unpin": "Відкріпити",
+  "You": "Ви"
 }

@@ -691,5 +691,16 @@
   "Hob, its models, your chats and settings will be deleted, and Hob will close. Files your chats made stay in your files folder.": "Hob과 모델, 채팅, 설정이 삭제되고 Hob이 종료됩니다. 채팅에서 만든 파일은 파일 폴더에 그대로 남아요.",
   "Saves to {folder}": "저장 위치: {folder}",
   "Where should Hob save its downloads?": "Hob이 다운로드를 어디에 저장할까요?",
-  "Free up {size} GB of disk space, or save to another drive.": "디스크 공간을 {size}GB 확보하거나 다른 드라이브에 저장하세요."
+  "Free up {size} GB of disk space, or save to another drive.": "디스크 공간을 {size}GB 확보하거나 다른 드라이브에 저장하세요.",
+  "Added {names}": "추가한 파일: {names}",
+  "Delete": "삭제",
+  "More": "더보기",
+  "More for “{title}”": "“{title}” 더보기",
+  "Pin": "고정",
+  "Pinned": "고정됨",
+  "Rename": "이름 바꾸기",
+  "Rename chat": "채팅 이름 바꾸기",
+  "Save as Markdown": "Markdown으로 저장",
+  "Unpin": "고정 해제",
+  "You": "나"
 }
